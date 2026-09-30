@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- AndroidHiddenApiBypass declares a higher minSdk than the plugin; it is only invoked on Android 9+. -->
+    <uses-sdk tools:overrideLibrary="org.lsposed.hiddenapibypass" />
+
+    <uses-permission android:name="org.autojs.permission.PLUGIN" />
+    <!-- Regular (none authorizer) installation and uninstallation through the system dialogs. -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
+    <!-- Installed version, signer comparison and the default-installer state of arbitrary packages. -->
+    <uses-permission
+        android:name="android.permission.QUERY_ALL_PACKAGES"
+        tools:ignore="QueryAllPackagesPermission" />
+    <!-- Progress of background installations (roadmap P3.4); the service type is declared with it. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Shizuku authorizer (roadmap D2 / D11). -->
+    <uses-permission android:name="moe.shizuku.manager.permission.API_V23" />
+
+    <queries>
+        <package android:name="org.autojs.autojs6" />
+        <package android:name="moe.shizuku.privileged.api" />
+        <!-- Which app currently handles package files: the default-installer state (roadmap D23). -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:mimeType="application/vnd.android.package-archive" />
+        </intent>
+    </queries>
+
+    <application
+        android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="false"
+        android:icon="@mipmap/ic_launcher_system"
+        android:roundIcon="@mipmap/ic_launcher_system"
+        android:label="@string/app_name"
+        android:localeConfig="@xml/locales_config"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.ThreeSetupInstaller"
+        tools:targetApi="33">
+
+        <meta-data
+            android:name="org.autojs.plugin.contract.NATIVE_PAGE_ALIGNMENT"
+            android:value="0" />
+
+        <meta-data
+            android:name="org.autojs.plugin.WAKE_ACTIVITY"
+            android:value=".WakeActivity" />
+        <meta-data
+            android:name="org.autojs.plugin.info.AUTHOR"
+            android:value="@string/plugin_author" />
+
+        <activity
+            android:name=".WakeActivity"
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:finishOnTaskLaunch="true"
+            android:permission="org.autojs.permission.PLUGIN"
+            android:theme="@android:style/Theme.NoDisplay">
+            <intent-filter>
+                <action android:name="org.autojs.plugin.action.WAKE" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <service
+            android:name=".ThreeSetupInstallerPluginInfoService"
+            android:enabled="true"
+            android:exported="true"
+            android:permission="org.autojs.permission.PLUGIN">
+            <intent-filter>
+                <action android:name="org.autojs.plugin.INFO" />
+                <category android:name="installer" />
+            </intent-filter>
+            <meta-data
+                android:name="requiresHostVersion"
+                android:value="5298" />
+        </service>
+
+        <!--
+            Host-facing installer service (roadmap D13). Until the host installer-api contract lands
+            (roadmap P1.2) it answers a placeholder Binder carrying the contract descriptor.
+        -->
+        <service
+            android:name=".ThreeSetupInstallerPluginService"
+            android:enabled="true"
+            android:exported="true"
+            android:permission="org.autojs.permission.PLUGIN">
+            <intent-filter>
+                <action android:name="org.autojs.plugin.INSTALLER" />
+                <category android:name="installer" />
+            </intent-filter>
+            <meta-data
+                android:name="requiresHostVersion"
+                android:value="5298" />
+        </service>
+
+        <!-- Shizuku client registration; the authority is fixed to this application id. -->
+        <provider
+            android:name="rikka.shizuku.ShizukuProvider"
+            android:authorities="${applicationId}.shizuku"
+            android:enabled="true"
+            android:exported="true"
+            android:multiprocess="false"
+            android:permission="android.permission.INTERACT_ACROSS_USERS_FULL" />
+
+    </application>
+
+</manifest>
