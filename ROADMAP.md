@@ -17,7 +17,7 @@
 
 ## 1. 固定决策
 
-以下决策 D1-D12 已由维护者于 2026-09-30 分三轮确认, 后续阶段不再重新讨论; D13-D31 为据此派生的技术决策, 进入对应阶段前可推翻 (推翻点见附录 D), 之后视同固定.
+以下决策 D1-D12 已由维护者于 2026-09-30 分三轮确认, 后续阶段不再重新讨论; D13-D31 为据此派生的技术决策, D32-D36 为维护者于 2026-09-30 对附录 D 与首页设计的拍板, 进入对应阶段前可推翻 (推翻点见附录 D), 之后视同固定.
 
 | 编号 | 决策 | 含义 |
 | --- | --- | --- |
@@ -52,6 +52,11 @@
 | D29 | 许可证边界 | 插件 MPL-2.0; InstallerX 系 GPL-3.0 只做架构 / 行为 / 选项目录参考, 不复制源码, 资源, 字符串; 隐藏 API 存根按 AOSP 接口签名自写并在 `THIRD_PARTY_NOTICES.md` 注明 Apache-2.0 来源; 第三方运行时依赖: Shizuku-API 13.1.5, libsu (建仓时 Maven Central 最新稳定版), HiddenApiBypass 6.1 |
 | D30 | 错误码与阶段 | 错误码集合与安装阶段枚举见附录 B.4 / B.5, 宿主 `installer-api` 与脚本 `InstallerError.code` 使用同一字符串 |
 | D31 | 契约上限 | 单次批量 <= 32 个安装包, 单个分包集合 <= 64 个文件, JSON 文档 <= 64 KiB, 安装者包名 <= 255 字节, 用户确认默认超时 5 分钟, 单会话默认超时 30 分钟, 并发会话 <= 4 |
+| D32 | 附录 D 拍板 (2026-09-30) | Q1 / Q2 / Q4 / Q5 / Q6 / Q9 按推荐值实施; Q3 按推荐值且文档必须明确提示 "特权可用时脚本默认静默安装"; Q4 另要求 `app.uninstall` 与 `installer.uninstall` 的文档互相提示对方的存在与用途简述; Q8 插件仓库可随时推送, 宿主仓库只本地提交, 不推送远端 |
+| D33 | 首页 | 插件拥有首页 `HomeActivity` (Three 系列惯例, 即 launcher 入口): 顶部两张状态卡 (授权方式: Shizuku / Root 可用与授权状态, 一键请求授权; 默认安装器: 当前处理者, 锁定 / 解锁), 下方为进行中与最近安装任务列表, FAB 选择安装包 (多选进入批量队列), 顶栏溢出菜单提供已安装应用与设置; 更新检查与发行历史保留在设置页 |
+| D34 | 安装历史 | 持久化到插件私有存储, 上限 200 条 (包名 / 版本 / 结果 / 时间 / 来源 (宿主 / 脚本 / 外部 / 首页) / 授权方式 / 失败时的错误码与系统消息), 可单条删除与清空, 不保存安装包内容, 进程重建后恢复 |
+| D35 | 默认安装器入口 | 首页状态卡可直接锁定 / 解锁; 设置页保留一行进入同一 `DefaultInstallerActivity` 详情页 (无特权时的系统设置引导与 OEM 限制说明), 取代原 Q7 的 "仅设置页一行" |
+| D36 | 首页附加能力 | 已安装应用列表页 (搜索 / 排序, 特权静默卸载与保留数据开关, 复用 P2.4 引擎); `ACTION_SEND` / `SEND_MULTIPLE` 接收安装包进入安装对话框 (与 P3.2 的 `ACTION_VIEW` 并列); 批量安装队列 (多选后逐个安装, 首页显示队列进度, 可取消剩余与跳过失败项, 复用 P2.5 批量语义) |
 
 ---
 
@@ -169,7 +174,9 @@ source/   PackageSource (PFD / content / file), ArchiveOpener (zip / xapk / apkm
 engine/   InstallEngine 接口, NoneInstallEngine, PrivilegedInstallEngine, UninstallEngine, DefaultInstallerLock
 priv/     IPrivilegedInstaller.aidl (私有 AIDL), PrivilegedInstallerImpl, ShizukuUserService, RootInstallerService (libsu), hidden/ 存根
 auth/     Authorizer 枚举, AuthorizerResolver (D14), ShizukuAuthorizer, RootAuthorizer, NoneAuthorizer
-ui/       InstallDialogActivity, ExternalInstallActivity, UninstallDialogActivity, UserActionActivity, InstallForegroundService
+ui/       InstallDialogActivity, ExternalInstallActivity, UninstallDialogActivity, UserActionActivity, InstallForegroundService, HomeActivity (首页, D33), InstalledAppsActivity (D36)
+history/  InstallHistoryStore (200 条持久化历史, D34)
+queue/    InstallQueue (首页批量队列, D36)
 ui/settings/ SettingsActivity, DefaultInstallerActivity, AboutActivity, ReleaseHistoryActivity, LauncherIcons
 ```
 
@@ -413,6 +420,15 @@ runtime/api/augment/installer/          Installer.kt (AugmentableKey("installer"
 
 目标: 插件可从启动器打开, 设置页遵循独立设置页规范, 默认安装器页可锁定 / 解锁, 关于 / 发行历史 / 更新检查齐备, 启动器图标四选项.
 
+### P5.0 首页, 安装历史与批量队列 (D33 / D34 / D36)
+
+- [ ] (插件) `ui/HomeActivity` 为 launcher 入口 (四个 alias 的 `targetActivity`): 顶部授权方式状态卡 (Shizuku / Root 的可用 / 运行 / 授权三态, 一键请求, 未安装 Shizuku 时给出下载引导) 与默认安装器状态卡 (当前处理者, 锁定 / 解锁, 无特权时跳系统 "默认打开" 引导), 下方任务列表 (进行中会话实时进度 + 最近历史), FAB 选择安装包 (SAF `OpenMultipleDocuments`, MIME 列表复用 P3.2, 多选进入批量队列), 顶栏溢出菜单: 已安装应用, 设置; 空状态文案, TalkBack, RTL, 大字号, 进程重建; 中性色与主题色遵循独立设置页规范.
+- [ ] (插件) `history/InstallHistoryStore`: JSON 文件 + 原子写, 上限 200 条 (超出丢弃最旧), 字段 包名 / 标签 / 版本 (旧 -> 新) / 结果 / 时间 / 来源 (host / script / external / home) / 授权方式 / 错误码与系统消息; 会话终态写入 (含批量逐项); 单条删除与清空确认; 不保存安装包内容或路径以外的信息.
+- [ ] (插件) `queue/InstallQueue`: 多选文件串行安装 (复用 P2.5 批量语义), 首页显示队列进度 (n / total, 当前项阶段), 取消剩余, 跳过失败项继续; 队列存活于进程内, 进程重建后未开始的项不自动续跑并在历史标记 `cancelled`.
+- [ ] (插件) `ui/InstalledAppsActivity`: 已安装应用列表 (图标 / 标签 / 包名 / 版本, 搜索, 按名称 / 安装时间 / 更新时间排序, 显示系统应用开关), 点击展开操作: 卸载 (特权静默 + 保留数据开关, 无特权时系统确认, 复用 P2.4), 打开, 应用信息; 列表异步加载并缓存图标.
+- [ ] (插件) `ACTION_SEND` / `ACTION_SEND_MULTIPLE` 接收安装包 (P3.2 的入口 Activity 增加 filter, MIME 同 `ACTION_VIEW`), 单项进入安装对话框, 多项进入批量队列.
+- [ ] (测试) JVM: 历史编解码, 上限裁剪, 来源与结果映射; instrumentation: 首页状态卡按授权状态渲染, 历史 200 条上限与清空, 队列取消与跳过, 已安装列表搜索与排序, `ACTION_SEND` 入口解析.
+
 ### P5.1 设置页
 
 - [ ] (插件) `SettingsActivity` (代码构建的分组平面列表, 复制 3-Stove Agent `ui/kit` 套件后裁剪): 外观组 (语言 / 夜间模式 / 主题色 / 启动器图标, 默认跟随 AutoJs6, 经官方 host settings 契约读取, 宿主不可用回退系统与 `#FFDEAD`); 安装组 (授权方式顺序与启用 (拖动或上下移动), 默认交互 (`auto` / `dialog` / `silent`), 允许降级, 允许测试包, 绕过低 targetSdk, 安装者包名 (空 = 本插件; HyperOS 提示 `com.android.shell`), 目标用户, 安装后删除源文件); 通知组 (进度通知开关); 关于组 (默认安装器状态卡入口, 关于, 发行历史, 检查更新).
@@ -422,7 +438,7 @@ runtime/api/augment/installer/          Installer.kt (AugmentableKey("installer"
 
 ### P5.2 默认安装器页
 
-- [ ] (插件) `DefaultInstallerActivity`: 状态卡 (当前默认处理者组件名, 是否本插件, 检测方式 D23), "设为默认" / "取消默认" 按钮 (特权路径, 选择授权方式), 无特权时的引导 (打开系统应用详情 "默认打开" 并说明步骤), 结果与失败原因 (OEM 限制按事实展示, 不承诺); 从宿主 / 脚本 `setDefault` 复用同一 `DefaultInstallerLock`.
+- [ ] (插件) `DefaultInstallerActivity` (从首页状态卡与设置页行进入, D35): 状态卡 (当前默认处理者组件名, 是否本插件, 检测方式 D23), "设为默认" / "取消默认" 按钮 (特权路径, 选择授权方式), 无特权时的引导 (打开系统应用详情 "默认打开" 并说明步骤), 结果与失败原因 (OEM 限制按事实展示, 不承诺); 从宿主 / 脚本 `setDefault` 复用同一 `DefaultInstallerLock`.
 - [ ] (测试) 设备: Shizuku 与 Root 各锁定 / 解锁一次, 锁定后从系统文件管理器打开 `.apk` 直接进入插件; API 24 / 31 / 35 三台.
 
 ### P5.3 关于, 发行历史与更新检查
@@ -474,7 +490,7 @@ runtime/api/augment/installer/          Installer.kt (AugmentableKey("installer"
 
 ### P7.1 文档与声明
 
-- [ ] (文档) `D:/webstorm-projects/AutoJs6-Documentation`: `api/installer.md` (模块页, 结构参照 `api/mail.md`: 插件依赖说明, `PLUGIN_UNAVAILABLE`, 同步 / Async / 会话三形态, `installer` 与 `$installer`), `api/installerInstallOptionsType.md`, `api/installerInstallResultType.md`, `api/installerSessionType.md`, `api/installerPackageInfoType.md`, `api/installerErrorType.md` (或合并进模块页, 按既有 mail 页面粒度); `api/sidebar.md` / `api/toc.md` 登记; `api/app.md` 的 `uninstall` 处交叉引用; 运行 `generator/auto-generate-for-autojs6.bat`, 随后提交文档仓库与 `AutoJs6-Plugin-Offline-Docs` (版本号自动变更).
+- [ ] (文档) `D:/webstorm-projects/AutoJs6-Documentation`: `api/installer.md` (模块页, 结构参照 `api/mail.md`: 插件依赖说明, `PLUGIN_UNAVAILABLE`, 同步 / Async / 会话三形态, `installer` 与 `$installer`), `api/installerInstallOptionsType.md`, `api/installerInstallResultType.md`, `api/installerSessionType.md`, `api/installerPackageInfoType.md`, `api/installerErrorType.md` (或合并进模块页, 按既有 mail 页面粒度); `api/sidebar.md` / `api/toc.md` 登记; `api/app.md` 的 `uninstall` 与 `api/installer.md` 的 `uninstall` 互相提示对方的存在与用途简述 (D32); 模块页与 README / 插件说明明确提示 "特权授权可用时脚本安装默认静默进行, 需要确认时传 `interaction: 'dialog'`" (D32); 运行 `generator/auto-generate-for-autojs6.bat`, 随后提交文档仓库与 `AutoJs6-Plugin-Offline-Docs` (版本号自动变更).
 - [ ] (文档) `D:/webstorm-projects/AutoJs6-TypeScript-Declarations`: `declarations/autojs6/aj6-int-installer.d.ts` (`@Source` 指向宿主 `runtime/api/augment/installer/*.kt` 与 `runtime/api/installer/*.kt`, `Internal.Installer` 命名空间, 重载与事件类型), `index.d.ts` 引用; 运行 `D:/idea-projects/android-dts-generator/aj6dts.bat -Publish`; 声明仓库与 `AutoJs6-Plugin-Ace-Editor` 的 `aj6-int-installer.d.ts` 同步, 两仓库版本号 +1 且版本名称按语义升级 (新增模块 -> y+1), Ace 仓库执行 `:app:generateAutoJs6LspDeclarations`; 分别提交.
 - [ ] (宿主) `docs/dev/installer-plugin-protocol-v1.md` 补齐脚本 API 章节; 宿主 changelog 核对 (P1.5 / P4.3 已写条目合并整理, 日期为当日).
 
@@ -779,55 +795,55 @@ if (!installer.isDefault()) installer.setDefault(true);
 
 - 现状: 宿主与 APK Inspector 各持一份, 后者已分叉 (第 3.3 节).
 - 推荐: 模块名 `plugin-api/package-archive-parser` (D28); APK Inspector 迁移放在 P8, 不阻塞 1.0.0.
-- 拍板: 待定.
+- 拍板 (2026-09-30): 按推荐值实施; P1.1 已用 `plugin-api/package-archive-parser`, APK Inspector 迁移留在 P8.
 
 ### Q2 (P2 前): `auto` 顺序默认值
 
 - 现状: InstallerX-Revived 由用户在配置文件中选择, 无固定顺序; 宿主双开卸载路径为 Shizuku -> Root -> 普通 shell.
 - 推荐: `shizuku -> root -> none` (D14), 设置页可调.
-- 拍板: 待定.
+- 拍板 (2026-09-30): 按推荐值实施 (D14).
 
 ### Q3 (P2 前): 特权可用时脚本 `interaction` 默认是否为 `silent`
 
 - 现状: D18 定义 `auto` = 特权可用则 `silent`.
 - 风险: 脚本无提示地安装应用; 但脚本本身已是用户授权运行的自动化, 且 `dialog` 可显式指定.
 - 推荐: 维持 D18; 宿主入口 (文件管理器 / 插件中心) 固定 `dialog`.
-- 拍板: 待定.
+- 拍板 (2026-09-30): 按推荐值实施 (D18), 且文档 (模块页, README, 插件说明) 必须明确提示用户: 特权授权可用时脚本安装默认静默进行, 需要确认时显式传 `interaction: 'dialog'` (D32).
 
 ### Q4 (P1 前): 宿主 `app.uninstall` 是否在插件可用时改走特权静默卸载
 
 - 现状: `app.uninstall` 为 `ACTION_DELETE` 系统对话框.
 - 推荐: 不改 (D24), 保持既有语义; 需要静默用 `installer.uninstall`.
-- 拍板: 待定.
+- 拍板 (2026-09-30): 按推荐值实施 (D24); `app.uninstall` 与 `installer.uninstall` 的文档互相提示对方的存在与用途简述 (D32).
 
 ### Q5 (P1 前): 宿主自更新是否经插件
 
 - 现状: `UpdateChecker` 下载后调用 `PackageInstallerActivity.install`.
 - 推荐: 经路由 (D21): 插件可用时进入插件对话框 (可选静默由插件设置决定), 否则系统安装器.
-- 拍板: 待定.
+- 拍板 (2026-09-30): 按推荐值实施 (D21), P1.3 已接入.
 
 ### Q6 (P3 前): 前台服务类型
 
 - 现状: API 34+ 要求声明类型; 候选 `dataSync` (语义接近, 有时长限制但足够) 与 `specialUse` (需 `PROPERTY_SPECIAL_USE_FGS_SUBTYPE` 说明).
 - 推荐: `dataSync`, 实测超时行为后定.
-- 拍板: 待定.
+- 拍板 (2026-09-30): 按推荐值实施, `dataSync` 实测后定.
 
 ### Q7 (P5 前): 默认安装器锁定的 UI 位置
 
 - 现状: InstallerX-Revived 在首页状态卡; 本插件无首页, 启动器入口直达设置页.
 - 推荐: 设置页 "关于" 组之前独立一行 "默认安装器" 进入 `DefaultInstallerActivity`.
-- 拍板: 待定.
+- 拍板 (2026-09-30): 插件需要首页 (D33); 默认安装器入口为首页状态卡 + 设置页行 (D35); 首页附加能力见 D36; 首页设计允许适度自行发挥.
 
 ### Q8 (P7 前): GitHub 仓库创建与推送时机, 宿主提交是否推送
 
 - 推荐: 插件仓库在 P0.1 初始提交后即创建远端并推送 (便于 CI 运行); 宿主提交按既有惯例本地保留, 由维护者决定推送.
-- 拍板: 待定.
+- 拍板 (2026-09-30): 插件仓库可随时推送 (远端 `SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer` 于 2026-09-30 创建并推送); 宿主仓库只本地提交, 不推送.
 
 ### Q9 (P8 前): Root 以 system 身份 (uid 1000) 调用 `addPersistentPreferredActivity` 是否纳入
 
 - 现状: InstallerX-Revived 未实现 (`canCallSystemRestrictedPreferredApis` 恒 false).
 - 推荐: P8 做一次 spike, 成立则纳入, 否则只保留 Dhizuku 路径.
-- 拍板: 待定.
+- 拍板 (2026-09-30): 按推荐值实施, P8 做一次 spike.
 
 ---
 
@@ -898,3 +914,9 @@ if (!installer.isDefault()) installer.setDefault(true);
 - 验证: 宿主 `:app:compileAppDebugKotlin` / `:app:compileInrtDebugKotlin` / `:app:assembleAppDebug` 通过, `:app:lintAppDebug` 0 错误 / 2392 警告 (P1 前 2403, 新代码无警告; 默认 4 GB 守护进程堆在 lintAnalyzeAppDebug 阶段耗尽, 以 12 GB 堆单独重跑 8 分 41 秒通过); 插件 `:app:testDebugUnitTest` 17 用例, `:app:assembleDebug` / `:app:assembleDebugAndroidTest` 通过, `:app:lintDebug` 0 错误 / 12 警告 (PrivateApi 3, UnusedResources 5 (P5.4 alias 前的图标资源), 依赖新版本 4), `generate_markdown.py --check` 与 `generate_launcher_icons.py --check` 通过. 证据: `docs/dev/p1-host-evidence.md`.
 - 未做: P1.4 的真机三处退化路径 (留待 P2 后与插件路径一并验收); 插件 androidTest 未在设备上重跑 (契约测试的能力断言已按 `installerContractVersion` 更新); 宿主与插件仓库均未推送; 宿主设置页的插件设置入口 (随 P5.1).
 - 下次会话建议起点: P2.1 来源与格式 + P2.2 授权方式 (复用 P0.2 的 `priv/`), 顺利时连做 P2.3 安装引擎; P2.6 用 `IInstallerPlugin.Stub` 替换占位 Binder 时同时声明 `AUTHORIZERS` / `FEATURES` / `MAX_*` 能力.
+
+### 2026-09-30 (附录 D 拍板与首页设计)
+
+- 维护者回复附录 D 全部 9 项并经选择题确定首页设计, 回填为 D32-D36: Q1 / Q2 / Q4 / Q5 / Q6 / Q9 按推荐值; Q3 附加文档提示; Q4 附加两处卸载文档互相提示; Q7 首页 = 状态卡 + 任务列表 + FAB, 持久化历史 200 条, 默认安装器入口为首页状态卡 + 设置页行, 附加已安装应用列表 / `ACTION_SEND` 接收 / 批量队列; Q8 插件仓库可随时推送 (远端已创建并推送), 宿主仓库只本地提交.
+- 路线图变更: 第 1 节增加 D32-D36, 第 4.2 节增加 `history/` 与 `queue/`, P5 增加 P5.0 首页小节, P5.2 与 P7.1 文案同步; P1.4 真机验证按建议延后到 P2 之后.
+- 下次会话建议起点不变: P2.1 + P2.2, 顺利时连做 P2.3.
