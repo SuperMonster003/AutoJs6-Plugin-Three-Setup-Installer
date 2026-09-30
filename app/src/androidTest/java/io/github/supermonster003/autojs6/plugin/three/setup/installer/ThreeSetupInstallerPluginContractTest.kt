@@ -14,6 +14,8 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import org.autojs.plugin.common.api.IPluginInfoProvider
 import org.autojs.plugin.common.api.PluginCapabilityKeys
+import org.autojs.plugin.installer.api.InstallerCapabilityKeys
+import org.autojs.plugin.installer.api.InstallerContract
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -141,8 +143,9 @@ class ThreeSetupInstallerPluginContractTest {
 
     private fun assertCapabilities(capabilities: Bundle) {
         assertEquals(ThreeSetupInstallerPlugin.REQUIRED_HOST_VERSION, capabilities.getLong(PluginCapabilityKeys.REQUIRES_HOST_VERSION))
-        // P0 negotiates nothing but the host build; P1.2 adds the installer contract version and features.
-        assertEquals(setOf(PluginCapabilityKeys.REQUIRES_HOST_VERSION), capabilities.keySet())
+        // P1.2 negotiates the host build and the contract version; the authorizer and feature arrays arrive with P2.6.
+        assertEquals(InstallerContract.CONTRACT_VERSION, capabilities.getInt(InstallerCapabilityKeys.CONTRACT_VERSION))
+        assertEquals(setOf(PluginCapabilityKeys.REQUIRES_HOST_VERSION, InstallerCapabilityKeys.CONTRACT_VERSION), capabilities.keySet())
     }
 
     private fun discoverSingleService(action: String, expectedClassName: String): ServiceInfo {

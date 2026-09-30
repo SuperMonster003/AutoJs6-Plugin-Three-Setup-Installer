@@ -33,7 +33,7 @@ class ThreeSetupInstallerPluginRuntimeInfoTest {
         assertEquals(1L, info.versionCode)
         assertEquals("Sep 30, 2026", info.versionDate)
         assertArrayEquals(emptyArray<String>(), info.supportedAbis)
-        assertEquals(5298L, info.requiresHostVersion)
+        assertEquals(5299L, info.requiresHostVersion)
         assertEquals(ThreeSetupInstallerPlugin.REQUIRED_HOST_VERSION, info.requiresHostVersion)
     }
 

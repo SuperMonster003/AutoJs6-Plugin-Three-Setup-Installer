@@ -18,7 +18,7 @@
   "plugin_service_category": "installer",
   "plugin_info_action": "org.autojs.plugin.INFO",
   "plugin_aidl_interface": "org.autojs.plugin.installer.api.IInstallerPlugin",
-  "required_host_version_code": "5298",
+  "required_host_version_code": "5299",
   "required_host_version_name": "6.8.0",
   "android_min_sdk": "24",
   "min_android_version": "7.0"

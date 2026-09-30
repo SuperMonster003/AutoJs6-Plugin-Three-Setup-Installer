@@ -7,6 +7,7 @@
 
 # Host contract AARs: parcelables and AIDL stubs are resolved reflectively across processes.
 -keep class org.autojs.plugin.common.api.** { *; }
+-keep class org.autojs.plugin.installer.api.** { *; }
 
 # Shizuku and libsu instantiate the privileged services and their AIDL stubs by name (roadmap P0.2).
 -keep class rikka.shizuku.** { *; }

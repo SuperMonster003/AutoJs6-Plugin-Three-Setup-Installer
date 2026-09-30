@@ -27,7 +27,7 @@
 | 设置入口 action (P5.1) | `org.autojs.plugin.INSTALLER_SETTINGS` |
 | 宿主契约标识 | AIDL 包 `org.autojs.plugin.installer.api`, 契约类 `InstallerContract` / `InstallerIds` / `InstallerActions` / `InstallerCapabilityKeys` / `InstallerErrorCodes` / `IInstaller*` 由宿主 `installer-api` AAR (路线图 P1.2) 决定; P0 阶段 `ThreeSetupInstallerPlugin` 以字面量声明同一组值, P1.2 落地后改为引用契约常量 |
 | 共享解析 AAR | `package-archive-parser` (宿主 `plugin-api/package-archive-parser`, 路线图 P1.1) |
-| 最低宿主 versionCode | `ThreeSetupInstallerPlugin.REQUIRED_HOST_VERSION` = 5298 (AutoJs6 6.8.0, 骨架所对构建; P1.5 回填为交付 `installer-api` 的宿主构建) |
+| 最低宿主 versionCode | `ThreeSetupInstallerPlugin.REQUIRED_HOST_VERSION` = `InstallerIds.REQUIRED_HOST_VERSION_CODE` = 5299 (AutoJs6 6.8.0 的 P1 构建: `installer-api`, `package-archive-parser` 与宿主客户端首次交付, 路线图 P1.5 回填于 2026-09-30) |
 | 平台版本插件 | `io.github.supermonster003.autojs6-platform-versions` 1.8.3 (建仓时 plugins.gradle.org 已发布 1.8.6, 与兄弟仓库统一升级时再更新) |
 | 发布文件名 | `autojs6-plugin-three-setup-installer-v{VERSION_NAME}-{CRC32}.apk` (单 APK) |
 | 图标源图 | `.python/icons/three-setup-ic-launcher-light.png` / `-dark.png` (1254 x 1254 RGBA, alpha 一致, 图案 `#272727` / `#D8D8D8`; light / dark 指使用它的模式); `ADAPTIVE_GLYPH = 0.41` |
@@ -98,7 +98,7 @@ AutoJs6-Plugin-Three-Setup-Installer/
 |-- build-logic/                org.autojs.build.{utils,versions,signs,properties,jvm-convention,local-arr-register-convention}
 |-- docs/dev/                   各阶段证据 (p0-spike-evidence.md 等)
 |-- gradle/                     wrapper, libs.versions.toml
-|-- libs/                       common-plugin-api.aar (+ P1: package-archive-parser.aar, installer-api.aar), README.md
+|-- libs/                       common-plugin-api.aar, package-archive-parser.aar, installer-api.aar (哈希锁定, 见 libs/README.md), README.md
 |-- locks/host-api-aars.lock    宿主 AAR SHA-256 锁
 |-- AGENTS.md, ROADMAP.md, README.md (生成, 简体中文), LICENSE (MPL-2.0), THIRD_PARTY_NOTICES.md
 |-- build.gradle.kts, settings.gradle.kts, gradle.properties, version.properties, gradlew(.bat)
@@ -158,7 +158,7 @@ AutoJs6-Plugin-Three-Setup-Installer/
 
 - `name` 来自不可翻译的 `app_name`, `description` 来自当前 locale 的 `plugin_description`, `instruction` 来自 `@raw/plugin_instruction`, `versionName` / `versionCode` 来自已安装包, `versionDate` 来自 `plugin_version_date` resValue, `id` / `engine` / `variant` 来自 `ThreeSetupInstallerPlugin`.
 - `supportedAbis = emptyArray()` 在 `getInfo()` 中显式写出.
-- `capabilities` P0 只含 `PluginCapabilityKeys.REQUIRES_HOST_VERSION`; P1.2 起追加 `CONTRACT_VERSION`, `AUTHORIZERS`, `FEATURES`, `MAX_BATCH`, `MAX_SPLITS` (路线图附录 B).
+- `capabilities` 自 P1.2 起含 `PluginCapabilityKeys.REQUIRES_HOST_VERSION` 与 `InstallerCapabilityKeys.CONTRACT_VERSION`; `AUTHORIZERS`, `FEATURES`, `MAX_BATCH`, `MAX_SPLITS` 随 P2.6 的真实 Binder 路由一起声明 (路线图附录 B), 不提前声明尚未实现的能力.
 - 新增可选方法时先协商能力, 不通过捕获异常猜测协议版本.
 
 ## 8. Binder 与公共 API 设计

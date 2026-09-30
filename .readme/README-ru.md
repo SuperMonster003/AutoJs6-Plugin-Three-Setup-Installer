@@ -52,7 +52,7 @@ AutoJs6 находит плагин через его Binder-сервис и п�
 
 ******
 
-Версия 1.0.0 является предварительной сборкой этапа P0: каркас репозитория, идентичность плагина, распознаваемая центром плагинов AutoJs6, и проверка привилегированной установки (spike). Контракт Binder, движок установки, диалоги, API скриптов и страница настроек следуют этапам [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md). Требуется AutoJs6 6.8.0 (сборка 5298) или новее. На этапе P0 проверены тихая установка, обновление, удаление и обычный выбор установщика по умолчанию через Shizuku и Root. Установка из хоста и скриптов пока недоступна; постоянные настройки по умолчанию не входят в эту версию.
+Версия 1.0.0 является предварительной сборкой этапа P0: каркас репозитория, идентичность плагина, распознаваемая центром плагинов AutoJs6, и проверка привилегированной установки (spike). Контракт Binder, движок установки, диалоги, API скриптов и страница настроек следуют этапам [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md). Требуется AutoJs6 6.8.0 (сборка 5299) или новее. На этапе P0 проверены тихая установка, обновление, удаление и обычный выбор установщика по умолчанию через Shizuku и Root. Установка из хоста и скриптов пока недоступна; постоянные настройки по умолчанию не входят в эту версию.
 
 ******
 
@@ -75,7 +75,7 @@ AutoJs6 находит плагин через его Binder-сервис и п�
 
 ******
 
-1. Установите APK плагина из [Releases](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/releases) на устройство с AutoJs6 сборки 5298 (6.8.0) или новее.
+1. Установите APK плагина из [Releases](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/releases) на устройство с AutoJs6 сборки 5299 (6.8.0) или новее.
 2. Откройте центр плагинов AutoJs6, убедитесь, что `3-Setup Installer` распознан, и включите его.
 3. Нажмите на файл пакета в файловом менеджере AutoJs6, откройте пакет из любого файлового менеджера через 3-Setup Installer или вызовите `installer.install(...)` из скрипта. Для тихой установки запустите Shizuku или предоставьте Root по запросу плагина либо выберите способ авторизации в настройках плагина.
 
@@ -170,7 +170,7 @@ service action: org.autojs.plugin.INSTALLER
 service category: installer
 info action: org.autojs.plugin.INFO
 aidl interface: org.autojs.plugin.installer.api.IInstallerPlugin
-minimum host build: 5298 (6.8.0)
+minimum host build: 5299 (6.8.0)
 ```
 
 `ThreeSetupInstallerPluginService` отвечает на `org.autojs.plugin.INSTALLER` (category `installer`) и начиная с этапа P1 реализует контракт хоста installer-api `org.autojs.plugin.installer.api.IInstallerPlugin`. `ThreeSetupInstallerPluginInfoService` отвечает на `org.autojs.plugin.INFO` объектом PluginInfo. `WakeActivity` позволяет хосту активировать плагин.
@@ -199,10 +199,12 @@ _2026/09/30_
 - `Функция` Идентичность плагина `three-setup-installer` (engine `installer`) с сервисом INFO, Wake Activity и каркасом сервиса `org.autojs.plugin.INSTALLER` для обнаружения хостом
 - `Функция` README, описание для центра плагинов и журнал изменений на 10 языках
 - `Улучшение` На этапе P0 проверены тихая установка, обновление, удаление и обычный выбор установщика по умолчанию через Shizuku и Root. Установка из хоста и скриптов пока недоступна; постоянные настройки по умолчанию не входят в эту версию.
+- `Улучшение` Идентификатор плагина, движок, action / category сервиса, дескриптор Binder и минимальная версия хоста теперь берутся из констант контракта installer-api хоста; возможности объявляют версию 1 контракта установщика, минимальная сборка хоста обновлена до 5299
 - `Зависимость` Добавлен Shizuku API 13.1.5 (`dev.rikka.shizuku:api`, `dev.rikka.shizuku:provider`) для способа авторизации Shizuku
 - `Зависимость` Добавлен libsu 6.0.0 (`com.github.topjohnwu.libsu:core`, `service`) для способа авторизации Root
 - `Зависимость` Добавлен AndroidHiddenApiBypass 6.1 для доступа привилегированного сервиса к скрытым API установщика пакетов
 - `Зависимость` Добавлен `common-plugin-api.aar` (модуль AutoJs6 `plugin-api/common-plugin-api`, сборка хоста 6.8.0 / 5298, MPL 2.0) как общий контракт плагинов с фиксацией хеша в `locks/host-api-aars.lock`
+- `Зависимость` Добавлены `package-archive-parser.aar` и `installer-api.aar` (модули AutoJs6 `plugin-api/package-archive-parser` и `plugin-api/installer-api`, сборка хоста P1 6.8.0 / 5299, MPL 2.0) с фиксацией хешей в `locks/host-api-aars.lock` вместе с `common-plugin-api.aar`
 
 ##### Полная история выпусков
 

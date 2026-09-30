@@ -52,7 +52,7 @@ AutoJs6 は Binder サービスを通じてプラグインを検出し, パッ�
 
 ******
 
-バージョン 1.0.0 は P0 開発プレビューです: リポジトリの骨組み, AutoJs6 プラグインセンターに認識されるプラグイン ID, 特権インストールの検証 (spike). Binder 契約, インストールエンジン, ダイアログ, スクリプト API, 設定画面は [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md) の段階に従って進みます. AutoJs6 6.8.0 (build 5298) 以降が必要です. P0 で Shizuku と Root によるサイレントインストール, 更新, アンインストール, 通常の既定インストーラー設定を検証しました. ホストとスクリプトからのインストールはまだ利用できず, 永続的な既定設定は本バージョンの対象外です.
+バージョン 1.0.0 は P0 開発プレビューです: リポジトリの骨組み, AutoJs6 プラグインセンターに認識されるプラグイン ID, 特権インストールの検証 (spike). Binder 契約, インストールエンジン, ダイアログ, スクリプト API, 設定画面は [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md) の段階に従って進みます. AutoJs6 6.8.0 (build 5299) 以降が必要です. P0 で Shizuku と Root によるサイレントインストール, 更新, アンインストール, 通常の既定インストーラー設定を検証しました. ホストとスクリプトからのインストールはまだ利用できず, 永続的な既定設定は本バージョンの対象外です.
 
 ******
 
@@ -75,7 +75,7 @@ AutoJs6 は Binder サービスを通じてプラグインを検出し, パッ�
 
 ******
 
-1. AutoJs6 build 5298 (6.8.0) 以降がインストールされた端末に, [Releases](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/releases) からプラグイン APK をインストールします.
+1. AutoJs6 build 5299 (6.8.0) 以降がインストールされた端末に, [Releases](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/releases) からプラグイン APK をインストールします.
 2. AutoJs6 プラグインセンターを開き, `3-Setup Installer` が認識されていることを確認して有効にします.
 3. AutoJs6 ファイルマネージャーでパッケージファイルをタップするか, 任意のファイルマネージャーから 3-Setup Installer でパッケージを開くか, スクリプトから `installer.install(...)` を呼び出します. サイレントインストールには, プラグインの案内に従って Shizuku を起動するか Root を許可するか, プラグイン設定で認可方式を選びます.
 
@@ -170,7 +170,7 @@ service action: org.autojs.plugin.INSTALLER
 service category: installer
 info action: org.autojs.plugin.INFO
 aidl interface: org.autojs.plugin.installer.api.IInstallerPlugin
-minimum host build: 5298 (6.8.0)
+minimum host build: 5299 (6.8.0)
 ```
 
 `ThreeSetupInstallerPluginService` は `org.autojs.plugin.INSTALLER` (category `installer`) に応答し, ロードマップ P1 以降はホストの installer-api 契約 `org.autojs.plugin.installer.api.IInstallerPlugin` を実装します. `ThreeSetupInstallerPluginInfoService` は `org.autojs.plugin.INFO` に PluginInfo で応答します. `WakeActivity` はホストによるプラグインの有効化に使われます.
@@ -199,10 +199,12 @@ _2026/09/30_
 - `機能` プラグイン ID `three-setup-installer` (engine `installer`), INFO サービス, Wake Activity, およびホスト検出用の `org.autojs.plugin.INSTALLER` サービスの骨組み
 - `機能` 10 言語の README, プラグインセンター説明, 変更履歴
 - `改善` P0 で Shizuku と Root によるサイレントインストール, 更新, アンインストール, 通常の既定インストーラー設定を検証しました. ホストとスクリプトからのインストールはまだ利用できず, 永続的な既定設定は本バージョンの対象外です.
+- `改善` プラグイン ID, engine, サービスの action / category, Binder descriptor と最低ホストバージョンをホストの installer-api 契約定数から取得するように変更; 能力宣言にインストーラ契約バージョン 1 を追加し, 最低ホストビルドを 5299 に更新
 - `依存関係` Shizuku 認可方式のために Shizuku API 13.1.5 (`dev.rikka.shizuku:api`, `dev.rikka.shizuku:provider`) を追加
 - `依存関係` Root 認可方式のために libsu 6.0.0 (`com.github.topjohnwu.libsu:core`, `service`) を追加
 - `依存関係` 特権サービスが非公開のパッケージインストーラー API へアクセスするために AndroidHiddenApiBypass 6.1 を追加
 - `依存関係` 共有プラグイン契約として `common-plugin-api.aar` (AutoJs6 モジュール `plugin-api/common-plugin-api`, ホストビルド 6.8.0 / 5298, MPL 2.0) を追加し, `locks/host-api-aars.lock` でハッシュを固定
+- `依存関係` `package-archive-parser.aar` と `installer-api.aar` (AutoJs6 モジュール `plugin-api/package-archive-parser` と `plugin-api/installer-api`, ホスト P1 ビルド 6.8.0 / 5299, MPL 2.0) を追加し, `common-plugin-api.aar` とともに `locks/host-api-aars.lock` でハッシュを固定
 
 ##### さらに詳しいリリース履歴
 
