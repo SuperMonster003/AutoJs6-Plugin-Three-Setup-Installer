@@ -14,6 +14,9 @@
         "Plugin identity `three-setup-installer` (engine `installer`) with the INFO service, the Wake Activity and the `org.autojs.plugin.INSTALLER` service skeleton for host discovery",
         "README, plugin-center instructions and changelog in 10 languages"
       ],
+      "improvement": [
+        "P0 validation completed for silent installation, updates, uninstallation and ordinary default-installer selection with Shizuku and Root. Host and script installation entry points are not available yet; persistent defaults remain outside this release."
+      ],
       "dependency": [
         "Shizuku API 13.1.5 (`dev.rikka.shizuku:api`, `dev.rikka.shizuku:provider`) for the Shizuku authorizer",
         "libsu 6.0.0 (`com.github.topjohnwu.libsu:core`, `service`) for the Root authorizer",

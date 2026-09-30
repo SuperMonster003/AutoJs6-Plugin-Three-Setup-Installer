@@ -11,6 +11,7 @@
 * `Note` Aperçu de développement P0 : le squelette du dépôt, l'identité du plugin reconnue par le centre de plugins AutoJs6 et la validation (spike) de l'installation privilégiée. Le contrat Binder, le moteur d'installation, les boîtes de dialogue, l'API de script et la page des paramètres suivent les phases de ROADMAP.md.
 * `Fonctionnalité` Identité du plugin `three-setup-installer` (engine `installer`) avec le service INFO, la Wake Activity et le squelette du service `org.autojs.plugin.INSTALLER` pour la découverte par l'hôte
 * `Fonctionnalité` README, instructions du centre de plugins et journal des modifications en 10 langues
+* `Amélioration` P0 a validé l'installation silencieuse, les mises à jour, la désinstallation et le choix ordinaire de l'installateur par défaut avec Shizuku et Root. Les points d'installation depuis l'hôte et les scripts ne sont pas encore disponibles; les valeurs par défaut persistantes restent hors de cette version.
 * `Dépendance` Ajout de Shizuku API 13.1.5 (`dev.rikka.shizuku:api`, `dev.rikka.shizuku:provider`) pour le mode d'autorisation Shizuku
 * `Dépendance` Ajout de libsu 6.0.0 (`com.github.topjohnwu.libsu:core`, `service`) pour le mode d'autorisation Root
 * `Dépendance` Ajout de AndroidHiddenApiBypass 6.1 pour les API cachées de l'installateur de paquets utilisées par le service privilégié

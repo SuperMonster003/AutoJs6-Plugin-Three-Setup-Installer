@@ -12,3 +12,4 @@
 -keep class rikka.shizuku.** { *; }
 -keep class com.topjohnwu.superuser.** { *; }
 -keep class * extends com.topjohnwu.superuser.ipc.RootService { *; }
+-keep class io.github.supermonster003.autojs6.plugin.three.setup.installer.priv.ShizukuUserService { *; }

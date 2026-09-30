@@ -1,6 +1,6 @@
 3-Setup Installer는 AutoJs6의 패키지 설치 프로그램을 대신합니다: 파일 관리자, 플러그인 센터, 스크립트 패키징 화면의 설치 버튼, `.apk`, `.apks`, `.xapk`, `.apkm`, `.apkz` 파일의 외부 "연결 프로그램" 진입점, 그리고 앱을 설치, 업데이트, 검사, 제거하는 스크립트 측 전역 객체 `installer`입니다. 일반적인 시스템 확인 외에도 Shizuku 또는 Root를 통해 무음으로 설치하고 제거할 수 있습니다.
 
-버전 1.0.0은 P0 개발 미리보기입니다: 저장소 골격, AutoJs6 플러그인 센터가 인식하는 플러그인 신원, 특권 설치 검증 (spike). Binder 계약, 설치 엔진, 대화 상자, 스크립트 API, 설정 화면은 [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md)의 단계에 따라 진행됩니다. AutoJs6 6.8.0 (build 5298) 이상이 필요합니다.
+버전 1.0.0은 P0 개발 미리보기입니다: 저장소 골격, AutoJs6 플러그인 센터가 인식하는 플러그인 신원, 특권 설치 검증 (spike). Binder 계약, 설치 엔진, 대화 상자, 스크립트 API, 설정 화면은 [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md)의 단계에 따라 진행됩니다. AutoJs6 6.8.0 (build 5298) 이상이 필요합니다. P0에서 Shizuku와 Root를 통한 자동 설치, 업데이트, 제거 및 일반 기본 설치 프로그램 설정을 검증했습니다. 호스트와 스크립트의 설치 진입점은 아직 제공되지 않으며, 영구 기본 설정은 이번 버전에서 지원하지 않습니다.
 
 ### 사용 방법
 

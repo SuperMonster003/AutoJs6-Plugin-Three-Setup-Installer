@@ -172,10 +172,11 @@ AutoJs6-Plugin-Three-Setup-Installer/
 ## 9. 特权进程, 隐藏 API 与许可证边界 (CONDITIONAL, P0.2 起)
 
 - Shizuku `UserService` 与 libsu `RootService` 实现同一私有 AIDL `IPrivilegedInstaller`, 共用 `PrivilegedInstallerImpl`; 特权 Binder 只对本应用进程暴露, 不导出.
-- 隐藏 API 存根 (`priv/hidden/`) 按 AOSP 接口签名自写, 只含方法签名不含实现, 在 `THIRD_PARTY_NOTICES.md` 注明 Apache-2.0 来源; `HiddenApiBypass` 只在 API 28+ 调用.
+- 隐藏 API 适配 (`priv/hidden/`) 按 AOSP 接口签名自写, 通过反射调用设备自带 Stub, 不复制框架实现, 不打包 `android.*` 存根; 在 `THIRD_PARTY_NOTICES.md` 注明 Apache-2.0 签名来源. `HiddenApiBypass` 只在 API 28+ 调用, 每进程一次.
 - 主路径为 Binder 隐藏 API (D15); `pm` 命令回退 (路线图附录 E.2) 只在 P0.2 决策点触发时启用, 参数白名单化.
 - 参考项目 InstallerX / InstallerX-Revived 为 GPL-3.0 (D29): 只参考架构, 行为与选项目录, MUST NOT 复制其源码, 资源, 字符串; 提交说明与文档只以 "参考" 表述.
-- 特权服务不保存状态, 操作之间不保持打开的 shell; 日志不记录安装包内容, 只记录格式, 大小, 耗时与错误码.
+- 特权服务只持有正在执行的会话, 不持久化状态; 客户端 Binder 死亡与服务关闭时放弃会话, 关闭运行与排队写入的所有描述符. 操作之间不保持打开的 shell; 日志不记录安装包内容, 只记录格式, 大小, 耗时与错误码.
+- 特权写入用普通 pipe 转交框架 `Session.openWrite` / `fsync`, 不直接写入隐藏接口的 FileBridge PFD, 不使用跨 Magisk / app 的 reliable pipe socket. 默认项只精确替换 APK filter; 不清除其它包的所有首选项, 旧 API 返回 `DEFAULT_REQUIRES_CLEAR` 时由后续 UI 引导处理.
 
 ## 10. 字符串资源
 
@@ -211,6 +212,7 @@ AutoJs6-Plugin-Three-Setup-Installer/
 - `ThreeSetupInstallerPluginContractTest`: Wake Activity 契约, INFO 服务 `getInfo()` 往返 (含显式空 `supportedAbis` 与能力 Bundle), INSTALLER 服务 descriptor, Shizuku provider 注册, P0 无启动器入口.
 - P0.2 起: 特权 spike 的真机往返 (Shizuku / Root 静默安装, 更新, 卸载; `addPreferredActivity` 可行性); P2 起: Binder happy path, 敌意输入, 上限, 宿主死亡; P3 / P5 起: 对话框与设置页.
 - 设备池与证据等级见 `ROADMAP.md` 附录 E; 多台设备时用明确 serial, 每次会话重新读取 SDK / ABI; 不卸载用户的已安装应用, 不清空启动器数据.
+- `PrivilegedInstallerDeviceTest` 必须显式传 `privilegedAuthorizer=shizuku|root`, 普通 CI 自动跳过; `tools/run-privileged-spike.ps1` 拒绝把失败或跳过当作成功. 夹具若预先存在立即拒绝操作, 默认项测试若已有 APK 首选项则跳过. debug-only spike 入口与状态接收器不得进入 release.
 
 ### 13.3 CI
 

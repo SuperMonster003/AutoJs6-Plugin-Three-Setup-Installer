@@ -25,13 +25,15 @@ license, reproduced in full in the distribution of the respective project.
 Test-only dependencies (JUnit 4, AndroidX Test runner / rules / ext-junit, Apache License 2.0 or EPL 1.0) are
 not shipped in the APK.
 
-## Android Open Source Project interface stubs
+## Android Open Source Project interface signatures
 
-The privileged service compiles against hand-written stubs of hidden Android framework interfaces
-(`android.content.pm.IPackageInstaller`, `IPackageInstallerSession`, `IPackageManager`, `android.os.IUserManager`
-and related hidden constants, roadmap P0.2). They reproduce only the method signatures of the Android Open Source
-Project (https://android.googlesource.com/platform/frameworks/base, Apache License 2.0) and contain no
-implementation; the real classes are provided by the device at run time.
+The hand-written adapters in `priv/hidden` use signatures of hidden Android framework interfaces
+(`android.content.pm.IPackageInstaller`, `IPackageInstallerSession`, `IPackageManager`, `ParceledListSlice`,
+`android.os.IUserManager`, `UserInfo` and related constants). Signature references are from the Android Open
+Source Project (https://android.googlesource.com/platform/frameworks/base, Apache License 2.0), Android 7 through
+15 release tags. No AOSP implementation is copied: reflection invokes the device's own Binder Stub and framework
+Session, preserving its transaction numbering and FileBridge protocol. No replacement `android.*` classes are
+packaged. The package installer status constants come from the public Android SDK.
 
 ## Reference projects (no code reused)
 

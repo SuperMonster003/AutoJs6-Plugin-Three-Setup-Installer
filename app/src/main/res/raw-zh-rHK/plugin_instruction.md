@@ -1,6 +1,6 @@
 3-Setup Installer 接管 AutoJs6 的安裝器: 檔案管理器, 外掛程式中心與腳本打包頁的安裝按鈕, `.apk`, `.apks`, `.xapk`, `.apkm` 與 `.apkz` 檔案的外部 "開啟方式" 入口, 以及腳本端用於安裝, 更新, 檢查與卸載應用程式的全域物件 `installer`. 除一般的系統確認外, 還可透過 Shizuku 或 Root 靜默安裝與卸載.
 
-版本 1.0.0 為 P0 開發預覽: 倉庫骨架, 可被 AutoJs6 外掛程式中心識別的外掛程式身分, 以及特權安裝 spike. Binder 契約, 安裝引擎, 對話方塊, 腳本 API 與設定頁按 [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md) 的階段推進. 需要 AutoJs6 6.8.0 (build 5298) 或更高版本.
+版本 1.0.0 為 P0 開發預覽: 倉庫骨架, 可被 AutoJs6 外掛程式中心識別的外掛程式身分, 以及特權安裝 spike. Binder 契約, 安裝引擎, 對話方塊, 腳本 API 與設定頁按 [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md) 的階段推進. 需要 AutoJs6 6.8.0 (build 5298) 或更高版本. P0 已驗證 Shizuku 和 Root 靜默安裝, 更新, 解除安裝及一般預設安裝器設定. 宿主與腳本安裝入口尚未開放, 本版本仍不支援持久預設項.
 
 ### 使用方法
 

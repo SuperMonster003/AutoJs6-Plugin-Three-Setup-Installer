@@ -1,6 +1,6 @@
 3-Setup Installer は AutoJs6 のパッケージインストーラーを引き継ぎます: ファイルマネージャー, プラグインセンター, スクリプトパッケージ化画面のインストールボタン, `.apk`, `.apks`, `.xapk`, `.apkm`, `.apkz` ファイルの外部 "アプリで開く" エントリ, そしてアプリのインストール, 更新, 検査, アンインストールを行うスクリプト側のグローバルオブジェクト `installer` です. 通常のシステム確認に加えて, Shizuku または Root によりサイレントにインストールとアンインストールを行えます.
 
-バージョン 1.0.0 は P0 開発プレビューです: リポジトリの骨組み, AutoJs6 プラグインセンターに認識されるプラグイン ID, 特権インストールの検証 (spike). Binder 契約, インストールエンジン, ダイアログ, スクリプト API, 設定画面は [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md) の段階に従って進みます. AutoJs6 6.8.0 (build 5298) 以降が必要です.
+バージョン 1.0.0 は P0 開発プレビューです: リポジトリの骨組み, AutoJs6 プラグインセンターに認識されるプラグイン ID, 特権インストールの検証 (spike). Binder 契約, インストールエンジン, ダイアログ, スクリプト API, 設定画面は [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md) の段階に従って進みます. AutoJs6 6.8.0 (build 5298) 以降が必要です. P0 で Shizuku と Root によるサイレントインストール, 更新, アンインストール, 通常の既定インストーラー設定を検証しました. ホストとスクリプトからのインストールはまだ利用できず, 永続的な既定設定は本バージョンの対象外です.
 
 ### 使い方
 

@@ -97,6 +97,12 @@
                 android:value="5298" />
         </service>
 
+        <!-- libsu instantiates this ContextWrapper in its root process, never as an Android Service. -->
+        <service
+            android:name=".priv.RootInstallerService"
+            android:exported="false"
+            tools:ignore="Instantiatable" />
+
         <!-- Shizuku client registration; the authority is fixed to this application id. -->
         <provider
             android:name="rikka.shizuku.ShizukuProvider"

@@ -84,7 +84,10 @@ class ManifestContractTest {
     @Test
     fun `info service and installer service match the identity constants`() {
         val services = manifest.child("application").children("service").associateBy { it.androidAttribute("name") }
-        assertEquals(setOf(".ThreeSetupInstallerPluginInfoService", ".ThreeSetupInstallerPluginService"), services.keys)
+        assertEquals(setOf(".ThreeSetupInstallerPluginInfoService", ".ThreeSetupInstallerPluginService", ".priv.RootInstallerService"), services.keys)
+        val root = services.getValue(".priv.RootInstallerService")
+        assertEquals("false", root.androidAttribute("exported"))
+        assertTrue(root.children("intent-filter").isEmpty())
 
         val info = services.getValue(".ThreeSetupInstallerPluginInfoService")
         assertDiscoveryContract(info, ThreeSetupInstallerPlugin.INFO_ACTION)
