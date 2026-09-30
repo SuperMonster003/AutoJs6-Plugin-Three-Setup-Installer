@@ -14,6 +14,9 @@
         "插件标识 `three-setup-installer` (engine `installer`), 含 INFO 服务, Wake Activity 以及供宿主发现的 `org.autojs.plugin.INSTALLER` 服务骨架",
         "10 种语言的 README, 插件中心说明与更新日志"
       ],
+      "improvement": [
+        "P0 已验证 Shizuku 和 Root 静默安装, 更新, 卸载及普通默认安装器设置. 宿主与脚本安装入口尚未开放, 本版本仍不支持持久默认项."
+      ],
       "dependency": [
         "附加 Shizuku API 13.1.5 (`dev.rikka.shizuku:api`, `dev.rikka.shizuku:provider`) 用于 Shizuku 授权方式",
         "附加 libsu 6.0.0 (`com.github.topjohnwu.libsu:core`, `service`) 用于 Root 授权方式",

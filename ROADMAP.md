@@ -35,15 +35,15 @@
 | D12 | 默认安装器 | 1.0.0 包含 "设为默认安装器" 的特权锁定 (Shizuku / Root); 无特权时引导到系统 "默认打开" 设置 |
 | D13 | 身份派生表 | 见第 4.4 节; 全部值在 Gradle, Manifest, 契约常量, 资源, 文档, 测试, 宿主注册与官方索引中 MUST 一致 |
 | D14 | `auto` 顺序 | `shizuku` (已安装, 服务运行中, 已授权) -> `root` (`su` 可用且授权成功) -> `none`; 顺序与各项启用状态可在插件设置页调整并作为默认; 脚本显式 `authorizer` 优先于设置 |
-| D15 | 特权进程实现 | 主路径为 Binder 隐藏 API (自写 AOSP 签名存根, `HiddenApiBypass` 解除限制), 不用 `pm install` 命令拼接; `pm` 命令仅作为 P6 的诊断 / 回退路径, 由能力协商上报是否可用 |
-| D16 | 数据传递 | 宿主 -> 插件用只读 `ParcelFileDescriptor` + JSON 元数据, 不传绝对路径; 插件 -> 特权进程经 `IPackageInstallerSession.openWrite` 返回的 PFD 流式写入; 外部 `ACTION_VIEW` 入口的 `content://` / `file://` 由插件自行打开 |
+| D15 | 特权进程实现 | 主路径为 Binder 隐藏 API (按 AOSP 签名自写 `priv/hidden` 反射适配器, 调用设备自带的 Stub, 不打包 `android.*` 类, `HiddenApiBypass` 解除限制), 不用 `pm install` 命令拼接; P0.2 已在 Shizuku API 24 / 31 / 35 与 Root API 28 验证, 不触发 `pm` 退路; 后续 OEM 失败时按附录 E.2 重新评估 |
+| D16 | 数据传递 | 宿主 -> 插件用只读 `ParcelFileDescriptor` + JSON 元数据, 不传绝对路径; 插件 -> 特权进程用普通 pipe PFD, 特权进程通过框架 `PackageInstaller.Session.openWrite` 流式写入并 fsync, 兼容旧版 FileBridge, 避免 reliable pipe 附带的 socket 被 Magisk / app SELinux 边界拒绝 (P0.2 实测); 外部 `ACTION_VIEW` 入口的 `content://` / `file://` 由插件自行打开 |
 | D17 | `none` 路径 | 标准 `PackageInstaller.Session` (`MODE_FULL_INSTALL`, API 31+ `USER_ACTION_REQUIRED`, API 33+ `PACKAGE_SOURCE_LOCAL_FILE`), `STATUS_PENDING_USER_ACTION` 的系统确认由插件自身 Activity 接管; 插件持有 `REQUEST_INSTALL_PACKAGES` 与 `REQUEST_DELETE_PACKAGES` |
 | D18 | 交互模式 | `interaction: 'auto' | 'dialog' | 'silent'`; `auto` = 特权可用时 `silent`, 否则 `dialog`; `silent` 在无特权时报 `AUTHORIZER_REQUIRED`, 不降级为对话框; 通知栏模式列入 P8 |
 | D19 | 脚本 API 形态 | `install` / `installAsync`, `session`, `uninstall` / `uninstallAsync`, `inspect` / `inspectAsync`, `authorizer` (状态 / 请求), `isDefault` / `setDefault` / `setDefaultAsync`, `users`, `isAvailable`; 错误类型 `InstallerError` (`code`, `status`, `systemMessage`); 草案见附录 A |
 | D20 | 分包与批量 | 数组参数 = 多个独立安装包的批量安装, 逐个返回结果; `{ splits: [...] }` 对象 = 一个应用的分包集合, 作为一个会话安装 |
 | D21 | 宿主退化路由 | 宿主新增 `core/plugin/installer/PackageInstallRouter` 单入口, 全部安装调用方改走它: 插件可用 -> Binder 会话; 不可用 -> `ACTION_VIEW` + FileProvider URI 交给系统安装器, 并在插件中心 / 文件管理器提示安装 3-Setup Installer |
 | D22 | 安装完成观察 | 宿主向导与插件中心等待安装完成改为双通道: 插件会话回调 (插件路径) + `PACKAGE_ADDED` / `PACKAGE_REPLACED` 动态广播 (系统安装器路径), 不再依赖被删除的 `PackageInstallStatusCoordinator` |
-| D23 | 锁定实现 | Shizuku / Root 路径调用 `IPackageManager.addPreferredActivity` (对 `ACTION_VIEW` 与 `ACTION_INSTALL_PACKAGE` 各一个 filter, MIME `application/vnd.android.package-archive`, 先 `clearPackagePreferredActivities` 清理竞争者); `addPersistentPreferredActivity` 需要 uid 1000, 1.0.0 不承诺, 列入 P8 (Dhizuku 的 `DevicePolicyManager` 路径或 Root 以 system 身份的 spike); 状态检测用 `resolveActivity(MATCH_DEFAULT_ONLY)` 比较组件 |
+| D23 | 锁定实现 | Shizuku / Root 路径调用 `IPackageManager.addPreferredActivity`, 对 `ACTION_VIEW` / `ACTION_INSTALL_PACKAGE` x `content` / `file` 共四个 APK MIME filter 逐一设置并解析确认; 六参数重载用 `removeExisting=true` 精确替换. API 24 / 28 的五参数重载不能精确替换 MIME 首选项, 仅清除本插件首选项; 若竞争者已有匹配默认项则返回 `DEFAULT_REQUIRES_CLEAR=-1`, 由 P5 引导先在系统设置清除. 不清除其它包的所有默认项. P0.2 实测 shell / root 调用 `addPersistentPreferredActivity` 均抛 `SecurityException`, 1.0.0 不承诺持久锁定, 仍列 P8 |
 | D24 | 卸载实现 | 特权: `IPackageInstaller.uninstall(VersionedPackage, callerPackage, flags, IntentSender, userId)`, 支持 `keepData` (`DELETE_KEEP_DATA`) 与 `user` (含 `all` -> `DELETE_ALL_USERS`); `none`: `ACTION_UNINSTALL_PACKAGE` + `EXTRA_RETURN_RESULT` 由插件 Activity 接管. 宿主既有 `app.uninstall` (`ACTION_DELETE`) 保持不变 |
 | D25 | 安装后删除 | `deleteSource` 由文件所有者执行: 脚本 API 的路径来源由宿主在收到 `COMPLETED` 后删除; 插件外部入口收到的 `content://` 用 `ContentResolver.delete` / `DocumentsContract.deleteDocument` 尽力删除, 失败只记录不报错 |
 | D26 | 插件 UI 形态 | 安装对话框为插件自有 Activity (对话框主题, `excludeFromRecents`, 独立 task), 三段: 确认 (图标, 名称, 包名, 版本 旧 -> 新, 大小, targetSdk, 签名匹配状态, 分包选择, 选项开关), 进度, 结果; 后台阶段用前台服务通知承载进度 |
@@ -228,6 +228,8 @@ runtime/api/augment/installer/          Installer.kt (AugmentableKey("installer"
 
 建议会话切分: P0 一次 (骨架 + spike); P1 两到三次 (共享 AAR 为一次; 契约 + 客户端 + 路由为一次; 删除旧安装器 + 调用方改造 + 文档为一次); P2 两到三次 (来源与授权; 安装引擎; 卸载 / 批量 / 路由); P3 一到两次; P4 两次 (install / session / errors; uninstall / inspect / authorizer / setDefault / 示例); P5 一到两次; P6 一到两次; P7 一次; P8 两次; P9 两到三次.
 
+当前进度 (2026-09-30): P0.1 / P0.2 已完成, 证据见 `docs/dev/p0-spike-evidence.md`. 下一阶段从 P1.1 共享解析 AAR 开始; 宿主契约, 安装入口, 脚本 API 与产品界面尚未交付.
+
 ---
 
 ## P0: 仓库骨架与特权安装 spike
@@ -249,12 +251,12 @@ runtime/api/augment/installer/          Installer.kt (AugmentableKey("installer"
 
 ### P0.2 特权安装 spike
 
-- [ ] (插件) 隐藏 API 存根 (`priv/hidden/`, 按 AOSP 接口签名自写, `compileOnly` 或 `implementation` 均可但不得进入发布 APK 的 `android.*` 命名空间冲突): `android.content.pm.IPackageInstaller`, `IPackageInstallerSession`, `IPackageManager` (`addPreferredActivity` 两种签名, `clearPackagePreferredActivities`, `getInstallSourceInfo`), `PackageInstallerHidden` (`SessionParams.installFlags`, `PackageInstaller.STATUS_*`), `PackageManagerHidden` (`INSTALL_*` 标志常量含 `INSTALL_BYPASS_LOW_TARGET_SDK_BLOCK`), `ParceledListSlice`, `IUserManager` / `UserInfo`; `HiddenApiBypass.addHiddenApiExemptions("")` 在特权进程与主进程各一次.
-- [ ] (插件) `IPrivilegedInstaller.aidl` 最小面: `createSession(Bundle params, String installerPackageName, int userId): int`, `openWrite(int sessionId, String name, long length): ParcelFileDescriptor`, `commit(int sessionId, IntentSender sender)`, `abandon(int sessionId)`, `uninstall(String packageName, int flags, int userId, IntentSender sender)`, `setDefaultInstaller(ComponentName component, boolean enable): int`, `getUsers(): Bundle`, `getUid(): int`; 实现 `PrivilegedInstallerImpl` 通过 `ServiceManager.getService("package")` + `ShizukuBinderWrapper` (Shizuku 路径) 或直接 Binder (root 路径) 取得 `IPackageInstaller`.
-- [ ] (插件) `ShizukuUserService` (`Shizuku.UserServiceArgs`, 进程后缀 `three-setup-installer-privileged`, `daemon(false)`, `version(BuildConfig.VERSION_CODE)`) 与 `RootInstallerService : com.topjohnwu.superuser.ipc.RootService` 返回同一 `PrivilegedInstallerImpl` Binder; 绑定 / 解绑 / 进程回收后重绑的确定行为.
-- [ ] (测试) 真机 spike: 用一个测试 APK (仓库 `app/src/androidTest/assets/` 内置的最小签名 APK, 两个版本用于降级与更新验证) 经 Shizuku 路径与 Root 路径各静默安装一次, 更新一次, 静默卸载一次; 记录设备, API, 授权方式, 各步耗时, `INSTALL_FAILED_*` 情况; 至少覆盖一台 API 33+ 真机与 AVD API 24 (Shizuku 用 ADB 模式启动).
-- [ ] (测试) `addPreferredActivity` spike: 在 shell (Shizuku ADB 模式) 与 root 身份下对本插件的临时 `ACTION_VIEW` 入口执行 D23 流程, 用 `resolveActivity(MATCH_DEFAULT_ONLY)` 断言命中; 记录 `addPersistentPreferredActivity` 在 shell / root 下的 `SecurityException` 事实; 覆盖 API 24 / 31 / 35 各一台.
-- [ ] (文档) 决策点: 两个 spike 全部通过则 D11 / D23 成立并关闭本节; Shizuku 或 Root 路径任一无法经隐藏 API 安装 (OEM 改动) 则启用附录 E.2 退路 (`pm install-create / install-write / install-commit` 命令路径) 并回填 D15; `addPreferredActivity` 在 shell 下不可用则 1.0.0 的锁定仅保留 root 路径并回填 D23. 证据写入 `docs/dev/p0-spike-evidence.md`.
+- [x] (插件) `priv/hidden/` 按 AOSP 签名自写适配器, 使用设备自带 `IPackageInstaller` / `IPackageInstallerSession` / `IPackageManager` / `ParceledListSlice` / `IUserManager` / `UserInfo`; 覆盖会话参数, 版本化卸载, 用户列表与两种 `addPreferredActivity` 签名; 安装标志集中在 `PrivilegedOptions`. 主进程绑定时与特权进程初始化时各一次 hidden API exemption, API < 28 不调用. 未使用的 `getInstallSourceInfo` 留 P2 inspect, 不提前加入死代码. (SOURCE / ANDROID_BUILD 2026-09-30: 无 `android.*` 存根进入 APK, 框架 Stub 决定 transaction 编号; debug / release 编译通过)
+- [x] (插件) 私有 `IPrivilegedInstaller.aidl` 八个操作及 `attachClient` 死亡令牌, Shizuku 保留 `destroy` transaction; `PrivilegedInstallerImpl` 统一会话创建 / 流式写入 / fsync / 提交 / 放弃 / 卸载 / 默认项 / 用户列表. 只接受所属插件 UID, Binder 调用进入系统前清除调用者身份, 会话 <= 4 / 分包 <= 64, 截断与超长写入失败, 取消关闭运行中与排队中的流. UserService 本身已有 shell / root 身份, 与 RootService 均直接取系统 Binder; `ShizukuBinderWrapper` 只在主进程诊断中使用. (JVM: `PrivilegedOptionsTest` 3 用例; DEVICE: 四组设备均通过非法输入, 截断与排队取消检查)
+- [x] (插件) `ShizukuUserService` 与 `RootInstallerService` 共用实现; UserService `daemon(false)`, 固定后缀, 版本戳; `PrivilegedServiceBinding` 主线程绑定 / 解绑, 非导出 Root 服务, Shizuku 保留退出 transaction 与 R8 构造入口. 重绑前通过 Binder death 确认旧进程结束, 避免旧连接断开回调误判新绑定. (DEVICE 2026-09-30: API 24 / 31 / 35 Shizuku, API 28 libsu Root 均通过解绑与重绑)
+- [x] (测试) 两个 8,536 字节签名夹具 APK, 附 Manifest 源码与重建脚本; 测试拒绝覆盖预先存在的同包应用, 结束后只清理本次夹具. (DEVICE 2026-09-30: AVD API 24 x86 / AVD API 31 x86_64 / Xiaomi 23046RP50C API 35 的 Shizuku ADB, Sony G8441 API 28 + Magisk 26.4 的 libsu Root 各通过新装 / 更新 / 拒绝降级 / 静默卸载; 耗时与 serial 见证据表; Sony XQ-AT72 API 31 额外通过安装链路)
+- [x] (测试) debug-only APK 入口与竞争 alias, 四种 action / scheme 的设置 / 解析 / 清理; 测试只在没有既有 APK 默认项的设备执行, 并覆盖插件内旧首选项的替换. (DEVICE 2026-09-30: API 24 / 31 / 35 shell 与 API 28 root 均命中 4/4; shell / root 持久首选项均 `SecurityException`; API 31 真机既有默认项完整保留, 用独立 AVD 补齐; 旧版 MIME 替换限制已回填 D23)
+- [x] (文档) 两个 spike 通过, D11 成立, D15 / D16 / D23 按实测修订; 无需启用 `pm` 退路, 普通默认项支持 shell 与 root, 不承诺持久锁定. (DOCS 2026-09-30: `docs/dev/p0-spike-evidence.md`, AGENTS, 第三方声明, 10 语言 README / 插件说明 / changelog 同步; 后续安装参数矩阵和生命周期压力仍在 P2 / P6)
 
 验收条件: `:app:assembleDebug` / `:app:testDebugUnitTest` / `:app:assembleDebugAndroidTest` / `:app:lintDebug` 通过; 宿主插件中心能发现并启用本插件 (INFO 往返); Shizuku 与 Root 静默安装 / 卸载各一次 (DEVICE); 默认安装器锁定 spike 至少一种身份通过; 证据写入本节与 `docs/dev/p0-spike-evidence.md`.
 
@@ -875,3 +877,16 @@ if (!installer.isDefault()) installer.setDefault(true);
 - 未做: 仓库骨架与 `git init` (P0.1), 任何宿主改动, 特权安装 spike (P0.2); 平台版本插件 1.8.3 的公共仓库可解析性与 libsu 当前稳定版本号未核实, 均留在 P0.1.
 - 待维护者: 附录 D 的 Q1 / Q4 / Q5 在 P1 前拍板, Q2 / Q3 在 P2 前拍板; 确认是否在 P0.1 后立即创建 GitHub 仓库 (Q8).
 - 下次会话建议起点: P0.1 全部条目 (骨架, `git init` 与初始提交) + P0.2 spike (隐藏 API 存根, `IPrivilegedInstaller`, Shizuku / Root 真机静默安装, `addPreferredActivity` 可行性); spike 通过后同一会话可开始 P1.1 共享解析 AAR.
+
+### 2026-09-30 (P0.1 已交付记录回填)
+
+- 之前的会话已完成 P0.1, 对应提交 `a5927f9`, `742e8be`, `4888af9`, `ea20a3b`, `e384d18`; 原会话记录未追加, 本次按已有源码与证据回填.
+- 基础验收: 14 JVM 用例, API 24 / 35 各 5 个 Binder 契约用例, debug 构建与 lint, 10 语言文档与 15 项图标检查. 详见证据文件 P0.1 节.
+
+### 2026-09-30 (P0.2 特权验证)
+
+- 完成: P0.2 六项, 私有 AIDL, Shizuku / libsu 共享实现, AOSP 签名适配, 流式写入与清理, 默认安装器验证, 可重建夹具, 显式指定设备的复测脚本.
+- 修正: FileBridge 不能当普通文件写入; reliable pipe 的 socket 在 API 28 Magisk 到 app 的 SELinux 传递中被拒绝; 快速解绑 / 重绑需要确认旧 Binder 死亡; 取消时须关闭排队任务的输出流; API 24 / 28 不支持 MIME `replacePreferredActivity`, 有竞争默认项时返回需先清除状态. 均记录在证据文件.
+- 验证: 17 JVM 用例, 四组设备各 3 个特权用例, API 31 真机额外安装链路; debug / androidTest / release 构建与 lint; 基础 Binder 契约回归; Markdown 与图标检查. API 31 真机的默认项用例跳过以保留用户偏好, 独立 API 31 AVD 已补齐.
+- 范围: 本节包含跨版本接口, 两种特权进程及真实设备验收, 本次集中闭合 P0.2; 未修改宿主, 未创建远端或推送. 宿主调用 / 脚本安装入口仍未开放.
+- 下次会话建议起点: P1.1 共享解析 AAR, 顺利时连做 P1.2 契约模块. Q1 / Q4 / Q5 保留为 P1 的维护者决策点; P2 / P5 消费 D23 的 `DEFAULT_REQUIRES_CLEAR` 状态, P6 补充大包 / OEM / 并发生命周期矩阵.

@@ -1,0 +1,6 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="io.github.supermonster003.autojs6.installer.spike.fixture"
+    android:versionCode="2" android:versionName="2.0">
+    <uses-sdk android:minSdkVersion="24" android:targetSdkVersion="28" />
+    <application android:label="3-Setup Spike Fixture" android:hasCode="false" android:allowBackup="false" />
+</manifest>

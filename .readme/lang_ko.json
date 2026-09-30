@@ -8,7 +8,7 @@
   "p_introduction_what": "3-Setup Installer는 AutoJs6의 패키지 설치 프로그램을 대신합니다: 파일 관리자, 플러그인 센터, 스크립트 패키징 화면의 설치 버튼, `.apk`, `.apks`, `.xapk`, `.apkm`, `.apkz` 파일의 외부 \"연결 프로그램\" 진입점, 그리고 앱을 설치, 업데이트, 검사, 제거하는 스크립트 측 전역 객체 `installer`입니다. 일반적인 시스템 확인 외에도 Shizuku 또는 Root를 통해 무음으로 설치하고 제거할 수 있습니다.",
   "p_introduction_how": "AutoJs6는 Binder 서비스를 통해 플러그인을 찾고 패키지 파일을 읽기 전용 파일 디스크립터로 전달합니다. 플러그인은 패키지를 분석하고 인증 방식을 선택하며 필요하면 자체 확인 및 진행률 대화 상자를 표시하고 단계, 진행률, 결과를 보고합니다. 특권 작업은 시스템 패키지 설치 프로그램과 직접 통신하는 Shizuku 사용자 서비스 또는 libsu Root 서비스에서 실행됩니다.",
   "h3_status": "현재 상태",
-  "p_status": "버전 {{ version_name }}은 P0 개발 미리보기입니다: 저장소 골격, AutoJs6 플러그인 센터가 인식하는 플러그인 신원, 특권 설치 검증 (spike). Binder 계약, 설치 엔진, 대화 상자, 스크립트 API, 설정 화면은 [ROADMAP.md]({{ roadmap_url }})의 단계에 따라 진행됩니다. AutoJs6 {{ required_host_version_name }} (build {{ required_host_version_code }}) 이상이 필요합니다.",
+  "p_status": "버전 {{ version_name }}은 P0 개발 미리보기입니다: 저장소 골격, AutoJs6 플러그인 센터가 인식하는 플러그인 신원, 특권 설치 검증 (spike). Binder 계약, 설치 엔진, 대화 상자, 스크립트 API, 설정 화면은 [ROADMAP.md]({{ roadmap_url }})의 단계에 따라 진행됩니다. AutoJs6 {{ required_host_version_name }} (build {{ required_host_version_code }}) 이상이 필요합니다. P0에서 Shizuku와 Root를 통한 자동 설치, 업데이트, 제거 및 일반 기본 설치 프로그램 설정을 검증했습니다. 호스트와 스크립트의 설치 진입점은 아직 제공되지 않으며, 영구 기본 설정은 이번 버전에서 지원하지 않습니다.",
   "h3_features": "기능",
   "p_features_intro": "플러그인은 다음 기능을 제공합니다",
   "features": [

@@ -8,7 +8,7 @@
   "p_introduction_what": "3-Setup Installer は AutoJs6 のパッケージインストーラーを引き継ぎます: ファイルマネージャー, プラグインセンター, スクリプトパッケージ化画面のインストールボタン, `.apk`, `.apks`, `.xapk`, `.apkm`, `.apkz` ファイルの外部 \"アプリで開く\" エントリ, そしてアプリのインストール, 更新, 検査, アンインストールを行うスクリプト側のグローバルオブジェクト `installer` です. 通常のシステム確認に加えて, Shizuku または Root によりサイレントにインストールとアンインストールを行えます.",
   "p_introduction_how": "AutoJs6 は Binder サービスを通じてプラグインを検出し, パッケージファイルを読み取り専用のファイルディスクリプタとして渡します. プラグインはパッケージを解析し, 認可方式を選択し, 必要に応じて独自の確認と進捗ダイアログを表示し, 段階, 進捗, 結果を報告します. 特権操作は Shizuku ユーザーサービスまたは libsu Root サービス内で実行され, システムのパッケージインストーラーと直接やり取りします.",
   "h3_status": "現在の状態",
-  "p_status": "バージョン {{ version_name }} は P0 開発プレビューです: リポジトリの骨組み, AutoJs6 プラグインセンターに認識されるプラグイン ID, 特権インストールの検証 (spike). Binder 契約, インストールエンジン, ダイアログ, スクリプト API, 設定画面は [ROADMAP.md]({{ roadmap_url }}) の段階に従って進みます. AutoJs6 {{ required_host_version_name }} (build {{ required_host_version_code }}) 以降が必要です.",
+  "p_status": "バージョン {{ version_name }} は P0 開発プレビューです: リポジトリの骨組み, AutoJs6 プラグインセンターに認識されるプラグイン ID, 特権インストールの検証 (spike). Binder 契約, インストールエンジン, ダイアログ, スクリプト API, 設定画面は [ROADMAP.md]({{ roadmap_url }}) の段階に従って進みます. AutoJs6 {{ required_host_version_name }} (build {{ required_host_version_code }}) 以降が必要です. P0 で Shizuku と Root によるサイレントインストール, 更新, アンインストール, 通常の既定インストーラー設定を検証しました. ホストとスクリプトからのインストールはまだ利用できず, 永続的な既定設定は本バージョンの対象外です.",
   "h3_features": "機能",
   "p_features_intro": "プラグインは以下の機能を提供します",
   "features": [

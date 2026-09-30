@@ -14,6 +14,9 @@
         "Идентичность плагина `three-setup-installer` (engine `installer`) с сервисом INFO, Wake Activity и каркасом сервиса `org.autojs.plugin.INSTALLER` для обнаружения хостом",
         "README, описание для центра плагинов и журнал изменений на 10 языках"
       ],
+      "improvement": [
+        "На этапе P0 проверены тихая установка, обновление, удаление и обычный выбор установщика по умолчанию через Shizuku и Root. Установка из хоста и скриптов пока недоступна; постоянные настройки по умолчанию не входят в эту версию."
+      ],
       "dependency": [
         "Добавлен Shizuku API 13.1.5 (`dev.rikka.shizuku:api`, `dev.rikka.shizuku:provider`) для способа авторизации Shizuku",
         "Добавлен libsu 6.0.0 (`com.github.topjohnwu.libsu:core`, `service`) для способа авторизации Root",
