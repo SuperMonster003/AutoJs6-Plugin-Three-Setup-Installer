@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="plugin_description">Устанавливает, обновляет и удаляет приложения Android, включая тихую установку через Shizuku или Root</string>
+</resources>

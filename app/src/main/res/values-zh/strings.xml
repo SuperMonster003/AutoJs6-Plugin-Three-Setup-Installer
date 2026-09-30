@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="plugin_description">安装, 更新和卸载 Android 应用, 支持通过 Shizuku 或 Root 静默安装</string>
+</resources>

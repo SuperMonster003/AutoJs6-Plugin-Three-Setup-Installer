@@ -1,0 +1,17 @@
+******
+
+### سجل الإصدارات
+
+******
+
+# v1.0.0
+
+###### 2026/09/30
+
+* `تلميح` معاينة التطوير للمرحلة P0: هيكل المستودع وهوية الإضافة التي يتعرف عليها مركز إضافات AutoJs6 والتحقق التجريبي (spike) من التثبيت بامتيازات. تتبع اتفاقية Binder ومحرك التثبيت ومربعات الحوار وواجهة البرامج النصية وصفحة الإعدادات مراحل ROADMAP.md.
+* `ميزة` هوية الإضافة `three-setup-installer` (engine `installer`) مع خدمة INFO و Wake Activity وهيكل خدمة `org.autojs.plugin.INSTALLER` لاكتشاف المضيف
+* `ميزة` README وتعليمات مركز الإضافات وسجل التغييرات بعشر لغات
+* `تبعية` إضافة Shizuku API 13.1.5 (`dev.rikka.shizuku:api` و `dev.rikka.shizuku:provider`) لطريقة تفويض Shizuku
+* `تبعية` إضافة libsu 6.0.0 (`com.github.topjohnwu.libsu:core` و `service`) لطريقة تفويض Root
+* `تبعية` إضافة AndroidHiddenApiBypass 6.1 لواجهات مثبت الحزم المخفية التي تستخدمها الخدمة ذات الامتيازات
+* `تبعية` إضافة `common-plugin-api.aar` (وحدة AutoJs6 `plugin-api/common-plugin-api`, بنية المضيف 6.8.0 / 5298, MPL 2.0) كاتفاقية إضافات مشتركة مع قفل التجزئة في `locks/host-api-aars.lock`

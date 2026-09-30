@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="plugin_description">Android 앱을 설치, 업데이트, 제거하며 Shizuku 또는 Root를 통한 무음 설치를 지원</string>
+</resources>

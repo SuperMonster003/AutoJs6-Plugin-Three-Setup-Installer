@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="plugin_description">Installe, met à jour et désinstalle des applications Android, avec installation silencieuse via Shizuku ou Root</string>
+</resources>

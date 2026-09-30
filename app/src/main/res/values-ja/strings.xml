@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="plugin_description">Android アプリのインストール, 更新, アンインストールを行い, Shizuku または Root によるサイレントインストールに対応</string>
+</resources>

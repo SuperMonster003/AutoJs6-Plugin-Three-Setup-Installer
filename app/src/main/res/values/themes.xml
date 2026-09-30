@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Material 3 base theme. Roadmap P3 / P5 add the dialog variants and the neutral palette of the
+         standalone settings specification; P0 only needs a valid application theme. -->
+    <style name="Theme.ThreeSetupInstaller" parent="Theme.Material3.DayNight.NoActionBar" />
+</resources>

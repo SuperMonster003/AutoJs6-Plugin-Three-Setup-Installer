@@ -1,0 +1,25 @@
+{
+  "changelog_label_hint": "Подсказка",
+  "changelog_label_feature": "Функция",
+  "changelog_label_fix": "Исправление",
+  "changelog_label_improvement": "Улучшение",
+  "changelog_label_dependency": "Зависимость",
+  "$data": {
+    "v1.0.0": {
+      "released_date": "2026/09/30",
+      "hint": [
+        "Предварительная сборка этапа P0: каркас репозитория, идентичность плагина, распознаваемая центром плагинов AutoJs6, и проверка привилегированной установки (spike). Контракт Binder, движок установки, диалоги, API скриптов и страница настроек следуют этапам ROADMAP.md."
+      ],
+      "feature": [
+        "Идентичность плагина `three-setup-installer` (engine `installer`) с сервисом INFO, Wake Activity и каркасом сервиса `org.autojs.plugin.INSTALLER` для обнаружения хостом",
+        "README, описание для центра плагинов и журнал изменений на 10 языках"
+      ],
+      "dependency": [
+        "Добавлен Shizuku API 13.1.5 (`dev.rikka.shizuku:api`, `dev.rikka.shizuku:provider`) для способа авторизации Shizuku",
+        "Добавлен libsu 6.0.0 (`com.github.topjohnwu.libsu:core`, `service`) для способа авторизации Root",
+        "Добавлен AndroidHiddenApiBypass 6.1 для доступа привилегированного сервиса к скрытым API установщика пакетов",
+        "Добавлен `common-plugin-api.aar` (модуль AutoJs6 `plugin-api/common-plugin-api`, сборка хоста 6.8.0 / 5298, MPL 2.0) как общий контракт плагинов с фиксацией хеша в `locks/host-api-aars.lock`"
+      ]
+    }
+  }
+}
