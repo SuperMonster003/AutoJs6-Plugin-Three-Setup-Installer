@@ -1,10 +1,10 @@
 3-Setup Installer 接管 AutoJs6 的安装器: 文件管理器, 插件中心与脚本打包页的安装按钮, `.apk`, `.apks`, `.xapk`, `.apkm` 与 `.apkz` 文件的外部 "打开方式" 入口, 以及脚本侧用于安装, 更新, 检查与卸载应用的全局对象 `installer`. 除常规的系统确认外, 还可通过 Shizuku 或 Root 静默安装与卸载.
 
-版本 1.0.0 为 P0 开发预览: 仓库骨架, 可被 AutoJs6 插件中心识别的插件身份, 以及特权安装 spike. Binder 契约, 安装引擎, 对话框, 脚本 API 与设置页按 [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md) 的阶段推进. 需要 AutoJs6 6.8.0 (build 5298) 或更高版本. P0 已验证 Shizuku 和 Root 静默安装, 更新, 卸载及普通默认安装器设置. 宿主与脚本安装入口尚未开放, 本版本仍不支持持久默认项.
+版本 1.0.0 为 P0 开发预览: 仓库骨架, 可被 AutoJs6 插件中心识别的插件身份, 以及特权安装 spike. Binder 契约, 安装引擎, 对话框, 脚本 API 与设置页按 [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md) 的阶段推进. 需要 AutoJs6 6.8.0 (build 5299) 或更高版本. P0 已验证 Shizuku 和 Root 静默安装, 更新, 卸载及普通默认安装器设置. 宿主与脚本安装入口尚未开放, 本版本仍不支持持久默认项.
 
 ### 使用方法
 
-1. 在安装了 AutoJs6 构建 5298 (6.8.0) 或更高版本的设备上, 从 [Releases](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/releases) 安装插件 APK.
+1. 在安装了 AutoJs6 构建 5299 (6.8.0) 或更高版本的设备上, 从 [Releases](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/releases) 安装插件 APK.
 2. 打开 AutoJs6 插件中心, 确认 `3-Setup Installer` 已被识别并启用它.
 3. 在 AutoJs6 文件管理器中点击安装包, 在任意文件管理器中用 3-Setup Installer 打开安装包, 或在脚本中调用 `installer.install(...)`. 需要静默安装时, 按插件提示启动 Shizuku 或授予 Root, 或在插件设置中选择授权方式.
 

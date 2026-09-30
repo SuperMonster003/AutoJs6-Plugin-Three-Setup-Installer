@@ -76,7 +76,7 @@
             </intent-filter>
             <meta-data
                 android:name="requiresHostVersion"
-                android:value="5298" />
+                android:value="5299" />
         </service>
 
         <!--
@@ -94,7 +94,7 @@
             </intent-filter>
             <meta-data
                 android:name="requiresHostVersion"
-                android:value="5298" />
+                android:value="5299" />
         </service>
 
         <!-- libsu instantiates this ContextWrapper in its root process, never as an Android Service. -->

@@ -5,6 +5,8 @@ import android.os.Build
 import android.os.Bundle
 import org.autojs.plugin.common.api.PluginCapabilityKeys
 import org.autojs.plugin.common.api.PluginInfo
+import org.autojs.plugin.installer.api.InstallerCapabilityKeys
+import org.autojs.plugin.installer.api.InstallerContract
 
 /** Collects the installed package version and the localized metadata of this plugin. */
 internal fun Context.threeSetupInstallerPluginRuntimeInfo(): ThreeSetupInstallerPluginRuntimeInfo {
@@ -48,9 +50,11 @@ internal fun ThreeSetupInstallerPluginRuntimeInfo.toPluginInfo(): PluginInfo {
 }
 
 /**
- * Capability negotiation bundle. P0 only reports the minimum host build; roadmap P1.2 adds the
- * installer contract version, the supported authorizers and the feature set.
+ * Capability negotiation bundle: the minimum host build and the installer contract version the
+ * plugin implements. The authorizer and feature arrays are declared together with the real
+ * Binder routing of roadmap P2.6, so the host never sees a capability the plugin cannot serve.
  */
 internal fun ThreeSetupInstallerPluginRuntimeInfo.capabilitiesBundle(): Bundle = Bundle().apply {
     putLong(PluginCapabilityKeys.REQUIRES_HOST_VERSION, requiresHostVersion)
+    putInt(InstallerCapabilityKeys.CONTRACT_VERSION, InstallerContract.CONTRACT_VERSION)
 }

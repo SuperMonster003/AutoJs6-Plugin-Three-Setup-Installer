@@ -52,7 +52,7 @@ AutoJs6 discovers the plugin through its Binder service and hands over package f
 
 ******
 
-Version 1.0.0 is the P0 development preview: the repository skeleton, the plugin identity recognized by the AutoJs6 plugin center, and the privileged-installation spike. The Binder contract, the installer engine, the dialogs, the script API and the settings page follow the phases of [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md). Requires AutoJs6 6.8.0 (build 5298) or later. P0 validation completed for silent installation, updates, uninstallation and ordinary default-installer selection with Shizuku and Root. Host and script installation entry points are not available yet; persistent defaults remain outside this release.
+Version 1.0.0 is the P0 development preview: the repository skeleton, the plugin identity recognized by the AutoJs6 plugin center, and the privileged-installation spike. The Binder contract, the installer engine, the dialogs, the script API and the settings page follow the phases of [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md). Requires AutoJs6 6.8.0 (build 5299) or later. P0 validation completed for silent installation, updates, uninstallation and ordinary default-installer selection with Shizuku and Root. Host and script installation entry points are not available yet; persistent defaults remain outside this release.
 
 ******
 
@@ -75,7 +75,7 @@ The plugin provides the following capabilities:
 
 ******
 
-1. Install the plugin APK from [Releases](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/releases) on a device with AutoJs6 build 5298 (6.8.0) or later.
+1. Install the plugin APK from [Releases](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/releases) on a device with AutoJs6 build 5299 (6.8.0) or later.
 2. Open the AutoJs6 plugin center, confirm that `3-Setup Installer` is recognized, and enable it.
 3. Tap a package file in the AutoJs6 file manager, open a package from any file manager with 3-Setup Installer, or call `installer.install(...)` from a script. For silent installation, start Shizuku or grant Root when the plugin asks, or choose the authorizer in the plugin settings.
 
@@ -170,7 +170,7 @@ service action: org.autojs.plugin.INSTALLER
 service category: installer
 info action: org.autojs.plugin.INFO
 aidl interface: org.autojs.plugin.installer.api.IInstallerPlugin
-minimum host build: 5298 (6.8.0)
+minimum host build: 5299 (6.8.0)
 ```
 
 `ThreeSetupInstallerPluginService` answers `org.autojs.plugin.INSTALLER` (category `installer`) and implements the host installer-api contract `org.autojs.plugin.installer.api.IInstallerPlugin` from roadmap P1 on. `ThreeSetupInstallerPluginInfoService` answers `org.autojs.plugin.INFO` with PluginInfo. `WakeActivity` lets the host activate the plugin.
@@ -199,10 +199,12 @@ _2026/09/30_
 - `Feature` Plugin identity `three-setup-installer` (engine `installer`) with the INFO service, the Wake Activity and the `org.autojs.plugin.INSTALLER` service skeleton for host discovery
 - `Feature` README, plugin-center instructions and changelog in 10 languages
 - `Improvement` P0 validation completed for silent installation, updates, uninstallation and ordinary default-installer selection with Shizuku and Root. Host and script installation entry points are not available yet; persistent defaults remain outside this release.
+- `Improvement` The plugin id, engine, service action / category, Binder descriptor and minimum host version now come from the host installer-api contract constants; the capabilities declare installer contract version 1 and the minimum host build is back-filled to 5299
 - `Dependency` Shizuku API 13.1.5 (`dev.rikka.shizuku:api`, `dev.rikka.shizuku:provider`) for the Shizuku authorizer
 - `Dependency` libsu 6.0.0 (`com.github.topjohnwu.libsu:core`, `service`) for the Root authorizer
 - `Dependency` AndroidHiddenApiBypass 6.1 for the hidden package installer APIs used by the privileged service
 - `Dependency` `common-plugin-api.aar` (AutoJs6 module `plugin-api/common-plugin-api`, host build 6.8.0 / 5298, MPL 2.0) as the shared plugin contract, hash-locked in `locks/host-api-aars.lock`
+- `Dependency` `package-archive-parser.aar` and `installer-api.aar` (AutoJs6 modules `plugin-api/package-archive-parser` and `plugin-api/installer-api`, host P1 build 6.8.0 / 5299, MPL 2.0), hash-locked in `locks/host-api-aars.lock` together with `common-plugin-api.aar`
 
 ##### For more release history
 

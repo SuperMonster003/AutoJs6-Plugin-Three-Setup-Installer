@@ -12,7 +12,9 @@
 * `ميزة` هوية الإضافة `three-setup-installer` (engine `installer`) مع خدمة INFO و Wake Activity وهيكل خدمة `org.autojs.plugin.INSTALLER` لاكتشاف المضيف
 * `ميزة` README وتعليمات مركز الإضافات وسجل التغييرات بعشر لغات
 * `تحسين` اكتمل تحقق P0 من التثبيت الصامت والتحديث وإلغاء التثبيت واختيار المثبت الافتراضي العادي عبر Shizuku وRoot. لم تتوفر بعد نقاط التثبيت من المضيف والبرامج النصية, ولا يشمل هذا الإصدار الإعدادات الافتراضية الدائمة.
+* `تحسين` أصبح معرّف الاضافة والمحرك و action / category الخاصة بالخدمة وواصف Binder والحد الأدنى لإصدار المضيف تأتي من ثوابت عقد installer-api في المضيف; تعلن القدرات الإصدار 1 من عقد المثبّت, وتم تحديث الحد الأدنى لبناء المضيف إلى 5299
 * `تبعية` إضافة Shizuku API 13.1.5 (`dev.rikka.shizuku:api` و `dev.rikka.shizuku:provider`) لطريقة تفويض Shizuku
 * `تبعية` إضافة libsu 6.0.0 (`com.github.topjohnwu.libsu:core` و `service`) لطريقة تفويض Root
 * `تبعية` إضافة AndroidHiddenApiBypass 6.1 لواجهات مثبت الحزم المخفية التي تستخدمها الخدمة ذات الامتيازات
 * `تبعية` إضافة `common-plugin-api.aar` (وحدة AutoJs6 `plugin-api/common-plugin-api`, بنية المضيف 6.8.0 / 5298, MPL 2.0) كاتفاقية إضافات مشتركة مع قفل التجزئة في `locks/host-api-aars.lock`
+* `تبعية` إضافة `package-archive-parser.aar` و `installer-api.aar` (وحدتا AutoJs6 `plugin-api/package-archive-parser` و `plugin-api/installer-api`, بنية المضيف P1 6.8.0 / 5299, MPL 2.0) مع قفل التجزئة في `locks/host-api-aars.lock` إلى جانب `common-plugin-api.aar`

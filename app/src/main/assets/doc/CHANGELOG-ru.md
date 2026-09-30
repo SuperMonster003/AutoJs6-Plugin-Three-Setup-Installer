@@ -12,7 +12,9 @@
 * `Функция` Идентичность плагина `three-setup-installer` (engine `installer`) с сервисом INFO, Wake Activity и каркасом сервиса `org.autojs.plugin.INSTALLER` для обнаружения хостом
 * `Функция` README, описание для центра плагинов и журнал изменений на 10 языках
 * `Улучшение` На этапе P0 проверены тихая установка, обновление, удаление и обычный выбор установщика по умолчанию через Shizuku и Root. Установка из хоста и скриптов пока недоступна; постоянные настройки по умолчанию не входят в эту версию.
+* `Улучшение` Идентификатор плагина, движок, action / category сервиса, дескриптор Binder и минимальная версия хоста теперь берутся из констант контракта installer-api хоста; возможности объявляют версию 1 контракта установщика, минимальная сборка хоста обновлена до 5299
 * `Зависимость` Добавлен Shizuku API 13.1.5 (`dev.rikka.shizuku:api`, `dev.rikka.shizuku:provider`) для способа авторизации Shizuku
 * `Зависимость` Добавлен libsu 6.0.0 (`com.github.topjohnwu.libsu:core`, `service`) для способа авторизации Root
 * `Зависимость` Добавлен AndroidHiddenApiBypass 6.1 для доступа привилегированного сервиса к скрытым API установщика пакетов
 * `Зависимость` Добавлен `common-plugin-api.aar` (модуль AutoJs6 `plugin-api/common-plugin-api`, сборка хоста 6.8.0 / 5298, MPL 2.0) как общий контракт плагинов с фиксацией хеша в `locks/host-api-aars.lock`
+* `Зависимость` Добавлены `package-archive-parser.aar` и `installer-api.aar` (модули AutoJs6 `plugin-api/package-archive-parser` и `plugin-api/installer-api`, сборка хоста P1 6.8.0 / 5299, MPL 2.0) с фиксацией хешей в `locks/host-api-aars.lock` вместе с `common-plugin-api.aar`

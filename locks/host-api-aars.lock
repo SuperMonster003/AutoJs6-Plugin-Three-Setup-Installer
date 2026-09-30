@@ -1,4 +1,9 @@
-# AutoJs6 6.8.0 / 5298 release API, host commit 86d9bfa26b, 2026-09-27 (module unchanged since 9c3ba2e520, 2026-09-15).
+# AutoJs6 6.8.0 host APIs, 2026-09-30: common-plugin-api release AAR from host commit 86d9bfa26b (module unchanged since 9c3ba2e520);
+# package-archive-parser.aar and installer-api.aar are the release builds of the host P1 line (installer contract V1, host build 5299).
 format=1
 common-plugin-api.file=common-plugin-api.aar
 common-plugin-api.sha256=ee7eb7879a53506c4cca5e2d19d3058e28df2168fb33351a52302a3b9e532e15
+package-archive-parser.file=package-archive-parser.aar
+package-archive-parser.sha256=d979659e6ea8c03a248ba841bf2b78b833697149e36fe1416ee52fc046ff2ab6
+installer-api.file=installer-api.aar
+installer-api.sha256=0e9996f86736e7ba312c625b5f7f5db78967be5c46f1c1399d75e60470ecb72f
