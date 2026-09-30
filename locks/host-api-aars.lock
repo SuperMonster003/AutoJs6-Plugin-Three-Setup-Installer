@@ -1,0 +1,4 @@
+# AutoJs6 6.8.0 / 5298 release API, host commit 86d9bfa26b, 2026-09-27 (module unchanged since 9c3ba2e520, 2026-09-15).
+format=1
+common-plugin-api.file=common-plugin-api.aar
+common-plugin-api.sha256=ee7eb7879a53506c4cca5e2d19d3058e28df2168fb33351a52302a3b9e532e15

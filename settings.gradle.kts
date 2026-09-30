@@ -1,0 +1,29 @@
+enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
+
+rootProject.name = "autojs6-plugin-three-setup-installer"
+
+pluginManagement {
+    providers.gradleProperty("autojs.buildPlugins.includeBuild").orNull?.let { includeBuild(it) }
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+        google()
+    }
+    plugins {
+        id("io.github.supermonster003.autojs6-platform-versions") version "1.8.3"
+        id("io.github.supermonster003.autojs6-native-alignment") version "1.8.3"
+        id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
+    }
+}
+
+plugins {
+    id("io.github.supermonster003.autojs6-platform-versions")
+    // @Hint by SuperMonster003 on Sep 14, 2025.
+    //  ! Enable JDK auto-resolution/download capability for build modules.
+    //  ! zh-CN: 让构建模块具备 JDK 自动解析/下载能力.
+    id("org.gradle.toolchains.foojay-resolver-convention")
+}
+
+includeBuild("build-logic")
+
+include(":app")
