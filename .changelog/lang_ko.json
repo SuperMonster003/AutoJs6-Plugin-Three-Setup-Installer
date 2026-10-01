@@ -14,6 +14,9 @@
         "플러그인 식별자 `three-setup-installer` (engine `installer`), INFO 서비스, Wake Activity 및 호스트 검색용 `org.autojs.plugin.INSTALLER` 서비스 골격",
         "10개 언어의 README, 플러그인 센터 안내 및 변경 기록"
       ],
+      "fix": [
+        "해당 시스템 번역이 없는 기기에서 취소 문구가 플러그인 언어를 따르지 않던 문제"
+      ],
       "improvement": [
         "플러그인 ID, engine, 서비스 action / category, Binder descriptor 및 최소 호스트 버전을 호스트 installer-api 계약 상수에서 가져오도록 변경; 기능 선언에 설치기 계약 버전 1을 추가하고 최소 호스트 빌드를 5299로 갱신",
         "임의 접근이 가능한 원본은 전체 캐시 복사를 생략하고, 스트림은 필요할 때 임시 저장합니다. ZIP 분할 패키지를 지원하며, AAB는 정보 확인만 허용하고 내용이 변경된 원본은 거부합니다.",

@@ -143,7 +143,7 @@ class InstallDialogActivity : HostAppearanceActivity() {
                 it.tag = "install_progress_bar"
             }
             dialog.content.addView(kit.text(getString(R.string.install_commit_notice), color = kit.palette.muted))
-            dialog.actions.addView(kit.textButton(getString(if (state.items.size > 1) R.string.install_cancel_all else android.R.string.cancel), TAG_CANCEL) { record?.cancel() }.apply {
+            dialog.actions.addView(kit.textButton(getString(if (state.items.size > 1) R.string.install_cancel_all else R.string.action_cancel), TAG_CANCEL) { record?.cancel() }.apply {
                 id = android.R.id.button2
             })
         }
@@ -250,7 +250,7 @@ class InstallDialogActivity : HostAppearanceActivity() {
         })
         dialog.content.addView(targetInput)
         dialog.content.addView(kit.text(getString(R.string.install_privileged_notice), color = kit.palette.muted))
-        dialog.actions.addView(kit.textButton(getString(if (state.items.size > 1) R.string.install_cancel_all else android.R.string.cancel), TAG_CANCEL) {
+        dialog.actions.addView(kit.textButton(getString(if (state.items.size > 1) R.string.install_cancel_all else R.string.action_cancel), TAG_CANCEL) {
             record?.cancel()
         }.apply { id = android.R.id.button2 })
         dialog.actions.addView(installButton)

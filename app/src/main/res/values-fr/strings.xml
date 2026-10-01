@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="action_cancel">Annuler</string>
     <string name="action_install">Installer</string>
     <string name="action_uninstall">Désinstaller</string>
     <string name="confirm_all_users">Tous les utilisateurs</string>

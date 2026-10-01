@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="action_cancel">取消</string>
     <string name="action_install">安裝</string>
     <string name="action_uninstall">解除安裝</string>
     <string name="confirm_all_users">所有使用者</string>

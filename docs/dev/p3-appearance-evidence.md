@@ -2,6 +2,8 @@
 
 Date: 2026-10-01.
 
+Screenshot review of the real Arabic/font-2/night/IME case also exposed an English Cancel label on HyperOS, whose framework did not provide the requested translation. Cancellation text in installation, privileged uninstallation and notifications now uses the plugin's own action_cancel resource in all 11 resource directories. The geometry fixture consumes that same resource; this avoids depending on which framework languages an OEM includes.
+
 The appearance support layer has passed the JVM and API 24 contract/view tests described below. A later follow-up also passed real-window and real-IME checks on API 35 and API 28, including private RTL/large-text/night configurations and landscape. The complete device and host-integration matrix remains open; these geometry fixtures do not establish a successful live host Provider read.
 
 ## Implementation

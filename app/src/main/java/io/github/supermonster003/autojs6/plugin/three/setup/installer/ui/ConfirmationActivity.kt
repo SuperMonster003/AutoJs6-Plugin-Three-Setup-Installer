@@ -83,7 +83,7 @@ class ConfirmationActivity : HostAppearanceActivity() {
             minHeight = kit.dp(72)
         })
         dialog.content.addView(kit.text(getString(R.string.uninstall_keep_data_explanation), color = kit.palette.muted))
-        dialog.actions.addView(kit.textButton(getString(android.R.string.cancel), TAG_CANCEL) {
+        dialog.actions.addView(kit.textButton(getString(R.string.action_cancel), TAG_CANCEL) {
             entry.answer(false)
             finish()
         }.apply { id = android.R.id.button2 })
