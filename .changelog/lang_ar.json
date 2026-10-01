@@ -6,7 +6,7 @@
   "changelog_label_dependency": "تبعية",
   "$data": {
     "v1.0.0": {
-      "released_date": "2026/10/01",
+      "released_date": "2026/10/02",
       "hint": [
         "يوثق 1.0.0 ميزات التثبيت وإدارة التطبيقات والبرامج النصية المنفذة أدناه. لم يكتمل بعد النشر الرسمي في GitHub Releases والإدراج في مركز الإضافات. يتطلب التكامل AutoJs6 >= 6.8.0 (5299), وتتطلب واجهة البرامج النصية `installer` البناء 5300 أو أحدث. تسجل تغطية الأجهزة والتحققات المتبقية في [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md)."
       ],

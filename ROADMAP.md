@@ -511,7 +511,7 @@ runtime/api/augment/installer/          Installer.kt (AugmentableKey("installer"
 
 ### P7.3 发布 gate
 
-- [x] (发布) 平台验收构建 (Temurin 参数) + `:app:testDebugUnitTest` + `:app:assembleDebugAndroidTest` + `:app:lintDebug` + `:app:appendDigestToReleasedFiles` (签名 APK, CRC32 文件名 `autojs6-plugin-three-setup-installer-v1.0.0-XXXXXXXX.apk`); `git diff --check`; `VERSION_BUILD == git rev-list --count HEAD`; 工作树干净. (RELEASE / JVM / DEVICE 2026-10-01: build 48平台检查通过, 268 JVM零失败/跳过, Debug/Release lint零错误, 签名R8包CRC32=8601e5e9, 1,902,783字节. API 24/35/37同包跨进程契约各2/2, 八台保留数据覆盖Release并核验. VERSION_BUILD与最终提交数48一致, 工作树干净; 仅本地gate, 不代表原P2/P6缺口或远端发布已完成. 见 docs/dev/p7-local-gate-evidence.md.)
+- [x] (发布) 平台验收构建 (Temurin 参数) + `:app:testDebugUnitTest` + `:app:assembleDebugAndroidTest` + `:app:lintDebug` + `:app:appendDigestToReleasedFiles` (签名 APK, CRC32 文件名 `autojs6-plugin-three-setup-installer-v1.0.0-XXXXXXXX.apk`); `git diff --check`; `VERSION_BUILD == git rev-list --count HEAD`; 工作树干净. (RELEASE / JVM / DEVICE 2026-10-01: build 48平台检查通过, 268 JVM零失败/跳过, Debug/Release lint零错误, 签名R8包CRC32=8601e5e9, 1,902,783字节. API 24/35/37同包跨进程契约各2/2, 八台保留数据覆盖Release并核验. VERSION_BUILD与最终提交数48一致, 工作树干净; 仅本地gate, 不代表原P2/P6缺口或远端发布已完成. 见 docs/dev/p7-local-gate-evidence.md.) (刷新 RELEASE / DEVICE 2026-10-02: build51全部本地检查通过, 268 JVM零失败/跳过, 签名APK CRC32=cf864c74, 当前4台保留数据交付, API24/31/33契约各2/2, Samsung/API36/16KiB独立首页通过. VERSION_BUILD与最终提交数51一致且工作树干净, 见 docs/dev/p7-matrix-complete-release-evidence.md.)
 - [ ] (发布) GitHub 仓库 `SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer` (功能性描述, 例如 `App installer plugin for AutoJs6 with Shizuku and Root silent installation`), 推送, tag `v1.0.0`, Release 附 APK 与 SHA-256.
 - [ ] (索引) `official-repositories.json` 插入仓库名 (字母序, 总数 45 -> 46, README 计数同步), `release-manifests/io.github.supermonster003.autojs6.plugin.three.setup.installer/<versionCode>.json` 准入清单, 本地运行生成器验证后提交推送 `main`, 确认 Actions 生成成功.
 - [ ] (宿主) 宿主提交 (`feat(installer): ...` 系列) 是否推送按维护者指示; 宿主 `PluginInstallWizardCatalog` 条目在索引可解析后生效.
@@ -1097,8 +1097,15 @@ if (!installer.isDefault()) installer.setDefault(true);
 
 ### 2026-10-02 (P6.3 授权后默认页与原矩阵收口)
 
-- 按维护者第4项许可, 测试新增仅QV710AF65F/API31/user0生效的approved模式, 精确绑定原四条VIEW/no-scheme/always=false记录. 原普通/第三方模式保护保持, 不进入旧InstallerX维护分支. 锁定前持久保存、清理前原记录完整比对、恢复后全量一致校验; 新增可清理项严格精确APK MIME且四种组合唯一, 防止通配MIME误判.
+- 按维护者第4项许可, 测试新增仅QV710AF65F/API31/user0生效的approved模式, 精确绑定原四条VIEW/no-scheme/always=false记录. 原普通/第三方模式保护保持, 不进入旧InstallerX维护分支. 锁定前持久保存, 清理前原记录完整比对, 恢复后全量一致校验; 新增可清理项严格精确APK MIME且四种组合唯一, 防止通配MIME误判.
 - XQ-AT72真默认页与实际系统Files直达确认后取消, 再解锁完整1/1, 21.674秒. 原四条插件最近使用/stopapp旧记录/全部其他默认和偏好保持; 精确token历史清理1/1后原8条历史完全一致, 自有来源已删除, 无安装. 未永久清除原记录.
 - 新6项守卫在API 24/31各6/6, 普通Root默认页在API24另1/1并恢复基线, 无失败/跳过. 268项JVM/Debug/androidTest及lint通过, 0错误/22警告. 审查发现的新增项MIME通配判断已收紧并有回归, 改动均为测试辅助.
 - 原P6.3设备表按既有证据与本次缺口验收收口, Redmi实际Files系统路由限制和无特权N/A保留, 不把限制写成成功. 原API37仍只按插件安装/运行范围, 其他未在线设备不冒充新包复验. 原条目已勾选, 详情见 docs/dev/p6-approved-default-completion-evidence.md.
 - 本次build50按P6.3测试/证据单独本地提交. 下一步刷新最终签名Release与本地gate, 远端发布仍受维护者仅本地提交指示限制.
+
+### 2026-10-02 (build 51 本地交付与后续发布边界)
+
+- 最终Temurin平台构建/268 JVM/Debug与签名R8 Release/独立Release测试APK/两种lint/原生库检查通过. 十语言发行日期同步当日并重新生成, 文档与图标校验通过. 初次ROADMAP顿号导致标点守卫失败, 修正后完整重跑零失败/跳过; 保留失败日志.
+- 当前四台在线设备保留数据覆盖Release51, 实际版本/摘要/UID/无Debug核验通过, 交付前后默认/许可/用户包集合/原系统session/server保持. API24/31/33真实跨UID/PID契约各2/2; Samsung无宿主不计该项, 但实际Release首页/16KiB运行已核验, 临时alias判定脚本问题修正并保留记录. 其他离线设备保持既有版本/证据, 不重启或关闭用户AVD.
+- APK autojs6-plugin-three-setup-installer-v1.0.0-cf864c74.apk, 1,902,783字节, SHA-256=547334493ecd76f9815167c2159e5730de5ac14cf310674d5cbd7dfa30ae29d0, v2签名通过. releases仅此包, 旧包摘要核验后归档于忽略目录. 详见 docs/dev/p7-matrix-complete-release-evidence.md.
+- 本轮build49-51三笔逻辑提交, VERSION_BUILD=51与可达提交数一致, 工作树干净; 本插件以外仓库未修改. 用户提供的四项条件已验收完成, 不再重复请求. 下一步为原P7.3远端发布/索引/宿主推送, 现有仅本地提交指示未解除, 因而本轮不推送或发布, 不跳过P7进入P8/P9.
