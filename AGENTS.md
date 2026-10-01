@@ -86,7 +86,7 @@ AutoJs6-Plugin-Three-Setup-Installer/
 |   |-- src/main/java/io/github/supermonster003/autojs6/plugin/three/setup/installer/
 |   |   |-- ThreeSetupInstallerPlugin.kt                 身份常量
 |   |   |-- ThreeSetupInstallerPluginInfoService.kt      IPluginInfoProvider
-|   |   |-- ThreeSetupInstallerPluginService.kt          org.autojs.plugin.INSTALLER (P0 占位 Binder, P1.2 起 IInstallerPlugin.Stub)
+|   |   |-- ThreeSetupInstallerPluginService.kt          org.autojs.plugin.INSTALLER (P2.6 起带宿主身份校验的 IInstallerPlugin.Stub)
 |   |   |-- ThreeSetupInstallerPluginInfo.kt / ThreeSetupInstallerPluginRuntimeInfo.kt
 |   |   |-- WakeActivity.kt
 |   |   `-- (路线图 4.2 节: binder/ source/ engine/ priv/ auth/ ui/ 随 P0.2 - P5 加入)
@@ -167,15 +167,16 @@ AutoJs6-Plugin-Three-Setup-Installer/
 - 全部输入按路线图 D31 上限校验: 批量 <= 32, 分包 <= 64, JSON <= 64 KiB, 安装者包名 <= 255, 并发会话 <= 4. 超限返回 `INVALID_ARGUMENT`, 不崩溃.
 - 文件只以 `ParcelFileDescriptor` (只读) 或 `content://` 传递, 不依赖绝对路径 (D16). PFD 归宿主所有, 插件在会话内 `dup` 后自持并在结束时关闭.
 - 已发布 AIDL 只在末尾追加方法, 由宿主 `InstallerAidlOrderTest` 冻结顺序.
-- 宿主进程死亡 (`linkToDeath`) 时取消会话并清理暂存; 会话对象未 `close` 时 10 分钟后回收.
+- 宿主进程死亡 (`linkToDeath`) 时取消会话并清理暂存; 会话终态对象未 `close` 时 10 分钟后由单个注册表任务回收, 不为每个已关闭对象保留独立定时器.
+- 可 seek 来源优先通过持有的描述符读取, 不改变宿主文件偏移; 管道或系统禁止 procfs 重开的来源才按需暂存. 安装准备与写入时校验内容摘要, 发现来源变化则拒绝提交; 来源仍须在准备与写入期间保持稳定.
 
 ## 9. 特权进程, 隐藏 API 与许可证边界 (CONDITIONAL, P0.2 起)
 
 - Shizuku `UserService` 与 libsu `RootService` 实现同一私有 AIDL `IPrivilegedInstaller`, 共用 `PrivilegedInstallerImpl`; 特权 Binder 只对本应用进程暴露, 不导出.
 - 隐藏 API 适配 (`priv/hidden/`) 按 AOSP 接口签名自写, 通过反射调用设备自带 Stub, 不复制框架实现, 不打包 `android.*` 存根; 在 `THIRD_PARTY_NOTICES.md` 注明 Apache-2.0 签名来源. `HiddenApiBypass` 只在 API 28+ 调用, 每进程一次.
-- 主路径为 Binder 隐藏 API (D15); `pm` 命令回退 (路线图附录 E.2) 只在 P0.2 决策点触发时启用, 参数白名单化.
+- 主路径为 Binder 隐藏 API (D15); `pm` 命令回退 (路线图附录 E.2) 只在 P0.2 决策点触发时启用, 参数白名单化. API 24 / 25 的用户运行状态使用 `IActivityManager`, API 26+ 使用 `IUserManager`; 反射异常必须转换为 Binder 支持的异常再跨进程返回.
 - 参考项目 InstallerX / InstallerX-Revived 为 GPL-3.0 (D29): 只参考架构, 行为与选项目录, MUST NOT 复制其源码, 资源, 字符串; 提交说明与文档只以 "参考" 表述.
-- 特权服务只持有正在执行的会话, 不持久化状态; 客户端 Binder 死亡与服务关闭时放弃会话, 关闭运行与排队写入的所有描述符. 操作之间不保持打开的 shell; 日志不记录安装包内容, 只记录格式, 大小, 耗时与错误码.
+- 特权服务只持有正在执行的会话, 不持久化状态; 客户端 Binder 死亡与服务关闭时放弃会话, 关闭运行与排队写入的所有描述符. 操作之间不保持打开的 shell; 授权探测与 RootService 启动统一管理 shell 生命周期. Shizuku 每次新绑定使用独立 tag, 避免已关闭服务的延迟死亡通知影响新连接. 日志不记录安装包内容, 只记录格式, 大小, 耗时与错误码.
 - 特权写入用普通 pipe 转交框架 `Session.openWrite` / `fsync`, 不直接写入隐藏接口的 FileBridge PFD, 不使用跨 Magisk / app 的 reliable pipe socket. 默认项只精确替换 APK filter; 不清除其它包的所有首选项, 旧 API 返回 `DEFAULT_REQUIRES_CLEAR` 时由后续 UI 引导处理.
 
 ## 10. 字符串资源
