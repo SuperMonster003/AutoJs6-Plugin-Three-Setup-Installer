@@ -235,7 +235,7 @@ runtime/api/augment/installer/          Installer.kt (AugmentableKey("installer"
 
 建议会话切分: P0 一次 (骨架 + spike); P1 两到三次 (共享 AAR 为一次; 契约 + 客户端 + 路由为一次; 删除旧安装器 + 调用方改造 + 文档为一次); P2 两到三次 (来源与授权; 安装引擎; 卸载 / 批量 / 路由); P3 一到两次; P4 两次 (install / session / errors; uninstall / inspect / authorizer / setDefault / 示例); P5 一到两次; P6 一到两次; P7 一次; P8 两次; P9 两到三次.
 
-当前进度 (2026-10-01): P0 已完成; P1 契约 / 解析 AAR / 宿主路由已交付, 三入口有/无插件的完整设备验收仍待完成. P2 核心来源 / 授权 / 安装 / 卸载 / 批量 / Binder 路由和 P3 安装界面 / 展示恢复 / 系统确认 / 通知已交付; 本轮补齐 P3.3 未知来源授权后成功安装, P3.2 已结合维护者浏览器/Files 的安装反馈和 build 35 的实际 Files XAPK 确认页复核补齐, APKM 与 MT APKS 成功证据另行记录. P4 脚本 API 及四套关联文档已完成. P5.0-P5.4 独立首页 / 历史 / 应用管理 / 设置 / 默认安装器 / 关于 / 启动器主要实现及基础设备验收已完成, P5.2 跨设备特权锁定矩阵仍未勾选; API 24 大字号 GPU 故障和系统多窗口的未测边界见 docs/dev/p5-standalone-evidence.md. 下一步按原条目收尾剩余验收并推进 P6, 不进入 P7 发布.
+当前进度 (2026-10-01): P0, P3, P4 与 P5 原有条目已完成当前范围验收; P1契约/解析AAR/宿主路由已交付, 宿主三入口完整有/无插件组合仍待完成. P2核心来源/授权/安装/卸载/批量/Binder已交付, 其余原矩阵边界继续保留. 本轮补齐P5.2的Shizuku API24/31/35及KernelSU Root API33真实默认页面/Files入口, 完成P6.2安全审查与设备守卫, P6.1空间/暂存/同包安装串行化子项. P6进程死亡, 完整OEM设备与性能/Release往返仍待继续; API24大字号图形故障与系统多窗口的独立显示边界见P5证据, 未用默认页测试替代. 下一步继续P6与P1剩余验收, 不进入P7发布.
 
 ---
 
@@ -449,7 +449,7 @@ runtime/api/augment/installer/          Installer.kt (AugmentableKey("installer"
 ### P5.2 默认安装器页
 
 - [x] (插件) `DefaultInstallerActivity` (从首页状态卡与设置页行进入, D35): 状态卡 (当前默认处理者组件名, 是否本插件, 检测方式 D23), "设为默认" / "取消默认" 按钮 (特权路径, 选择授权方式), 无特权时的引导 (打开系统应用详情 "默认打开" 并说明步骤), 结果与失败原因 (OEM 限制按事实展示, 不承诺); 从宿主 / 脚本 `setDefault` 复用同一 `DefaultInstallerLock`. (SOURCE / DEVICE 2026-10-01: 33f9341; 首页/设置/脚本复用同一 DefaultInstallerLock, 状态/特权确认/OEM 结果与无特权引导完成, 六页显示测试包含默认安装器页. 下项真实锁定矩阵仍未执行, 不以只读页面覆盖替代.)
-- [ ] (测试) 设备: Shizuku 与 Root 各锁定 / 解锁一次, 锁定后从系统文件管理器打开 `.apk` 直接进入插件; API 24 / 31 / 35 三台.
+- [x] (测试) 设备: Shizuku 与 Root 各锁定 / 解锁一次, 锁定后从系统文件管理器打开 `.apk` 直接进入插件; API 24 / 31 / 35 三台. (DEVICE 2026-10-01: Shizuku在API24/31/35, KernelSU Root在维护者新提供的XQ-DQ72 API33完成真实页面锁/解锁及系统DocumentsUI点击夹具直达插件确认. 四种公开解析, 全部其它默认项与偏好恢复均核验, 每台最终1/1无跳过通过; 独立Files证据与中间失败分开记录. Root经维护者授权后保留剩余两条InstallerX最近使用及原有通配历史, 未清MT或应用数据. 自有文件/取消历史已清理, AVD Shizuku恢复停止, 见 docs/dev/p5-default-installer-evidence.md.)
 
 ### P5.3 关于, 发行历史与更新检查
 
@@ -1006,3 +1006,13 @@ if (!installer.isDefault()) installer.setDefault(true);
 - build 35 已覆盖 QV710AF65F, 从真实 Files Downloads 页面分别打开 XAPK/APKM, 两者均可选择插件并进入正确包名/版本的确认页. 系统第二次把最近使用的插件提升到标题区域, 仍使用 Just once, 未设默认项. 代理在确认页取消并结束, 未重复安装用户应用; 三个用户应用版本保持, 活动 session/安装前台服务为零. build 34 的 base.apk 勾选修复也已交付并经实际截图复核.
 - 原 P3.2 测试条目据上述反馈与真实 Files 复核勾选, 不增加/拆分/丢弃路线图小节. 范围明确为维护者指定的 Files by Google, 不声称所有 OEM/AOSP 文件管理器完成验收. 新 opaque URI 测试在旧 APK 准确失败, 修复后 API 24 / 35 各 4/4, 无跳过; JVM 243 项, Debug/androidTest/签名 Release 与两种 lint 通过, 详见 docs/dev/p3-external-entry-evidence.md.
 - 插件 VERSION_BUILD=35, 对应一个本地修复提交, 工作区改动按本次外部入口意图收口; 宿主与其它插件未修改, 未推送远端. 下一步仍按 P5.2 默认安装器矩阵和 P6 原有条目推进.
+
+
+### 2026-10-01 (P5.2 默认安装器与 P6 安全/健壮性)
+
+- 补齐原 P5.2 默认页面验收: Shizuku API24/31/35和维护者新提供的KernelSU Root API33均完成页面锁/解锁, 系统DocumentsUI实际点击自建APK直达插件确认, 取消后原默认项与偏好恢复. 首次缺失full XML字段, API24旧Files目录URI与输入事件差异, Root首帧可见性等中间失败分别保留, 不将UI-only通过与Files失败拼接为成功.
+- 经维护者授权尝试清除Root设备的InstallerX APK打开记录后, 系统仍保留两条last-chosen. 严格核对固定审计与当前状态后, 使用限定该审计的显式保留例外完成Root测试, 原有通配last-chosen也逐项保留; 没有清MT/应用数据/域链接或恢复旧always=true. G8441原配置未动. 详见docs/dev/p5-default-installer-evidence.md.
+- P6.2: 只读请求之外校验provider实际FD模式, 拒绝可写句柄并释放, 正式服务八操作拒绝非宿主, 备份与实际合并导出组件审查. 安全四项在API24/35/33均通过. pm回退未启用, 条件项标N/A而非虚构命令测试. 本地提交7c4b814/build36.
+- P6.1第二生产项: 同包安装跨用户/授权串行且等待可取消/超时, 独立入口回收24小时非活动暂存并防symlink跟随, 本地和私有Binder空间错误保真, EPIPE诊断保留明确Binder死亡错误. Root33和Shizuku35实际v1/v2并发及等待取消各2/2, 最终空间注入API24/35各6/6. 历史2GiB真实流式证据保留, 不冒充本轮堆峰值测试. 本地提交a6f61b7/build37.
+- 收尾: 全量261 JVM, Debug/androidTest/签名Release和两种lint通过 (0错误, 22/23警告), 十语言生成与图标检查通过. 自建包/来源/五条外部取消历史均按归属清理, 四份默认项journal为restored; 临时启动的两台AVD Shizuku恢复停止, 模拟器保留运行. QV710AF65F与QV770340J7已覆盖build38 Release, 无spike入口, 原默认项保持.
+- 新增勾选原条目5项 (P5.2测试1, P6.1生产1, P6.2三项含1项N/A), 未增删或拆分路线图. 插件最终VERSION_BUILD=38与可达提交数对齐, 仅本地提交, 宿主/其它仓库本轮未改且未推送. 下一步继续P6进程死亡与完整设备/性能/Release往返, 以及P1宿主三入口遗留验收.
