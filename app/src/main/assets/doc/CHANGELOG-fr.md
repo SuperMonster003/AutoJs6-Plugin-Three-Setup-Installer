@@ -23,6 +23,7 @@
 * `Amélioration` L'installation en arrière-plan dispose d'un service de premier plan et de notifications de progression, annulation et résultats. Refuser les notifications ne bloque pas l'installation.
 * `Amélioration` Ajout de dialogues de confirmation, progression et résultats avec informations, sélection des composants APK, options, copie des erreurs et état par élément. Une perte du processus est signalée sans réinstallation automatique.
 * `Amélioration` La confirmation système gère les indications de permission des sources inconnues et les interruptions. La désinstallation privilégiée affiche les informations et le choix de conserver les données avant confirmation.
+* `Amélioration` Ouvrez ou partagez un ou plusieurs paquets, réessayez les sources externes encore accessibles et demandez leur suppression après succès. Un refus de suppression préserve la réussite de l'installation.
 * `Dépendance` Ajout de Shizuku API 13.1.5 (`dev.rikka.shizuku:api`, `dev.rikka.shizuku:provider`) pour le mode d'autorisation Shizuku
 * `Dépendance` Ajout de libsu 6.0.0 (`com.github.topjohnwu.libsu:core`, `service`) pour le mode d'autorisation Root
 * `Dépendance` Ajout de AndroidHiddenApiBypass 6.1 pour les API cachées de l'installateur de paquets utilisées par le service privilégié

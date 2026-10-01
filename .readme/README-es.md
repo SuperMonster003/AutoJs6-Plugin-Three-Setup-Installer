@@ -211,6 +211,7 @@ _2026/10/01_
 - `Mejora` La instalación en segundo plano incluye servicio en primer plano y avisos de progreso, cancelación y resultados. Denegar notificaciones no bloquea la instalación.
 - `Mejora` Añadidos diálogos de confirmación, progreso y resultados con información de la aplicación, selección de componentes APK, opciones, copia de errores y estados por elemento. Perder el proceso indica interrupción sin reinstalar automáticamente.
 - `Mejora` La confirmación del sistema incorpora orientación sobre fuentes desconocidas e interrupciones. La desinstalación con privilegios muestra información y la opción de conservar datos antes de confirmar.
+- `Mejora` Abre o comparte uno o varios paquetes, reintenta orígenes externos mientras haya acceso e intenta eliminarlos opcionalmente tras el éxito. El rechazo de la eliminación mantiene la instalación correcta.
 - `Dependencia` Se añade Shizuku API 13.1.5 (`dev.rikka.shizuku:api`, `dev.rikka.shizuku:provider`) para el modo de autorización Shizuku
 - `Dependencia` Se añade libsu 6.0.0 (`com.github.topjohnwu.libsu:core`, `service`) para el modo de autorización Root
 - `Dependencia` Se añade AndroidHiddenApiBypass 6.1 para las API ocultas del instalador de paquetes que usa el servicio privilegiado
