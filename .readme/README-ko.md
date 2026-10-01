@@ -52,7 +52,7 @@
 
 ******
 
-1.1.0은 아래 설치, 앱 관리 및 스크립트 기능을 구현합니다. 공식 GitHub Release 게시와 플러그인 센터 등록은 아직 완료되지 않았습니다. 호스트 연동에는 AutoJs6 >= 6.8.0 (5299), `installer` 스크립트 API에는 빌드 5300 이상이 필요합니다. 기기 검증 범위와 남은 검증 항목은 [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md)에 기록되어 있습니다. Dhizuku, 알림 설치 및 영구 기본 설치 프로그램의 스크립트 옵션에는 installer V2와 AutoJs6 6.8.0 빌드 5307 이상이 필요합니다. 기본 호스트 연동은 빌드 5299, V1 스크립트 메서드는 5300 이상을 계속 지원합니다.
+1.2.0은 아래 설치, 앱 관리 및 스크립트 기능을 구현합니다. 공식 GitHub Release 게시와 플러그인 센터 등록은 아직 완료되지 않았습니다. 호스트 연동에는 AutoJs6 >= 6.8.0 (5299), `installer` 스크립트 API에는 빌드 5300 이상이 필요합니다. 기기 검증 범위와 남은 검증 항목은 [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md)에 기록되어 있습니다. Dhizuku, 알림 설치 및 영구 기본 설치 프로그램의 스크립트 옵션에는 installer V2와 AutoJs6 6.8.0 빌드 5307 이상이 필요합니다. 기본 호스트 연동은 빌드 5299, V1 스크립트 메서드는 5300 이상을 계속 지원합니다.
 
 ******
 
@@ -60,7 +60,7 @@
 
 ******
 
-1.1.0에 구현된 기능:
+1.2.0에 구현된 기능:
 
 - 패키지 형식: `.apk`, `.apks`, `.xapk`, `.apkm`, `.apkz` 및 APK가 들어 있는 ZIP 아카이브. 분할 패키지는 기기에 맞게 선택되며 `.aab` 파일은 인식과 설명만 하고 설치하지 않습니다.
 - `none`은 Android 확인을 사용합니다. 새 설정의 `auto`는 사용 가능한 `shizuku -> root -> dhizuku -> none` 순서로 선택하며 순서와 사용 여부를 바꿀 수 있습니다. 저장된 기존 세 방식의 설정은 상대 순서와 사용 여부를 유지하고 Dhizuku를 `none` 앞에 비활성 상태로 추가합니다. 명시적으로 지정한 방식은 다른 방식으로 바뀌지 않습니다.
@@ -77,6 +77,8 @@
 - 설정에 권한 방식 순서와 사용 여부, 설치 옵션 및 알림 환경설정을 저장합니다. 홈/외부 설치의 기본값은 `dialog`이며 `auto`, `silent`, `notification`을 명시할 수 있습니다. 호스트 UI는 `dialog`를 사용하고 스크립트는 명시한 옵션과 기본 `auto`를 유지합니다. 변경은 확인 후 저장됩니다.
 - 설정에서 정보 페이지와 10개 언어로 제공되는 내장 버전 기록을 열 수 있습니다. 수동 업데이트 확인은 12시간 간격으로 플러그인의 GitHub Releases API를 사용하며 결과 캐시와 무시한 버전 관리를 지원합니다. 릴리스 페이지는 브라우저에서 열리고 업데이트가 자동 다운로드되거나 설치되지는 않습니다.
 - `dhizuku`: Android 8.0 (API 26)+, 활성 Dhizuku 기기/프로필 소유자 및 이 플러그인에 부여한 권한이 필요합니다. 현재 소유자 사용자에서만 작동하고 실제 소유자 패키지를 설치자로 기록합니다. shell/root용 다운그레이드, 테스트 패키지, 낮은 targetSdk 제한 우회, 다른 사용자, 임의 설치자 지정 및 제거 시 데이터 보존 옵션은 지원하지 않습니다. 플러그인은 소유자를 설정하지 않습니다.
+- 고급 설치 옵션: `grantAllRequestedPermissions`, `requestUpdateOwnership`, `dexopt` (`none`/`verify`/`speed-profile`/`speed`), `installReason`, `packageSource`. 지원하지 않는 플랫폼이나 권한 방식은 명시적으로 거부합니다. none은 수동 컴파일을 추가하지 않으며 Android의 기본 컴파일을 끄지 않습니다.
+- 성공 결과에는 읽어 온 `updateOwner` 및 `dexopt`가 포함될 수 있습니다. null은 Android가 현재 호출 주체에 owner를 반환하지 않았음을 뜻하며 가시성 제한일 수 있어 전체적으로 없다는 증거가 아닙니다. 읽기 실패 시 필드를 생략하고 notes에 기록합니다. DexOpt 상태는 accepted/failed/cancelled/timeout/unavailable/unknown입니다. accepted에는 시스템의 건너뛰기도 포함되며 실제 컴파일을 보장하지 않습니다. 추가 작업 실패는 확인된 설치 성공을 바꾸지 않습니다.
 
 ******
 
@@ -159,11 +161,21 @@ let installViaDhizuku = source => installer.install(source, {
 let setPersistentDefaultChosen = enabled => installer.setDefault(enabled, {
     authorizer: 'root', mode: 'persistent',
 });
+
+// 고급 예제: 호스트 V3, Root 및 해당 메타데이터용 API 33+ 필요. 함수를 호출하면 설치 시작
+let installAdvancedChosen = source => installer.installAsync(source, {
+    authorizer: 'root', interaction: 'dialog', deleteSource: false,
+    grantAllRequestedPermissions: false, requestUpdateOwnership: false,
+    dexopt: 'speed-profile', installReason: 'user', packageSource: 'local-file',
+}).then(result => console.log(result.ok, result.updateOwner, result.dexopt, result.notes))
+    .catch(error => console.error(error.code, error.systemMessage));
 ```
 
 원본에는 경로, `file://` 또는 읽을 수 있는 `content://` URI를 사용할 수 있습니다. 배열은 독립적인 일괄 항목이며 `{ splits: [...] }`는 한 앱을 설치합니다. `session(...)`은 생성 즉시 시작하고 반환된 객체는 `cancel()`과 `wait()`를 지원합니다. 동기 호출은 `InstallerError`를 발생시킬 수 있고 UI 스레드에서는 사용할 수 없습니다. `installer.status` 읽기, `installer.session(...)` 생성 및 `session.wait()` 호출도 이 제한을 따릅니다. UI 스레드에서는 Async 메서드를 사용하거나 스크립트 작업 스레드에서 동기 작업을 실행하세요. 세션 객체는 이를 만든 스크립트 스레드에서만 사용해야 합니다. Promise 거부를 처리하고 각 일괄 결과의 `ok`와 `error`를 확인하세요. 플러그인이 없거나 호환되지 않으면 `PLUGIN_UNAVAILABLE`을 보고합니다. `setDefault`는 기본값 해제를 포함하여 요청한 상태에 도달했는지 반환합니다. `app.uninstall`은 기존 시스템 제거 바로가기로 유지됩니다. 특권 옵션에는 `installer.uninstall`을 사용하세요. 전체 옵션과 이벤트는 [installer API 문서](https://docs.autojs6.com/#/installer)를 확인하세요.
 
 Dhizuku, 알림 설치 및 영구 기본 설치 프로그램의 스크립트 옵션에는 installer V2와 AutoJs6 6.8.0 빌드 5307 이상이 필요합니다. 기본 호스트 연동은 빌드 5299, V1 스크립트 메서드는 5300 이상을 계속 지원합니다.
+
+고급 스크립트 옵션에는 AutoJs6 빌드 5308+ 및 V3와 `advanced-install-options` 지원 확인이 필요합니다. 생략 시 기존 동작을 유지하며 명시적 `false`/`none`도 지원이 필요합니다. 로컬 구현은 공식 배포나 P9 전체 완료를 뜻하지 않습니다.
 
 ******
 
@@ -177,6 +189,7 @@ Dhizuku, 알림 설치 및 영구 기본 설치 프로그램의 스크립트 옵
 - 낮은 targetSdk 차단 우회는 Android 14 (API 34)부터 존재합니다. 더 오래된 시스템에서는 이 옵션이 무시되고 결과에 표시됩니다.
 - 기본 설치 프로그램 페이지는 일반 기본값과 영구 정책을 구분합니다. 일반 기본값은 Shizuku 또는 Root를 사용하며 ROM 제한이 적용됩니다. Dhizuku 영구 정책은 API 26-33을 지원하며 API 34+는 소유자 콜백을 검증할 수 없어 변경 전에 거부합니다. Root는 지원 기기의 사용자 0에서만 system UID 보조 프로세스를 사용합니다. 경쟁하는 영구 정책을 덮어쓰지 않습니다. `persistentConfigured`는 이전 설정 성공 기록이며 현재 시스템 정책의 증거가 아닙니다. 수동 상태 조회는 `preferred` 또는 `none`만 보고합니다.
 - `dhizuku`: Android 8.0 (API 26)+, 활성 Dhizuku 기기/프로필 소유자 및 이 플러그인에 부여한 권한이 필요합니다. 현재 소유자 사용자에서만 작동하고 실제 소유자 패키지를 설치자로 기록합니다. shell/root용 다운그레이드, 테스트 패키지, 낮은 targetSdk 제한 우회, 다른 사용자, 임의 설치자 지정 및 제거 시 데이터 보존 옵션은 지원하지 않습니다. 플러그인은 소유자를 설정하지 않습니다.
+- 권한 부여 요청과 none 이외의 DexOpt에는 Shizuku/Root가 필요하고 verify는 API 26+가 필요합니다. 설치 이유는 API 26+, 출처는 API 33+, 업데이트 소유권 요청은 API 34+가 필요합니다. 소유권은 최초 설치에서만 활성화되며 업데이트나 다른 사용자에게 이미 있는 패키지에서는 무시될 수 있습니다. false는 기존 owner를 해제하지 않습니다.
 
 ******
 
@@ -202,11 +215,12 @@ Dhizuku, 알림 설치 및 영구 기본 설치 프로그램의 스크립트 옵
 플러그인은 명확한 경계를 따릅니다:
 
 - Binder 진입점은 `org.autojs.permission.PLUGIN` 서명 권한으로 보호되어 AutoJs6만 접근할 수 있습니다. 외부 "연결 프로그램" 진입점은 패키지 파일만 받아들이며 스크립트를 실행하지 않습니다.
-- REQUEST_INSTALL_PACKAGES와 REQUEST_DELETE_PACKAGES는 Android 확인을 지원합니다. QUERY_ALL_PACKAGES는 설치된 앱 관리, 버전 및 서명 비교, 기본 설치 프로그램 감지에 사용됩니다.
+- REQUEST_INSTALL_PACKAGES와 REQUEST_DELETE_PACKAGES는 Android 확인을 지원합니다. QUERY_ALL_PACKAGES는 설치된 앱 관리, 버전 및 서명 비교, 기본 설치 프로그램 감지에 사용됩니다. 일반 권한 ENFORCE_UPDATE_OWNERSHIP은 명시적 업데이트 소유권 요청에 사용하며 owner 할당을 보장하지 않습니다.
 - FOREGROUND_SERVICE와 FOREGROUND_SERVICE_DATA_SYNC는 설치 및 임시 원본 접근을 지원하고 POST_NOTIFICATIONS는 알림에 사용됩니다. `notification`은 알림과 설치 채널이 켜져 있어야 합니다. 다른 모드는 알림 권한이 없어도 실행됩니다.
 - Shizuku, Root 및 Dhizuku는 요청한 작업에 사용됩니다. 플러그인은 기기/프로필 소유자를 설정하지 않습니다. 영구 규칙은 설정 또는 해제 요청으로만 변경되며 패키지를 업로드하지 않습니다.
 - 설치, 검사, 기록 및 앱 관리는 오프라인으로 동작합니다. INTERNET은 사용자가 수동으로 버전을 확인할 때만 12시간 간격으로 플러그인의 고정 GitHub Releases API에 접근하는 데 사용됩니다. 백그라운드 업데이트 확인이나 패키지 업로드는 수행하지 않습니다.
 - 패키지 원본은 읽기 전용으로 열립니다. 기록에는 제한된 앱 메타데이터와 결과만 저장되며 패키지 내용이나 원본 URI는 저장되지 않습니다. 오류의 경로는 가려집니다. 비공개 저장소는 백업에서 제외됩니다. 기록을 삭제해도 앱이나 원본은 삭제되지 않습니다.
+- 권한 옵션은 시스템이 부여할 수 있는 권한을 요청하며 Android 14의 USE_FULL_SCREEN_INTENT처럼 설치 관리자가 변경할 수 있는 app-op을 포함할 수 있습니다. 모든 선언 권한을 보장하거나 접근성, 오버레이, 임의의 서명 권한을 부여하지 않습니다. restricted/system-fixed/policy-fixed 제약을 유지하고 restricted 권한 allowlist 플래그를 추가하지 않습니다.
 
 공식 게시 후 플러그인은 공식 [Releases](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/releases) 페이지 또는 AutoJs6 플러그인 센터에서만 받으세요. 출처를 알 수 없는 패키지는 버전 번호가 같아 보여도 호스트 검증에 실패하거나 위험을 동반할 수 있습니다.
 
@@ -247,6 +261,18 @@ minimum host build: 5299 (6.8.0)
 ### 릴리스 기록
 
 ******
+
+#### v1.2.0
+
+_2026/10/02_
+
+- `기능` 고급 설치 옵션: `grantAllRequestedPermissions`, `requestUpdateOwnership`, `dexopt` (`none`/`verify`/`speed-profile`/`speed`), `installReason`, `packageSource`. 지원하지 않는 플랫폼이나 권한 방식은 명시적으로 거부합니다. none은 수동 컴파일을 추가하지 않으며 Android의 기본 컴파일을 끄지 않습니다.
+- `개선` 고급 스크립트 옵션에는 AutoJs6 빌드 5308+ 및 V3와 `advanced-install-options` 지원 확인이 필요합니다. 생략 시 기존 동작을 유지하며 명시적 `false`/`none`도 지원이 필요합니다. 로컬 구현은 공식 배포나 P9 전체 완료를 뜻하지 않습니다.
+- `개선` 성공 결과에는 읽어 온 `updateOwner` 및 `dexopt`가 포함될 수 있습니다. null은 Android가 현재 호출 주체에 owner를 반환하지 않았음을 뜻하며 가시성 제한일 수 있어 전체적으로 없다는 증거가 아닙니다. 읽기 실패 시 필드를 생략하고 notes에 기록합니다. DexOpt 상태는 accepted/failed/cancelled/timeout/unavailable/unknown입니다. accepted에는 시스템의 건너뛰기도 포함되며 실제 컴파일을 보장하지 않습니다. 추가 작업 실패는 확인된 설치 성공을 바꾸지 않습니다.
+- `개선` 권한 부여 요청과 none 이외의 DexOpt에는 Shizuku/Root가 필요하고 verify는 API 26+가 필요합니다. 설치 이유는 API 26+, 출처는 API 33+, 업데이트 소유권 요청은 API 34+가 필요합니다. 소유권은 최초 설치에서만 활성화되며 업데이트나 다른 사용자에게 이미 있는 패키지에서는 무시될 수 있습니다. false는 기존 owner를 해제하지 않습니다.
+- `개선` 권한 옵션은 시스템이 부여할 수 있는 권한을 요청하며 Android 14의 USE_FULL_SCREEN_INTENT처럼 설치 관리자가 변경할 수 있는 app-op을 포함할 수 있습니다. 모든 선언 권한을 보장하거나 접근성, 오버레이, 임의의 서명 권한을 부여하지 않습니다. restricted/system-fixed/policy-fixed 제약을 유지하고 restricted 권한 allowlist 플래그를 추가하지 않습니다.
+- `의존성` installer-api.aar를 계약 V3 (MPL 2.0)로 업그레이드하며 V1/V2와 11개 AIDL 트랜잭션 유지. 고급 스크립트 옵션은 호스트 빌드 5308+ 필요
+- `의존성` 공유 패키지 파서 (MPL 2.0)를 업그레이드하여 실제 매니페스트 루트와 sharedUserId를 검증하고 모호한 입력 거부
 
 #### v1.1.0
 

@@ -5,6 +5,22 @@
   "changelog_label_improvement": "تحسين",
   "changelog_label_dependency": "تبعية",
   "$data": {
+    "v1.2.0": {
+      "released_date": "2026/10/02",
+      "feature": [
+        "خيارات التثبيت المتقدمة: `grantAllRequestedPermissions`, `requestUpdateOwnership`, `dexopt` (`none`/`verify`/`speed-profile`/`speed`), `installReason` و `packageSource`. ترفض المنصة أو وسيلة التفويض غير المدعومة الطلب. لا يضيف none تجميعا يدويا ولا يعطل تجميع Android العادي."
+      ],
+      "improvement": [
+        "تتطلب الخيارات المتقدمة AutoJs6 build {{ v3_host_version_code }}+ والتفاوض على V3 مع `advanced-install-options`. يحافظ حذف الحقول على السلوك السابق ويتطلب `false`/`none` الصريح الدعم أيضا. لا يعني التنفيذ المحلي إصدارا رسميا أو اكتمال جميع بنود P9.",
+        "قد تتضمن النتائج الناجحة القيم المرصودة `updateOwner` و `dexopt`. تعني null أن Android لم يرجع owner لهوية المستدعي الحالية وربما بسبب قيود الرؤية, ولا تثبت غيابه على مستوى النظام. يحذف فشل القراءة الحقل ويضيف notes. حالات DexOpt هي accepted/failed/cancelled/timeout/unavailable/unknown. تشمل accepted تخطي النظام ولا تثبت حدوث التجميع. لا يغير فشل هذه الخطوة نجاح التثبيت المؤكد.",
+        "تتطلب طلبات منح الأذونات و DexOpt غير none صلاحية Shizuku/Root, ويتطلب verify مستوى API 26+. سبب التثبيت يتطلب API 26+, والمصدر API 33+, وطلب ملكية التحديث API 34+. تبدأ الملكية في التثبيت الأول فقط وقد يتجاهلها النظام عند التحديث أو وجود الحزمة لمستخدم آخر. لا يلغي false قيمة owner الحالية.",
+        "يطلب الخيار الأذونات التي يستطيع النظام منحها وقد يشمل app-op قابلا لتغيير المثبت مثل USE_FULL_SCREEN_INTENT في Android 14. لا يضمن كل الأذونات المعلنة ولا يمنح إمكانية الوصول أو التراكب أو أذونات توقيع عشوائية. تبقى قيود restricted/system-fixed/policy-fixed دون إضافة علامة allowlist."
+      ],
+      "dependency": [
+        "ترقية installer-api.aar إلى العقد V3 (MPL 2.0) مع إبقاء V1/V2 وجميع معاملات AIDL الإحدى عشرة; تتطلب الخيارات المتقدمة المضيف build 5308+",
+        "ترقية محلل الحزم المشترك (MPL 2.0) للتحقق من جذر البيان الحقيقي و sharedUserId ورفض المدخلات الملتبسة"
+      ]
+    },
     "v1.1.0": {
       "released_date": "2026/10/02",
       "feature": [

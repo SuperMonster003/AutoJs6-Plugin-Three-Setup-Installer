@@ -101,7 +101,7 @@ internal class InstallerBinder(context: Context, private val guard: CallerGuard 
         guard.enforceHost()
         withCallback(callback) { answer ->
             val json = InstallerBundles.request(request)
-            if (request?.getInt(InstallerContract.KEY_CONTRACT_VERSION) != 2) throw RequestDocuments.invalid("Persistent defaults require installer contract version 2")
+            if ((request?.getInt(InstallerContract.KEY_CONTRACT_VERSION) ?: 0) < 2) throw RequestDocuments.invalid("Persistent defaults require installer contract version 2 or later")
             val decoded = DefaultModeRequest.parse(json)
             queue.submit(answer) { _, check ->
                 check()
@@ -199,6 +199,7 @@ internal class InstallerBinder(context: Context, private val guard: CallerGuard 
                         callback.onProgress(id, progress, InstallerBundles.document(InstallerContract.KEY_DETAIL_JSON, detail))
                     }
                     override fun onItemResult(index: Int, result: com.google.gson.JsonObject) { record?.onItemResult(index, result) }
+                    override fun onInstalled(index: Int, result: com.google.gson.JsonObject) { record?.onInstalled(index, result) }
                     override fun onCompleted(result: com.google.gson.JsonObject) {
                         capacity.close()
                         record?.onCompleted(result)

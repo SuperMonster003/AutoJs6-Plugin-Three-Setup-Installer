@@ -127,11 +127,21 @@ let installViaDhizuku = source => installer.install(source, {
 let setPersistentDefaultChosen = enabled => installer.setDefault(enabled, {
     authorizer: 'root', mode: 'persistent',
 });
+
+// {{ example_v3 }}
+let installAdvancedChosen = source => installer.installAsync(source, {
+    authorizer: 'root', interaction: 'dialog', deleteSource: false,
+    grantAllRequestedPermissions: false, requestUpdateOwnership: false,
+    dexopt: 'speed-profile', installReason: 'user', packageSource: 'local-file',
+}).then(result => console.log(result.ok, result.updateOwner, result.dexopt, result.notes))
+    .catch(error => console.error(error.code, error.systemMessage));
 ```
 
 {{ p_quick_start_details }}
 
 {{ p_v2_requirements }}
+
+{{ p_v3_requirements }}
 
 ******
 

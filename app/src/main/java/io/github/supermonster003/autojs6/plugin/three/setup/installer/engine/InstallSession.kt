@@ -44,6 +44,7 @@ internal class InstallSession(
         fun onStage(stage: String, detail: JsonObject) = Unit
         fun onProgress(progress: Float, detail: JsonObject) = Unit
         fun onItemResult(index: Int, result: JsonObject) = Unit
+        fun onInstalled(index: Int, result: JsonObject) = Unit
         fun onCompleted(result: JsonObject)
         fun onFailed(failure: InstallFailure)
     }
@@ -151,6 +152,15 @@ internal class InstallSession(
                             notifyListener { listener.onProgress(progress, InstallDocuments.progressDetail(index, bytesWritten, totalBytes)) }
                         }
                         override fun onUserAction(intent: Intent) = environment.onUserAction(intent)
+                        override fun onInstalled(result: InstallEngine.Result) {
+                            if (!options.requestUpdateOwnership && options.dexopt == InstallerContract.DEXOPT_NONE) return
+                            // This is a durable fact, not a second item-completion callback. Keep
+                            // deletion and result notifications at the existing final boundary.
+                            val confirmed = InstallDocuments.installResult(result.packageName ?: current.packageName,
+                                current.versionName, current.versionCode, previous?.code, target.authorizer.id,
+                                result.interaction, (clock() - startedAt).coerceAtLeast(0), false, result.notes)
+                            listener.onInstalled(index, confirmed)
+                        }
                     },
                     ::checkActive,
                 )
@@ -170,7 +180,7 @@ internal class InstallSession(
                 }
                 val result = InstallDocuments.installResult(packageName, version?.name ?: prepared.versionName,
                     version?.code ?: prepared.versionCode, previous?.code, target.authorizer.id, installed.interaction,
-                    (clock() - startedAt).coerceAtLeast(0), cleanup.deleted, notes)
+                    (clock() - startedAt).coerceAtLeast(0), cleanup.deleted, notes, followUp = installed.followUp)
                 results += result
                 runCatching { listener.onItemResult(index, result.deepCopy()) }
             } catch (failure: Exception) {

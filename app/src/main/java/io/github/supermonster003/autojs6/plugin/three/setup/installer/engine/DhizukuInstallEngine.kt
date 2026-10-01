@@ -14,6 +14,9 @@ import java.io.OutputStream
 /** Streaming, verification, cancellation and status handling are shared with the other transports. */
 internal class DhizukuInstallEngine(context: Context) : SessionInstallEngine(Authorizer.DHIZUKU) {
     private val context = context.applicationContext
+    override fun afterInstallation(request: InstallEngine.Request, packageName: String,
+        deadlineMillis: Long, checkActive: () -> Unit): InstallFollowUp =
+        InstallFollowUp.readOwner(context, packageName, request.options.requestUpdateOwnership)
     override fun openSession(request: InstallEngine.Request, parameters: Parameters, deadlineMillis: Long): Session {
         check(android.os.Looper.myLooper() != android.os.Looper.getMainLooper()) { "Installation must run on a worker" }
         val framework = DhizukuFramework(context)
@@ -24,7 +27,7 @@ internal class DhizukuInstallEngine(context: Context) : SessionInstallEngine(Aut
             setSize(parameters.totalBytes)
             request.prepared.packageName?.let(::setAppPackageName)
             if (Build.VERSION.SDK_INT >= 31) setRequireUserAction(PackageInstaller.SessionParams.USER_ACTION_NOT_REQUIRED)
-            if (Build.VERSION.SDK_INT >= 33) setPackageSource(PackageInstaller.PACKAGE_SOURCE_LOCAL_FILE)
+            AdvancedSessionParameters.apply(this, request.options)
         }
         val lease = journal.create(framework, params, requireNotNull(request.prepared.packageName), parameters.totalBytes)
         val id = lease.record.id

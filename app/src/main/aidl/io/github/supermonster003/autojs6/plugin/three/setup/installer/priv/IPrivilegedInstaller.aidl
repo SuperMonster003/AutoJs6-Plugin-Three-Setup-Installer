@@ -31,4 +31,6 @@ interface IPrivilegedInstaller {
     Bundle getSessionRecoveryInfo(int sessionId) = 13;
     // A replacement process checks exact platform identity before abandoning this one session.
     void abandonRecoveredSession(int sessionId, in Bundle expected) = 14;
+    // Optional work after confirmed installation. Its failure cannot undo that installed fact.
+    Bundle postInstall(String packageName, int userId, String dexopt, boolean readUpdateOwner, long timeoutMillis) = 15;
 }

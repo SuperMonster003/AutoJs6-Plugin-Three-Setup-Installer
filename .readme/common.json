@@ -23,5 +23,6 @@
   "android_min_sdk": "24",
   "min_android_version": "7.0",
   "script_host_version_code": "5300",
-  "v2_host_version_code": "5307"
+  "v2_host_version_code": "5307",
+  "v3_host_version_code": "5308"
 }

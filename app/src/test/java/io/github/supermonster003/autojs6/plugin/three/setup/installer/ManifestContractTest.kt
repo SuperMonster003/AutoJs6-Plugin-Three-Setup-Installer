@@ -30,6 +30,7 @@ class ManifestContractTest {
                 PLUGIN_PERMISSION,
                 "android.permission.REQUEST_INSTALL_PACKAGES",
                 "android.permission.REQUEST_DELETE_PACKAGES",
+                "android.permission.ENFORCE_UPDATE_OWNERSHIP",
                 "android.permission.QUERY_ALL_PACKAGES",
                 "android.permission.FOREGROUND_SERVICE",
                 "android.permission.FOREGROUND_SERVICE_DATA_SYNC",

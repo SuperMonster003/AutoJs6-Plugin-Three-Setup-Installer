@@ -1,6 +1,8 @@
 3-Setup Installer installs, updates, inspects and uninstalls Android apps from its standalone home screen, AutoJs6 entries and scripts, or external package-opening and sharing requests. It supports Android confirmation and privileged operations through Shizuku, Root or Dhizuku.
 
-1.1.0 documents the implemented installation, app-management and script features below. The official GitHub Release and plugin-center listing are still pending. Host integration requires AutoJs6 >= 6.8.0 (5299), and the `installer` script API requires build 5300 or later. Device coverage and remaining acceptance work are recorded in [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md). Dhizuku, notification installation and persistent-default script options require AutoJs6 6.8.0 build 5307 or later with installer contract V2. Base host integration remains available from build 5299, and V1 script methods from build 5300.
+1.2.0 documents the implemented installation, app-management and script features below. The official GitHub Release and plugin-center listing are still pending. Host integration requires AutoJs6 >= 6.8.0 (5299), and the `installer` script API requires build 5300 or later. Device coverage and remaining acceptance work are recorded in [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md). Dhizuku, notification installation and persistent-default script options require AutoJs6 6.8.0 build 5307 or later with installer contract V2. Base host integration remains available from build 5299, and V1 script methods from build 5300.
+
+Advanced script options require AutoJs6 build 5308+ and negotiated V3 with `advanced-install-options`. Omitted fields preserve existing behavior; explicit `false`/`none` still requires support. These local changes do not announce an official release or completion of every P9 item.
 
 ### Usage
 
@@ -25,6 +27,7 @@
 - The bypass of the low target SDK block exists from Android 14 (API 34); on older systems the option is ignored and noted in the result.
 - The default-installer page distinguishes ordinary preferences and persistent policy. Ordinary preferences use Shizuku or Root and remain subject to ROM restrictions. Persistent policy is available through Dhizuku on API 26-33; API 34+ is rejected before mutation because the owner callback cannot be verified. Root uses a system-UID helper only in user 0 on supported devices. Competing persistent policies are not overwritten. `persistentConfigured` is a receipt of a previous successful configuration, not proof of the current system policy; passive observation reports only `preferred` or `none`.
 - `dhizuku`: requires Android 8.0 (API 26)+, an active Dhizuku device/profile owner and permission granted to this plugin. It operates in the current owner user, and installation attribution uses the real owner package. It does not grant shell/root downgrade, test-package, low-targetSdk bypass, other-user, arbitrary installer attribution or keep-data uninstall options. The plugin does not provision an owner.
+- Permission-grant requests and non-none DexOpt require Shizuku/Root; verify needs API 26+. Install reason needs API 26+, package source API 33+, and requesting update ownership API 34+. Ownership can start only on initial installation; updates or an existing package in another user may be ignored. False does not revoke an existing owner.
 
 ### FAQ
 
@@ -40,10 +43,11 @@
 ### Permissions and Security
 
 - The Binder entry points are protected by the `org.autojs.permission.PLUGIN` signature permission, so only AutoJs6 can reach them; the external "Open with" entry only accepts package files and never runs a script.
-- REQUEST_INSTALL_PACKAGES and REQUEST_DELETE_PACKAGES support Android confirmation. QUERY_ALL_PACKAGES supports installed-app management, installed-version and signature comparisons, and default-installer detection.
+- REQUEST_INSTALL_PACKAGES and REQUEST_DELETE_PACKAGES support Android confirmation. QUERY_ALL_PACKAGES supports installed-app management, installed-version and signature comparisons, and default-installer detection. The normal permission ENFORCE_UPDATE_OWNERSHIP supports an explicit ownership request; it does not guarantee an owner is assigned.
 - FOREGROUND_SERVICE and FOREGROUND_SERVICE_DATA_SYNC support installation work and temporary source access; POST_NOTIFICATIONS permits notifications. `notification` interaction requires notifications and its channel to be enabled. Other interaction modes tolerate missing notification permission.
 - Shizuku, Root and Dhizuku are used for requested operations. The plugin does not provision a device/profile owner. Persistent default rules are changed only through the requested set/clear operation; source packages are never uploaded.
 - Installation, inspection, history and app management work offline. INTERNET is used only when you manually check releases at the plugin's fixed GitHub Releases API, with a 12-hour interval. No background update checks or package uploads are performed.
 - Package sources are opened read-only. History stores bounded app metadata and outcomes, not package contents or source URIs; error paths are redacted. Private plugin storage is excluded from backups. Deleting a history record does not uninstall its app or remove its source.
+- The grant option requests permissions the system can grant, including supported installer-changeable app-ops such as USE_FULL_SCREEN_INTENT on Android 14. It does not guarantee every declared permission or grant accessibility, overlays or arbitrary signature permissions. Restricted/system-fixed/policy-fixed constraints remain, without an extra restricted-permission allowlist flag.
 
 See the [project README](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer) and [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md) for the installation guide and the current progress.

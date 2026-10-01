@@ -11,7 +11,8 @@ internal object DhizukuPolicy {
     }
     fun install(options: InstallOptions, currentId: Int, ownerPackage: String) {
         user(options.user, currentId)
-        if (options.allowDowngrade || options.allowTestOnly || options.bypassLowTargetSdk) {
+        if (options.allowDowngrade || options.allowTestOnly || options.bypassLowTargetSdk || options.grantAllRequestedPermissions ||
+            options.dexopt != InstallerContract.DEXOPT_NONE) {
             throw RequestDocuments.invalid("Dhizuku does not grant shell/root installation flags; use Shizuku or Root for these options")
         }
         if (options.installer != null && options.installer != ownerPackage) {

@@ -107,7 +107,10 @@ internal class FixturePackageOwnership(private val packages: Set<String>) : Clos
     private val users: List<String>
     private var started = false
     init {
-        require(packages.isNotEmpty() && packages.all { it == FixtureInstallUi.PACKAGE_NAME })
+        val fixedPackages = setOf(FixtureInstallUi.PACKAGE_NAME,
+            "io.github.supermonster003.autojs6.installer.advanced.fixture",
+            "io.github.supermonster003.autojs6.installer.advanced.shared.fixture")
+        require(packages.isNotEmpty() && packages.all { it in fixedPackages })
         users = Regex("UserInfo\\{(\\d+):").findAll(shell("pm list users")).map { it.groupValues[1] }.toList()
         check(users.isNotEmpty()) { "Cannot enumerate users for fixture ownership" }
         check(users.none { user -> listed(user).any { it in packages } }) { "A fixture or retained fixture data already exists; refusing to modify it" }

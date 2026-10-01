@@ -5,9 +5,11 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.content.pm.PackageInfo
+import android.content.pm.InstallSourceInfo
 import android.content.pm.ResolveInfo
 import android.net.Uri
 import android.os.IBinder
+import android.os.Build
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.priv.hidden.HiddenApiAccess.booleanType
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.priv.hidden.HiddenApiAccess.intType
 
@@ -27,8 +29,14 @@ internal class PackageManagerHidden(wrap: (IBinder) -> IBinder = { it }) {
     fun packageUid(name: String, user: Int): Int = call("getPackageUid",
         arrayOf(String::class.java, HiddenApiAccess.flagsType, intType), name, HiddenApiAccess.flags(0), user) as Int
 
-    fun packageInfo(name: String, user: Int): PackageInfo? = call("getPackageInfo",
-        arrayOf(String::class.java, HiddenApiAccess.flagsType, intType), name, HiddenApiAccess.flags(0), user) as PackageInfo?
+    fun packageInfo(name: String, user: Int, flags: Int = 0): PackageInfo? = call("getPackageInfo",
+        arrayOf(String::class.java, HiddenApiAccess.flagsType, intType), name, HiddenApiAccess.flags(flags), user) as PackageInfo?
+
+    fun updateOwner(name: String, user: Int): String? {
+        if (Build.VERSION.SDK_INT < 34) throw IllegalStateException("Update owner metadata is unavailable before Android 14")
+        val source = call("getInstallSourceInfo", arrayOf(String::class.java, intType), name, user) as InstallSourceInfo?
+        return requireNotNull(source) { "Installed package source is unavailable" }.updateOwnerPackageName
+    }
 
     fun query(intent: Intent, user: Int): List<ResolveInfo> {
         val slice = call("queryIntentActivities", arrayOf(Intent::class.java, String::class.java, HiddenApiAccess.flagsType, intType),

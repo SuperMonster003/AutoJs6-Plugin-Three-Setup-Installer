@@ -142,7 +142,8 @@ class InstallDialogActivity : HostAppearanceActivity() {
                 })
                 it.tag = "install_progress_bar"
             }
-            dialog.content.addView(kit.text(getString(R.string.install_commit_notice), color = kit.palette.muted))
+            dialog.content.addView(kit.text(getString(if (state.stage == InstallerContract.STAGE_OPTIMIZING)
+                R.string.install_optimizing_note else R.string.install_commit_notice), color = kit.palette.muted))
             dialog.actions.addView(kit.textButton(getString(if (state.items.size > 1) R.string.install_cancel_all else R.string.action_cancel), TAG_CANCEL) { record?.cancel() }.apply {
                 id = android.R.id.button2
             })
@@ -183,7 +184,8 @@ class InstallDialogActivity : HostAppearanceActivity() {
         ), initial.authorizer, "install_authorizer") { authorizer ->
             val old = choices.snapshot().options
             choices.updateOptions(if (authorizer in listOf(InstallerContract.AUTHORIZER_NONE, InstallerContract.AUTHORIZER_DHIZUKU)) old.copy(authorizer = authorizer,
-                allowDowngrade = false, allowTestOnly = false, bypassLowTargetSdk = false, installer = null, user = InstallerContract.USER_CURRENT)
+                allowDowngrade = false, allowTestOnly = false, bypassLowTargetSdk = false, installer = null, user = InstallerContract.USER_CURRENT,
+                grantAllRequestedPermissions = false, dexopt = InstallerContract.DEXOPT_NONE)
                 else old.copy(authorizer = authorizer))
             if (authorizer in listOf(InstallerContract.AUTHORIZER_NONE, InstallerContract.AUTHORIZER_DHIZUKU)) choices.setUser(InstallerContract.USER_CURRENT)
             redraw()
@@ -201,6 +203,22 @@ class InstallDialogActivity : HostAppearanceActivity() {
         dialog.content.addView(kit.switch(getString(R.string.install_delete_source), state.canDeleteSource && initial.deleteSource, "install_delete_source") {
             choices.updateOptions(choices.snapshot().options.copy(deleteSource = it))
         }.apply { isEnabled = state.canDeleteSource })
+        dialog.content.addView(kit.switch(getString(R.string.advanced_grant_permissions), initial.grantAllRequestedPermissions, "install_grant_permissions") {
+            choices.updateOptions(choices.snapshot().options.copy(grantAllRequestedPermissions = it))
+        }.apply { isEnabled = privileged })
+        dialog.content.addView(kit.switch(getString(R.string.advanced_update_ownership), initial.requestUpdateOwnership, "install_update_ownership") {
+            choices.updateOptions(choices.snapshot().options.copy(requestUpdateOwnership = it))
+        })
+        advancedChoice(dialog.content, R.string.advanced_dexopt, AdvancedInstallUi.dexopt, initial.dexopt, "install_dexopt", privileged) {
+            choices.updateOptions(choices.snapshot().options.copy(dexopt = it ?: InstallerContract.DEXOPT_NONE))
+        }
+        advancedChoice(dialog.content, R.string.advanced_install_reason, AdvancedInstallUi.reasons, initial.installReason, "install_install_reason") {
+            choices.updateOptions(choices.snapshot().options.copy(installReason = it))
+        }
+        advancedChoice(dialog.content, R.string.advanced_package_source, AdvancedInstallUi.sources, initial.packageSource, "install_package_source") {
+            choices.updateOptions(choices.snapshot().options.copy(packageSource = it))
+        }
+        dialog.content.addView(kit.text(getString(R.string.advanced_sdk_note), 14f, kit.palette.muted))
         if (!state.canDeleteSource) dialog.content.addView(kit.text(getString(R.string.install_source_owned_by_sender), color = kit.palette.muted))
         initial.installer?.let { dialog.content.addView(kit.text(getString(R.string.confirm_installer, it), color = kit.palette.muted)) }
         val installButton = kit.textButton(getString(R.string.action_install), TAG_CONFIRM) { record?.accept() }.apply {
@@ -295,6 +313,20 @@ class InstallDialogActivity : HostAppearanceActivity() {
         content.addView(kit.text(getString(R.string.install_metadata_user, data.installedUserId), color = kit.palette.muted))
     }
 
+    private fun advancedChoice(content: LinearLayout, title: Int, options: List<Pair<String?, Int>>, current: String?,
+        tag: String, enabled: Boolean = true, changed: (String?) -> Unit) {
+        val selected = options.indexOfFirst { it.first == current }.coerceAtLeast(0)
+        content.addView(kit.textButton(getString(title) + ": " + getString(options[selected].second), tag) {
+            information?.dismiss()
+            var draft = selected
+            information = MaterialAlertDialogBuilder(this).setTitle(title)
+                .setSingleChoiceItems(options.map { getString(it.second) }.toTypedArray(), selected) { _, index -> draft = index }
+                .setNegativeButton(R.string.action_cancel, null)
+                .setPositiveButton(R.string.settings_confirm) { _, _ -> changed(options[draft].first); redraw() }
+                .setBackground(kit.roundedFill(kit.palette.surface, 24)).create().also { it.show() }
+        }.apply { isEnabled = enabled })
+    }
+
     private fun batch(content: LinearLayout, state: InstallPresentation.Snapshot) {
         section(content, R.string.install_batch)
         state.items.forEachIndexed { index, item ->
@@ -353,6 +385,11 @@ class InstallDialogActivity : HostAppearanceActivity() {
 
     private fun sourceDeletionNotice(content: LinearLayout, state: InstallPresentation.Snapshot, item: InstallPresentation.Item) {
         val result = item.result
+        if (item.followUpPending) {
+            if (state.recovered || state.terminal) content.addView(kit.text(getString(R.string.advanced_follow_up_unknown), color = kit.palette.muted))
+            return
+        }
+        InstallFollowUpUi.summary(this, result).forEach { content.addView(kit.text(it, color = kit.palette.muted).apply { tag = "install_follow_up" }) }
         if (state.canDeleteSource && item.options?.deleteSource == true && result?.get(InstallerContract.FIELD_OK)?.asBoolean == true &&
             result.get(InstallerContract.FIELD_SOURCE_DELETED)?.asBoolean != true) {
             content.addView(kit.text(getString(R.string.install_source_not_deleted), color = kit.palette.muted).apply { tag = TAG_SOURCE_NOT_DELETED })
@@ -452,6 +489,7 @@ class InstallDialogActivity : HostAppearanceActivity() {
         InstallerContract.STAGE_CONFIRMING -> R.string.install_waiting_system
         InstallerContract.STAGE_WRITING -> R.string.install_writing
         InstallerContract.STAGE_COMMITTING -> R.string.install_committing
+        InstallerContract.STAGE_OPTIMIZING -> R.string.install_optimizing
         InstallerContract.STAGE_COMPLETED -> R.string.install_success
         InstallerContract.STAGE_FAILED -> R.string.install_failed
         InstallerContract.STAGE_CANCELLED -> R.string.install_cancelled

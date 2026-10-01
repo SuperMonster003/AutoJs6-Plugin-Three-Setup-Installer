@@ -114,6 +114,11 @@ internal data class InstallOptions(
     val deleteSource: Boolean = false,
     val continueOnError: Boolean = true,
     val timeoutMillis: Long = InstallerContract.DEFAULT_SESSION_TIMEOUT_MILLIS,
+    val grantAllRequestedPermissions: Boolean = false,
+    val requestUpdateOwnership: Boolean = false,
+    val dexopt: String = InstallerContract.DEXOPT_NONE,
+    val installReason: String? = null,
+    val packageSource: String? = null,
 ) {
     /** Names of the options that only a privileged authorizer can honour (protocol "Operations"). */
     val privilegedOptions: List<String>
@@ -123,6 +128,8 @@ internal data class InstallOptions(
             if (bypassLowTargetSdk) add(InstallerContract.FIELD_BYPASS_LOW_TARGET_SDK)
             if (installer != null) add(InstallerContract.FIELD_INSTALLER)
             if (user != InstallerContract.USER_CURRENT) add(InstallerContract.FIELD_USER)
+            if (grantAllRequestedPermissions) add(InstallerContract.FIELD_GRANT_ALL_REQUESTED_PERMISSIONS)
+            if (dexopt != InstallerContract.DEXOPT_NONE) add(InstallerContract.FIELD_DEXOPT)
         }
 
     companion object {
@@ -138,6 +145,11 @@ internal data class InstallOptions(
                 deleteSource = root.boolean(InstallerContract.FIELD_DELETE_SOURCE) ?: false,
                 continueOnError = root.boolean(InstallerContract.FIELD_CONTINUE_ON_ERROR) ?: true,
                 timeoutMillis = timeoutOf(root.long(InstallerContract.FIELD_TIMEOUT_MILLIS), what),
+                grantAllRequestedPermissions = root.boolean(InstallerContract.FIELD_GRANT_ALL_REQUESTED_PERMISSIONS) ?: false,
+                requestUpdateOwnership = root.boolean(InstallerContract.FIELD_REQUEST_UPDATE_OWNERSHIP) ?: false,
+                dexopt = AdvancedInstallOptions.dexopt(root.string(InstallerContract.FIELD_DEXOPT)),
+                installReason = AdvancedInstallOptions.installReason(root.string(InstallerContract.FIELD_INSTALL_REASON)),
+                packageSource = AdvancedInstallOptions.packageSource(root.string(InstallerContract.FIELD_PACKAGE_SOURCE)),
             )
         }
     }

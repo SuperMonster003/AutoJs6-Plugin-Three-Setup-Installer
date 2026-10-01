@@ -38,7 +38,7 @@ internal class InstallationNoticeRegistry<T>(private val maximum: Int = Installe
     fun update(token: String, name: String, stage: String, progress: Float, payload: T, mandatory: Boolean = false): Change {
         val previous = entries[token]
         if (token in completed || (previous == null && entries.size >= maximum)) return Change(false, false)
-        val beganWriting = previous?.writingStarted != true && stage == InstallerContract.STAGE_WRITING
+        val beganWriting = previous?.writingStarted != true && stage in setOf(InstallerContract.STAGE_WRITING, InstallerContract.STAGE_OPTIMIZING)
         val required = mandatory || previous?.mandatory == true
         val beganForeground = previous?.let { !it.writingStarted && !it.mandatory } != false && (beganWriting || required)
         entries[token] = Entry(token, name, stage, if (progress.isFinite()) progress.coerceIn(0f, 1f) else 0f,
@@ -142,7 +142,8 @@ internal object InstallNotifications {
                 cancelNotice(application, progressTag(token), PROGRESS_ID)
                 if (notificationsAllowed(application)) {
                     val localized = localized(application)
-                    val body = (if (entry.mandatory) notificationResult(localized, token) else null)
+                    val hasFollowUp = InstallPresentation.find(token)?.snapshot()?.items?.any { InstallFollowUpUi.summary(localized, it.result).isNotEmpty() } == true
+                    val body = (if (entry.mandatory || hasFollowUp) notificationResult(localized, token) else null)
                         ?: message?.take(512) ?: localized.getString(if (success) R.string.notification_install_complete else R.string.notification_install_failed)
                     val builder = builder(localized)
                         .setSmallIcon(if (success) android.R.drawable.stat_sys_download_done else android.R.drawable.stat_notify_error)
@@ -262,6 +263,7 @@ internal object InstallNotifications {
                     else result?.getAsJsonObject(InstallerContract.FIELD_ERROR)?.get(InstallerContract.FIELD_ERROR_CODE)?.asString
                         ?: context.getString(R.string.install_failed)
                 add(context.getString(R.string.install_item_status, index + 1, item.metadata?.label ?: item.displayName, status))
+                addAll(InstallFollowUpUi.summary(context, result))
             }
             snapshot.failure?.let { add(context.getString(R.string.install_error_code, it.code)) }
         }.joinToString("\n").take(4_096)
@@ -422,6 +424,7 @@ internal object InstallNotifications {
     private fun stage(context: Context, stage: String) = context.getString(when (stage) {
         InstallerContract.STAGE_WRITING -> R.string.notification_writing
         InstallerContract.STAGE_COMMITTING -> R.string.notification_installing
+        InstallerContract.STAGE_OPTIMIZING -> R.string.install_optimizing
         InstallerContract.STAGE_CONFIRMING -> R.string.notification_action_required
         else -> R.string.notification_preparing
     })

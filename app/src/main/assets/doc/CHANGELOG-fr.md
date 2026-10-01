@@ -4,6 +4,18 @@
 
 ******
 
+# v1.2.0
+
+###### 2026/10/02
+
+* `Fonctionnalité` Options avancées: `grantAllRequestedPermissions`, `requestUpdateOwnership`, `dexopt` (`none`/`verify`/`speed-profile`/`speed`), `installReason` et `packageSource`. Une plateforme ou autorisation incompatible refuse la requête. none n'ajoute pas de compilation manuelle et ne désactive pas celle d'Android.
+* `Amélioration` Les options avancées nécessitent AutoJs6 build 5308+ et V3 avec `advanced-install-options`. L'omission conserve le comportement existant; `false`/`none` explicite exige aussi la prise en charge. Cette implémentation locale n'annonce ni publication officielle ni achèvement de tout P9.
+* `Amélioration` Un résultat réussi peut contenir `updateOwner` et `dexopt` observés. null signifie qu'Android ne renvoie aucun owner à cette identité, éventuellement à cause du filtrage de visibilité, sans prouver une absence globale. Un échec de lecture omet le champ et ajoute des notes. Les états DexOpt sont accepted/failed/cancelled/timeout/unavailable/unknown. accepted inclut une opération ignorée par le système et ne prouve pas une compilation. L'échec de cette étape ne change pas une installation déjà confirmée.
+* `Amélioration` Les demandes de permissions et DexOpt autre que none exigent Shizuku/Root; verify exige API 26+. Le motif nécessite API 26+, la source API 33+ et la demande de propriété des mises à jour API 34+. Cette propriété ne démarre qu'à l'installation initiale; les mises à jour ou paquets présents chez un autre utilisateur peuvent être ignorés. false ne révoque pas un owner existant.
+* `Amélioration` L'option demande les permissions que le système peut accorder et peut inclure des app-ops modifiables par l'installateur, comme USE_FULL_SCREEN_INTENT sur Android 14. Elle ne garantit pas toutes les permissions et n'accorde ni accessibilité, ni superposition, ni permissions de signature arbitraires. Les contraintes restricted/system-fixed/policy-fixed restent actives, sans drapeau allowlist supplémentaire.
+* `Dépendance` Mise à niveau de installer-api.aar vers le contrat V3 (MPL 2.0), avec V1/V2 et les 11 transactions AIDL conservés; options avancées à partir du build hôte 5308
+* `Dépendance` Mise à niveau de l'analyseur partagé de paquets (MPL 2.0) pour vérifier la racine réelle du manifeste et sharedUserId et refuser les entrées ambiguës
+
 # v1.1.0
 
 ###### 2026/10/02

@@ -26,7 +26,9 @@
     "非公開のインストール履歴を最大 200 件保存します. パッケージ名, ラベル, 旧/新バージョン, 結果, 時刻, 起点 (ホスト/スクリプト/外部/ホーム), 権限方式と失敗情報を含みます. アプリやソースファイルを削除せずに 1 件ずつ削除, または履歴全体を消去できます. プロセス終了後の未完了項目はキャンセル済みとなり, 自動再開しません.",
     "設定に権限方式の順序と有効状態, インストールオプション, 通知設定を保存します. ホーム/外部からのインストールは既定で `dialog` を使い, `auto`, `silent`, `notification` を明示できます. ホスト UI は `dialog`, スクリプトは明示オプションと既定の `auto` を維持します. 変更は確認後に保存します.",
     "設定からアプリ情報と 10 言語の内蔵リリース履歴を開けます. 手動更新確認は 12 時間間隔でプラグインの GitHub Releases API にアクセスし, 結果のキャッシュと無視するバージョンの管理に対応します. リリースページはブラウザーで開き, 更新の自動ダウンロードや自動インストールは行いません.",
-    "`dhizuku`: Android 8.0 (API 26)+, 有効な Dhizuku デバイス/プロファイル所有者, このプラグインへの許可が必要です. 現在の所有者ユーザーのみを操作し, 実際の所有者パッケージをインストーラーとして記録します. shell/root 用のダウングレード, テストパッケージ, 低 targetSdk 制限回避, 他のユーザー, 任意のインストーラー指定, 削除時のデータ保持は非対応です. プラグインは所有者を設定しません."
+    "`dhizuku`: Android 8.0 (API 26)+, 有効な Dhizuku デバイス/プロファイル所有者, このプラグインへの許可が必要です. 現在の所有者ユーザーのみを操作し, 実際の所有者パッケージをインストーラーとして記録します. shell/root 用のダウングレード, テストパッケージ, 低 targetSdk 制限回避, 他のユーザー, 任意のインストーラー指定, 削除時のデータ保持は非対応です. プラグインは所有者を設定しません.",
+    "高度なインストールオプション: `grantAllRequestedPermissions`, `requestUpdateOwnership`, `dexopt` (`none`/`verify`/`speed-profile`/`speed`), `installReason`, `packageSource`. 未対応の環境や認可では明示的に拒否. none は手動コンパイルを追加せず, Android 自身のコンパイルを無効にしません.",
+    "成功結果は読み取れた `updateOwner` と `dexopt` を返す場合があります. null は現在の呼び出し元に Android が owner を返さなかったことを示し, 可視性による非表示も含むため全体での不在を証明しません. 読み取り失敗では省略して notes に記録. DexOpt 状態は accepted/failed/cancelled/timeout/unavailable/unknown. accepted はシステムによるスキップも含み, 実際のコンパイルを保証しません. 追加処理の失敗は確認済みのインストール成功を変更しません."
   ],
   "h3_usage": "使い方",
   "usage_steps": [
@@ -54,7 +56,8 @@
     "Android 7.0 (API 24) 以降. 端末での確認状況と未確認の範囲は [ROADMAP.md]({{ roadmap_url }}) に記録しています.",
     "低い targetSdk のブロック回避は Android 14 (API 34) から存在します. それより古いシステムではこのオプションは無視され, 結果に注記されます.",
     "既定インストーラーページは通常の優先設定と永続ポリシーを区別します. 通常設定は Shizuku または Root を使い, ROM の制限を受けます. Dhizuku の永続設定は API 26-33 に対応し, API 34+ では所有者のコールバックを検証できないため変更前に拒否します. Root は対応端末のユーザー 0 で system UID の補助プロセスを使います. 競合する永続ポリシーは上書きしません. `persistentConfigured` は過去の設定成功の記録であり, 現在のシステムポリシーの証明ではありません. 受動的な照会は `preferred` または `none` のみを返します.",
-    "`dhizuku`: Android 8.0 (API 26)+, 有効な Dhizuku デバイス/プロファイル所有者, このプラグインへの許可が必要です. 現在の所有者ユーザーのみを操作し, 実際の所有者パッケージをインストーラーとして記録します. shell/root 用のダウングレード, テストパッケージ, 低 targetSdk 制限回避, 他のユーザー, 任意のインストーラー指定, 削除時のデータ保持は非対応です. プラグインは所有者を設定しません."
+    "`dhizuku`: Android 8.0 (API 26)+, 有効な Dhizuku デバイス/プロファイル所有者, このプラグインへの許可が必要です. 現在の所有者ユーザーのみを操作し, 実際の所有者パッケージをインストーラーとして記録します. shell/root 用のダウングレード, テストパッケージ, 低 targetSdk 制限回避, 他のユーザー, 任意のインストーラー指定, 削除時のデータ保持は非対応です. プラグインは所有者を設定しません.",
+    "権限付与要求と none 以外の DexOpt は Shizuku/Root が必要で, verify は API 26+ が必要. インストール理由は API 26+, ソースは API 33+, 更新所有権の要求は API 34+. 所有権は初回インストールのみで有効化でき, 更新や別ユーザーの既存パッケージでは無視される場合があります. false は既存 owner を解除しません."
   ],
   "h3_faq": "よくある質問",
   "faq_items": [
@@ -71,11 +74,12 @@
   "p_security_intro": "プラグインは明確な境界に従います:",
   "security_points": [
     "Binder エントリポイントは `org.autojs.permission.PLUGIN` 署名権限で保護され, AutoJs6 だけがアクセスできます. 外部 \"アプリで開く\" エントリはパッケージファイルのみを受け付け, スクリプトを実行することはありません.",
-    "REQUEST_INSTALL_PACKAGES と REQUEST_DELETE_PACKAGES は Android の確認に使用します. QUERY_ALL_PACKAGES はインストール済みアプリの管理, バージョンと署名の比較, 既定インストーラーの検出に使用します.",
+    "REQUEST_INSTALL_PACKAGES と REQUEST_DELETE_PACKAGES は Android の確認に使用します. QUERY_ALL_PACKAGES はインストール済みアプリの管理, バージョンと署名の比較, 既定インストーラーの検出に使用します. 通常権限 ENFORCE_UPDATE_OWNERSHIP は明示的な更新所有権の要求に使用し, owner の割り当てを保証しません.",
     "FOREGROUND_SERVICE と FOREGROUND_SERVICE_DATA_SYNC はインストールと一時的なソースアクセスを支え, POST_NOTIFICATIONS は通知に使用します. `notification` は通知とチャンネルが有効である必要があります. 他のモードでは通知権限は必須ではありません.",
     "Shizuku, Root, Dhizuku は要求された操作に使用します. プラグインはデバイス/プロファイル所有者を設定しません. 永続ルールは設定または解除の要求時だけ変更し, パッケージをアップロードしません.",
     "インストール, 検査, 履歴, アプリ管理はオフラインで動作します. INTERNET は手動でバージョンを確認するときだけ, 12 時間間隔でプラグインの固定 GitHub Releases API にアクセスするために使用します. バックグラウンド更新確認やパッケージのアップロードは行いません.",
-    "パッケージソースは読み取り専用で開きます. 履歴には限定されたアプリ情報と結果を保存し, パッケージの内容やソース URI は保存しません. エラー内のパスは伏せられます. 非公開ストレージはバックアップ対象外です. 履歴の削除はアプリやソースを削除しません."
+    "パッケージソースは読み取り専用で開きます. 履歴には限定されたアプリ情報と結果を保存し, パッケージの内容やソース URI は保存しません. エラー内のパスは伏せられます. 非公開ストレージはバックアップ対象外です. 履歴の削除はアプリやソースを削除しません.",
+    "権限付与はシステムが許可できる権限を要求し, Android 14 の USE_FULL_SCREEN_INTENT などインストーラーが変更できる app-op を含む場合があります. 全宣言権限を保証せず, アクセシビリティ, オーバーレイや任意の署名権限は付与しません. restricted/system-fixed/policy-fixed 制限を維持し, restricted 権限 allowlist フラグを追加しません."
   ],
   "p_security_permission": "正式公開後のプラグインは公式の [Releases]({{ repo_url }}/releases) ページまたは AutoJs6 のプラグインセンターからのみ入手してください. 出所不明のパッケージは, バージョン番号が同じに見えてもホストの検証に失敗したり, リスクを伴う可能性があります.",
   "h3_plugin_interface": "プラグインインターフェース",
@@ -115,5 +119,7 @@
   "example_default": "true はこのプラグインを既定に設定, false は解除. ROM の制限があります.",
   "example_v2": "V2 の例にはホストビルド {{ v2_host_version_code }} が必要. Dhizuku は有効な所有者, 通知モードは通知許可が必要です.",
   "example_persistent": "Root の永続設定はユーザー 0 で system UID を利用できる端末向け. 競合ポリシーは保持します.",
-  "p_v2_requirements": "Dhizuku, 通知インストール, 永続的な既定インストーラーのスクリプトオプションには installer V2 と AutoJs6 {{ required_host_version_name }} ビルド {{ v2_host_version_code }} 以降が必要です. 基本的なホスト連携はビルド {{ required_host_version_code }}, V1 スクリプトは {{ script_host_version_code }} 以降を引き続きサポートします."
+  "p_v2_requirements": "Dhizuku, 通知インストール, 永続的な既定インストーラーのスクリプトオプションには installer V2 と AutoJs6 {{ required_host_version_name }} ビルド {{ v2_host_version_code }} 以降が必要です. 基本的なホスト連携はビルド {{ required_host_version_code }}, V1 スクリプトは {{ script_host_version_code }} 以降を引き続きサポートします.",
+  "p_v3_requirements": "高度なスクリプトオプションには AutoJs6 ビルド {{ v3_host_version_code }}+ と V3 / `advanced-install-options` の対応確認が必要. 省略時は従来の動作を維持し, 明示的な `false`/`none` も対応が必要. ローカル実装は正式公開や P9 全項目の完了を意味しません.",
+  "example_v3": "高度な例: ホスト V3, Root とこのメタデータに必要な API 33+ が必要. 関数呼び出し時にインストールを開始"
 }

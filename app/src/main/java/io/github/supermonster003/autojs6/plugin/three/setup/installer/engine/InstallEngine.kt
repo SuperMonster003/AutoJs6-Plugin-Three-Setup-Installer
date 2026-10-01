@@ -41,12 +41,15 @@ internal interface InstallEngine {
         val deadlineMillis: Long = Long.MAX_VALUE,
     )
 
-    data class Result(val packageName: String?, val notes: List<String>, val interaction: String)
+    data class Result(val packageName: String?, val notes: List<String>, val interaction: String,
+        val followUp: InstallFollowUp = InstallFollowUp())
 
     interface Listener {
         fun onStage(stage: String) = Unit
         /** Bytes accepted by the session stream; commit validation and durable completion follow. */
         fun onProgress(bytesWritten: Long, totalBytes: Long) = Unit
+        /** Authoritative package success, before optional work; never an invitation to retry. */
+        fun onInstalled(result: Result) = Unit
         /** Must launch/delegate confirmation or throw. Never silently discard this callback. */
         fun onUserAction(intent: Intent)
     }
@@ -73,6 +76,8 @@ internal abstract class SessionInstallEngine(
     }
 
     protected abstract fun openSession(request: InstallEngine.Request, parameters: Parameters, deadlineMillis: Long): Session
+    protected open fun afterInstallation(request: InstallEngine.Request, packageName: String,
+        deadlineMillis: Long, checkActive: () -> Unit): InstallFollowUp = InstallFollowUp()
 
     final override fun install(request: InstallEngine.Request, listener: InstallEngine.Listener, checkCancelled: () -> Unit): InstallEngine.Result {
         var session: Session? = null
@@ -146,8 +151,22 @@ internal abstract class SessionInstallEngine(
             if (status.status != InstallStatusMapper.STATUS_SUCCESS) {
                 throw InstallStatusMapper.toFailure(status.status, status.message, status.packageName ?: name)
             }
-            // Once success is confirmed, late cancellation must not misreport an installed package.
-            return InstallEngine.Result(status.packageName ?: name, notes.toList(), interaction)
+            // The package lock stays held through optional work, which cannot undo a confirmed installation.
+            val installedName = status.packageName ?: name
+            if (request.options.requestUpdateOwnership || request.options.dexopt != InstallerContract.DEXOPT_NONE) {
+                try { listener.onInstalled(InstallEngine.Result(installedName, notes.toList(), interaction)) }
+                catch (_: Exception) { notes += "Installation succeeded, but its early outcome could not be recorded" }
+            }
+            val followUp = if (installedName == null || (!request.options.requestUpdateOwnership && request.options.dexopt == InstallerContract.DEXOPT_NONE)) {
+                InstallFollowUp()
+            } else try {
+                if (request.options.dexopt != InstallerContract.DEXOPT_NONE) listener.onStage(InstallerContract.STAGE_OPTIMIZING)
+                afterInstallation(request, installedName, deadline, checkActive)
+            } catch (failure: Exception) {
+                if (failure is InterruptedException) Thread.currentThread().interrupt()
+                InstallFollowUp.failed(request.options, failure)
+            }
+            return InstallEngine.Result(installedName, notes + followUp.notes, interaction, followUp)
         } catch (failure: Exception) {
             if (failure is InterruptedException) Thread.currentThread().interrupt()
             throw InstallFailure.from(failure, name)
@@ -160,6 +179,7 @@ internal abstract class SessionInstallEngine(
     private fun validate(request: InstallEngine.Request): Parameters {
         request.prepared.failure()?.let { throw it }
         val options = request.options
+        AdvancedInstallOptions.validate(options, authorizer, sdk)
         if (!InstallerContract.isInteraction(request.interaction)) throw RequestDocuments.invalid("Unknown interaction: ${request.interaction}")
         if (options.authorizer != InstallerContract.AUTHORIZER_AUTO && options.authorizer != authorizer.id) {
             throw RequestDocuments.invalid("The selected engine does not match the requested authorizer")
@@ -189,6 +209,7 @@ internal abstract class SessionInstallEngine(
         var flags = PrivilegedOptions.INSTALL_REPLACE_EXISTING
         if (options.allowDowngrade) flags = flags or PrivilegedOptions.INSTALL_REQUEST_DOWNGRADE or PrivilegedOptions.INSTALL_ALLOW_DOWNGRADE
         if (options.allowTestOnly) flags = flags or PrivilegedOptions.INSTALL_ALLOW_TEST
+        if (options.grantAllRequestedPermissions) flags = flags or PrivilegedOptions.INSTALL_GRANT_ALL_REQUESTED_PERMISSIONS
         if (options.user == InstallerContract.USER_ALL) flags = flags or PrivilegedOptions.INSTALL_ALL_USERS
         val notes = mutableListOf<String>()
         if (options.bypassLowTargetSdk) {
@@ -202,6 +223,10 @@ internal abstract class SessionInstallEngine(
 internal class NoneInstallEngine(context: Context) : SessionInstallEngine(Authorizer.NONE) {
     private val context = context.applicationContext
 
+    override fun afterInstallation(request: InstallEngine.Request, packageName: String,
+        deadlineMillis: Long, checkActive: () -> Unit): InstallFollowUp =
+        InstallFollowUp.readOwner(context, packageName, request.options.requestUpdateOwnership)
+
     override fun openSession(request: InstallEngine.Request, parameters: Parameters, deadlineMillis: Long): Session {
         requireWorkerThread()
         val installer = nonePlatformCall { context.packageManager.packageInstaller }
@@ -209,7 +234,7 @@ internal class NoneInstallEngine(context: Context) : SessionInstallEngine(Author
             setSize(parameters.totalBytes)
             request.prepared.packageName?.let(::setAppPackageName)
             if (Build.VERSION.SDK_INT >= 31) setRequireUserAction(PackageInstaller.SessionParams.USER_ACTION_REQUIRED)
-            if (Build.VERSION.SDK_INT >= 33) setPackageSource(PackageInstaller.PACKAGE_SOURCE_LOCAL_FILE)
+            AdvancedSessionParameters.apply(this, request.options)
         }
         val id = nonePlatformCall { platformIo { installer.createSession(params) } }
         var session: PackageInstaller.Session? = null
@@ -242,6 +267,16 @@ internal class PrivilegedInstallEngine(
 ) : SessionInstallEngine(authorizer) {
     private val context = context.applicationContext
     private var cachedUid: Pair<IBinder, Int>? = null
+    private var installedTransport: IPrivilegedInstaller? = null
+
+    override fun afterInstallation(request: InstallEngine.Request, packageName: String,
+        deadlineMillis: Long, checkActive: () -> Unit): InstallFollowUp {
+        checkActive()
+        val service = requireNotNull(installedTransport)
+        val remaining = (deadlineMillis - SystemClock.elapsedRealtime()).coerceIn(0, 30_000)
+        return InstallFollowUp.decode(request.options, service.postInstall(packageName, request.userId,
+            request.options.dexopt, request.options.requestUpdateOwnership, remaining))
+    }
 
     init { require(authorizer.privileged) { "A privileged engine requires Shizuku or Root" } }
 
@@ -263,8 +298,12 @@ internal class PrivilegedInstallEngine(
             putInt(PrivilegedOptions.FLAGS, parameters.flags)
             putLong(PrivilegedOptions.SIZE, parameters.totalBytes)
             request.prepared.packageName?.let { putString(PrivilegedOptions.PACKAGE_NAME, it) }
+            if (request.options.requestUpdateOwnership) putBoolean(PrivilegedOptions.REQUEST_UPDATE_OWNERSHIP, true)
+            request.options.installReason?.let { putInt(PrivilegedOptions.INSTALL_REASON, AdvancedInstallOptions.reasonValue(it)) }
+            request.options.packageSource?.let { putInt(PrivilegedOptions.PACKAGE_SOURCE, AdvancedInstallOptions.sourceValue(it)) }
         }
         val id = privilegedInstallerCall { service.createSession(params, installer, request.userId) }
+        installedTransport = service
         try {
             val recovery = service.getSessionRecoveryInfo(id)
             val ticket = InstallStatusBridge.open(context)

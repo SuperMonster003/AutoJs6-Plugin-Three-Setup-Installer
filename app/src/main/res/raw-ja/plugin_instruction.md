@@ -1,6 +1,8 @@
 3-Setup Installer は独立したホーム画面, AutoJs6 の入口とスクリプト, 外部アプリからのパッケージの開き方や共有を通じて Android アプリをインストール, 更新, 検査, アンインストールします. Android の確認と, Shizuku, Root または Dhizuku による特権操作に対応します.
 
-1.1.0 は以下のインストール, アプリ管理, スクリプト機能を実装しています. GitHub Releases での正式公開とプラグインセンターへの登録は未完了です. ホスト連携には AutoJs6 >= 6.8.0 (5299), `installer` スクリプト API にはビルド 5300 以降が必要です. 端末の検証範囲と残りの受け入れ項目は [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md) に記録しています. Dhizuku, 通知インストール, 永続的な既定インストーラーのスクリプトオプションには installer V2 と AutoJs6 6.8.0 ビルド 5307 以降が必要です. 基本的なホスト連携はビルド 5299, V1 スクリプトは 5300 以降を引き続きサポートします.
+1.2.0 は以下のインストール, アプリ管理, スクリプト機能を実装しています. GitHub Releases での正式公開とプラグインセンターへの登録は未完了です. ホスト連携には AutoJs6 >= 6.8.0 (5299), `installer` スクリプト API にはビルド 5300 以降が必要です. 端末の検証範囲と残りの受け入れ項目は [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md) に記録しています. Dhizuku, 通知インストール, 永続的な既定インストーラーのスクリプトオプションには installer V2 と AutoJs6 6.8.0 ビルド 5307 以降が必要です. 基本的なホスト連携はビルド 5299, V1 スクリプトは 5300 以降を引き続きサポートします.
+
+高度なスクリプトオプションには AutoJs6 ビルド 5308+ と V3 / `advanced-install-options` の対応確認が必要. 省略時は従来の動作を維持し, 明示的な `false`/`none` も対応が必要. ローカル実装は正式公開や P9 全項目の完了を意味しません.
 
 ### 使い方
 
@@ -25,6 +27,7 @@
 - 低い targetSdk のブロック回避は Android 14 (API 34) から存在します. それより古いシステムではこのオプションは無視され, 結果に注記されます.
 - 既定インストーラーページは通常の優先設定と永続ポリシーを区別します. 通常設定は Shizuku または Root を使い, ROM の制限を受けます. Dhizuku の永続設定は API 26-33 に対応し, API 34+ では所有者のコールバックを検証できないため変更前に拒否します. Root は対応端末のユーザー 0 で system UID の補助プロセスを使います. 競合する永続ポリシーは上書きしません. `persistentConfigured` は過去の設定成功の記録であり, 現在のシステムポリシーの証明ではありません. 受動的な照会は `preferred` または `none` のみを返します.
 - `dhizuku`: Android 8.0 (API 26)+, 有効な Dhizuku デバイス/プロファイル所有者, このプラグインへの許可が必要です. 現在の所有者ユーザーのみを操作し, 実際の所有者パッケージをインストーラーとして記録します. shell/root 用のダウングレード, テストパッケージ, 低 targetSdk 制限回避, 他のユーザー, 任意のインストーラー指定, 削除時のデータ保持は非対応です. プラグインは所有者を設定しません.
+- 権限付与要求と none 以外の DexOpt は Shizuku/Root が必要で, verify は API 26+ が必要. インストール理由は API 26+, ソースは API 33+, 更新所有権の要求は API 34+. 所有権は初回インストールのみで有効化でき, 更新や別ユーザーの既存パッケージでは無視される場合があります. false は既存 owner を解除しません.
 
 ### よくある質問
 
@@ -40,10 +43,11 @@
 ### 権限とセキュリティ
 
 - Binder エントリポイントは `org.autojs.permission.PLUGIN` 署名権限で保護され, AutoJs6 だけがアクセスできます. 外部 "アプリで開く" エントリはパッケージファイルのみを受け付け, スクリプトを実行することはありません.
-- REQUEST_INSTALL_PACKAGES と REQUEST_DELETE_PACKAGES は Android の確認に使用します. QUERY_ALL_PACKAGES はインストール済みアプリの管理, バージョンと署名の比較, 既定インストーラーの検出に使用します.
+- REQUEST_INSTALL_PACKAGES と REQUEST_DELETE_PACKAGES は Android の確認に使用します. QUERY_ALL_PACKAGES はインストール済みアプリの管理, バージョンと署名の比較, 既定インストーラーの検出に使用します. 通常権限 ENFORCE_UPDATE_OWNERSHIP は明示的な更新所有権の要求に使用し, owner の割り当てを保証しません.
 - FOREGROUND_SERVICE と FOREGROUND_SERVICE_DATA_SYNC はインストールと一時的なソースアクセスを支え, POST_NOTIFICATIONS は通知に使用します. `notification` は通知とチャンネルが有効である必要があります. 他のモードでは通知権限は必須ではありません.
 - Shizuku, Root, Dhizuku は要求された操作に使用します. プラグインはデバイス/プロファイル所有者を設定しません. 永続ルールは設定または解除の要求時だけ変更し, パッケージをアップロードしません.
 - インストール, 検査, 履歴, アプリ管理はオフラインで動作します. INTERNET は手動でバージョンを確認するときだけ, 12 時間間隔でプラグインの固定 GitHub Releases API にアクセスするために使用します. バックグラウンド更新確認やパッケージのアップロードは行いません.
 - パッケージソースは読み取り専用で開きます. 履歴には限定されたアプリ情報と結果を保存し, パッケージの内容やソース URI は保存しません. エラー内のパスは伏せられます. 非公開ストレージはバックアップ対象外です. 履歴の削除はアプリやソースを削除しません.
+- 権限付与はシステムが許可できる権限を要求し, Android 14 の USE_FULL_SCREEN_INTENT などインストーラーが変更できる app-op を含む場合があります. 全宣言権限を保証せず, アクセシビリティ, オーバーレイや任意の署名権限は付与しません. restricted/system-fixed/policy-fixed 制限を維持し, restricted 権限 allowlist フラグを追加しません.
 
 インストール手順と現在の進捗は [プロジェクト README](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer) と [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md) を参照してください.

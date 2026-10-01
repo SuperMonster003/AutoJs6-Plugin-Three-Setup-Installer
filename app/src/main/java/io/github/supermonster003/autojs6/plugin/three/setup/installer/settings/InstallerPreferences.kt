@@ -107,6 +107,11 @@ internal data class InstallerPreferences(
             addProperty(InstallerContract.FIELD_DELETE_SOURCE, value.deleteSource)
             addProperty(InstallerContract.FIELD_CONTINUE_ON_ERROR, value.continueOnError)
             addProperty(InstallerContract.FIELD_TIMEOUT_MILLIS, value.timeoutMillis)
+            addProperty(InstallerContract.FIELD_GRANT_ALL_REQUESTED_PERMISSIONS, value.grantAllRequestedPermissions)
+            addProperty(InstallerContract.FIELD_REQUEST_UPDATE_OWNERSHIP, value.requestUpdateOwnership)
+            addProperty(InstallerContract.FIELD_DEXOPT, value.dexopt)
+            value.installReason?.let { addProperty(InstallerContract.FIELD_INSTALL_REASON, it) }
+            value.packageSource?.let { addProperty(InstallerContract.FIELD_PACKAGE_SOURCE, it) }
         }
     }
 }

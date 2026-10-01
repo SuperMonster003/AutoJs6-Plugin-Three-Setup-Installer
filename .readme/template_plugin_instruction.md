@@ -2,6 +2,8 @@
 
 {{ p_status }}
 
+{{ p_v3_requirements }}
+
 ### {{ h3_usage }}
 
 {{ placeholder_usage_steps }}

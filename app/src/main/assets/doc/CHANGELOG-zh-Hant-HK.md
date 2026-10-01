@@ -4,6 +4,18 @@
 
 ******
 
+# v1.2.0
+
+###### 2026/10/02
+
+* `新增` 進階安裝選項: `grantAllRequestedPermissions`, `requestUpdateOwnership`, `dexopt` (`none`/`verify`/`speed-profile`/`speed`), `installReason` 及 `packageSource`. 平台或授權方式不支援時明確拒絕, 不靜默忽略. none 不追加手動編譯, 也不關閉 Android 自身的編譯.
+* `優化` 進階指令碼選項需要 AutoJs6 構建 5308+ 並協商 V3 與 `advanced-install-options`. 省略欄位保留原行為, 明確指定 `false`/`none` 仍需對應支援. 本機實作不表示已正式發佈或全部 P9 項目完成.
+* `優化` 成功結果可回報讀回的 `updateOwner` 及 `dexopt`. null 表示 Android 未向目前呼叫身分傳回 owner, 可能沒有 owner 或受可見性過濾, 不能證明全域不存在; 讀取失敗省略欄位並寫入 notes. DexOpt 狀態為 accepted/failed/cancelled/timeout/unavailable/unknown; accepted 包含系統略過, 不證明實際執行編譯. 附加步驟失敗不改變已確認的安裝成功.
+* `優化` 權限授予請求及非 none 的 DexOpt 需要 Shizuku/Root, verify 需要 API 26+. 安裝原因需要 API 26+, 來源標籤需要 API 33+, 請求更新擁有權需要 API 34+. 擁有權僅能在首次安裝啟用, 更新或其他使用者已有該套件時可能被忽略; false 不撤銷既有 owner.
+* `優化` 授予選項請求系統可授予的權限, 也可能包含 Android 14 的 USE_FULL_SCREEN_INTENT 等安裝器可改變的 app-op. 不保證全部宣告權限, 不授予無障礙, 懸浮視窗或任意簽章權限. restricted/system-fixed/policy-fixed 限制仍有效, 不額外設定 restricted 權限 allowlist 標誌.
+* `依賴` 升級 installer-api.aar 至契約 V3 (MPL 2.0), 保留 V1/V2 與全部 11 個 AIDL 交易; 進階指令碼選項需要宿主構建 5308+
+* `依賴` 升級共用安裝包解析器 (MPL 2.0), 核驗真實資訊清單根元素及 sharedUserId, 拒絕有歧義的輸入
+
 # v1.1.0
 
 ###### 2026/10/02
