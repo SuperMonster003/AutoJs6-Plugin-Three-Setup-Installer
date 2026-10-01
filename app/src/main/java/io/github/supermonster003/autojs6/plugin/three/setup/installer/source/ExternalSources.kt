@@ -111,7 +111,8 @@ internal class ExternalSources private constructor(val uris: List<Uri>, val gran
             return fromUris(values, intent.flags)
         }
 
-        private fun fromUris(uris: List<Uri>, flags: Int): ExternalSources {
+        /** Also used by the local SAF picker; callers supply only the returned grant flags. */
+        fun fromUris(uris: List<Uri>, flags: Int): ExternalSources {
             if (uris.size !in 1..InstallerContract.MAX_BATCH_SOURCES) throw RequestDocuments.invalid("Invalid package source count")
             if (uris.any { it.scheme?.lowercase(Locale.ROOT) !in setOf("content", "file") || (it.scheme.equals("file", true) && it.path.isNullOrBlank()) }) {
                 throw RequestDocuments.invalid("Only content and readable file package sources are accepted")

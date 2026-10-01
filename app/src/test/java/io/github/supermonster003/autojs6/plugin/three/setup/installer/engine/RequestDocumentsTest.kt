@@ -33,6 +33,17 @@ class RequestDocumentsTest {
         assertEquals("auto", request.options.authorizer)
         assertEquals("current", request.options.user)
         assertTrue(request.options.continueOnError)
+        assertEquals("host", request.origin)
+    }
+
+    @Test fun `only the trusted host and script origin labels cross Binder`() {
+        for (origin in listOf("host", "script")) {
+            val request = InstallRequest.parse("""{"id":"x","sourceOrigin":"$origin","sources":[{"displayName":"x.apk"}]}""", 1)
+            assertEquals(origin, request.origin)
+        }
+        for (origin in listOf("\"home\"", "\"external\"", "\"unknown\"", "false", "{}")) {
+            invalid("""{"id":"x","sourceOrigin":$origin,"sources":[{"displayName":"x.apk"}]}""", 1)
+        }
     }
 
     @Test fun `explicit batch preserves a single application including a split set`() {

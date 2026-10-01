@@ -42,7 +42,7 @@ El README.md actual admite los siguientes idiomas:
 
 ******
 
-3-Setup Installer instala, actualiza, inspecciona y desinstala aplicaciones Android mediante las funciones de instalación de AutoJs6 y las solicitudes externas para abrir o compartir paquetes. Admite la confirmación normal de Android y la instalación con privilegios mediante Shizuku o Root. Las versiones compatibles del anfitrión ofrecen la API de scripts `installer`; las páginas independientes de inicio y ajustes siguen previstas.
+3-Setup Installer instala, actualiza, inspecciona y desinstala aplicaciones Android desde su inicio independiente, las entradas y scripts de AutoJs6, o solicitudes externas para abrir y compartir paquetes. Admite la confirmación de Android y operaciones privilegiadas mediante Shizuku o Root.
 
 AutoJs6 descubre el plugin a través de su servicio Binder y le entrega los archivos de paquete como descriptores de archivo de solo lectura; el plugin analiza el paquete, elige el modo de autorización, muestra su propio diálogo de confirmación y progreso cuando hace falta, e informa etapas, progreso y resultados. Las operaciones privilegiadas se ejecutan en un servicio de usuario de Shizuku o en un servicio root de libsu que habla directamente con el instalador de paquetes del sistema.
 
@@ -52,7 +52,7 @@ AutoJs6 descubre el plugin a través de su servicio Binder y le entrega los arch
 
 ******
 
-1.0.0: Vista previa de desarrollo. Ya se han implementado los diálogos de confirmación, progreso, resultados y lotes, la apertura y el uso compartido externos, la eliminación opcional del origen, la confirmación del sistema y las notificaciones en primer plano. Tras reiniciar el proceso, la vista restaurada muestra los resultados confirmados guardados y marca los elementos pendientes como interrumpidos. Es de solo lectura y nunca instala ni reintenta automáticamente. La API de scripts `installer` requiere AutoJs6 >= 6.8.0 (5300). El inicio y los ajustes independientes, el historial y una pantalla de configuración del instalador predeterminado siguen previstos. Consulta [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md) para el progreso y la cobertura de dispositivos. Compatibilidad básica del plugin: AutoJs6 >= 6.8.0 (5299).
+1.0.0: Vista previa de desarrollo con inicio independiente, ajustes, gestión de aplicaciones instaladas, colas secuenciales e historial de instalación. Incluye confirmación, progreso, resultados y notificaciones en primer plano. Tras reiniciar el proceso, conserva los resultados confirmados guardados y marca como canceladas las tareas incompletas, sin reanudarlas ni reintentarlas automáticamente. La API de scripts `installer` requiere AutoJs6 >= 6.8.0 (5300); la integración básica requiere la compilación 5299. Consulta [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md) para la cobertura de dispositivos y las validaciones pendientes.
 
 ******
 
@@ -60,19 +60,22 @@ AutoJs6 descubre el plugin a través de su servicio Binder y le entrega los arch
 
 ******
 
-Funciones disponibles en esta vista previa de desarrollo; las futuras se indican expresamente:
+Funciones disponibles en esta vista previa de desarrollo:
 
 - Formatos de paquete: `.apk`, `.apks`, `.xapk`, `.apkm`, `.apkz` y archivos ZIP que contienen APK; los paquetes divididos se seleccionan para el dispositivo; los archivos `.aab` se reconocen y describen pero no se instalan.
-- Métodos de autorización: `none` usa la confirmación de Android; `shizuku` y `root` permiten operaciones con privilegios. `auto` elige Shizuku, Root y la confirmación del sistema, en ese orden, según su disponibilidad. El diálogo de instalación permite elegir el método.
+- Autorización: `none` utiliza la confirmación de Android; `shizuku` y `root` permiten operaciones privilegiadas. Por defecto, `auto` elige Shizuku, Root y la confirmación del sistema en ese orden, según su disponibilidad. Los ajustes permiten reordenar y habilitar los métodos; una elección explícita nunca cambia silenciosamente a otro método.
 - Se puede intentar eliminar el origen tras una instalación correcta. Las versiones anteriores, los paquetes de prueba, la omisión del límite de targetSdk bajo (Android 14+), la atribución del instalador y otros usuarios requieren Shizuku o Root y siguen sujetos a las restricciones de Android.
-- Desinstalación silenciosa con conservación opcional de datos mediante Shizuku o Root; en los demás casos, el diálogo habitual del sistema.
+- La gestión de aplicaciones instaladas permite buscar por nombre o paquete, ordenar por nombre, fecha de instalación o actualización, y mostrar aplicaciones del sistema. Abre una aplicación o su información del sistema, o revisa y confirma su desinstalación. Shizuku o Root pueden desinstalar después sin otra confirmación del sistema y conservar los datos si se solicita; en otros casos se usa la confirmación de Android.
 - La confirmación muestra información de la aplicación, versiones anterior y nueva, firmas y componentes APK seleccionables. El progreso permite cancelar; los resultados muestran acciones de éxito o errores que se pueden copiar. La instalación por lotes muestra el estado de cada elemento.
-- Abre archivos de paquetes o comparte uno o varios con el plugin. Los orígenes externos fallidos se pueden reintentar mientras su URI y acceso sigan disponibles.
+- Abre o comparte uno o varios paquetes, incluidos los archivos APKS compartidos por MT Manager. Varios paquetes entran en una cola secuencial. Los elementos externos fallidos se pueden reintentar mientras su URI y acceso sigan disponibles.
 - Notificaciones de progreso en primer plano, cancelación y resultados. Denegar el permiso de notificaciones no impide la instalación.
-- Los diálogos siguen por defecto el idioma, el modo nocturno y el color de AutoJs6. Si el anfitrión no está disponible, usan el idioma y modo nocturno del sistema y un color predeterminado.
-- Los scripts pueden consultar el instalador predeterminado con `installer.isDefault` y establecerlo mediante Shizuku o Root con `installer.setDefault` / `setDefaultAsync`. La pantalla independiente y la orientación hacia los ajustes del sistema siguen previstas.
+- La apariencia incluye idioma, modo nocturno, color del tema e icono del lanzador. Los tres primeros siguen AutoJs6 por defecto y admiten ajustes locales; sin anfitrión se usan el idioma y modo del sistema y el color predeterminado. Los iconos ofrecen modos claro, oscuro, automático y transparente; el automático sigue el sistema, sujeto a la caché y las máscaras del lanzador.
+- La tarjeta de inicio y los ajustes abren la misma página del instalador predeterminado, con acciones privilegiadas para establecerlo o quitarlo y guía hacia los ajustes del sistema sin privilegios. Las políticas OEM pueden impedir el cambio o exigir borrar el controlador anterior. Los scripts conservan `installer.isDefault`, `installer.setDefault` y `setDefaultAsync`; los resultados reflejan la respuesta del dispositivo.
 - La API de scripts `installer` (alias `$installer`) ofrece formas síncrona, `...Async` y de sesión para instalar paquetes individuales, por lotes o divididos, desinstalar, inspeccionar, consultar autorizadores y usuarios, y configurar el instalador predeterminado. Los fallos son objetos `InstallerError` con un `code` estable (requiere AutoJs6 >= 6.8.0 (5300)).
-- Previsto para P5: páginas independientes de inicio y ajustes, historial de instalación y gestión de aplicaciones instaladas.
+- El inicio independiente muestra la disponibilidad y autorización de Shizuku/Root, el instalador predeterminado, las tareas activas y las instalaciones recientes. Selecciona varios paquetes en el selector del sistema para instalarlos secuencialmente, continuar tras errores individuales o cancelar los elementos restantes.
+- El historial privado conserva hasta 200 elementos con paquete, nombre, versiones anterior/nueva, resultado, fecha, origen (anfitrión/script/externo/inicio), autorización y detalles del error. Elimina un registro o borra el historial sin desinstalar aplicaciones ni eliminar archivos de origen. Tras finalizar el proceso, los elementos incompletos se marcan como cancelados y nunca se reanudan automáticamente.
+- Los ajustes guardan el orden y los métodos de autorización habilitados, las opciones de instalación y las notificaciones de progreso. Las instalaciones locales y externas usan `dialog` por defecto; las opciones `auto` o `silent` guardadas explícitamente se aplican. Las solicitudes del anfitrión/scripts conservan sus opciones explícitas, y la API de scripts mantiene `auto` por defecto. Las selecciones se guardan solo al confirmar.
+- Los ajustes incluyen Acerca de y el historial de versiones integrado en diez idiomas. La búsqueda manual de actualizaciones utiliza la API GitHub Releases del plugin con un intervalo de 12 horas, resultados en caché y gestión de versiones ignoradas. Las páginas de publicación se abren en el navegador; las actualizaciones no se descargan ni instalan automáticamente.
 
 ******
 
@@ -80,9 +83,11 @@ Funciones disponibles en esta vista previa de desarrollo; las futuras se indican
 
 ******
 
-1. Instala el APK del plugin desde [Releases](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/releases) en un dispositivo con AutoJs6 build 5299 (6.8.0) o posterior.
-2. Abre el centro de plugins de AutoJs6, comprueba que `3-Setup Installer` se reconoce y actívalo.
-3. Usa una acción de instalación de AutoJs6 o elige 3-Setup Installer al abrir o compartir archivos de paquetes. Cuando aparezca la confirmación, revisa la aplicación y las opciones antes de instalar. Prepara la autorización de Shizuku o Root al elegir un método con privilegios.
+1. Instala el APK del plugin desde la página oficial [Releases](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/releases) en Android 7.0 o posterior. Su entrada en el lanzador abre el inicio independiente.
+2. En Inicio, comprueba la autorización y el instalador predeterminado, y usa el botón de añadir para seleccionar uno o varios paquetes. Revisa el diálogo antes de confirmar y sigue el progreso y el historial reciente en Inicio.
+3. Para la integración con AutoJs6, usa la compilación 5299 (6.8.0) o posterior y habilita `3-Setup Installer` en el centro de plugins. La API de scripts requiere la compilación 5300 o posterior.
+4. Usa una acción de instalación de AutoJs6 o elige 3-Setup Installer al abrir o compartir archivos de paquetes. Cuando aparezca la confirmación, revisa la aplicación y las opciones antes de instalar. Prepara la autorización de Shizuku o Root al elegir un método con privilegios.
+5. El menú de Inicio permite acceder a las aplicaciones instaladas y los ajustes. Revisa las opciones locales de instalación, la apariencia, el icono y las notificaciones; Acerca de, el historial de versiones y la búsqueda manual de actualizaciones están en los ajustes.
 
 ******
 
@@ -96,6 +101,7 @@ Qué puede hacer cada modo y qué necesita:
 - `shizuku`: requiere Shizuku en ejecución (iniciado mediante depuración inalámbrica, ADB o Root) y permiso concedido al plugin. Sus privilegios de shell permiten instalaciones y desinstalaciones silenciosas y operaciones para otros usuarios.
 - `root`: necesita un gestor Root que conceda `su` al plugin; ofrece las mismas operaciones que Shizuku a través de un servicio root de libsu. La degradación en un firmware normal (user) solo sigue funcionando para aplicaciones debuggable, lo cual es una regla del framework y no un límite del plugin.
 - **Nota:** Con privilegios disponibles, las solicitudes del anfitrión con `interaction: 'auto'` instalan en silencio sin abrir antes una confirmación. Si Android exige confirmación, `auto` la permite y la registra en `notes`. Usa `interaction: 'dialog'` para solicitar confirmación previa, o `interaction: 'silent'` para fallar si hace falta una confirmación del sistema. La API de scripts sigue el mismo comportamiento predeterminado.
+- Los ajustes guardan el orden y los métodos de autorización habilitados, las opciones de instalación y las notificaciones de progreso. Las instalaciones locales y externas usan `dialog` por defecto; las opciones `auto` o `silent` guardadas explícitamente se aplican. Las solicitudes del anfitrión/scripts conservan sus opciones explícitas, y la API de scripts mantiene `auto` por defecto. Las selecciones se guardan solo al confirmar.
 
 ******
 
@@ -162,10 +168,11 @@ Hechos de la plataforma que delimitan lo que el plugin puede hacer:
 El plugin sigue límites explícitos:
 
 - Los puntos de entrada Binder están protegidos por el permiso de firma `org.autojs.permission.PLUGIN`, de modo que solo AutoJs6 puede alcanzarlos; la entrada externa "Abrir con" solo acepta archivos de paquete y nunca ejecuta un script.
-- REQUEST_INSTALL_PACKAGES y REQUEST_DELETE_PACKAGES respaldan los diálogos habituales de instalación y desinstalación; QUERY_ALL_PACKAGES permite al plugin mostrar la versión instalada y comparar firmas antes de una actualización.
+- REQUEST_INSTALL_PACKAGES y REQUEST_DELETE_PACKAGES permiten la confirmación de Android. QUERY_ALL_PACKAGES sirve para gestionar aplicaciones instaladas, comparar versiones y firmas y detectar el instalador predeterminado.
 - FOREGROUND_SERVICE y FOREGROUND_SERVICE_DATA_SYNC permiten el trabajo de instalación en segundo plano; POST_NOTIFICATIONS permite avisos de progreso y resultados. La falta de permiso de notificaciones no bloquea la instalación.
 - Shizuku y Root se usan solo para la operación que tú inicias; el servicio privilegiado no guarda estado, no mantiene ningún shell abierto entre operaciones y nunca es alcanzado desde fuera del plugin.
-- Los archivos de paquete se abren en modo de solo lectura; el plugin no realiza solicitudes de red, no recopila datos y excluye su almacenamiento privado de las copias de seguridad.
+- La instalación, la inspección, el historial y la gestión de aplicaciones funcionan sin conexión. INTERNET se usa solo al comprobar versiones manualmente mediante la API GitHub Releases fija del plugin, con un intervalo de 12 horas. No se realizan comprobaciones en segundo plano ni se suben paquetes.
+- Los archivos de origen se abren en modo de solo lectura. El historial conserva metadatos limitados y resultados, sin contenido de paquetes ni URI de origen; las rutas de los errores se ocultan. El almacenamiento privado se excluye de las copias de seguridad. Eliminar un registro no desinstala la aplicación ni elimina su origen.
 
 Obtenga el plugin únicamente desde la página oficial de [Releases](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/releases) o el centro de plugins de AutoJs6. Los paquetes de origen desconocido pueden fallar la verificación del anfitrión o conllevar riesgos aunque el número de versión parezca idéntico.
 
@@ -211,10 +218,16 @@ Los planes y el progreso del plugin se mantienen como una lista verificable en R
 
 _2026/10/01_
 
-- `Aviso` Vista previa de desarrollo. Ya se han implementado los diálogos de confirmación, progreso, resultados y lotes, la apertura y el uso compartido externos, la eliminación opcional del origen, la confirmación del sistema y las notificaciones en primer plano. La API de scripts `installer` requiere AutoJs6 >= 6.8.0 (5300). El inicio y los ajustes independientes, el historial y una pantalla de configuración del instalador predeterminado siguen previstos. Consulta [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md) para el progreso y la cobertura de dispositivos. Compatibilidad básica del plugin: AutoJs6 >= 6.8.0 (5299).
-- `Función` Identidad del plugin `three-setup-installer` (engine `installer`) con el servicio INFO, la Wake Activity y el esqueleto del servicio `org.autojs.plugin.INSTALLER` para el descubrimiento por el host
+- `Aviso` Vista previa de desarrollo con inicio independiente, ajustes, gestión de aplicaciones instaladas, colas secuenciales e historial de instalación. Incluye confirmación, progreso, resultados y notificaciones en primer plano. Tras reiniciar el proceso, conserva los resultados confirmados guardados y marca como canceladas las tareas incompletas, sin reanudarlas ni reintentarlas automáticamente. La API de scripts `installer` requiere AutoJs6 >= 6.8.0 (5300); la integración básica requiere la compilación 5299. Consulta [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md) para la cobertura de dispositivos y las validaciones pendientes
+- `Función` 3-Setup Installer instala, actualiza, inspecciona y desinstala aplicaciones Android desde su inicio independiente, las entradas y scripts de AutoJs6, o solicitudes externas para abrir y compartir paquetes. Admite la confirmación de Android y operaciones privilegiadas mediante Shizuku o Root
 - `Función` README, instrucciones del centro de plugins y registro de cambios en 10 idiomas
 - `Función` La API de scripts `installer` (alias `$installer`) ofrece formas síncrona, `...Async` y de sesión para instalar paquetes individuales, por lotes o divididos, desinstalar, inspeccionar, consultar autorizadores y usuarios, y configurar el instalador predeterminado. Los fallos son objetos `InstallerError` con un `code` estable (requiere AutoJs6 >= 6.8.0 (5300))
+- `Función` El inicio independiente muestra la disponibilidad y autorización de Shizuku/Root, el instalador predeterminado, las tareas activas y las instalaciones recientes. Selecciona varios paquetes en el selector del sistema para instalarlos secuencialmente, continuar tras errores individuales o cancelar los elementos restantes
+- `Función` El historial privado conserva hasta 200 elementos con paquete, nombre, versiones anterior/nueva, resultado, fecha, origen (anfitrión/script/externo/inicio), autorización y detalles del error. Elimina un registro o borra el historial sin desinstalar aplicaciones ni eliminar archivos de origen. Tras finalizar el proceso, los elementos incompletos se marcan como cancelados y nunca se reanudan automáticamente
+- `Función` La gestión de aplicaciones instaladas permite buscar por nombre o paquete, ordenar por nombre, fecha de instalación o actualización, y mostrar aplicaciones del sistema. Abre una aplicación o su información del sistema, o revisa y confirma su desinstalación. Shizuku o Root pueden desinstalar después sin otra confirmación del sistema y conservar los datos si se solicita; en otros casos se usa la confirmación de Android
+- `Función` Los ajustes guardan el orden y los métodos de autorización habilitados, las opciones de instalación y las notificaciones de progreso. Las instalaciones locales y externas usan `dialog` por defecto; las opciones `auto` o `silent` guardadas explícitamente se aplican. Las solicitudes del anfitrión/scripts conservan sus opciones explícitas, y la API de scripts mantiene `auto` por defecto. Las selecciones se guardan solo al confirmar
+- `Función` La tarjeta de inicio y los ajustes abren la misma página del instalador predeterminado, con acciones privilegiadas para establecerlo o quitarlo y guía hacia los ajustes del sistema sin privilegios. Las políticas OEM pueden impedir el cambio o exigir borrar el controlador anterior. Los scripts conservan `installer.isDefault`, `installer.setDefault` y `setDefaultAsync`; los resultados reflejan la respuesta del dispositivo
+- `Función` Los ajustes incluyen Acerca de y el historial de versiones integrado en diez idiomas. La búsqueda manual de actualizaciones utiliza la API GitHub Releases del plugin con un intervalo de 12 horas, resultados en caché y gestión de versiones ignoradas. Las páginas de publicación se abren en el navegador; las actualizaciones no se descargan ni instalan automáticamente
 - `Corrección` Las acciones de cancelar no seguían el idioma del complemento en dispositivos sin la traducción correspondiente del sistema
 - `Mejora` El id del plugin, el motor, la accion / categoria del servicio, el descriptor Binder y la version minima del host provienen ahora de las constantes del contrato installer-api del host; las capacidades declaran la version 1 del contrato del instalador y la build minima del host se fija en 5299
 - `Mejora` Las fuentes con acceso aleatorio evitan una copia completa en caché, y los flujos se almacenan temporalmente cuando es necesario. Se admiten paquetes divididos en ZIP, AAB solo permite inspección y se rechazan fuentes modificadas.
@@ -223,11 +236,12 @@ _2026/10/01_
 - `Mejora` El núcleo de desinstalación admite la confirmación del sistema, Shizuku y Root, con la opción de conservar los datos al usar autorización privilegiada.
 - `Mejora` La instalación por lotes secuencial permite continuar tras los fallos o cancelar los elementos restantes, y admite validar y seleccionar usuarios de destino con privilegios.
 - `Mejora` El servicio del anfitrión admite inspección, instalación, desinstalación y consulta de usuarios, con confirmación explícita, cancelación al salir el solicitante, hasta cuatro sesiones simultáneas y limpieza automática.
-- `Mejora` Los diálogos de instalación siguen el idioma, modo nocturno y color de AutoJs6, con una alternativa sin anfitrión y diseños compatibles con texto grande y RTL.
+- `Mejora` La apariencia incluye idioma, modo nocturno, color del tema e icono del lanzador. Los tres primeros siguen AutoJs6 por defecto y admiten ajustes locales; sin anfitrión se usan el idioma y modo del sistema y el color predeterminado. Los iconos ofrecen modos claro, oscuro, automático y transparente; el automático sigue el sistema, sujeto a la caché y las máscaras del lanzador
 - `Mejora` La instalación en segundo plano incluye servicio en primer plano y avisos de progreso, cancelación y resultados. Denegar notificaciones no bloquea la instalación.
 - `Mejora` Añadidos diálogos de confirmación, progreso y resultados con información de la aplicación, selección de componentes APK, opciones, copia de errores y estados por elemento. Tras reiniciar el proceso, la vista restaurada muestra los resultados confirmados guardados y marca los elementos pendientes como interrumpidos. Es de solo lectura y nunca instala ni reintenta automáticamente.
 - `Mejora` La confirmación del sistema incorpora orientación sobre fuentes desconocidas e interrupciones. La desinstalación con privilegios muestra información y la opción de conservar datos antes de confirmar.
 - `Mejora` Abre o comparte uno o varios paquetes, reintenta orígenes externos mientras haya acceso e intenta eliminarlos opcionalmente tras el éxito. El rechazo de la eliminación mantiene la instalación correcta.
+- `Mejora` La apertura de paquetes APKS compartidos por MT Manager admite el tipo MIME application/vnd.android.package-archives
 - `Dependencia` Se añade Shizuku API 13.1.5 (`dev.rikka.shizuku:api`, `dev.rikka.shizuku:provider`) para el modo de autorización Shizuku
 - `Dependencia` Se añade libsu 6.0.0 (`com.github.topjohnwu.libsu:core`, `service`) para el modo de autorización Root
 - `Dependencia` Se añade AndroidHiddenApiBypass 6.1 para las API ocultas del instalador de paquetes que usa el servicio privilegiado

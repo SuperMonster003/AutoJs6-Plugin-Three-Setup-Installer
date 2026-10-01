@@ -146,9 +146,10 @@ AutoJs6-Plugin-Three-Setup-Installer/
 | 权限 | 理由 |
 |---|---|
 | `REQUEST_INSTALL_PACKAGES` / `REQUEST_DELETE_PACKAGES` | `none` 授权方式的系统安装 / 卸载对话框 (D17 / D24) |
-| `QUERY_ALL_PACKAGES` | 显示已安装版本, 比对签名, 检测默认安装器状态 (D23); 插件经 GitHub 分发, 不受商店政策限制, 在 Manifest 以 `tools:ignore` 标注 |
+| `QUERY_ALL_PACKAGES` | 已安装应用列表, 版本与签名比对, 默认安装器状态检测 (D23 / D36); 插件经 GitHub 分发, 不受商店政策限制, 在 Manifest 以 `tools:ignore` 标注 |
 | `FOREGROUND_SERVICE` / `FOREGROUND_SERVICE_DATA_SYNC` | 安装写入期间的 dataSync 前台服务与进度通知 (D26 / P3.4) |
 | `POST_NOTIFICATIONS` | 进度与结果通知, 缺失时静默降级 |
+| `INTERNET` | 仅用户手动检查更新时访问本插件固定的 GitHub Releases API, 12 小时间隔与缓存结果; 无后台检查或安装包上传, 安装及应用管理保持离线 (P5.3) |
 | `moe.shizuku.manager.permission.API_V23` | Shizuku 授权方式 (D2) |
 
 - `<queries>`: 宿主包, Shizuku 管理器包, 以及 `ACTION_VIEW` + 安装包 MIME 的 intent (默认安装器状态检测). 新增跨包访问时先加 queries.

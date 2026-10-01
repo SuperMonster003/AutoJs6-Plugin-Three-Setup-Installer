@@ -10,4 +10,8 @@
 
 {{ placeholder_authorizer_points }}
 
+### {{ h3_security }}
+
+{{ placeholder_security_points }}
+
 {{ p_instruction_more }}
