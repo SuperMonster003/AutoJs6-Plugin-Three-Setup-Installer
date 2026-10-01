@@ -22,6 +22,7 @@
 * `Corrección` Se corrigió la marca de selección invisible de los APK divididos obligatorios como base.apk cuando su casilla está deshabilitada, tanto en el tema claro como en el oscuro
 * `Corrección` Se corrigió la ausencia del plugin en el selector de instalación para contenedores abiertos desde Files by Google u otros proveedores con URI opacas y tipos MIME ZIP o binarios genéricos
 * `Corrección` Se rechazan los proveedores de paquetes que devuelven descriptores de origen con escritura y se cierran de inmediato los descriptores rechazados
+* `Corrección` Se conserva el error de espacio insuficiente durante la preparación, extracción y escritura por canal privilegiado en lugar de informar un paquete no válido o un error de canal genérico
 * `Mejora` El id del plugin, el motor, la accion / categoria del servicio, el descriptor Binder y la version minima del host provienen ahora de las constantes del contrato installer-api del host; las capacidades declaran la version 1 del contrato del instalador y la build minima del host se fija en 5299
 * `Mejora` Las fuentes con acceso aleatorio evitan una copia completa en caché, y los flujos se almacenan temporalmente cuando es necesario. Se admiten paquetes divididos en ZIP, AAB solo permite inspección y se rechazan fuentes modificadas.
 * `Mejora` El método de autorización elegido explícitamente no cambia a otro. Se distinguen rechazo, tiempo de espera agotado e incompatibilidad, y las solicitudes simultáneas comparten autorización y conexiones privilegiadas.
@@ -35,6 +36,7 @@
 * `Mejora` La confirmación del sistema incorpora orientación sobre fuentes desconocidas e interrupciones. La desinstalación con privilegios muestra información y la opción de conservar datos antes de confirmar.
 * `Mejora` Abre o comparte uno o varios paquetes, reintenta orígenes externos mientras haya acceso e intenta eliminarlos opcionalmente tras el éxito. El rechazo de la eliminación mantiene la instalación correcta.
 * `Mejora` La apertura de paquetes APKS compartidos por MT Manager admite el tipo MIME application/vnd.android.package-archives
+* `Mejora` Las instalaciones simultáneas del mismo paquete se ejecutan en serie entre usuarios y métodos de autorización, conservando la cancelación y los plazos de espera, y se limpian los directorios temporales inactivos durante más de 24 horas
 * `Dependencia` Se añade Shizuku API 13.1.5 (`dev.rikka.shizuku:api`, `dev.rikka.shizuku:provider`) para el modo de autorización Shizuku
 * `Dependencia` Se añade libsu 6.0.0 (`com.github.topjohnwu.libsu:core`, `service`) para el modo de autorización Root
 * `Dependencia` Se añade AndroidHiddenApiBypass 6.1 para las API ocultas del instalador de paquetes que usa el servicio privilegiado

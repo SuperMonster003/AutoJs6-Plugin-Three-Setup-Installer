@@ -25,7 +25,8 @@
         "Las acciones de cancelar no seguían el idioma del complemento en dispositivos sin la traducción correspondiente del sistema",
         "Se corrigió la marca de selección invisible de los APK divididos obligatorios como base.apk cuando su casilla está deshabilitada, tanto en el tema claro como en el oscuro",
         "Se corrigió la ausencia del plugin en el selector de instalación para contenedores abiertos desde Files by Google u otros proveedores con URI opacas y tipos MIME ZIP o binarios genéricos",
-        "Se rechazan los proveedores de paquetes que devuelven descriptores de origen con escritura y se cierran de inmediato los descriptores rechazados"
+        "Se rechazan los proveedores de paquetes que devuelven descriptores de origen con escritura y se cierran de inmediato los descriptores rechazados",
+        "Se conserva el error de espacio insuficiente durante la preparación, extracción y escritura por canal privilegiado en lugar de informar un paquete no válido o un error de canal genérico"
       ],
       "improvement": [
         "El id del plugin, el motor, la accion / categoria del servicio, el descriptor Binder y la version minima del host provienen ahora de las constantes del contrato installer-api del host; las capacidades declaran la version 1 del contrato del instalador y la build minima del host se fija en 5299",
@@ -40,7 +41,8 @@
         "Añadidos diálogos de confirmación, progreso y resultados con información de la aplicación, selección de componentes APK, opciones, copia de errores y estados por elemento. Tras reiniciar el proceso, la vista restaurada muestra los resultados confirmados guardados y marca los elementos pendientes como interrumpidos. Es de solo lectura y nunca instala ni reintenta automáticamente.",
         "La confirmación del sistema incorpora orientación sobre fuentes desconocidas e interrupciones. La desinstalación con privilegios muestra información y la opción de conservar datos antes de confirmar.",
         "Abre o comparte uno o varios paquetes, reintenta orígenes externos mientras haya acceso e intenta eliminarlos opcionalmente tras el éxito. El rechazo de la eliminación mantiene la instalación correcta.",
-        "La apertura de paquetes APKS compartidos por MT Manager admite el tipo MIME application/vnd.android.package-archives"
+        "La apertura de paquetes APKS compartidos por MT Manager admite el tipo MIME application/vnd.android.package-archives",
+        "Las instalaciones simultáneas del mismo paquete se ejecutan en serie entre usuarios y métodos de autorización, conservando la cancelación y los plazos de espera, y se limpian los directorios temporales inactivos durante más de 24 horas"
       ],
       "dependency": [
         "Se añade Shizuku API 13.1.5 (`dev.rikka.shizuku:api`, `dev.rikka.shizuku:provider`) para el modo de autorización Shizuku",

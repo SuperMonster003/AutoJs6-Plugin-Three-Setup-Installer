@@ -213,6 +213,20 @@ class InstallEngineTest {
         assertFalse(engine.session.committed)
     }
 
+    @Test fun `private storage markers are exact and only decoded at private service calls`() {
+        val marker = PrivilegedOptions.ERROR_INSUFFICIENT_STORAGE
+        val original = IllegalStateException(marker)
+        val engine = FakeEngine().apply { session.beforeWrite = { privilegedInstallerCall { throw original } } }
+        val failure = assertThrows(InstallFailure::class.java) { engine.install(request(apk()), RecordingListener()) }
+        assertEquals(InstallerErrorCodes.INSUFFICIENT_STORAGE, failure.code)
+        assertSame(original, failure.cause)
+        assertTrue(engine.session.abandoned && engine.session.closed)
+        assertFalse(engine.session.committed)
+        assertEquals(InstallerErrorCodes.INTERNAL, InstallFailure.from(IllegalStateException(marker)).code)
+        val prefixed = IllegalStateException("Unexpected response: $marker")
+        assertSame(prefixed, assertThrows(IllegalStateException::class.java) { privilegedInstallerCall { throw prefixed } })
+    }
+
     @Test fun `interruption while awaiting a result remains cancellation and preserves interrupt flag`() {
         val engine = FakeEngine().apply { session.beforeAwait = { throw InterruptedException("stopped") } }
         try {

@@ -14,6 +14,7 @@ import android.system.OsConstants
 import android.system.StructPollfd
 import android.util.Log
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.ThreeSetupInstallerPlugin
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.engine.StorageErrors
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.priv.hidden.PackageInstallerHidden
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.priv.hidden.PackageManagerHidden
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.priv.hidden.UserManagerHidden
@@ -111,36 +112,33 @@ internal open class PrivilegedInstallerImpl(expectedOwnerUid: Int? = null) : IPr
             record.outputs += output
             // API 24 returns a FileBridge socket, not an APK stream. The framework handles its protocol.
             val work = Runnable {
-                try {
-                    output.use { destination ->
-                        ParcelFileDescriptor.AutoCloseInputStream(pipe[0]).use { source ->
-                            val buffer = ByteArray(256 * 1024)
-                            val poll = StructPollfd().apply {
-                                fd = pipe[0].fileDescriptor
-                                events = OsConstants.POLLIN.toShort()
-                            }
-                            val deadline = System.nanoTime() + TimeUnit.MINUTES.toNanos(30)
-                            var copied = 0L
-                            while (true) {
-                                check(!record.cancelled && !Thread.currentThread().isInterrupted) { "Session was abandoned" }
-                                check(System.nanoTime() < deadline) { "APK stream timed out" }
-                                if (Os.poll(arrayOf(poll), 1000) == 0) continue
-                                val count = source.read(buffer)
-                                if (count < 0) break
-                                copied += count
-                                check(copied <= length) { "APK exceeded declared length" }
-                                destination.write(buffer, 0, count)
-                            }
-                            check(copied == length) { "Incomplete APK stream" }
-                            record.session.fsync(destination)
-                        }
-                    }
-                } catch (failure: Throwable) {
+                val source = ParcelFileDescriptor.AutoCloseInputStream(pipe[0])
+                record.writeState.write(closeInput = { source.close() }, onFailure = { failure ->
                     if (!record.cancelled && record.writeFailureLogged.compareAndSet(false, true)) {
                         Log.w("PrivilegedInstaller", "APK write failed (declaredBytes=$length)", failure)
                     }
-                    runCatching { pipe[0].close() }
-                    throw failure
+                }) {
+                    output.use { destination ->
+                        val buffer = ByteArray(256 * 1024)
+                        val poll = StructPollfd().apply {
+                            fd = pipe[0].fileDescriptor
+                            events = OsConstants.POLLIN.toShort()
+                        }
+                        val deadline = System.nanoTime() + TimeUnit.MINUTES.toNanos(30)
+                        var copied = 0L
+                        while (true) {
+                            check(!record.cancelled && !Thread.currentThread().isInterrupted) { "Session was abandoned" }
+                            check(System.nanoTime() < deadline) { "APK stream timed out" }
+                            if (Os.poll(arrayOf(poll), 1000) == 0) continue
+                            val count = source.read(buffer)
+                            if (count < 0) break
+                            copied += count
+                            check(copied <= length) { "APK exceeded declared length" }
+                            destination.write(buffer, 0, count)
+                        }
+                        check(copied == length) { "Incomplete APK stream" }
+                        record.session.fsync(destination)
+                    }
                 }
             }
             try {
@@ -179,6 +177,14 @@ internal open class PrivilegedInstallerImpl(expectedOwnerUid: Int? = null) : IPr
     override fun abandon(sessionId: Int) = privileged { remove(sessionId, abandon = true) }
 
     override fun release(sessionId: Int) = privileged { remove(sessionId, abandon = false) }
+
+    override fun checkWriteStatus(sessionId: Int) = privileged {
+        val record = record(sessionId)
+        synchronized(record) {
+            check(!record.cancelled) { "Session was abandoned" }
+            record.writeState.checkFailure()
+        }
+    }
 
     override fun uninstall(packageName: String, flags: Int, userId: Int, sender: IntentSender) = privileged {
         PrivilegedOptions.validatePackage(packageName)
@@ -265,10 +271,18 @@ internal open class PrivilegedInstallerImpl(expectedOwnerUid: Int? = null) : IPr
         checkCaller()
         checkActive()
         val identity = Binder.clearCallingIdentity()
-        return try { block() } catch (failure: ReflectiveOperationException) {
+        return try { block() } catch (failure: Exception) {
+            if (StorageErrors.isInsufficientStorage(failure)) {
+                // Binder only preserves supported exception types. The client recognizes this
+                // exact marker at private installer calls, never from arbitrary package text.
+                throw IllegalStateException(PrivilegedOptions.ERROR_INSUFFICIENT_STORAGE, failure)
+            }
             // Binder cannot marshal checked reflection exceptions on older Android versions.
             // Report an explicit supported exception instead of a successful reply with null data.
-            throw IllegalStateException("Privileged framework API is unavailable: ${failure.message}", failure)
+            if (failure is ReflectiveOperationException) {
+                throw IllegalStateException("Privileged framework API is unavailable: ${failure.message}", failure)
+            }
+            throw failure
         } finally { Binder.restoreCallingIdentity(identity) }
     }
 
@@ -283,6 +297,7 @@ internal open class PrivilegedInstallerImpl(expectedOwnerUid: Int? = null) : IPr
         private var sessionClosed = false
         @Volatile var cancelled = false
         val writeFailureLogged = AtomicBoolean(false)
+        val writeState = PrivilegedWriteState()
         val inputs = mutableListOf<ParcelFileDescriptor>()
         val outputs = mutableListOf<OutputStream>()
         val writes = linkedMapOf<String, Future<*>>()

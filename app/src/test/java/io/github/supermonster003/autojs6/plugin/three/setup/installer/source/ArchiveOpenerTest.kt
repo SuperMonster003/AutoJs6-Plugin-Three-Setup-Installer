@@ -11,6 +11,7 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.IOException
 import java.security.MessageDigest
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
@@ -19,6 +20,16 @@ import java.util.zip.CRC32
 class ArchiveOpenerTest {
     @get:Rule val temporary = TemporaryFolder()
     private val device = PackageDeviceSpec(35, listOf("arm64-v8a", "armeabi-v7a"), 440, listOf("en-US"))
+
+    @Test fun `the pinned parser storage preflight is not mislabeled as an invalid archive`() {
+        val original = IOException("Insufficient storage space to stage the package")
+        val failure = ArchiveOpener.extractionFailure(original, "example.source")
+        assertEquals(InstallerErrorCodes.INSUFFICIENT_STORAGE, failure.code)
+        assertEquals("example.source", failure.packageName)
+        assertSame(original, failure.cause)
+        assertEquals(InstallerErrorCodes.INVALID_PACKAGE, ArchiveOpener.extractionFailure(
+            IOException("Invalid entry: Insufficient storage space to stage the package"), null).code)
+    }
 
     @Test fun `plain APK is recognized by content and retains its source digest`() {
         val file = file("renamed.bin", apk())

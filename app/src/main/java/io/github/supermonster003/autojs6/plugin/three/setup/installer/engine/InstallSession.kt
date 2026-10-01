@@ -113,6 +113,7 @@ internal class InstallSession(
             var prepared: PreparedPackage? = null
             var target = initialTarget
             var options = request.options
+            var packageLease: Closeable? = null
             try {
                 checkActive()
                 stage(InstallerContract.STAGE_PREPARING, index, null)
@@ -127,8 +128,14 @@ internal class InstallSession(
                     options = selection.options
                     prepared.failure()?.let { throw it }
                     checkActive()
+                    // The confirmation has been consumed. A same-package wait is preparation,
+                    // not another request for approval, and must retain only the cancel action.
+                    stage(InstallerContract.STAGE_PREPARING, index, prepared.packageName)
                 }
                 val current = prepared
+                // Confirmation may change the target and can take minutes. Acquire only once it
+                // finishes, then keep version sampling and the entire platform session together.
+                packageLease = PackageInstallLocks.acquire(current.packageName, ::checkActive)
                 val previous = prepared.packageName?.let { environment.installedVersion(it, target) }
                 checkActive()
                 val installed = target.engine.install(
@@ -174,6 +181,7 @@ internal class InstallSession(
                 if (error.code == InstallerErrorCodes.CANCELLED) cancel()
             } finally {
                 runCatching { environment.discardItem(index) }
+                packageLease?.close()
             }
         }
         finish(if (request.isBatch) InstallDocuments.batch(results) else results.single(), null)

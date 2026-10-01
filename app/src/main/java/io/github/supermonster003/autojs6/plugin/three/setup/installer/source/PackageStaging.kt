@@ -4,8 +4,10 @@ import android.content.Context
 import android.net.Uri
 import android.os.ParcelFileDescriptor
 import android.provider.OpenableColumns
+import android.system.ErrnoException
 import android.system.Os
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.engine.InstallFailure
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.engine.StorageErrors
 import org.autojs.plugin.installer.api.InstallerErrorCodes
 import java.io.File
 import java.io.IOException
@@ -31,8 +33,8 @@ internal object PackageStaging {
 
     const val MAX_SOURCE_BYTES = 4L * 1024L * 1024L * 1024L
     private const val MINIMUM_FREE_BYTES = 128L * 1024L * 1024L
-    private const val STALE_AFTER_MILLIS = 24L * 60L * 60L * 1000L
     private const val BUFFER_BYTES = 256 * 1024
+    private val directories = StagingDirectories(makeDirectory = ::createDirectory)
 
     fun open(
         context: Context,
@@ -179,27 +181,27 @@ internal object PackageStaging {
     fun root(context: Context): File = File(context.cacheDir, "staging")
 
     /** A fresh directory for one session; the caller deletes it through [discard]. */
-    fun newDirectory(context: Context, sessionId: String = UUID.randomUUID().toString()): File {
-        val safe = sessionId.replace(Regex("[^A-Za-z0-9._-]"), "_").trim('.').take(64).ifEmpty { "session" }
-        val parent = root(context)
-        if (!parent.isDirectory && !parent.mkdirs()) throw IOException("Unable to create the staging root")
-        // Host IDs are untrusted and may repeat. Never share a directory between live requests.
-        val directory = File(parent, "$safe-${UUID.randomUUID()}")
-        if (!directory.mkdir()) throw IOException("Unable to create the staging directory")
-        return directory
+    fun newDirectory(context: Context, sessionId: String = UUID.randomUUID().toString()): File =
+        directories.create(root(context), sessionId)
+
+    fun newChildDirectory(parent: File, name: String): File = File(parent, name).also(::createDirectory)
+
+    /** Keep errno when mkdir fails; File.mkdir() would discard ENOSPC and EDQUOT. */
+    private fun createDirectory(directory: File) {
+        try {
+            Os.mkdir(directory.absolutePath, 448) // 0700, app-private staging only.
+        } catch (failure: ErrnoException) {
+            if (StorageErrors.isInsufficientStorage(failure)) throw StorageErrors.failure(failure)
+            throw IOException("Unable to create the staging directory", failure)
+        }
     }
 
     fun discard(directory: File?) {
-        directory?.takeIf { it.isDirectory && it.parentFile?.name == "staging" }?.deleteRecursively()
+        directories.discard(directory)
     }
 
-    /** Deletes staging directories older than a day; called from the service start, never from a Binder thread. */
-    fun cleanStale(context: Context) {
-        val now = System.currentTimeMillis()
-        root(context).listFiles()?.forEach { directory ->
-            if (directory.isDirectory && now - directory.lastModified() > STALE_AFTER_MILLIS) directory.deleteRecursively()
-        }
-    }
+    /** Deletes day-old residual directories, preserving this process's live source views. Worker only. */
+    fun cleanStale(context: Context) = directories.cleanStale(root(context))
 
     /** Stages a host descriptor; [declaredSize] is the size the host reported and the copy must match it. */
     fun stageDescriptor(
@@ -293,8 +295,8 @@ internal object PackageStaging {
             }
         } catch (failure: IOException) {
             target.delete()
-            if (failure.message?.contains("ENOSPC") == true) throw InstallFailure(InstallerErrorCodes.INSUFFICIENT_STORAGE, "Cache partition is full")
-            throw InstallFailure(InstallerErrorCodes.SOURCE_UNREADABLE, "Cannot read the package source: ${failure.message}")
+            if (StorageErrors.isInsufficientStorage(failure)) throw StorageErrors.failure(failure)
+            throw InstallFailure(InstallerErrorCodes.SOURCE_UNREADABLE, "Cannot read the package source: ${failure.message}", cause = failure)
         } catch (failure: Throwable) {
             target.delete()
             throw failure

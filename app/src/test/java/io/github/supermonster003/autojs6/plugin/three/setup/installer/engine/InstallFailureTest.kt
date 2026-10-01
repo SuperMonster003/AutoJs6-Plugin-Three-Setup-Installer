@@ -52,4 +52,24 @@ class InstallFailureTest {
         assertEquals(InstallerErrorCodes.INVALID_PACKAGE, InstallStatusMapper.toFailure(4, null, null).code)
         assertEquals(InstallerErrorCodes.UNINSTALL_FAILED, InstallStatusMapper.toFailure(4, message, null, uninstall = true).code)
     }
+
+    @Test fun `generic OEM storage failures recognize only an exact legacy reason prefix`() {
+        val reason = "INSTALL_FAILED_INSUFFICIENT_STORAGE: Failed to allocate internal storage"
+        val failure = InstallStatusMapper.toFailure(InstallStatusMapper.STATUS_FAILURE, reason, "example.fixture")
+        assertEquals(InstallerErrorCodes.INSUFFICIENT_STORAGE, failure.code)
+        assertEquals(reason, failure.systemMessage)
+        assertEquals(InstallStatusMapper.STATUS_FAILURE, failure.status)
+        assertEquals(InstallerErrorCodes.INSTALL_FAILED, InstallStatusMapper.toFailure(1, "Invalid filename: $reason", null).code)
+        assertEquals(InstallerErrorCodes.UNINSTALL_FAILED, InstallStatusMapper.toFailure(1, reason, null, uninstall = true).code)
+    }
+
+    @Test fun `arbitrary exception messages never masquerade as a storage errno`() {
+        val text = "ENOSPC (No space left on device)"
+        assertEquals(InstallerErrorCodes.SOURCE_UNREADABLE, InstallFailure.from(IOException(text)).code)
+        assertEquals(InstallerErrorCodes.INVALID_ARGUMENT, InstallFailure.from(IllegalArgumentException(text)).code)
+        val cyclic = IOException("a")
+        val inner = IOException("b", cyclic)
+        cyclic.initCause(inner)
+        assertFalse(StorageErrors.isInsufficientStorage(cyclic))
+    }
 }

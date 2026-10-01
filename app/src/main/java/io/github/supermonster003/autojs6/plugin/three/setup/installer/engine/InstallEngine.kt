@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.pm.PackageInstaller
 import android.os.Build
 import android.os.Bundle
+import android.os.DeadObjectException
 import android.os.IBinder
 import android.os.Looper
 import android.os.ParcelFileDescriptor
@@ -259,15 +260,17 @@ internal class PrivilegedInstallEngine(
             putInt(PrivilegedOptions.FLAGS, parameters.flags)
             putLong(PrivilegedOptions.SIZE, parameters.totalBytes)
         }
-        val id = service.createSession(params, installer, request.userId)
+        val id = privilegedInstallerCall { service.createSession(params, installer, request.userId) }
         try {
             val ticket = InstallStatusBridge.open(context)
             return object : StatusSession(ticket) {
                 override fun openWrite(apk: PlannedApk, checkActive: () -> Unit): OutputStream =
-                    CancellablePipeOutputStream(service.openWrite(id, apk.name, apk.size), checkActive)
+                    CancellablePipeOutputStream(privilegedInstallerCall { service.openWrite(id, apk.name, apk.size) }, checkActive) {
+                        privilegedInstallerCall { service.checkWriteStatus(id) }
+                    }
                 // The privileged service drains, validates and fsyncs each pipe before commit returns.
                 override fun fsync(output: OutputStream) = Unit
-                override fun commit() = service.commit(id, ticket.sender)
+                override fun commit() = privilegedInstallerCall { service.commit(id, ticket.sender) }
                 override fun abandon() = service.abandon(id)
                 override fun close() {
                     // Also release the privileged service's ownership record after a terminal result.
@@ -287,7 +290,13 @@ private abstract class StatusSession(private val ticket: InstallStatusBridge.Tic
 }
 
 /** Pipe backpressure must not prevent cancellation or deadline checks if the remote reader stalls. */
-internal class CancellablePipeOutputStream(private val descriptor: ParcelFileDescriptor, private val checkActive: () -> Unit) : OutputStream() {
+internal class CancellablePipeOutputStream(
+    private val descriptor: ParcelFileDescriptor,
+    private val checkActive: () -> Unit,
+    private val checkRemoteWrite: () -> Unit,
+) : OutputStream() {
+    constructor(descriptor: ParcelFileDescriptor, checkActive: () -> Unit) : this(descriptor, checkActive, {})
+
     init {
         try {
             HiddenApiAccess.setNonBlocking(descriptor.fileDescriptor)
@@ -312,6 +321,20 @@ internal class CancellablePipeOutputStream(private val descriptor: ParcelFileDes
             } catch (failure: ErrnoException) {
                 if (failure.errno == OsConstants.EINTR) continue
                 if (failure.errno == OsConstants.EPIPE) {
+                    // The remote publishes its destination error before closing the read side.
+                    // A concurrent cancellation takes precedence over a stale storage error.
+                    checkActive()
+                    try {
+                        checkRemoteWrite()
+                    } catch (remoteFailure: Exception) {
+                        checkActive()
+                        if (remoteFailure is DeadObjectException) throw InstallFailure.from(remoteFailure)
+                        if (remoteFailure is InstallFailure && remoteFailure.code == InstallerErrorCodes.INSUFFICIENT_STORAGE) throw remoteFailure
+                        throw InstallFailure(InstallerErrorCodes.INSTALL_FAILED,
+                            "The privileged installer stopped reading APK data",
+                            systemMessage = remoteFailure.message, cause = remoteFailure)
+                    }
+                    checkActive()
                     throw InstallFailure(InstallerErrorCodes.INSTALL_FAILED,
                         "The privileged installer stopped reading APK data",
                         systemMessage = failure.message, cause = failure)
@@ -331,6 +354,14 @@ private fun requireWorkerThread() {
     check(Looper.myLooper() != Looper.getMainLooper()) { "InstallEngine must run on a worker thread" }
 }
 
+/** Do not recognize this marker outside calls to the plugin's own privileged installer Binder. */
+internal inline fun <T> privilegedInstallerCall(block: () -> T): T = try {
+    block()
+} catch (failure: IllegalStateException) {
+    if (failure.message == PrivilegedOptions.ERROR_INSUFFICIENT_STORAGE) throw StorageErrors.failure(failure)
+    throw failure
+}
+
 /** Only platform operations of the regular installer use this mapping; caller callbacks do not. */
 internal inline fun <T> nonePlatformCall(block: () -> T): T = try {
     block()
@@ -343,7 +374,7 @@ internal inline fun <T> nonePlatformCall(block: () -> T): T = try {
 private inline fun <T> platformIo(block: () -> T): T = try {
     block()
 } catch (failure: IOException) {
-    val noSpace = generateSequence<Throwable>(failure) { it.cause }.any { it is ErrnoException && it.errno == OsConstants.ENOSPC }
-    throw InstallFailure(if (noSpace) InstallerErrorCodes.INSUFFICIENT_STORAGE else InstallerErrorCodes.INSTALL_FAILED,
+    if (StorageErrors.isInsufficientStorage(failure)) throw StorageErrors.failure(failure)
+    throw InstallFailure(InstallerErrorCodes.INSTALL_FAILED,
         failure.message ?: "Cannot write the package installation session", cause = failure)
 }
