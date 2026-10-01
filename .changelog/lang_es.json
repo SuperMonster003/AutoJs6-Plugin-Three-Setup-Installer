@@ -23,7 +23,8 @@
       ],
       "fix": [
         "Las acciones de cancelar no seguían el idioma del complemento en dispositivos sin la traducción correspondiente del sistema",
-        "Se corrigió la marca de selección invisible de los APK divididos obligatorios como base.apk cuando su casilla está deshabilitada, tanto en el tema claro como en el oscuro"
+        "Se corrigió la marca de selección invisible de los APK divididos obligatorios como base.apk cuando su casilla está deshabilitada, tanto en el tema claro como en el oscuro",
+        "Se corrigió la ausencia del plugin en el selector de instalación para contenedores abiertos desde Files by Google u otros proveedores con URI opacas y tipos MIME ZIP o binarios genéricos"
       ],
       "improvement": [
         "El id del plugin, el motor, la accion / categoria del servicio, el descriptor Binder y la version minima del host provienen ahora de las constantes del contrato installer-api del host; las capacidades declaran la version 1 del contrato del instalador y la build minima del host se fija en 5299",

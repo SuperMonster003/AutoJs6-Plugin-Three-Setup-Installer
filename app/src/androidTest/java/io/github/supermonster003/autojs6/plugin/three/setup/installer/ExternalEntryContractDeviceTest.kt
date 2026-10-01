@@ -26,7 +26,7 @@ class ExternalEntryContractDeviceTest {
     @Test fun formalEntryResolvesApkContainersAndSharingWithoutAHostInstallerEntry() {
         val packages = context.packageManager
         val expected = ExternalInstallActivity::class.java.name
-        val types = listOf("application/vnd.android.package-archive", "application/x-apks", "application/vnd.apkm",
+        val types = listOf("application/vnd.android.package-archive", "application/vnd.android.package-archives", "application/x-apks", "application/vnd.apkm",
             "application/xapk-package-archive", "application/x-apkz", "application/x-aab", "application/vnd.android.aab")
         for (action in listOf(Intent.ACTION_VIEW, Intent.ACTION_INSTALL_PACKAGE)) {
             for (scheme in listOf("content", "file")) for (type in types) {
@@ -49,6 +49,29 @@ class ExternalEntryContractDeviceTest {
             @Suppress("DEPRECATION")
             assertTrue(packages.queryIntentActivities(Intent(action).setType("application/zip").setPackage(context.packageName), PackageManager.MATCH_DEFAULT_ONLY)
                 .any { it.activityInfo.name == expected })
+        }
+    }
+
+    @Test fun opaqueProviderUrisResolveGenericPackageTypesWithoutClaimingDocumentsOrNetworkUrls() {
+        val packages = context.packageManager
+        val expected = ExternalInstallActivity::class.java.name
+        fun resolves(action: String, uri: String, type: String): Boolean {
+            val intent = Intent(action).setDataAndType(Uri.parse(uri), type).setPackage(context.packageName)
+            @Suppress("DEPRECATION")
+            return packages.queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY).any { it.activityInfo.name == expected }
+        }
+        val opaqueUris = listOf("content://com.google.android.apps.nbu.files.provider/2/42",
+            "content://com.android.providers.downloads.documents/document/42", "content://fixture/items/42")
+        for (action in listOf(Intent.ACTION_VIEW, Intent.ACTION_INSTALL_PACKAGE)) {
+            for (uri in opaqueUris) for (type in listOf("application/zip", "application/octet-stream")) {
+                assertTrue("Missing opaque URI handler for $action/$uri/$type", resolves(action, uri, type))
+            }
+            for (uri in opaqueUris) for (type in listOf("application/pdf", "image/png", "text/plain")) {
+                assertFalse("Unrelated document type matched: $action/$uri/$type", resolves(action, uri, type))
+            }
+            for (scheme in listOf("https", "http")) for (type in listOf("application/zip", "application/octet-stream")) {
+                assertFalse("Network source matched: $scheme/$type", resolves(action, "$scheme://fixture/package.apkm", type))
+            }
         }
     }
 
