@@ -14,7 +14,8 @@ Current provenance: `common-plugin-api.aar` is the release AAR assembled from Au
 (2026-09-15), so the artifact is byte-identical to the one staged by the other official plugins.
 `package-archive-parser.aar` and `installer-api.aar` are the release builds of the host P1 line
 (installer contract V1, `InstallerIds.REQUIRED_HOST_VERSION_CODE` 5299) assembled on 2026-09-30;
-all three must come from the same host contract line and are re-staged together.
+The parser alone was rebuilt from host commit `0767971bc9` on 2026-10-01 to recognize ordinary ZIP
+split containers. The two contract AARs are unchanged; all three remain on the same V1 contract line.
 License and individual hashes are in `../THIRD_PARTY_NOTICES.md` and `../locks/host-api-aars.lock`.
 
 Record the lowercase SHA-256 of every staged artifact in `../locks/host-api-aars.lock`.

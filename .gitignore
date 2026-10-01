@@ -1,6 +1,7 @@
 *.apk
 !app/src/androidTest/assets/fixture-v1.apk
 !app/src/androidTest/assets/fixture-v2.apk
+!app/src/androidTest/assets/core-fixtures/*.apk
 *.zip
 *.exe
 *.iml
@@ -42,6 +43,7 @@ __pycache__/
 /releases/
 /tools/*
 !/tools/build-spike-fixtures.ps1
+!/tools/build-core-fixtures.ps1
 !/tools/run-privileged-spike.ps1
 !/tools/spike-fixtures/
 !/tools/nodejs/
