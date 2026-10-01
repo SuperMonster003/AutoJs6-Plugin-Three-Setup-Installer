@@ -344,7 +344,7 @@ runtime/api/augment/installer/          Installer.kt (AugmentableKey("installer"
 - [x] (插件) `InstallEngine` 接口: `install(request, sources, listener)`; `NoneInstallEngine` (D17): `PackageInstaller.Session` 创建 / 写入 (每个分包一个 `openWrite`, 1 MiB 缓冲, 进度按字节; 2026-10-01 从 8 MiB 调整以降低并发内存占用并细化进度) / `commit(IntentSender)` -> `STATUS_PENDING_USER_ACTION` 交 `UserActionActivity` (P3.3) / 结果广播 -> 回调; `PrivilegedInstallEngine`: 经 `IPrivilegedInstaller` 创建会话 (`installFlags` 映射: `allowDowngrade` -> `INSTALL_REQUEST_DOWNGRADE | INSTALL_ALLOW_DOWNGRADE`, `allowTestOnly` -> `INSTALL_ALLOW_TEST`, `bypassLowTargetSdk` -> `INSTALL_BYPASS_LOW_TARGET_SDK_BLOCK` (API 34+, 低版本忽略并在结果 `notes` 说明), `user: 'all'` -> `INSTALL_ALL_USERS`, `installer` -> `installerPackageName`, `user: <id>` -> `userId`), 写入用返回的 PFD, `commit` 后经 `IntentSender` (插件 `PendingIntent` 广播) 取结果. (SOURCE / DEVICE 2026-10-01: P3.3 已接入独立 UserActionActivity, 未知来源设置和通知回退; API 24 none 真实安装 / 更新, API 28 Root 与 API 35 Shizuku 回归通过. 安装标志的完整设备交叉矩阵仍按下方测试项保留未完成, 见 docs/dev/p3-ui-evidence.md)
 - [x] (插件) 结果规范化: `PackageInstaller.STATUS_*` -> 错误码 (附录 B.4), `EXTRA_STATUS_MESSAGE` 原样进 `systemMessage`, `EXTRA_PACKAGE_NAME` 进结果; 安装成功后按目标用户读取已安装版本, 按契约字段 `versionCode` / `previousVersionCode` 返回. (JVM: `InstallEngineTest`, `InstallFailureTest`, `InstallSessionTest`; DEVICE 2026-10-01: API 24 none / API 35 Shizuku / API 28 Root 的批量新装与更新返回正确旧版本; `Result.interaction` 原样用于成功结果; 见 `docs/dev/p2-session-evidence.md`)
 - [x] (插件) `deleteSource` (D25) 与 `keepSourceOnFailure`; 会话超时 (D31) 与取消 (`abandon`). (SOURCE / JVM / DEVICE 2026-10-01: 维护者确认 keepSourceOnFailure 为固定保留策略, 不新增开关或公开选项, 已在原 D25 澄清. 外部成功删除/提供方拒删沿用 P3 实装证据, 宿主 PFD 所有权不变. 新组合在 API 24/35 各 1/1, 显式 deleteSource=true 的坏包失败/确认取消/provider query 和 open 超时四状态均保留源 SHA-256/长度且删除调用为 0; 独立 URI 的一次拒删控制验证计数有效且隔离, 自有历史精确恢复, 平台 session 集合不变. 成功项清理与晚到取消的边界已有 JVM, 已创建会话的 abandon 另有 P2/P6 生命周期证据. 见 docs/dev/p2-source-preservation-evidence.md.)
-- [ ] (测试) 设备矩阵: 三种授权方式 x (新装 / 更新 / 降级 / 测试包 / 分包集合 xapk) 于 AVD API 24 与一台 API 33+ 真机; 记录降级在 user 版本 ROM 的实际结果 (预期 `INSTALL_FAILED_VERSION_DOWNGRADE`); `bypassLowTargetSdk` 用 targetSdk 22 的夹具 APK 于 API 34+ 验证.
+- [ ] (测试) 设备矩阵: 三种授权方式 x (新装 / 更新 / 降级 / 测试包 / 分包集合 xapk) 于 AVD API 24 与一台 API 33+ 真机; 记录降级在 user 版本 ROM 的实际结果 (预期 `INSTALL_FAILED_VERSION_DOWNGRADE`); `bypassLowTargetSdk` 用 targetSdk 22 的夹具 APK 于 API 34+ 验证. (部分 DEVICE 2026-10-01: 本轮统一 Core 在 API 24 none 5/5, Shizuku 6/6, API 35 none 5/5, 额外 Sony API 33 Root 6/6. API 33 user/KernelSU 实际接受带双标志的非 debuggable 降级, 与原 API 28/35 拒绝结果分别记录, 不一概推断 user ROM 拒绝. API 35 none 接受 targetSdk 22, 不作为绕过拦截的证明. 本轮未补齐每种授权方式在两类 API 上的所有组合, 原 checkbox 保留; 详见 docs/dev/p6-matrix-evidence.md.)
 
 ### P2.4 卸载引擎
 
@@ -483,7 +483,7 @@ runtime/api/augment/installer/          Installer.kt (AugmentableKey("installer"
 
 ### P6.3 兼容矩阵
 
-- [ ] (测试) 设备池 (附录 E.1): AVD API 24 (Shizuku ADB / none), Sony G8441 API 28, Sony XQ-AT72 API 31, Redmi 22120RN86C API 33, Xiaomi 23046RP50C API 35 (HyperOS 安装者包名事实), AVD API 37 (16 KB 页, 仅验证插件本身安装与运行); 每台: none 新装 / 更新, 可用特权路径静默安装 / 卸载, 外部入口, 默认安装器锁定 (可用身份); 结果表写入 `docs/dev/p6-matrix-evidence.md`. (部分 DEVICE 2026-10-01: 维护者启动的 API 37 x86_64 AVD 实际 PAGE_SIZE=16384, 同一 build 40 Release 安装/独立首页运行及两项跨进程契约通过, 此限定行完成. 原 OEM 全组合尚未完成, 补充 Sony Root API 33 不替代 Redmi API 33; 原 checkbox 保留.)
+- [ ] (测试) 设备池 (附录 E.1): AVD API 24 (Shizuku ADB / none), Sony G8441 API 28, Sony XQ-AT72 API 31, Redmi 22120RN86C API 33, Xiaomi 23046RP50C API 35 (HyperOS 安装者包名事实), AVD API 37 (16 KB 页, 仅验证插件本身安装与运行); 每台: none 新装 / 更新, 可用特权路径静默安装 / 卸载, 外部入口, 默认安装器锁定 (可用身份); 结果表写入 `docs/dev/p6-matrix-evidence.md`. (部分 DEVICE 2026-10-01: 原五台设备 none 新装/更新均通过, API 24/31/35 Shizuku 和 API 28 Root 静默新装/更新/卸载通过, 五台显式外部 Activity/取消各 1/1. API 24/35 默认页锁定/解锁各 1/1 且基线恢复; G8441/XQ-AT72 因原 APK preferred/last-chosen 保护性跳过. Redmi 没有可用特权身份, 不用额外 Root Sony 替代. HyperOS 三种请求安装者事实已记录. API 37 实际 PAGE_SIZE=16384 的 build 40 Release 安装/首页/跨进程契约限定行完成. 两台手机默认项及各 OEM 实际文件管理器/隐式入口仍有缺口, 原 checkbox 保留.)
 - [ ] (插件) OEM 差异按事实进入文案与 README 常见问题 (HyperOS 安装者包名, ColorOS 停止状态需激活, 部分 ROM 限制默认安装器).
 
 ### P6.4 性能与体积
@@ -1046,3 +1046,9 @@ if (!installer.isDefault()) installer.setDefault(true);
 - 启用 APK Inspector 时信息图标隐藏且无更多菜单替代入口, 已在宿主 522335e864 修复. 同一提交包含捕获文件身份的菜单回调, 十语言 fix/生成文档, 六入口测试和证据. App/Inrt/全量 JVM/androidTest/lint 已通过, 最终 lint 0 Error/Fatal, 2399 Warning, 3 Hint.
 - 最终导航/启用/安装许可恢复, 自有来源和 12 case 归档清理, 4 条精确归属历史移除, HTTP 子进程/reverse 停止; 用户应用, Inspector 设置和默认记录保留. 宿主另一个终端会话的全部 Git index 条目在本轮限定路径提交前后相同, 没有纳入安装器提交.
 - 插件此文档提交为 build 42, 宿主证据见 AutoJs6/docs/dev/installer-entry-evidence.md. API 35 绑定/通知等原证据按原范围使用, P2.3 跨授权/API 的完整矩阵和 P6.3 OEM 完整矩阵继续保留未完成. 全部只作本地提交.
+
+### 2026-10-01 (P2/P6 原设备安装矩阵推进)
+
+- build 43 汇总原五台设备 none 新装/更新, 可用特权路径实际静默安装/更新/卸载, 外部显式 Activity 各 1/1, API 24/35 默认页锁定/解锁. 三种授权方式的统一 Core 在本轮四组分别 5/5, 6/6, 5/5, 6/6; 额外 Sony API 33 Root 不替代原 Redmi, 两台原手机默认记录受保护而跳过.
+- HyperOS 默认安装者为 shell, 显式 shell 和插件自身两种请求均静默成功且实际归属相同. Sony API 33 user ROM 的 Root 接受非 debuggable 降级, 按设备事实记录, 不改写其他 ROM 的原拒绝结果. P2.3/P6.3 完整交叉矩阵仍保留未完成, 没有扩大低 targetSdk 或显式 Activity 的证据口径.
+- 固定夹具 Play Protect 扫描驱动与重复卸载收尾修正, 初轮失败保留且最终独立复测通过. 安装许可工具在写入前持久 journal, 核对 UID/原模式/外部变化, 同目标串行; 六份全部恢复. 最终 8 台只读清理复核通过, 用户系统 session/server 和默认记录保持, 详情见 docs/dev/p6-matrix-evidence.md.
