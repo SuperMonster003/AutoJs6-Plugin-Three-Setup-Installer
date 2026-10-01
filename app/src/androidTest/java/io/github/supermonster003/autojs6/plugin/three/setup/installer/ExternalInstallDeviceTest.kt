@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
+import android.os.Bundle
 import android.os.ParcelFileDescriptor
 import android.os.SystemClock
 import android.system.Os
@@ -30,6 +31,7 @@ import org.junit.Assume.assumeTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.File
+import java.security.MessageDigest
 import java.util.UUID
 
 /** Real external-source/controller/UI integration. Package mutations require explicit runner opt-in. */
@@ -82,7 +84,7 @@ class ExternalInstallDeviceTest {
     @Test fun externalViewActivityShowsTheOwnedSourceAndCancellationNeverAllocatesAnInstallSession() {
         unlocked()
         assumeTrue("This route test requires the local dialog preference", InstallDefaults.interaction(context) == InstallerContract.INTERACTION_DIALOG)
-        FixturePackageOwnership(setOf(FIXTURE)).use {
+        FixturePackageOwnership(setOf(FIXTURE)).use { FixtureHistoryOwnership(context).use { history ->
             val directory = providerDirectory()
             var record: InstallPresentation.Record? = null
             val monitor = instrumentation.addMonitor(InstallDialogActivity::class.java.name, null, false)
@@ -97,6 +99,7 @@ class ExternalInstallDeviceTest {
                 val token = requireNotNull(activity).intent.getStringExtra(InstallPresentation.EXTRA_TOKEN)
                 record = requireNotNull(token?.let(InstallPresentation::find))
                 assertEquals(uri, activity.intent.clipData!!.getItemAt(0).uri)
+                history.track(requireNotNull(record))
                 waitUntil { requireNotNull(record).snapshot().prompt != null || requireNotNull(record).snapshot().terminal }
                 assertFalse("Existing installation defaults prevented confirmation", requireNotNull(record).snapshot().terminal)
                 assertEquals(FIXTURE, requireNotNull(record).snapshot().prompt!!.metadata.packageName)
@@ -106,7 +109,7 @@ class ExternalInstallDeviceTest {
                 assertTrue(source.isFile)
                 assertEquals(before, context.packageManager.packageInstaller.mySessions.map { it.sessionId }.toSet())
             } finally { record?.close(); instrumentation.removeMonitor(monitor); directory.deleteRecursively() }
-        }
+        } }
     }
 
     @Test fun noneViewConfirmationInstallsAndDeletesOnlyTheOwnedPrivateFile() = installingFixture { directory, owner ->
@@ -208,6 +211,96 @@ class ExternalInstallDeviceTest {
                 assertTrue(first.isFile && second.isFile)
             } finally { record?.close(); instrumentation.removeMonitor(monitor); directory.deleteRecursively() }
         }
+    }
+
+    /** deleteSource applies only to confirmed success, including when opening a source times out. */
+    @Test fun deleteSourceRetainsFailedCancelledAndTimedOutSources() {
+        unlocked()
+        val initialSessions = context.packageManager.packageInstaller.mySessions.map { it.sessionId }.toSet()
+        FixturePackageOwnership(setOf(FIXTURE)).use {
+            val controlDirectory = providerDirectory()
+            try {
+                val controlSource = copyFixture(controlDirectory)
+                val controlUri = contentUri(controlDirectory)
+                val controlLength = controlSource.length()
+                val controlDigest = sourceDigest(controlSource)
+                FixtureHistoryOwnership(context).use {
+                    assertEquals(0, providerDeleteAttempts(controlUri))
+                    // A separate URI proves that the counter observes actual rejected deletes.
+                    // No installation request ever uses this control source.
+                    assertThrows(UnsupportedOperationException::class.java) {
+                        context.contentResolver.delete(controlUri, null, null)
+                    }
+                    assertEquals(1, providerDeleteAttempts(controlUri))
+                    assertSourcePreserved(controlSource, controlLength, controlDigest)
+                    assertEquals(initialSessions, context.packageManager.packageInstaller.mySessions.map { it.sessionId }.toSet())
+                    sourcePolicyEvidence("control=rejected-delete deleteAttempts=1 sourceUnchanged=true platformSessionsUnchanged=true")
+                }
+
+                for (case in listOf("failed", "cancelled", "query-timeout", "open-timeout")) {
+                    val directory = providerDirectory()
+                    var record: InstallPresentation.Record? = null
+                    try {
+                        val source = copyFixture(directory)
+                        if (case == "failed") source.writeText("Malformed installation source for the fixed preservation audit")
+                        val length = source.length()
+                        val digest = sourceDigest(source)
+                        val timeoutPhase = case.removeSuffix("-timeout").takeIf { case.endsWith("-timeout") }
+                        val uri = contentUri(directory).let { base ->
+                            if (timeoutPhase == null) base else base.buildUpon().appendQueryParameter("waitForCancel", timeoutPhase).build()
+                        }
+                        val expectedCode = when (case) {
+                            "failed" -> InstallerErrorCodes.INVALID_PACKAGE
+                            "cancelled" -> InstallerErrorCodes.USER_CANCELLED
+                            else -> InstallerErrorCodes.TIMEOUT
+                        }
+                        FixtureHistoryOwnership(context).use { history ->
+                            assertEquals("Deletion counters must be isolated by the complete fixture URI", 0, providerDeleteAttempts(uri))
+                            assertEquals(1, providerDeleteAttempts(controlUri))
+                            val startedAt = SystemClock.elapsedRealtime()
+                            val current = startWithOptions(ExternalSources.fromIntent(Intent(Intent.ACTION_VIEW, uri)), InstallOptions(
+                                authorizer = InstallerContract.AUTHORIZER_NONE, deleteSource = true,
+                                timeoutMillis = if (timeoutPhase == null) 15_000 else 5_000))
+                            record = current
+                            history.track(current)
+                            assertTrue(current.request.options.deleteSource)
+                            if (case == "cancelled") {
+                                waitUntil(failureMessage = { "Fixture cancellation did not reach confirmation: ${sourceState(current)}" }) {
+                                    current.snapshot().prompt != null || current.snapshot().terminal
+                                }
+                                assertFalse(sourceState(current), current.snapshot().terminal)
+                                assertEquals(FIXTURE, current.snapshot().prompt!!.metadata.packageName)
+                                waitUntil { FixtureInstallUi.clickInstall(InstallDialogActivity.TAG_CANCEL, token = current.token, packageName = FIXTURE) }
+                            } else if (timeoutPhase != null) {
+                                waitUntil(4_000, { "Provider $timeoutPhase was not entered: ${sourceState(current)}" }) { providerWaiting(uri) }
+                            }
+                            waitUntil(8_000, { "Source preservation case $case did not finish: ${sourceState(current)}" }) { current.snapshot().terminal }
+                            assertEquals(expectedCode, current.snapshot().failure?.code)
+                            assertTrue(current.snapshot().items.none { it.result?.get(InstallerContract.FIELD_OK)?.asBoolean == true })
+                            if (timeoutPhase != null) {
+                                val elapsed = SystemClock.elapsedRealtime() - startedAt
+                                assertTrue("The 5000 ms timeout did not fire near its deadline: $elapsed ms", elapsed in 4_500L..10_000L)
+                                waitUntil { !providerWaiting(uri) }
+                            }
+                            assertEquals(0, providerDeleteAttempts(uri))
+                            assertEquals(1, providerDeleteAttempts(controlUri))
+                            assertSourcePreserved(source, length, digest)
+                            assertSourcePreserved(controlSource, controlLength, controlDigest)
+                            assertNull(installedVersion())
+                            assertEquals(initialSessions, context.packageManager.packageInstaller.mySessions.map { it.sessionId }.toSet())
+                            sourcePolicyEvidence("case=$case code=$expectedCode deleteSource=true deleteAttempts=0 sourceUnchanged=true platformSessionsUnchanged=true durationMillis=${SystemClock.elapsedRealtime() - startedAt}")
+                        }
+                    } finally {
+                        record?.close()
+                        check(directory.deleteRecursively() || !directory.exists()) { "The owned preservation source was not removed after verification" }
+                    }
+                }
+            } finally {
+                check(controlDirectory.deleteRecursively() || !controlDirectory.exists()) { "The owned deletion-control source was not removed after verification" }
+            }
+        }
+        assertEquals(initialSessions, context.packageManager.packageInstaller.mySessions.map { it.sessionId }.toSet())
+        sourcePolicyEvidence("SUCCESS cases=4 controlDeleteAttempts=1 actualDeleteAttempts=0 sourceChecks=sha256+length+exists historyRestored=true platformSessionsUnchanged=true fixtureAbsent=true")
     }
 
     @Test fun blockedProviderQueriesAndOpensReachTheSessionTimeoutWithoutUserCancellation() {
@@ -369,6 +462,24 @@ class ExternalInstallDeviceTest {
     private fun invalid(operation: () -> Unit) = assertEquals(InstallerErrorCodes.INVALID_ARGUMENT, assertThrows(InstallFailure::class.java) { operation() }.code)
     private fun providerWaiting(uri: Uri): Boolean =
         context.contentResolver.call(uri, "fixtureCancellationState", uri.toString(), null)?.getBoolean("waiting") == true
+    private fun providerDeleteAttempts(uri: Uri): Int {
+        val state = requireNotNull(context.contentResolver.call(uri, "fixtureDeletionState", uri.toString(), null)) {
+            "The debug provider does not expose deletion counters"
+        }
+        check(state.getString("fixtureUri") == uri.toString() && state.containsKey("deleteAttempts")) {
+            "The debug provider returned an unrelated or incomplete deletion counter"
+        }
+        return state.getInt("deleteAttempts").also { check(it >= 0) }
+    }
+    private fun sourceDigest(source: File): ByteArray = MessageDigest.getInstance("SHA-256").digest(source.readBytes())
+    private fun assertSourcePreserved(source: File, length: Long, digest: ByteArray) {
+        assertTrue("The test-owned source was deleted before cleanup", source.isFile)
+        assertEquals(length, source.length())
+        assertArrayEquals(digest, sourceDigest(source))
+    }
+    private fun sourcePolicyEvidence(message: String) = instrumentation.sendStatus(0, Bundle().apply {
+        putString("source-preservation", "${Build.MODEL} API=${Build.VERSION.SDK_INT} $message")
+    })
     private fun sourceState(record: InstallPresentation.Record): String = record.snapshot().let {
         "stage=${it.stage}, index=${it.index}, terminal=${it.terminal}, failure=${it.failure?.toJson()}, items=${it.items.map { item -> item.result }}"
     }

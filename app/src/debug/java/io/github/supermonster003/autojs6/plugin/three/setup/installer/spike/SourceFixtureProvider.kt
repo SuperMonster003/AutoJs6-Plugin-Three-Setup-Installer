@@ -15,6 +15,7 @@ import java.io.FileNotFoundException
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
 
 /** Non-exported debug-only provider for real ContentResolver and pipe source tests. */
 class SourceFixtureProvider : ContentProvider() {
@@ -22,10 +23,16 @@ class SourceFixtureProvider : ContentProvider() {
     override fun getType(uri: Uri) = "application/vnd.android.package-archive"
 
     override fun call(method: String, arg: String?, extras: Bundle?): Bundle? {
-        if (method != "fixtureCancellationState") return super.call(method, arg, extras)
+        if (method !in setOf("fixtureCancellationState", "fixtureDeletionState")) return super.call(method, arg, extras)
         val uri = Uri.parse(arg ?: throw IllegalArgumentException("A fixture URI is required"))
         file(uri)
-        return Bundle().apply { putBoolean("waiting", uri.toString() in waitingForCancellation) }
+        return Bundle().apply {
+            if (method == "fixtureCancellationState") putBoolean("waiting", uri.toString() in waitingForCancellation)
+            else {
+                putString("fixtureUri", uri.toString())
+                putInt("deleteAttempts", deleteAttempts[uri.toString()]?.get() ?: 0)
+            }
+        }
     }
 
     override fun query(uri: Uri, projection: Array<out String>?, selection: String?, selectionArgs: Array<out String>?, sortOrder: String?): Cursor {
@@ -107,9 +114,16 @@ class SourceFixtureProvider : ContentProvider() {
 
     override fun insert(uri: Uri, values: ContentValues?): Uri? = throw UnsupportedOperationException("Read-only")
     override fun update(uri: Uri, values: ContentValues?, selection: String?, selectionArgs: Array<out String>?): Int = throw UnsupportedOperationException("Read-only")
-    override fun delete(uri: Uri, selection: String?, selectionArgs: Array<out String>?): Int = throw UnsupportedOperationException("Read-only")
+    override fun delete(uri: Uri, selection: String?, selectionArgs: Array<out String>?): Int {
+        file(uri)
+        // Observe the real ContentResolver route while retaining the provider's read-only contract.
+        // Each test uses a new private directory and this count is never persisted.
+        deleteAttempts.computeIfAbsent(uri.toString()) { AtomicInteger() }.incrementAndGet()
+        throw UnsupportedOperationException("Read-only")
+    }
 
     companion object {
         private val waitingForCancellation: MutableSet<String> = ConcurrentHashMap.newKeySet()
+        private val deleteAttempts = ConcurrentHashMap<String, AtomicInteger>()
     }
 }
