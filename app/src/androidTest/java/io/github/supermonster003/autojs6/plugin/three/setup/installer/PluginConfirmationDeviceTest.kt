@@ -4,12 +4,13 @@ import android.app.KeyguardManager
 import android.os.Bundle
 import android.os.ParcelFileDescriptor
 import android.os.SystemClock
-import android.view.accessibility.AccessibilityNodeInfo
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.google.gson.JsonParser
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.binder.CallerGuard
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.binder.InstallerBinder
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.ui.InstallDialogActivity
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.ui.InstallPresentation
 import org.autojs.plugin.installer.api.IInstallerSessionCallback
 import org.autojs.plugin.installer.api.InstallerContract
 import org.junit.Assert.*
@@ -28,10 +29,12 @@ class PluginConfirmationDeviceTest {
         val context = instrumentation.targetContext
         assumeFalse("Unlock the device to exercise visible confirmation", context.getSystemService(KeyguardManager::class.java).isKeyguardLocked)
         val before = context.packageManager.packageInstaller.mySessions.map { it.sessionId }.toSet()
+        val ownership = FixturePackageOwnership(setOf(FixtureInstallUi.PACKAGE_NAME))
         val file = File(context.cacheDir, "dialog-fixture-${UUID.randomUUID()}.apk")
         instrumentation.context.assets.open("fixture-v1.apk").use { input -> file.outputStream().use(input::copyTo) }
         val done = CountDownLatch(1)
         var error: Bundle? = null
+        var presentation: InstallPresentation.Record? = null
         val callback = object : IInstallerSessionCallback.Stub() {
             override fun onStage(id: String?, stage: String?, detail: Bundle?) = Unit
             override fun onProgress(id: String?, progress: Float, detail: Bundle?) = Unit
@@ -53,11 +56,8 @@ class PluginConfirmationDeviceTest {
                         val expires = SystemClock.elapsedRealtime() + 10_000
                         var clicked = false
                         while (!clicked && SystemClock.elapsedRealtime() < expires) {
-                            val root = instrumentation.uiAutomation.rootInActiveWindow
-                            if (root?.packageName?.toString() == context.packageName && root.findAccessibilityNodeInfosByText("3-Setup Spike Fixture").isNotEmpty()) {
-                                clicked = root.findAccessibilityNodeInfosByViewId("android:id/button2").singleOrNull()
-                                    ?.performAction(AccessibilityNodeInfo.ACTION_CLICK) == true
-                            }
+                            if (presentation == null) presentation = FixtureInstallUi.resumedRecord { it.request.id == id }
+                            clicked = FixtureInstallUi.clickInstall(InstallDialogActivity.TAG_CANCEL, sessionId = id, packageName = FixtureInstallUi.PACKAGE_NAME)
                             if (!clicked) SystemClock.sleep(50)
                         }
                         assertTrue("The plugin confirmation could not be declined", clicked)
@@ -67,6 +67,6 @@ class PluginConfirmationDeviceTest {
                     } finally { session.close() }
                 }
             }
-        } finally { file.delete() }
+        } finally { presentation?.close(); file.delete(); ownership.close() }
     }
 }

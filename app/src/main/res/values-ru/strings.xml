@@ -83,4 +83,7 @@
     <string name="notification_preparing">Подготовка пакета</string>
     <string name="notification_writing">Запись пакета</string>
     <string name="plugin_description">Устанавливает, обновляет и удаляет приложения Android, включая тихую установку через Shizuku или Root</string>
+    <string name="uninstall_authorization">Авторизация: %1$s</string>
+    <string name="uninstall_keep_data_explanation">Сохранить данные приложения для последующей переустановки.</string>
+    <string name="uninstall_target_user">Целевой пользователь: %1$s</string>
 </resources>

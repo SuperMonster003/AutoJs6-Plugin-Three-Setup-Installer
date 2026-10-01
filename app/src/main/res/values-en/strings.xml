@@ -83,4 +83,7 @@
     <string name="notification_preparing">Preparing package</string>
     <string name="notification_writing">Writing package</string>
     <string name="plugin_description">Installs, updates and uninstalls Android apps, with silent installation through Shizuku or Root</string>
+    <string name="uninstall_authorization">Authorization: %1$s</string>
+    <string name="uninstall_keep_data_explanation">Retain app data for a future reinstallation.</string>
+    <string name="uninstall_target_user">Target user: %1$s</string>
 </resources>

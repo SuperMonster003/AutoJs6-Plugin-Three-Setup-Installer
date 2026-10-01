@@ -83,4 +83,7 @@
     <string name="notification_preparing">패키지 준비 중</string>
     <string name="notification_writing">패키지 쓰는 중</string>
     <string name="plugin_description">Android 앱을 설치, 업데이트, 제거하며 Shizuku 또는 Root를 통한 무음 설치를 지원</string>
+    <string name="uninstall_authorization">권한 부여: %1$s</string>
+    <string name="uninstall_keep_data_explanation">나중에 다시 설치할 수 있도록 앱 데이터를 유지합니다.</string>
+    <string name="uninstall_target_user">대상 사용자: %1$s</string>
 </resources>

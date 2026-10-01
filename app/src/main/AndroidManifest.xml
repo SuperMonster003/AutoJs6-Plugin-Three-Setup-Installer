@@ -101,12 +101,16 @@
             android:name=".ui.ConfirmationActivity"
             android:exported="false"
             android:excludeFromRecents="true"
-            android:theme="@style/Theme.ThreeSetupInstaller.Confirmation" />
+            android:configChanges="uiMode|locale|layoutDirection"
+            android:theme="@style/Theme.ThreeSetupInstaller.Dialog" />
 
         <activity android:name=".ui.InstallDialogActivity" android:exported="false"
             android:excludeFromRecents="true" android:launchMode="standard" android:documentLaunchMode="intoExisting"
             android:configChanges="uiMode|locale|layoutDirection"
             android:theme="@style/Theme.ThreeSetupInstaller.Dialog" />
+
+        <activity android:name=".ui.UserActionActivity" android:exported="false"
+            android:excludeFromRecents="true" android:theme="@android:style/Theme.Translucent.NoTitleBar" />
 
         <service android:name=".ui.InstallForegroundService" android:exported="false"
             android:foregroundServiceType="dataSync" />

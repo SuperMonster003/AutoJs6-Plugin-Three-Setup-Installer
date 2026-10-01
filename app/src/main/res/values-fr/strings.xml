@@ -83,4 +83,7 @@
     <string name="notification_preparing">Préparation du paquet</string>
     <string name="notification_writing">Écriture du paquet</string>
     <string name="plugin_description">Installe, met à jour et désinstalle des applications Android, avec installation silencieuse via Shizuku ou Root</string>
+    <string name="uninstall_authorization">Autorisation: %1$s</string>
+    <string name="uninstall_keep_data_explanation">Conserver les données de l\'application pour une réinstallation ultérieure.</string>
+    <string name="uninstall_target_user">Utilisateur cible: %1$s</string>
 </resources>

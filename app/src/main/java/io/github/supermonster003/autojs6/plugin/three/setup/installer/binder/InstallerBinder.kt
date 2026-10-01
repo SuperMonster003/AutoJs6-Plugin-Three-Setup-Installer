@@ -106,11 +106,11 @@ internal class InstallerBinder(context: Context, private val guard: CallerGuard 
                 check()
                 // Validate privilege requirements before displaying any confirmation.
                 UninstallEngine.flags(decoded, selected, userId, DeviceUsers(context).currentId)
-                if (decoded.interaction == InstallerContract.INTERACTION_DIALOG && selected.privileged) {
+                val approved = if (decoded.interaction == InstallerContract.INTERACTION_DIALOG && selected.privileged) {
                     PluginConfirmation.uninstall(context, decoded, selected, userId, deadline, check)
-                }
+                } else decoded
                 val engine = if (selected.privileged) PrivilegedUninstallEngine(context, selected) else NoneUninstallEngine(context)
-                val result = engine.uninstall(decoded, userId, object : InstallEngine.Listener {
+                val result = engine.uninstall(approved, userId, object : InstallEngine.Listener {
                     override fun onUserAction(intent: Intent) = UserActionLauncher.launch(context, intent)
                 }, check, deadline)
                 InstallDocuments.uninstallResult(result.packageName, result.authorizer)

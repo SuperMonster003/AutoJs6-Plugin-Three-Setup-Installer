@@ -83,4 +83,7 @@
     <string name="notification_preparing">パッケージを準備中</string>
     <string name="notification_writing">パッケージを書き込み中</string>
     <string name="plugin_description">Android アプリのインストール, 更新, アンインストールを行い, Shizuku または Root によるサイレントインストールに対応</string>
+    <string name="uninstall_authorization">認証方式: %1$s</string>
+    <string name="uninstall_keep_data_explanation">今後の再インストールに備えてアプリのデータを保持します.</string>
+    <string name="uninstall_target_user">対象ユーザー: %1$s</string>
 </resources>

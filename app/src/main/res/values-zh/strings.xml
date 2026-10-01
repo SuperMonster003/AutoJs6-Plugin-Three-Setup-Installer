@@ -83,4 +83,7 @@
     <string name="notification_preparing">正在准备安装包</string>
     <string name="notification_writing">正在写入安装包</string>
     <string name="plugin_description">安装, 更新和卸载 Android 应用, 支持通过 Shizuku 或 Root 静默安装</string>
+    <string name="uninstall_authorization">授权方式: %1$s</string>
+    <string name="uninstall_keep_data_explanation">保留应用数据, 以供以后重新安装时使用.</string>
+    <string name="uninstall_target_user">目标用户: %1$s</string>
 </resources>
