@@ -32,6 +32,7 @@ class ManifestContractTest {
                 "android.permission.REQUEST_DELETE_PACKAGES",
                 "android.permission.QUERY_ALL_PACKAGES",
                 "android.permission.FOREGROUND_SERVICE",
+                "android.permission.FOREGROUND_SERVICE_DATA_SYNC",
                 "android.permission.POST_NOTIFICATIONS",
                 "moe.shizuku.manager.permission.API_V23",
             ),
@@ -88,16 +89,17 @@ class ManifestContractTest {
         assertEquals(listOf("org.autojs.plugin.action.WAKE"), wakeFilter.children("action").map { it.androidAttribute("name") })
         assertEquals(listOf("android.intent.category.DEFAULT"), wakeFilter.children("category").map { it.androidAttribute("name") })
         assertTrue(manifest.child("application").children("activity-alias").isEmpty())
-        val receiver = manifest.child("application").children("receiver").single()
-        assertEquals(".engine.InstallStatusReceiver", receiver.androidAttribute("name"))
-        assertEquals("false", receiver.androidAttribute("exported"))
-        assertTrue(receiver.children("intent-filter").isEmpty())
+        val receivers = manifest.child("application").children("receiver")
+        assertEquals(setOf(".engine.InstallStatusReceiver", ".ui.InstallNotifications\$CancelReceiver"), receivers.map { it.androidAttribute("name") }.toSet())
+        receivers.forEach { assertEquals("false", it.androidAttribute("exported")); assertTrue(it.children("intent-filter").isEmpty()) }
     }
 
     @Test
     fun `info service and installer service match the identity constants`() {
         val services = manifest.child("application").children("service").associateBy { it.androidAttribute("name") }
-        assertEquals(setOf(".ThreeSetupInstallerPluginInfoService", ".ThreeSetupInstallerPluginService", ".priv.RootInstallerService"), services.keys)
+        assertEquals(setOf(".ThreeSetupInstallerPluginInfoService", ".ThreeSetupInstallerPluginService", ".priv.RootInstallerService", ".ui.InstallForegroundService"), services.keys)
+        assertEquals("false", services.getValue(".ui.InstallForegroundService").androidAttribute("exported"))
+        assertEquals("dataSync", services.getValue(".ui.InstallForegroundService").androidAttribute("foregroundServiceType"))
         val root = services.getValue(".priv.RootInstallerService")
         assertEquals("false", root.androidAttribute("exported"))
         assertTrue(root.children("intent-filter").isEmpty())

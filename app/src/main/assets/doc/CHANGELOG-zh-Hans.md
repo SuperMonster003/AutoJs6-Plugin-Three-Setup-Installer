@@ -20,6 +20,7 @@
 * `优化` 支持串行批量安装, 失败后继续或取消剩余项, 并可通过特权方式校验和选择目标用户.
 * `优化` 宿主服务接入包信息查询, 安装, 卸载和用户查询, 支持显式确认, 调用方退出时取消, 最多四个并发会话及自动清理.
 * `优化` 安装对话框默认跟随 AutoJs6 的语言, 夜间模式与主题色, 支持宿主不可用时回退, 大字号和 RTL 布局.
+* `优化` 后台安装支持前台服务, 进度, 取消和结果通知; 未授予通知权限不会阻止安装.
 * `依赖` 附加 Shizuku API 13.1.5 (`dev.rikka.shizuku:api`, `dev.rikka.shizuku:provider`) 用于 Shizuku 授权方式
 * `依赖` 附加 libsu 6.0.0 (`com.github.topjohnwu.libsu:core`, `service`) 用于 Root 授权方式
 * `依赖` 附加 AndroidHiddenApiBypass 6.1 用于特权服务访问隐藏的包安装器 API

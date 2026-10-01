@@ -146,7 +146,7 @@ AutoJs6-Plugin-Three-Setup-Installer/
 |---|---|
 | `REQUEST_INSTALL_PACKAGES` / `REQUEST_DELETE_PACKAGES` | `none` 授权方式的系统安装 / 卸载对话框 (D17 / D24) |
 | `QUERY_ALL_PACKAGES` | 显示已安装版本, 比对签名, 检测默认安装器状态 (D23); 插件经 GitHub 分发, 不受商店政策限制, 在 Manifest 以 `tools:ignore` 标注 |
-| `FOREGROUND_SERVICE` (+ P3.4 决定的类型权限) | 后台安装进度通知 (D26) |
+| `FOREGROUND_SERVICE` / `FOREGROUND_SERVICE_DATA_SYNC` | 安装写入期间的 dataSync 前台服务与进度通知 (D26 / P3.4) |
 | `POST_NOTIFICATIONS` | 进度与结果通知, 缺失时静默降级 |
 | `moe.shizuku.manager.permission.API_V23` | Shizuku 授权方式 (D2) |
 

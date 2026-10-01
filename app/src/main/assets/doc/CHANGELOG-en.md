@@ -20,6 +20,7 @@
 * `Improvement` Serial batch installation can continue after failures or cancel remaining items, and supports validating and selecting target users with privileges.
 * `Improvement` Host service requests support inspection, installation, uninstallation and user queries, with explicit confirmation, cancellation when callers exit, up to four concurrent sessions and automatic cleanup.
 * `Improvement` Installation dialogs follow AutoJs6 language, night mode and theme color, with a fallback when the host is unavailable and layouts that support large text and RTL.
+* `Improvement` Background installation now has foreground progress, cancellation and result notifications. Denying notification permission does not block installation.
 * `Dependency` Shizuku API 13.1.5 (`dev.rikka.shizuku:api`, `dev.rikka.shizuku:provider`) for the Shizuku authorizer
 * `Dependency` libsu 6.0.0 (`com.github.topjohnwu.libsu:core`, `service`) for the Root authorizer
 * `Dependency` AndroidHiddenApiBypass 6.1 for the hidden package installer APIs used by the privileged service

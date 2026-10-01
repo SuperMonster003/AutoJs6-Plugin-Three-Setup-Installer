@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="action_install">安裝</string>
     <string name="action_uninstall">解除安裝</string>
     <string name="confirm_all_users">所有使用者</string>
@@ -13,5 +13,16 @@
     <string name="confirm_system">系統確認</string>
     <string name="confirm_uninstall_body">%1$s\n授權方式: %2$s\n使用者: %3$s</string>
     <string name="confirm_uninstall_title">確認解除安裝</string>
+    <string name="notification_action_required">需要確認</string>
+    <string name="notification_action_required_body">點擊繼續所要求的確認操作.</string>
+    <string name="notification_active_count">正在進行的安裝: %1$d</string>
+    <string name="notification_cancel_all">全部取消</string>
+    <string name="notification_channel_installation">安裝</string>
+    <string name="notification_install_complete">安裝完成</string>
+    <string name="notification_install_failed">安裝失敗</string>
+    <string name="notification_installing">正在安裝</string>
+    <string name="notification_open_for_progress">點擊開啟安裝器並查看進度.</string>
+    <string name="notification_preparing">正在準備安裝套件</string>
+    <string name="notification_writing">正在寫入安裝套件</string>
     <string name="plugin_description">安裝, 更新和卸載 Android 應用程式, 支援透過 Shizuku 或 Root 靜默安裝</string>
 </resources>
