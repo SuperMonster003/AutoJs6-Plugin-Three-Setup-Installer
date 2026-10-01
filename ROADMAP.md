@@ -1127,3 +1127,10 @@ if (!installer.isDefault()) installer.setDefault(true);
 - 主插件运行时按Dhizuku/V2, 持久默认, notification三笔逻辑提交, 分阶段保留能力边界和十语言changelog; 前两阶段独立源树的JVM/Kotlin/androidTest编译通过, 最终完整实现312 JVM通过. 完整README/插件说明/跨库证据另作文档提交, 保留1.0.0历史.
 - 关联仓库包括Inspector17fe20d, 宿主494e3e9493/bd9817980f/8c3045d24e/bb49c86ab129, Docs2ada5142, d.ts d789d42, Ace9f66fd62, Offline4d8115c5. 具体版本/验证/离线200文件摘要见 docs/dev/p8-integration-evidence.md. 宿主其他会话的Rhino等变更及Ace原有releases/保留, 不混入本任务提交.
 - 同一最终签名R8候选1.1.0/build57已完成Root实际main六操作和正式宿主UID的Dhizuku/persistent脚本往返. 最终构建, APK摘要, 多设备Release契约及交付核验单独记录. P7远端发布继续延迟, P9四个原条目尚未实施; 下一步从原P9高级选项开始, 继续仅本地提交.
+
+### 2026-10-02 (P8 build57 本地发行包收尾)
+
+- 最终包 autojs6-plugin-three-setup-installer-v1.1.0-c2238464.apk, 1,965,043字节, SHA-256 d1300f2b1ac97c240bc02e58752909d1fa5b78a18397d3894ac5ce1aef8df31e, v2签名/CRC/无native/非Debug核验通过. 312 JVM, Debug/Release各0 lint错误与40警告, 文档36/图标15产物一致. API26缺失size读回和Debug旧API任务标识的gate失败已修正, 记录全部失败与复验, 没有压制NewApi或提高minSdk.
+- API24/31/36同包独立契约各2/2, 包括V2新增事务的非宿主拒绝; 最终R8的Root主入口六次往返与真实宿主UID的Dhizuku脚本实际安装/卸载/持久往返通过. 通知完整实装与生命周期按各自固定Debug版本记载, 最后Sony保数据交付同包; 不扩大成所有功能/ROM的最终R8全矩阵.
+- 用户设备原默认/历史/授权状态核验保护, 新三星按新基线配置宿主/插件并移除临时测试包, 专用自建AVD已关闭, 用户AVD保持. 主插件build52-57六笔本地提交, 最终计数57且工作区干净. 关联仓库各自提交, 其他会话与Ace既有文件保留. 详情见 docs/dev/p8-release-evidence.md.
+- P8原五项完成, 本轮不进入繁杂的P9四项实现. 下一步从原P9高级选项/契约V3继续; P7远端发布仍按维护者指示延迟. 当前没有新的设备, 关键决策或手动操作待维护者处理.
