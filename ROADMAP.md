@@ -377,25 +377,25 @@ runtime/api/augment/installer/          Installer.kt (AugmentableKey("installer"
 
 - [x] (插件) `InstallDialogActivity` (对话框主题 `Theme.ThreeSetupInstaller.Dialog`, `excludeFromRecents`, `launchMode=standard` + `documentLaunchMode=intoExisting` + 会话 token URI 区分 task (平台必要适配, 见 docs/dev/p3-ui-evidence.md)): 确认段 (D26: 图标, 名称, 包名, 版本 旧 -> 新 或 "新安装", 大小, minSdk / targetSdk, 签名匹配 (与已安装签名一致 / 不一致 / 未安装), 分包列表可勾选, 选项开关 (授权方式, 降级, 测试包, 绕过低 targetSdk, 安装后删除, 目标用户) 默认取设置页), 进度段 (阶段文案 + 百分比 + 取消), 结果段 (成功: 打开 / 完成; 失败: 错误码 + 系统消息 + 复制). (SOURCE / JVM / DEVICE 2026-10-01: 完整信息 / 选项 / 分包复验 / 取消 / 结果操作已接入 Binder 与外部会话; 默认选项消费统一存储格式, 编辑设置页留在 P5. 见 docs/dev/p3-ui-evidence.md)
 - [x] (插件) 批量对话框: 列表逐项状态, 全部取消, 单项重试; AAB 项显示 "无法安装 AAB" 与信息入口 (D9). (SOURCE / DEVICE 2026-10-01: 逐项状态, 全部取消, AAB 信息与说明已实现; 外部来源在 URI 授权仍有效时可独立重试. 已释放的宿主 PFD 提示调用方重新发起, 不延长描述符所有权. API 24 实际坏包 / 正常包 / 修复来源后重试通过)
-- [ ] (插件) 遵循独立设置页规范的对话框几何 (24 dp 圆角, 手机左右 24 dp, 宽屏 560 dp, 内容滚动按钮固定), 中性色表面, 主题色只用于控件; 10 语言文案; RTL / 大字号 / 夜间 / 进程重建 (会话 id 持久到 `SavedStateHandle`, 重建后从 `SessionRegistry` 恢复). (部分 JVM / DEVICE 2026-10-01: 10 语言, 中性色 / 主题控件, RTL / 字号 / 夜间及几何断言已通过; SavedStateHandle token 旋转恢复不重复执行. 进程记录丢失后只显示中断, 尚未持久化恢复; 真实 IME 和 API 35 全部几何边界亦待补测. 见 docs/dev/p3-appearance-evidence.md)
+- [x] (插件) 遵循独立设置页规范的对话框几何 (24 dp 圆角, 手机左右 24 dp, 宽屏 560 dp, 内容滚动按钮固定), 中性色表面, 主题色只用于控件; 10 语言文案; RTL / 大字号 / 夜间 / 进程重建 (会话 id 持久到 `SavedStateHandle`, 重建后从 `SessionRegistry` 恢复). (SOURCE / JVM / DEVICE 2026-10-01: 完成私有有界快照与只读恢复, 14 项新增 JVM 和 12 项安装界面用例通过; API 28 / 35 实际更换 PID 后恢复已保存确认结果, 未完成项中断且不自动重新执行. 两台设备各 3 项真实 IME / RTL / 字号 2 / 夜间 / 横屏几何通过. 既有 API 24 几何证据保留, 本轮新增 API 24 实机复验因模拟器启动被自动审批拒绝未执行. 见 docs/dev/p3-recovery-evidence.md 和 docs/dev/p3-appearance-evidence.md)
 - [x] (测试) instrumentation: 确认 -> 安装 -> 结果的 happy path (none 路径在 AVD), 取消, 旋转重建, 失败结果展示. (DEVICE 2026-10-01: AVD API 24 none 真实安装 / 更新 / 删除与拒绝删除 / 批量重试; InstallDialogDeviceTest 8 项含取消, 重建和结果展示. P3 UI 组合 47 项无跳过通过, 见 docs/dev/p3-ui-evidence.md)
 
 ### P3.2 外部入口
 
 - [x] (插件) `ExternalInstallActivity` (`exported=true`, 无权限保护, `Theme.NoDisplay` 后转 `InstallDialogActivity`): 两组 intent-filter 从宿主原 `PackageInstallerEntryActivity` 迁来 (`ACTION_VIEW` + `ACTION_INSTALL_PACKAGE`, `content` / `file` scheme, 7 种 MIME; `content` + `application/zip` / `application/octet-stream` + 大小写 `pathPattern` 覆盖 6 种扩展名); 多 URI (`ACTION_SEND_MULTIPLE`) 作为批量. (SOURCE / DEVICE 2026-10-01: 正式导出入口与受限 URI 转交完成; 7 MIME x action / scheme, 6 扩展名大小写与分享的解析矩阵通过, 宿主 5299 不再出现于 APK 处理列表)
 - [x] (插件) 外部来源的安全处理: 只读打开, 不信任文件名, 大小上限与共享 AAR 的检查上限; `file://` 在 API 24+ 仅接受可读路径, 失败给出 `SOURCE_UNREADABLE` 文案. (SOURCE / DEVICE 2026-10-01: 只读打开, URI / 数量 / 大小限制, 实际内容识别和共享解析器检查, 取消与错误展示已接入, 见 ExternalInstallDeviceTest 和 docs/dev/p3-ui-evidence.md)
-- [ ] (测试) 设备: 从系统文件管理器与浏览器下载列表各打开一次 `.apk` / `.xapk`; 宿主已删除入口后, 系统 "打开方式" 列表只出现插件. (部分 DEVICE 2026-10-01: 已通过真实 exported VIEW / SEND_MULTIPLE 和系统解析列表验证, 尚未逐一从文件管理器与浏览器下载 UI 打开 APK / XAPK, 不以合成 Intent 代替该矩阵)
+- [ ] (测试) 设备: 从系统文件管理器与浏览器下载列表各打开一次 `.apk` / `.xapk`; 宿主已删除入口后, 系统 "打开方式" 列表只出现插件. (部分 DEVICE 2026-10-01: 既有 exported VIEW / SEND_MULTIPLE 与系统解析列表验证通过; 本轮准备本机无代码夹具后, 启动 Chrome 的命令被自动审批拒绝, 只返回 blocked by policy. HTTP 服务与端口转发已停止. 实际文件管理器 / 浏览器下载列表的 APK / XAPK 矩阵仍未完成, 不以合成 Intent 代替)
 
 ### P3.3 用户确认与卸载对话框
 
 - [x] (插件) `UserActionActivity`: 接管 `STATUS_PENDING_USER_ACTION` 的 intent sender (`startActivityForResult`), 未知来源权限缺失时先引导 `ACTION_MANAGE_UNKNOWN_APP_SOURCES` 再重试, 超时 (D31) 后取消会话. (SOURCE / JVM / DEVICE 2026-10-01: token 桥接, 权限设置返回, 超时, 任务清理与通知回退完成; 最终结果以 PackageInstaller 广播为准, 不把 API 24 的 RESULT_CANCELED 当成安装失败. 见 docs/dev/p3-ui-evidence.md)
 - [x] (插件) `UninstallDialogActivity`: `none` 路径承载 `ACTION_UNINSTALL_PACKAGE`; 特权路径的确认对话框 (脚本以 `interaction = dialog` 卸载时) 显示应用信息与 `keepData` 开关. (SOURCE / JVM / DEVICE 2026-10-01: 系统卸载桥接保留, 特权确认使用插件外观和 keepData 草稿; 旋转不重复启动, 选择值进入 UninstallEngine. API 24 / 28 / 35 桥接和特权确认回归通过)
-- [ ] (测试) 设备: none 路径新装 (含未知来源引导), 用户取消, 超时; 特权卸载确认. (部分 DEVICE 2026-10-01: API 24 none 新装 / 取消, 确认超时与特权卸载通过; API 35 实际打开未知来源 Settings 并拒绝, 返回 USER_CANCELLED 且未改变许可. 首次授予权限后继续安装只覆盖桥接状态测试, 实际 UI 授权流程仍待完成)
+- [ ] (测试) 设备: none 路径新装 (含未知来源引导), 用户取消, 超时; 特权卸载确认. (部分 DEVICE 2026-10-01: 既有 API 24 新装 / 取消, 超时 / 卸载与 API 35 实际拒绝仍有效. 新 opt-in 在 API 28 实际开启本插件来源权限并以原 session 显示一次系统确认, 随后拒绝额外 Play Protect 上传扫描并验证失败终结; API 35 在开关之后遇到额外 OEM 授权页, 明确跳过. 权限均恢复. 两者不能算完整安装成功, 见 docs/dev/p3-unknown-source-evidence.md)
 
 ### P3.4 前台服务与通知
 
 - [x] (插件) `InstallForegroundService`: 会话进入写入阶段时启动, 类型在 `dataSync` 与 `specialUse` 之间按 API 34+ 实测选定 (附录 D Q6), 通知显示阶段与进度, 完成后结束; 通知通道 `installation`; API 33+ `POST_NOTIFICATIONS` 缺失时静默降级 (不阻塞安装). (SOURCE / JVM / DEVICE 2026-10-01: 采用 dataSync, API 35 两次真实 2 GiB 写入与后台存活通过; 共享服务 / 取消 / 完成 / 通知发布竞态 / onTimeout 清理已实现, 通知拒绝不阻塞. 见 docs/dev/p3-notification-evidence.md)
-- [ ] (测试) 设备: 静默安装 2 GiB 级 xapk 期间切到后台, 进程未被杀且进度通知更新; API 34+ 无异常. (部分 DEVICE 2026-10-01: API 35 Shizuku 真实 APK 写入 2,147,500,874 字节, 最终后台 11,556 ms / 44 个 FGS 样本 / PID 不变; 真机通知保持拒绝. API 24 独立短包验证可见通知 [0,100], 不与大包拼接为同一次可见进度验收. 同次 2 GiB 可见通知更新仍待补测)
+- [x] (测试) 设备: 静默安装 2 GiB 级 xapk 期间切到后台, 进程未被杀且进度通知更新; API 34+ 无异常. (DEVICE 2026-10-01: API 35 Shizuku 同一次真实 2 GiB xapk 安装写入 2,147,500,874 字节, 后台 11,679 ms / 46 个 FGS 样本 / PID 31136 不变, 可见通知记录 27 个不同进度值 (0 至 98, 含中间进度), 无字节回调暂停, 操作 27,500 ms, 1 项通过无跳过. 临时通知许可已恢复为原有效禁用状态. 见 docs/dev/p3-notification-evidence.md)
 
 验收条件: P3 全部对话框在 AVD API 24 / 真机 API 33+ 走通; 外部入口在系统列表出现且宿主不再出现; 前台服务在 API 34+ 合规; 证据写入 `docs/dev/p3-ui-evidence.md`.
 
@@ -969,3 +969,13 @@ if (!installer.isDefault()) installer.setDefault(true);
 - 未完成边界保留原 checkbox: 跨进程持久化恢复与真实 IME / API 35 全几何, 文件管理器和浏览器下载 UI 的 APK / XAPK 矩阵, 实际首次授予未知来源后继续安装, 同一次 2 GiB 的可见通知, 宿主三处入口与 P2 完整标志 / 用户矩阵. P4 / P5 尚未开始.
 - 提交: 插件按外观, 通知, 安装 UI, 系统 / 卸载确认, 外部入口, 设备验收与文档分开提交; 宿主前台绑定修复为 1e6d8d09eb, 探针任务清理为 53faf617a7. 遵循维护者本轮最新指示, 两仓库当前均仅本地提交, 不推送 GitHub. 插件最终 VERSION_BUILD=24, 与可达提交数对齐.
 - 下一步: 优先补齐上述原有验收项和进程恢复, 然后按 P4 接入宿主 installer / $installer 脚本 API; 继续保持原有路线图结构.
+
+### 2026-10-01 (P3 恢复与真实窗口 / 通知验收)
+
+- 完成原 P3.1 剩余的展示恢复与真实窗口验证, 原 P3.4 的同次大包可见通知验收, 新增勾选 2 个原有条目; 未新增, 分拆或丢弃路线图小节. P4 尚未开始.
+- 恢复: 私有有界原子快照, 关键结果落盘, 进度不写盘, 关闭 / 清除拒绝晚写, 设备重启后不复用 elapsedRealtime 原点. 新进程只读显示保存的已确认结果, 未完成项中断, 不恢复 worker / 描述符 / URI 授权, 不猜测成功或自动安装. API 35 PID 24697 -> 25743, API 28 PID 5734 -> 5783 的真实进程终止与恢复均通过; 探针明确使用合成展示数据, 不冒充实际系统安装结果.
+- 窗口与通知: API 28 / 35 的真实键盘, RTL, 字号 2, 夜间, 横屏和固定按钮触摸各 3 项通过; API 35 同次 2 GiB 后台写入显示 27 个通知进度值, 46 个 FGS 样本. 详见三份专项证据与 docs/dev/p3-ui-evidence.md 的本轮补充.
+- 授权: 新的真实 Settings 授权测试保持单 session / 单确认, 严格限于自建无代码夹具和本次任务. Sony 在授权和系统确认后遇到额外上传扫描, 测试只拒绝并等失败终态; HyperOS 在开关后遇到额外权限页, 测试不操作该页. 两台最终组合各 15 项通过 + 1 项有意跳过, 0 失败, 不把跳过计成功. 初次挂起夹具 session 已清理, 未改全局扫描设置或上传 APK.
+- 验证: 插件 194 JVM 用例, debug / androidTest / 混淆 release, 两种 lint, 十语言 Markdown 和图标检查通过. 最终版本构建与具体警告数见本轮综合证据. 宿主和其他仓库未修改.
+- 保留未完成: 实际文件管理器 / 浏览器下载列表 APK / XAPK 矩阵, 首次授予未知来源后完整安装成功, 宿主三入口与 P2 剩余矩阵. 本轮模拟器启动及 Chrome 启动均被自动审批拒绝, 仅返回 blocked by policy, 未绕过; 新 API 24 恢复 / 真实 IME 复验未执行.
+- 工作区与下一步: 继续仅本地提交, 不推送 GitHub. 插件按恢复界面, 授权验收, 大包通知与路线图证据及取消文案修复分成 5 笔提交, VERSION_BUILD=29 与可达提交数对齐. 下一轮继续原有验收边界, 再推进 P4 服务层与脚本 augment.

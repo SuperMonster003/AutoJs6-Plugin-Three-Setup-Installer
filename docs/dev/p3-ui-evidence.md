@@ -1,6 +1,6 @@
 # P3 安装界面与外部入口证据
 
-日期: 2026-10-01. 本轮沿用 ROADMAP.md 的 P3.1-P3.4, 不增加或拆分路线图条目. 宿主与插件的公开 V1 AIDL / AAR / 哈希锁均未改变.
+日期: 2026-10-01. 本文保留 build 24 的首轮 P3 记录, 末尾补充 build 29 的恢复与验收收尾. 沿用 ROADMAP.md 的 P3.1-P3.4, 不增加或拆分路线图条目. 宿主与插件的公开 V1 AIDL / AAR / 哈希锁均未改变.
 
 ## 实现与状态边界
 
@@ -11,7 +11,7 @@
 - 仅在系统确认安装成功后尽力删除所选外部来源. 提供方拒绝删除时保留安装成功, 返回 sourceDeleted=false 与说明; UI 显示来源未删除. 失败的来源保留. keepSourceOnFailure 的设置页仍属 P5, 不据此勾选 P2.3 的整个来源策略条目.
 - Binder, 外部入口和单项重试共享四个安装名额. 关闭, 取消, 超时与终态分别处理, 实际来源清理结束后释放运行资源. 安装通知发布和移除串行化, 避免完成后的延迟通知重新出现.
 - 外部来源在各项 prepare 时懒打开, 单项不可读不错误归属前一项, continueOnError=false 时不读取后续来源. 独立 deadline 主动取消 ContentResolver 的 CancellationSignal; provider 取消在专用线程执行, 不堵塞界面或错误中断复用的安装线程.
-- SavedStateHandle 保存随机会话 token, 旋转恢复同一进程中的会话和确认草稿, 不重新执行安装. 进程已丢失时显示中断, 不猜测安装结果或自动再次提交. 跨进程持久化恢复仍未实现, P3.1 对应整项保留未完成.
+- SavedStateHandle 保存随机会话 token, 旋转恢复同一进程中的会话和确认草稿, 不重新执行安装. build 29 已加入跨进程只读恢复: 显示私有快照中已确认并保存的结果, 未完成项中断, 不猜测安装结果或自动再次提交. 见 [恢复证据](p3-recovery-evidence.md).
 
 外观与通知的独立记录分别见 [p3-appearance-evidence.md](p3-appearance-evidence.md) 和 [p3-notification-evidence.md](p3-notification-evidence.md).
 
@@ -25,7 +25,7 @@ Android 14+ 的前台宿主必须显式允许绑定的安装插件启动确认�
 
 系统确认与未知来源设置使用非导出桥接 Activity, 服务端保留真实 Intent, 通知只携带随机 token. 任务取消时结束自己启动的子 Activity; 只有桥接 Activity 自己是 task root 时才 finishAndRemoveTask, 防止关闭调用者的任务.
 
-## 构建与纯逻辑验证
+## 首轮构建与纯逻辑验证 (build 24)
 
 - 插件 testDebugUnitTest: 180 项, 0 失败 / 0 错误 / 0 跳过. 包含 UI 选项, 分包依赖复验, 用户选择, 逐项不可变结果, 来源删除回调, 确认状态, 通知状态与发布竞态等.
 - 插件 assembleDebug / assembleDebugAndroidTest / assembleRelease / lintDebug / lintRelease 全部成功. 混淆 release 保持单 APK, native page alignment 检查确认无原生库. 本轮构建参数关闭 build number / build time 自动修改.
@@ -77,7 +77,7 @@ tools/build-large-install-fixture.ps1 生成两枚带各 1 GiB 资产的签名 A
 - 最终 API 35 运行: PID 16607 未变, 44 个 FGS 样本, 真实 HOME 后 Activity STOPPED / 无焦点, 后台 11,556 ms, 安装操作 28,938 ms, 成功后卸载清理.
 - 该真机保持 POST_NOTIFICATIONS 拒绝与通知栏禁用, 安装未被阻塞. API 24 的独立短包实装记录了可见进度 [0, 100], 8 个 FGS 样本, 后台 1,535 ms; 其首字节处 1,200 ms 等待只为观测, 不作为大包证据.
 
-P3.4 的完整测试项要求同一次大包运行中通知可见并更新. 上述两次运行不合并冒充该矩阵已经完成, 因此该复合测试项仍保留未勾选. dataSync 类型已在 API 35 实际启动与持续写入成功; 实现处理 onTimeout 并先结束服务, 未主动耗尽系统累计时长预算.
+P3.4 的完整测试项要求同一次大包运行中通知可见并更新. 首轮上述两次运行没有合并冒充该矩阵完成. 后续已完成同一次 2 GiB 写入的可见通知更新, 见文末补充和 [通知证据](p3-notification-evidence.md). dataSync 类型已在 API 35 实际启动与持续写入成功; 实现处理 onTimeout 并先结束服务, 未主动耗尽系统累计时长预算.
 
 ## 首轮失败与修复记录
 
@@ -95,10 +95,33 @@ P3.4 的完整测试项要求同一次大包运行中通知可见并更新. 上�
 
 ## 保留未完成的原有条目
 
-P3.1 跨进程恢复与真实键盘 / API 35 全部几何边界, P3.2 系统文件管理器和浏览器下载列表各打开 APK / XAPK, P3.3 真机首次授予未知来源后继续安装的实际界面流程, P3.4 同一次 2 GiB 安装的可见通知更新, 以及 P2 的安装标志 / 多用户完整矩阵与宿主三处入口. 未启用 P4 脚本 API 或 P5 首页 / 设置页, 未提前宣称 1.0.0 可发布.
+仍保留 P3.2 系统文件管理器和浏览器下载列表各打开 APK / XAPK, P3.3 真机首次授予未知来源后的完整成功安装, P2 的安装标志 / 多用户完整矩阵与宿主三处入口. 新增恢复 / 真实 IME 的 API 24 复验本轮未执行. 未启用 P4 脚本 API 或 P5 首页 / 设置页, 未提前宣称 1.0.0 可发布.
 
 ## 清理与提交范围
 
 结束时再次枚举三台测试设备的全部用户, 没有残留自建安装夹具或其保留数据. 已删除真机上的 2 GiB 来源和临时中转副本, 宿主探针 APK 与四份已记入日志的探针 JSON; 仅关闭本轮启动的 AVD_API_24. 真机通知仍为 ignore, 未知来源仍为 default, 宿主插件开关仍由测试恢复为原值.
 
 实现, 测试, 十语言文案与证据按逻辑作本地提交. 遵循维护者 2026-10-01 的最新指示, 插件当前暂不推送 GitHub 远端; 宿主亦未推送. AGENTS.md 与 ROADMAP.md Q8 已记录该约束.
+
+## 后续恢复与验收收尾 (build 29)
+
+恢复与真实窗口实现见提交 962bc8b 和 [恢复证据](p3-recovery-evidence.md); 未知来源测试见 f9d1665 和 [授权证据](p3-unknown-source-evidence.md); 同次大包通知验收见 adb3914 和 [通知证据](p3-notification-evidence.md). 本轮只修改插件仓库, 宿主保持 53faf617a7, 公开契约与依赖不变.
+
+截图复核另发现 HyperOS 缺少对应系统翻译时, 阿拉伯语界面的取消按钮仍为英文. 0884d76 改用插件自身 11 个资源目录的 action_cancel, 同时覆盖安装, 特权卸载和通知. API 35 的 Arabic / 字号 2 / 夜间 / 真实 IME 用例重跑 1 项通过, 修复后截图确认显示阿拉伯语取消文案. 原始图片保留在忽略目录 build/p3-followup-screenshots, 不作为产品内容或用户数据入库.
+
+| 检查 | 结果 |
+| --- | --- |
+| JVM | 194 项通过, 0 失败 / 0 跳过, 比首轮新增 14 项恢复逻辑测试 |
+| 最终 build 29 | Debug / androidTest / 混淆 Release 与两种 lint 全部通过; lint 0 错误, Debug 21 / Release 22 个警告; 十语言 Markdown 与 15 个图标资源检查通过 |
+| API 28 最终组合 | 15 项通过 + 1 项有意跳过, 0 失败; 12 项安装 UI / 恢复与 3 项真实窗口 |
+| API 35 最终组合 | 15 项通过 + 1 项有意跳过, 0 失败; 同上 |
+| 实际进程更替 | API 28 / 35 均更换 PID, 无内存 Record 时读到保存的合成确认结果与未知项, 不创建安装 worker |
+| 同次大包可见通知 | 1 项通过无跳过; 2,147,500,874 字节, 后台 11,679 ms, 46 个 FGS 样本, 27 个进度值, PID 不变, 无字节回调暂停 |
+
+组合日志为 build/p3-followup-api28-final-suite.log 与 build/p3-followup-api35-final-suite.log. 两项有意跳过分别来自额外 Play Protect 上传扫描同意和额外 HyperOS 授权页面, 不是安装成功. 前者只拒绝本次固定夹具并等失败终结, 后者关闭自有任务; 均复查原权限状态恢复. 没有上传 APK 或修改全局扫描设置.
+
+设备侧测试夹具和探针按 case 清理. 临时通知授权结束后恢复 runtime=false / UID ignore, 敏感权限 flags 不变且通知有效禁用; package 操作具有默认 allow 记录, 不声称操作或访问记录完全未变化.
+
+结束时重新检查两台设备全部用户, 无残留自建安装夹具或保留数据; 两枚恢复探针 token 均已确认清除. 大包及中转文件, 探针 JSON, 自有验证器 XML 和设备截图已清理; 测量截图保留于本地忽略目录. 最后本地 VERSION_BUILD=29 与可达提交数对齐, 未推送远端.
+
+启动测试模拟器的后台命令和让 Chrome 打开本机夹具页的命令被自动审批审查拒绝, 返回原因仅为 blocked by policy. 未采用其他路径绕过这两次拒绝. 本机临时 HTTP 服务和两个端口转发均已停止; 没有把未运行的浏览器入口或新 API 24 用例记为通过.
