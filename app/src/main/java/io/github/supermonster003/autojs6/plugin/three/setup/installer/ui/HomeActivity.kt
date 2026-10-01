@@ -187,9 +187,9 @@ class HomeActivity : HostAppearanceActivity() {
         if (!::authorizationCard.isInitialized) return
         authorizationCard.removeAllViews()
         title(authorizationCard, getString(R.string.home_authorizers))
-        listOf(Authorizer.SHIZUKU, Authorizer.ROOT).forEach { method ->
+        listOf(Authorizer.SHIZUKU, Authorizer.ROOT, Authorizer.DHIZUKU).forEach { method ->
             val state = states[method]
-            val name = getString(if (method == Authorizer.SHIZUKU) R.string.settings_shizuku else R.string.settings_root)
+            val name = getString(when (method) { Authorizer.SHIZUKU -> R.string.settings_shizuku; Authorizer.DHIZUKU -> R.string.settings_dhizuku; else -> R.string.settings_root })
             // Root has no separate daemon: the shared API reports running even without su.
             // Mask that sentinel only in Home's display; authorization still uses the raw state.
             val displayedRunning = state?.let { it.running && (method != Authorizer.ROOT || it.available) } == true

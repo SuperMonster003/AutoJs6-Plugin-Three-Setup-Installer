@@ -52,7 +52,7 @@ AutoJs6 découvre le plugin par son service Binder et lui transmet les fichiers 
 
 ******
 
-1.0.0 décrit les fonctions d'installation, de gestion des applications et de scripts présentées ci-dessous. La publication officielle sur GitHub Releases et le référencement dans le centre de plugins restent à effectuer. L'intégration nécessite AutoJs6 >= 6.8.0 (5299), et l'API de scripts `installer` nécessite la compilation 5300 ou ultérieure. La couverture des appareils et les validations restantes figurent dans [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md).
+1.1.0 décrit les fonctions d'installation, de gestion des applications et de scripts présentées ci-dessous. La publication officielle sur GitHub Releases et le référencement dans le centre de plugins restent à effectuer. L'intégration nécessite AutoJs6 >= 6.8.0 (5299), et l'API de scripts `installer` nécessite la compilation 5300 ou ultérieure. La couverture des appareils et les validations restantes figurent dans [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md).
 
 ******
 
@@ -60,7 +60,7 @@ AutoJs6 découvre le plugin par son service Binder et lui transmet les fichiers 
 
 ******
 
-Fonctions implémentées dans 1.0.0:
+Fonctions implémentées dans 1.1.0:
 
 - Formats de paquet : `.apk`, `.apks`, `.xapk`, `.apkm`, `.apkz` et archives ZIP contenant des APK ; les paquets fractionnés sont sélectionnés pour l'appareil ; les fichiers `.aab` sont reconnus et décrits mais pas installés.
 - Autorisations: `none` utilise la confirmation Android; `shizuku` et `root` permettent les opérations privilégiées. Par défaut, `auto` choisit Shizuku, Root puis la confirmation système selon leur disponibilité. Les paramètres permettent de modifier l'ordre et d'activer les méthodes; un choix explicite ne bascule jamais silencieusement vers une autre méthode.
@@ -232,6 +232,15 @@ Les plans et l'avancement du plugin sont tenus sous forme de liste cochable dans
 ### Historique des versions
 
 ******
+
+#### v1.1.0
+
+_2026/10/02_
+
+- `Fonctionnalité` `dhizuku`: nécessite Android 8.0 (API 26)+, un propriétaire d'appareil/profil Dhizuku actif et l'autorisation donnée au plugin. Les opérations sont limitées à l'utilisateur du propriétaire courant; l'attribution de l'installation utilise le vrai paquet propriétaire. Les options shell/root de rétrogradation, paquet de test, contournement du targetSdk, autres utilisateurs, attribution arbitraire et conservation des données à la désinstallation sont refusées. Le plugin ne configure pas de propriétaire.
+- `Amélioration` `none` utilise la confirmation Android. Les nouveaux paramètres essaient `shizuku -> root -> dhizuku -> none` pour `auto`, selon leur disponibilité; chaque méthode peut être déplacée ou désactivée. Les anciens paramètres à trois méthodes conservent leur ordre relatif et leurs activations, avec Dhizuku inséré avant `none` mais désactivé. Un choix explicite ne bascule jamais vers une autre méthode.
+- `Dépendance` Ajout de Dhizuku API 2.6.0 (MIT) pour l'autorisation par propriétaire d'appareil/profil
+- `Dépendance` Mise à niveau de `installer-api.aar` vers le contrat V2 (MPL 2.0), avec négociation V1 conservée et méthode persistante ajoutée à la fin; origine et SHA-256 figurent dans les avis de tiers; AutoJs6 >= 6.8.0 (5307).
 
 #### v1.0.0
 

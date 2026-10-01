@@ -52,7 +52,7 @@ AutoJs6 透過 Binder 服務發現外掛程式, 以唯讀檔案描述元交出�
 
 ******
 
-1.0.0 已實作下述安裝, 應用程式管理與腳本功能. 官方 GitHub Release 和外掛程式中心索引收錄仍待完成. 宿主接入需要 AutoJs6 >= 6.8.0 (5299), `installer` 腳本 API 需要組建 5300 或更高版本. 裝置覆蓋與餘下驗收記錄在 [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md) 中.
+1.1.0 已實作下述安裝, 應用程式管理與腳本功能. 官方 GitHub Release 和外掛程式中心索引收錄仍待完成. 宿主接入需要 AutoJs6 >= 6.8.0 (5299), `installer` 腳本 API 需要組建 5300 或更高版本. 裝置覆蓋與餘下驗收記錄在 [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md) 中.
 
 ******
 
@@ -60,7 +60,7 @@ AutoJs6 透過 Binder 服務發現外掛程式, 以唯讀檔案描述元交出�
 
 ******
 
-1.0.0 已實作的功能:
+1.1.0 已實作的功能:
 
 - 安裝套件格式: `.apk`, `.apks`, `.xapk`, `.apkm`, `.apkz` 以及包含 APK 的 ZIP 壓縮檔; 分包按裝置選擇; `.aab` 檔案只識別與說明, 不安裝.
 - 授權方式: `none` 使用 Android 確認; `shizuku` 與 `root` 提供特權操作. `auto` 預設依次選擇可用的 Shizuku, Root 和系統確認. 設定中可調整授權次序與啟用狀態; 明確選擇的方式不會靜默改用其他方式.
@@ -232,6 +232,15 @@ minimum host build: 5299 (6.8.0)
 ### 發行歷史
 
 ******
+
+#### v1.1.0
+
+_2026/10/02_
+
+- `新增` `dhizuku`: 需要 Android 8.0 (API 26)+, 已啟用的 Dhizuku 裝置/設定檔擁有者, 並向此外掛程式授權. 只操作目前擁有者使用者, 安裝者歸屬使用真實擁有者套件名稱. 不提供 shell/root 的降級, 測試套件, 略過低 targetSdk, 其他使用者, 任意安裝者歸屬或解除安裝保留資料選項. 外掛程式不自動設定擁有者.
+- `優化` `none` 使用 Android 確認. 新設定的 `auto` 按 `shizuku -> root -> dhizuku -> none` 選擇可用方式, 可調整次序和啟用狀態. 已儲存的舊三項設定保留原相對次序及啟用選擇, Dhizuku 插入 `none` 前但預設停用. 明確指定的授權方式不會改用其他方式.
+- `依賴` 附加 Dhizuku API 2.6.0 (MIT), 提供裝置/設定檔擁有者授權方式
+- `依賴` 升級 `installer-api.aar` 為契約 V2 (MPL 2.0), 保留 V1 協商並在末尾追加持久預設方法; 產物來源與 SHA-256 見第三方聲明; AutoJs6 >= 6.8.0 (5307).
 
 #### v1.0.0
 

@@ -68,6 +68,10 @@ class RequestDocumentsTest {
         invalid("""{"id":"many","batch":false,"sources":[{"displayName":"one.apk"},{"displayName":"two.apk"}]}""", 2)
     }
 
+    @Test fun `notification is rejected until its capability is implemented`() {
+        invalid("""{"id":"x","interaction":"notification","sources":[{"displayName":"x.apk"}]}""", 1)
+    }
+
     private fun invalid(json: String, count: Int) {
         assertEquals(json.take(80), "INVALID_ARGUMENT", assertThrows(InstallFailure::class.java) { InstallRequest.parse(json, count) }.code)
     }

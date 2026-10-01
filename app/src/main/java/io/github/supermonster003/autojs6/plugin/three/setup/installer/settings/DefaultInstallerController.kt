@@ -78,7 +78,7 @@ internal class DefaultInstallerController(
             val candidates = runCatching {
                 val preferences = InstallerPreferences.read(app).authorizers
                 val states = AuthorizerStates.states(app)
-                preferences.order.filter { it.privileged && it in preferences.enabled && states[it]?.let { state -> state.available && state.running } == true }
+                preferences.order.filter { it in listOf(Authorizer.SHIZUKU, Authorizer.ROOT) && it in preferences.enabled && states[it]?.let { state -> state.available && state.running } == true }
             }.getOrDefault(emptyList())
             deliver(expected) {
                 onBusy(false)

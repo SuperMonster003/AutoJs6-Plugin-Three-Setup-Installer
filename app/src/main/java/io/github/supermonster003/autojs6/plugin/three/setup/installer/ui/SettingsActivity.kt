@@ -145,6 +145,7 @@ class SettingsActivity : SettingsPageActivity() {
         Authorizer.SHIZUKU -> getString(R.string.settings_shizuku)
         Authorizer.ROOT -> getString(R.string.settings_root)
         Authorizer.NONE -> getString(R.string.confirm_system)
+        Authorizer.DHIZUKU -> getString(R.string.settings_dhizuku)
     }
     private fun open(type: Class<*>) = startActivity(Intent(this, type))
 

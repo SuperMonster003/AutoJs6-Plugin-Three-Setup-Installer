@@ -4,6 +4,15 @@
 
 ******
 
+# v1.1.0
+
+###### 2026/10/02
+
+* `Función` `dhizuku`: requiere Android 8.0 (API 26)+, un propietario de dispositivo/perfil Dhizuku activo y permiso para el plugin. Solo opera en el usuario propietario actual y atribuye la instalación al paquete propietario real. No admite opciones shell/root de degradación, paquetes de prueba, omisión de targetSdk bajo, otros usuarios, atribución arbitraria ni conservación de datos al desinstalar. El plugin no configura propietarios.
+* `Mejora` `none` usa la confirmación de Android. Los ajustes nuevos prueban `shizuku -> root -> dhizuku -> none` para `auto`, según disponibilidad; cada método se puede reordenar o desactivar. Los ajustes guardados con tres métodos conservan su orden relativo y métodos habilitados; Dhizuku se inserta antes de `none`, desactivado. Una elección explícita nunca cambia a otro método.
+* `Dependencia` Se añade Dhizuku API 2.6.0 (MIT) para la autorización mediante propietario de dispositivo/perfil
+* `Dependencia` Se actualiza `installer-api.aar` al contrato V2 (MPL 2.0), manteniendo la negociación V1 y añadiendo al final el método de instalador persistente; el origen y SHA-256 figuran en los avisos de terceros; AutoJs6 >= 6.8.0 (5307).
+
 # v1.0.0
 
 ###### 2026/10/02

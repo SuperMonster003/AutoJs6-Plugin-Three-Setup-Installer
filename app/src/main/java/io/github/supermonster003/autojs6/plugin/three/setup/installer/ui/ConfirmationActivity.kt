@@ -72,6 +72,7 @@ class ConfirmationActivity : HostAppearanceActivity() {
             Authorizer.NONE -> getString(R.string.confirm_system)
             Authorizer.ROOT -> "Root"
             Authorizer.SHIZUKU -> "Shizuku"
+            Authorizer.DHIZUKU -> "Dhizuku"
         }
         val target = if (entry.request.user == InstallerContract.USER_ALL) getString(R.string.confirm_all_users) else entry.userId.toString()
         dialog.content.addView(kit.text(getString(R.string.uninstall_authorization, authorization), color = kit.palette.muted).apply {

@@ -52,7 +52,7 @@ AutoJs6는 Binder 서비스를 통해 플러그인을 찾고 패키지 파일을
 
 ******
 
-1.0.0은 아래 설치, 앱 관리 및 스크립트 기능을 구현합니다. 공식 GitHub Release 게시와 플러그인 센터 등록은 아직 완료되지 않았습니다. 호스트 연동에는 AutoJs6 >= 6.8.0 (5299), `installer` 스크립트 API에는 빌드 5300 이상이 필요합니다. 기기 검증 범위와 남은 검증 항목은 [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md)에 기록되어 있습니다.
+1.1.0은 아래 설치, 앱 관리 및 스크립트 기능을 구현합니다. 공식 GitHub Release 게시와 플러그인 센터 등록은 아직 완료되지 않았습니다. 호스트 연동에는 AutoJs6 >= 6.8.0 (5299), `installer` 스크립트 API에는 빌드 5300 이상이 필요합니다. 기기 검증 범위와 남은 검증 항목은 [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md)에 기록되어 있습니다.
 
 ******
 
@@ -60,7 +60,7 @@ AutoJs6는 Binder 서비스를 통해 플러그인을 찾고 패키지 파일을
 
 ******
 
-1.0.0에 구현된 기능:
+1.1.0에 구현된 기능:
 
 - 패키지 형식: `.apk`, `.apks`, `.xapk`, `.apkm`, `.apkz` 및 APK가 들어 있는 ZIP 아카이브. 분할 패키지는 기기에 맞게 선택되며 `.aab` 파일은 인식과 설명만 하고 설치하지 않습니다.
 - 권한 방식: `none`은 Android 확인을 사용하고, `shizuku`와 `root`는 특권 작업을 제공합니다. `auto`는 기본적으로 사용 가능한 Shizuku, Root, 시스템 확인 순서로 선택합니다. 설정에서 순서와 사용 여부를 바꿀 수 있으며, 명시적으로 선택한 방식이 다른 방식으로 자동 변경되지는 않습니다.
@@ -232,6 +232,15 @@ minimum host build: 5299 (6.8.0)
 ### 릴리스 기록
 
 ******
+
+#### v1.1.0
+
+_2026/10/02_
+
+- `기능` `dhizuku`: Android 8.0 (API 26)+, 활성 Dhizuku 기기/프로필 소유자 및 이 플러그인에 부여한 권한이 필요합니다. 현재 소유자 사용자에서만 작동하고 실제 소유자 패키지를 설치자로 기록합니다. shell/root용 다운그레이드, 테스트 패키지, 낮은 targetSdk 제한 우회, 다른 사용자, 임의 설치자 지정 및 제거 시 데이터 보존 옵션은 지원하지 않습니다. 플러그인은 소유자를 설정하지 않습니다.
+- `개선` `none`은 Android 확인을 사용합니다. 새 설정의 `auto`는 사용 가능한 `shizuku -> root -> dhizuku -> none` 순서로 선택하며 순서와 사용 여부를 바꿀 수 있습니다. 저장된 기존 세 방식의 설정은 상대 순서와 사용 여부를 유지하고 Dhizuku를 `none` 앞에 비활성 상태로 추가합니다. 명시적으로 지정한 방식은 다른 방식으로 바뀌지 않습니다.
+- `의존성` 기기/프로필 소유자 권한 방식을 위한 Dhizuku API 2.6.0 (MIT) 추가
+- `의존성` `installer-api.aar`을 계약 V2 (MPL 2.0)로 업그레이드. V1 협상을 유지하고 영구 기본값 메서드를 끝에 추가. 출처와 SHA-256은 서드파티 고지에 기록; AutoJs6 >= 6.8.0 (5307).
 
 #### v1.0.0
 

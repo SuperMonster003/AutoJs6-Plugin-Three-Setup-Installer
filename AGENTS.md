@@ -52,6 +52,7 @@
 ### 3.3 提交
 
 - 维护者于 2026-10-01 最新指示: 本插件仓库当前仅作本地提交, 暂时不推送到 GitHub 远端. 后续会话继续遵守, 直至维护者明确恢复推送.
+- 维护者于 2026-10-02 明确允许 P7 远端发布继续延迟时实施 P8 及后续项. 此授权仅调整阶段依赖, 不恢复任何仓库的远端推送, 标签或发布.
 - 除非用户明确要求本次会话不要提交, 会话结束前 MUST 将本次范围内的全部文件按逻辑提交, 一个路线图子项一个提交.
 - 使用 Conventional Commits 风格: `feat:`, `fix:`, `docs:`, `build:`, `test:`, `ci:`, `chore:`, 可加作用域, 例如 `feat(priv): ...`.
 - 一个提交表达一个完整意图; 行为实现, 对应测试和对应 changelog 通常放在同一提交.
@@ -151,8 +152,9 @@ AutoJs6-Plugin-Three-Setup-Installer/
 | `POST_NOTIFICATIONS` | 进度与结果通知, 缺失时静默降级 |
 | `INTERNET` | 仅用户手动检查更新时访问本插件固定的 GitHub Releases API, 12 小时间隔与缓存结果; 无后台检查或安装包上传, 安装及应用管理保持离线 (P5.3) |
 | `moe.shizuku.manager.permission.API_V23` | Shizuku 授权方式 (D2) |
+| `com.rosan.dhizuku.permission.API` | Dhizuku 设备/资料所有者授权及安装 (P8, API 26+) |
 
-- `<queries>`: 宿主包, Shizuku 管理器包, 以及 `ACTION_VIEW` + 安装包 MIME 的 intent (默认安装器状态检测). 新增跨包访问时先加 queries.
+- `<queries>`: 宿主包, Shizuku / Dhizuku 管理器包, 以及 `ACTION_VIEW` + 安装包 MIME 的 intent (默认安装器状态检测). Dhizuku API 合并其已知 provider 查询. 新增跨包访问时先加 queries.
 - `rikka.shizuku.ShizukuProvider` 以 `${applicationId}.shizuku` 为 authority, exported 且受 `INTERACT_ACROSS_USERS_FULL` 保护, 这是 Shizuku 的固定注册方式.
 - 外部 `ACTION_VIEW` 入口 (P3.2) 与启动器 alias (P5.4) 为 CONDITIONAL: 外部入口不受 PLUGIN 权限保护但只接受安装包 URI, 不执行脚本; 启动器 MAIN / LAUNCHER 只放在四个 alias 上.
 
@@ -162,6 +164,7 @@ AutoJs6-Plugin-Three-Setup-Installer/
 - `supportedAbis = emptyArray()` 在 `getInfo()` 中显式写出.
 - `capabilities` 自 P1.2 起含 `PluginCapabilityKeys.REQUIRES_HOST_VERSION` 与 `InstallerCapabilityKeys.CONTRACT_VERSION`; `AUTHORIZERS`, `FEATURES`, `MAX_BATCH`, `MAX_SPLITS` 随 P2.6 的真实 Binder 路由一起声明 (路线图附录 B), 不提前声明尚未实现的能力.
 - 新增可选方法时先协商能力, 不通过捕获异常猜测协议版本.
+- P8 实现 V1/V2 共存: 最小能力版本为 1, 最大版本为 2; V1 AIDL 顺序冻结, V2 仅在末尾追加 setDefaultInstallerV2. 新请求选项须按同一 Binder 的实时能力协商; 未改变结构的结果 envelope 保持版本 1. 基础宿主仍为 5299, V1 脚本为 5300, 完整 V2 状态字段由 5307 起提供.
 
 ## 8. Binder 与公共 API 设计
 
@@ -180,6 +183,8 @@ AutoJs6-Plugin-Three-Setup-Installer/
 - 参考项目 InstallerX / InstallerX-Revived 为 GPL-3.0 (D29): 只参考架构, 行为与选项目录, MUST NOT 复制其源码, 资源, 字符串; 提交说明与文档只以 "参考" 表述.
 - 特权服务只持有正在执行的会话, 不持久化状态; 客户端 Binder 死亡与服务关闭时放弃会话, 关闭运行与排队写入的所有描述符. 操作之间不保持打开的 shell; 授权探测与 RootService 启动统一管理 shell 生命周期. Shizuku 每次新绑定使用独立 tag, 避免已关闭服务的延迟死亡通知影响新连接. 日志不记录安装包内容, 只记录格式, 大小, 耗时与错误码.
 - 特权写入用普通 pipe 转交框架 `Session.openWrite` / `fsync`, 不直接写入隐藏接口的 FileBridge PFD, 不使用跨 Magisk / app 的 reliable pipe socket. 默认项只精确替换 APK filter; 不清除其它包的所有首选项, 旧 API 返回 `DEFAULT_REQUIRES_CLEAR` 时由后续 UI 引导处理.
+- Dhizuku API 为 MIT, 其 GPL 管理器由用户独立安装, 不随插件打包. API 26 以下不初始化 API, 不因其 minSdk 声明提高本插件的最低版本. 核对实时系统 owner 与 provider 的包, UID, 当前用户和签名身份; 只包装新建框架对象, 不污染进程全局 PackageManager. 仅支持当前用户, 安装者归属实际 owner; 不冒充 shell/root 的安装 flags 或 keepData.
+- Dhizuku owner 创建的系统 session 可跨插件进程死亡存活. journal 只记录明确归属的 session 与随机来源标记, 不存原始包来源; 恢复只处理已知 id, 必须核对 owner, user, 包信息和标记, 不碰活跃进程的会话, 不重放安装. API 26/27 及创建响应丢失时无法证明归属的会话不得猜测清理.
 
 ## 10. 字符串资源
 

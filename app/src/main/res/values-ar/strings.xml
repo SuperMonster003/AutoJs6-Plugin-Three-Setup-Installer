@@ -85,7 +85,7 @@
     <string name="default_installer_settings_unavailable">تعذر فتح إعدادات التطبيق بالنظام.</string>
     <string name="default_installer_state">الحالة الافتراضية</string>
     <string name="default_installer_summary">اختر التطبيق الذي يفتح ملفات APK. يتغير معالج APK فقط.</string>
-    <string name="default_installer_timeout">انتهت مهلة التفويض. تحقق من Shizuku أو Root وحاول مجددا.</string>
+    <string name="default_installer_timeout">انتهت مهلة التفويض. تحقق من طريقة التفويض المختارة وحاول مجددا.</string>
     <string name="default_installer_title">المثبت الافتراضي</string>
     <string name="home_active">قيد التنفيذ</string>
     <string name="home_authorize">منح الإذن</string>
@@ -196,7 +196,7 @@
     <string name="notification_open_for_progress">اضغط لفتح المثبت وعرض التقدم.</string>
     <string name="notification_preparing">جار تجهيز الحزمة</string>
     <string name="notification_writing">جار كتابة الحزمة</string>
-    <string name="plugin_description">يثبت تطبيقات Android ويحدثها ويزيلها مع دعم التثبيت الصامت عبر Shizuku أو Root</string>
+    <string name="plugin_description">يثبت تطبيقات Android ويحدثها ويزيلها مع دعم التثبيت الصامت عبر Shizuku أو Root أو Dhizuku</string>
     <string name="release_history_error">تعذرت قراءة المستند المدمج.</string>
     <string name="release_history_title">سجل الإصدارات</string>
     <string name="settings_appearance">المظهر</string>
@@ -205,15 +205,16 @@
     <string name="settings_back">رجوع</string>
     <string name="settings_confirm">موافق</string>
     <string name="settings_defaults_note">تعرض التثبيتات المحلية الجديدة حوار تأكيد افتراضيا. تطبق القيم الافتراضية على التثبيتات الجديدة من هذا التطبيق والملفات المشاركة ومديري الملفات. يحتفظ المضيف والسكربت بخياراتهما الصريحة. تتطلب الخيارات المتقدمة Shizuku أو Root.</string>
+    <string name="settings_dhizuku">Dhizuku</string>
     <string name="settings_disabled">متوقف</string>
     <string name="settings_enabled">مفعل</string>
     <string name="settings_error">تعذرت قراءة الإعدادات أو حفظها. تحقق من الحدود وأعد المحاولة. أوقف المهام النشطة قبل مسح البيانات.</string>
     <string name="settings_installation">التثبيت</string>
-    <string name="settings_installer_note">اتركه فارغا لنسب التثبيت إلى هذه الإضافة. قد يتطلب HyperOS استخدام com.android.shell. يتطلب تغيير جهة التثبيت Shizuku أو Root.</string>
+    <string name="settings_installer_note">اتركه فارغا لاستخدام هوية المثبت الافتراضية لطريقة التفويض المختارة. يتطلب تحديد جهة التثبيت Shizuku أو Root ويظل خاضعا لقيود النظام.</string>
     <string name="settings_installer_package">اسم حزمة المثبت</string>
     <string name="settings_installer_self">هذه الإضافة</string>
     <string name="settings_interaction">التفاعل الافتراضي</string>
-    <string name="settings_interaction_auto_note">قد يثبت الوضع التلقائي بصمت عند السماح بـ Shizuku أو Root. وإلا يطلب Android التأكيد.</string>
+    <string name="settings_interaction_auto_note">قد يثبت الوضع التلقائي بصمت عند السماح بـ Shizuku أو Root أو Dhizuku. وإلا يطلب Android التأكيد.</string>
     <string name="settings_interaction_dialog">عرض حوار التثبيت</string>
     <string name="settings_interaction_silent">صامت (يتطلب إذنا)</string>
     <string name="settings_invalid_package">أدخل اسم حزمة Android صالحا أو اتركه فارغا.</string>

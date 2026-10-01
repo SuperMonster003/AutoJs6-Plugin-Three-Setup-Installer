@@ -50,7 +50,11 @@ internal class DescriptorInstallEnvironment private constructor(
         checkActive()
         val userId = DeviceUsers(context).resolve(request.options.user, authorizer, remaining())
         return InstallSession.Target(authorizer, userId,
-            if (authorizer.privileged) PrivilegedInstallEngine(context, authorizer) else NoneInstallEngine(context))
+            when {
+                authorizer == Authorizer.DHIZUKU -> DhizukuInstallEngine(context)
+                authorizer.privileged -> PrivilegedInstallEngine(context, authorizer)
+                else -> NoneInstallEngine(context)
+            })
     }
 
     override fun prepare(index: Int, sources: List<SourceEntry>, checkActive: () -> Unit): PreparedPackage {
@@ -75,7 +79,7 @@ internal class DescriptorInstallEnvironment private constructor(
     }
 
     override fun installedVersion(packageName: String, target: InstallSession.Target): InstallSession.Version? {
-        if (target.authorizer.privileged) {
+        if (target.authorizer.privileged && target.authorizer != Authorizer.DHIZUKU) {
             val info = PrivilegedClient.get(context).acquire(target.authorizer, remaining()).getInstalledVersion(packageName, target.userId)
             return if (info.containsKey("versionCode")) InstallSession.Version(info.getString("versionName"), info.getLong("versionCode")) else null
         }

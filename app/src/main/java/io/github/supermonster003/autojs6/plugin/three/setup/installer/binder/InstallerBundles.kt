@@ -19,9 +19,19 @@ internal object InstallerBundles {
             val host = bundle[InstallerContract.KEY_HOST_VERSION_CODE] as? Long
                 ?: throw RequestDocuments.invalid("hostVersionCode must be a long")
             if (host < ThreeSetupInstallerPlugin.REQUIRED_HOST_VERSION) throw RequestDocuments.invalid("Unsupported host version")
-            return (bundle[InstallerContract.KEY_REQUEST_JSON] as? String)
+            val json = (bundle[InstallerContract.KEY_REQUEST_JSON] as? String)
                 ?.takeIf { it.toByteArray(Charsets.UTF_8).size <= InstallerContract.MAX_JSON_BYTES }
                 ?: throw RequestDocuments.invalid("Request JSON is missing or too large")
+            if (version < 2) {
+                val root = com.google.gson.JsonParser.parseString(json).takeIf { it.isJsonObject }?.asJsonObject
+                listOfNotNull(root, root?.get("options")?.takeIf { it.isJsonObject }?.asJsonObject).forEach { options ->
+                    if (options.get("authorizer")?.takeIf { it.isJsonPrimitive }?.asString == InstallerContract.AUTHORIZER_DHIZUKU ||
+                        options.get("interaction")?.takeIf { it.isJsonPrimitive }?.asString == InstallerContract.INTERACTION_NOTIFICATION || options.has(InstallerContract.FIELD_MODE)) {
+                        throw RequestDocuments.invalid("This option requires installer contract version 2")
+                    }
+                }
+            }
+            return json
         } catch (failure: InstallFailure) { throw failure }
         catch (_: RuntimeException) { throw RequestDocuments.invalid("Malformed request bundle") }
     }
@@ -36,7 +46,8 @@ internal object InstallerBundles {
             throw InstallFailure(InstallerErrorCodes.INTERNAL, "Installer response exceeds the JSON ceiling")
         }
         return Bundle().apply {
-            putInt(InstallerContract.KEY_CONTRACT_VERSION, InstallerContract.CONTRACT_VERSION)
+            // The result envelope itself is unchanged. V1 callers must continue to decode it.
+            putInt(InstallerContract.KEY_CONTRACT_VERSION, InstallerContract.MIN_CONTRACT_VERSION)
             putString(key, json)
         }
     }

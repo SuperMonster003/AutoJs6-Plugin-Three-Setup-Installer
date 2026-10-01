@@ -19,7 +19,7 @@ import org.autojs.plugin.installer.api.*
 import java.io.Closeable
 import java.util.concurrent.Executors
 
-/** The real V1 router. Only metadata discovery is public to holders of a delegated Binder. */
+/** V1 routes plus capability-negotiated V2 operations. Only metadata discovery is public. */
 internal class InstallerBinder(context: Context, private val guard: CallerGuard = HostCallerGuard(context)) : IInstallerPlugin.Stub(), Closeable {
     private val context = context.applicationContext
     private val queue = InstallerWorkQueue()
@@ -96,6 +96,17 @@ internal class InstallerBinder(context: Context, private val guard: CallerGuard 
         }
     }
 
+    override fun setDefaultInstallerV2(enable: Boolean, request: Bundle?, callback: IInstallerCallback?) {
+        guard.enforceHost()
+        withCallback(callback) { answer ->
+            val json = InstallerBundles.request(request)
+            if (request?.getInt(InstallerContract.KEY_CONTRACT_VERSION) != 2) throw RequestDocuments.invalid("Default mode requires installer contract version 2")
+            val decoded = DefaultModeRequest.parse(json)
+            if (decoded.mode != InstallerContract.DEFAULT_MODE_PREFERRED) throw RequestDocuments.invalid("Persistent defaults are not available in this build")
+            queue.submit(answer) { _, check -> check(); defaults.set(enable, resolve(decoded.authorizer), check) }
+        }
+    }
+
     override fun uninstall(request: Bundle?, callback: IInstallerCallback?) {
         guard.enforceHost()
         withCallback(callback) { answer ->
@@ -109,7 +120,11 @@ internal class InstallerBinder(context: Context, private val guard: CallerGuard 
                 val approved = if (decoded.interaction == InstallerContract.INTERACTION_DIALOG && selected.privileged) {
                     PluginConfirmation.uninstall(context, decoded, selected, userId, deadline, check)
                 } else decoded
-                val engine = if (selected.privileged) PrivilegedUninstallEngine(context, selected) else NoneUninstallEngine(context)
+                val engine = when {
+                    selected == Authorizer.DHIZUKU -> DhizukuUninstallEngine(context)
+                    selected.privileged -> PrivilegedUninstallEngine(context, selected)
+                    else -> NoneUninstallEngine(context)
+                }
                 val result = engine.uninstall(approved, userId, object : InstallEngine.Listener {
                     override fun onUserAction(intent: Intent) = UserActionLauncher.launch(context, intent)
                 }, check, deadline)

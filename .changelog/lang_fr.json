@@ -5,6 +5,19 @@
   "changelog_label_improvement": "Amélioration",
   "changelog_label_dependency": "Dépendance",
   "$data": {
+    "v1.1.0": {
+      "released_date": "2026/10/02",
+      "feature": [
+        "`dhizuku`: nécessite Android 8.0 (API 26)+, un propriétaire d'appareil/profil Dhizuku actif et l'autorisation donnée au plugin. Les opérations sont limitées à l'utilisateur du propriétaire courant; l'attribution de l'installation utilise le vrai paquet propriétaire. Les options shell/root de rétrogradation, paquet de test, contournement du targetSdk, autres utilisateurs, attribution arbitraire et conservation des données à la désinstallation sont refusées. Le plugin ne configure pas de propriétaire."
+      ],
+      "improvement": [
+        "`none` utilise la confirmation Android. Les nouveaux paramètres essaient `shizuku -> root -> dhizuku -> none` pour `auto`, selon leur disponibilité; chaque méthode peut être déplacée ou désactivée. Les anciens paramètres à trois méthodes conservent leur ordre relatif et leurs activations, avec Dhizuku inséré avant `none` mais désactivé. Un choix explicite ne bascule jamais vers une autre méthode."
+      ],
+      "dependency": [
+        "Ajout de Dhizuku API 2.6.0 (MIT) pour l'autorisation par propriétaire d'appareil/profil",
+        "Mise à niveau de `installer-api.aar` vers le contrat V2 (MPL 2.0), avec négociation V1 conservée et méthode persistante ajoutée à la fin; origine et SHA-256 figurent dans les avis de tiers; AutoJs6 >= 6.8.0 (5307)."
+      ]
+    },
     "v1.0.0": {
       "released_date": "2026/10/02",
       "hint": [

@@ -231,6 +231,7 @@ dependencies {
     // Shizuku authorizer: permission request, binder wrapper and the privileged UserService (roadmap D11).
     implementation(libs.shizuku.api)
     implementation(libs.shizuku.provider)
+    implementation(libs.dhizuku.api)
     // Root authorizer: su shell and the RootService hosting the same privileged installer (roadmap D11).
     implementation(libs.libsu.core)
     implementation(libs.libsu.service)

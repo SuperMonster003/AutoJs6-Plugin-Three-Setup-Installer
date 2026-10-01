@@ -5,6 +5,19 @@
   "changelog_label_improvement": "改善",
   "changelog_label_dependency": "依存関係",
   "$data": {
+    "v1.1.0": {
+      "released_date": "2026/10/02",
+      "feature": [
+        "`dhizuku`: Android 8.0 (API 26)+, 有効な Dhizuku デバイス/プロファイル所有者, このプラグインへの許可が必要です. 現在の所有者ユーザーのみを操作し, 実際の所有者パッケージをインストーラーとして記録します. shell/root 用のダウングレード, テストパッケージ, 低 targetSdk 制限回避, 他のユーザー, 任意のインストーラー指定, 削除時のデータ保持は非対応です. プラグインは所有者を設定しません."
+      ],
+      "improvement": [
+        "`none` は Android の確認を使用します. 新しい設定では `auto` が利用可能な `shizuku -> root -> dhizuku -> none` の順で選び, 順序や有効状態を変更できます. 保存済みの旧 3 方式の設定は相対順序と有効状態を保持し, Dhizuku を `none` の前に無効のまま追加します. 明示した方式から別方式への自動変更はありません."
+      ],
+      "dependency": [
+        "デバイス/プロファイル所有者による権限方式用に Dhizuku API 2.6.0 (MIT) を追加",
+        "`installer-api.aar` を契約 V2 (MPL 2.0) に更新. V1 の協議を維持し, 永続設定メソッドを末尾に追加. 出所と SHA-256 はサードパーティ通知に記載; AutoJs6 >= 6.8.0 (5307)."
+      ]
+    },
     "v1.0.0": {
       "released_date": "2026/10/02",
       "hint": [

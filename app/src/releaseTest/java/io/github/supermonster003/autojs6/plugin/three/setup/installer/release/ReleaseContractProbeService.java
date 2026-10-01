@@ -93,6 +93,7 @@ public final class ReleaseContractProbeService extends Service {
             mustReject(result, "authorizer", () -> invoke(contract, api, "getAuthorizerState", new Class<?>[]{String.class}, "none"));
             mustReject(result, "users", () -> invoke(contract, api, "getUsers", new Class<?>[]{Bundle.class, callback}, request, null));
             mustReject(result, "default", () -> invoke(contract, api, "getDefaultInstallerState", new Class<?>[0]));
+            mustReject(result, "persistent", () -> invoke(contract, api, "setDefaultInstallerV2", new Class<?>[]{boolean.class, Bundle.class, callback}, false, request, null));
             mustReject(result, "inspect", () -> invoke(contract, api, "inspect", new Class<?>[]{ParcelFileDescriptor.class, Bundle.class, callback}, null, request, null));
             mustReject(result, "session", () -> invoke(contract, api, "openSession", new Class<?>[]{ParcelFileDescriptor[].class, Bundle.class, sessionCallback}, null, request, null));
         }

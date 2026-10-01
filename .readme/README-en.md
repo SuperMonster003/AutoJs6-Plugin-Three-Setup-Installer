@@ -52,7 +52,7 @@ AutoJs6 discovers the plugin through its Binder service and hands over package f
 
 ******
 
-1.0.0 documents the implemented installation, app-management and script features below. The official GitHub Release and plugin-center listing are still pending. Host integration requires AutoJs6 >= 6.8.0 (5299), and the `installer` script API requires build 5300 or later. Device coverage and remaining acceptance work are recorded in [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md).
+1.1.0 documents the implemented installation, app-management and script features below. The official GitHub Release and plugin-center listing are still pending. Host integration requires AutoJs6 >= 6.8.0 (5299), and the `installer` script API requires build 5300 or later. Device coverage and remaining acceptance work are recorded in [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md).
 
 ******
 
@@ -60,7 +60,7 @@ AutoJs6 discovers the plugin through its Binder service and hands over package f
 
 ******
 
-Implemented features in 1.0.0:
+Implemented features in 1.1.0:
 
 - Package formats: `.apk`, `.apks`, `.xapk`, `.apkm`, `.apkz` and ZIP archives that contain APKs; split packages are selected for the device; `.aab` files are recognized and described but not installed.
 - Authorizers: `none` uses Android confirmation; `shizuku` and `root` provide privileged operations. By default, `auto` tries available Shizuku, Root and system confirmation in that order. Settings can reorder and enable authorizers; an explicit choice never silently falls back.
@@ -232,6 +232,15 @@ The plugin's plans and progress are maintained as a checkable list in ROADMAP.md
 ### Release History
 
 ******
+
+#### v1.1.0
+
+_2026/10/02_
+
+- `Feature` `dhizuku`: requires Android 8.0 (API 26)+, an active Dhizuku device/profile owner and permission granted to this plugin. It operates in the current owner user, and installation attribution uses the real owner package. It does not grant shell/root downgrade, test-package, low-targetSdk bypass, other-user, arbitrary installer attribution or keep-data uninstall options. The plugin does not provision an owner.
+- `Improvement` `none` uses Android confirmation. Fresh settings try usable `shizuku -> root -> dhizuku -> none` for `auto`; each method can be reordered or disabled. Existing saved three-method orders keep their relative order and enabled choices, with Dhizuku inserted before `none` but disabled. An explicit authorizer never falls back.
+- `Dependency` Add Dhizuku API 2.6.0 (MIT) for the device/profile-owner authorizer
+- `Dependency` Upgrade `installer-api.aar` to contract V2 (MPL 2.0), retaining V1 negotiation and appending the persistent-default method; provenance and SHA-256 are in Third-Party Notices; AutoJs6 >= 6.8.0 (5307).
 
 #### v1.0.0
 

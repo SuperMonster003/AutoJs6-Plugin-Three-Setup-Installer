@@ -66,6 +66,7 @@ internal abstract class UninstallEngine(
             RequestDocuments.timeoutOf(request.timeoutMillis, "uninstallation")
             RequestDocuments.userOf(request.user, "uninstallation")
             RequestDocuments.interactionOf(request.interaction, "uninstallation")
+            if (request.interaction == InstallerContract.INTERACTION_NOTIFICATION) throw RequestDocuments.invalid("Notification mode is only supported for installation")
             if (request.authorizer != InstallerContract.AUTHORIZER_AUTO && request.authorizer != authorizer.id) {
                 throw RequestDocuments.invalid("The selected engine does not match the requested authorizer")
             }

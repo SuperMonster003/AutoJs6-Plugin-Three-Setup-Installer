@@ -10,6 +10,7 @@
             android:exported="false" android:grantUriPermissions="false" />
         <service android:name=".spike.InstallerBinderTestService" android:exported="false" android:process=":binder_test" />
         <service android:name=".spike.InstallerDeathProbeService" android:exported="false" android:process=":binder_death_client" />
+        <service android:name=".spike.DhizukuSessionDeathProbeService" android:exported="false" android:process=":dhizuku_recovery_test" />
         <activity android:name=".spike.SpikeInstallerActivity" android:exported="true"
             android:theme="@android:style/Theme.NoDisplay" android:excludeFromRecents="true">
             <intent-filter>

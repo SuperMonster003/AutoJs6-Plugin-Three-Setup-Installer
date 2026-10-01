@@ -1,6 +1,6 @@
 3-Setup Installer instala, actualiza, inspecciona y desinstala aplicaciones Android desde su inicio independiente, las entradas y scripts de AutoJs6, o solicitudes externas para abrir y compartir paquetes. Admite la confirmación de Android y operaciones privilegiadas mediante Shizuku o Root.
 
-1.0.0 describe las funciones de instalación, gestión de aplicaciones y scripts implementadas a continuación. La publicación oficial en GitHub Releases y la inclusión en el centro de plugins siguen pendientes. La integración requiere AutoJs6 >= 6.8.0 (5299), y la API de scripts `installer` requiere la compilación 5300 o posterior. La cobertura de dispositivos y las validaciones pendientes se registran en [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md).
+1.1.0 describe las funciones de instalación, gestión de aplicaciones y scripts implementadas a continuación. La publicación oficial en GitHub Releases y la inclusión en el centro de plugins siguen pendientes. La integración requiere AutoJs6 >= 6.8.0 (5299), y la API de scripts `installer` requiere la compilación 5300 o posterior. La cobertura de dispositivos y las validaciones pendientes se registran en [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md).
 
 ### Uso
 

@@ -23,7 +23,7 @@ class ManifestContractTest {
     }
 
     @Test
-    fun `manifest declares the P0 permissions and queries the host, Shizuku and package handlers`() {
+    fun `manifest declares only required permissions and queries each authorizer and package handlers`() {
         val permissions = manifest.children("uses-permission").map { it.androidAttribute("name") }
         assertEquals(
             listOf(
@@ -35,6 +35,7 @@ class ManifestContractTest {
                 "android.permission.FOREGROUND_SERVICE_DATA_SYNC",
                 "android.permission.POST_NOTIFICATIONS",
                 "moe.shizuku.manager.permission.API_V23",
+                "com.rosan.dhizuku.permission.API",
                 "android.permission.INTERNET",
             ),
             permissions,
@@ -42,12 +43,20 @@ class ManifestContractTest {
 
         val queries = manifest.child("queries")
         assertEquals(
-            listOf(ThreeSetupInstallerPlugin.HOST_PACKAGE_NAME, ThreeSetupInstallerPlugin.SHIZUKU_PACKAGE_NAME),
+            listOf(ThreeSetupInstallerPlugin.HOST_PACKAGE_NAME, ThreeSetupInstallerPlugin.SHIZUKU_PACKAGE_NAME, "com.rosan.dhizuku"),
             queries.children("package").map { it.androidAttribute("name") },
         )
         val intent = queries.children("intent").single()
         assertEquals("android.intent.action.VIEW", intent.child("action").androidAttribute("name"))
         assertEquals("application/vnd.android.package-archive", intent.child("data").androidAttribute("mimeType"))
+    }
+
+    @Test
+    fun `min SDK overrides remain limited to APIs explicitly gated by the plugin`() {
+        val sdk = manifest.child("uses-sdk")
+        assertEquals(setOf("org.lsposed.hiddenapibypass", "com.rosan.dhizuku.api"),
+            sdk.getAttributeNS("http://schemas.android.com/tools", "overrideLibrary").split(',').toSet())
+        assertNull(sdk.androidAttributeOrNull("minSdkVersion"))
     }
 
     @Test

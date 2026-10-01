@@ -15,7 +15,7 @@ internal class DeviceUsers(context: Context) {
     val currentId: Int get() = Process.myUid() / 100000
 
     fun list(authorizer: Authorizer, timeoutMillis: Long = PrivilegedClient.BIND_TIMEOUT_MILLIS): List<DeviceUser> {
-        if (!authorizer.privileged) {
+        if (!authorizer.privileged || authorizer == Authorizer.DHIZUKU) {
             val manager = context.getSystemService(UserManager::class.java)
             return listOf(DeviceUser(currentId, null, manager.isSystemUser, true))
         }
@@ -37,6 +37,7 @@ internal class DeviceUsers(context: Context) {
     companion object {
         fun resolve(user: String, authorizer: Authorizer, currentId: Int, users: List<DeviceUser>): Int {
             RequestDocuments.userOf(user, "target user")
+            if (authorizer == Authorizer.DHIZUKU) DhizukuPolicy.user(user, currentId)
             if (!authorizer.privileged && user != InstallerContract.USER_CURRENT) {
                 throw InstallFailure(InstallerErrorCodes.AUTHORIZER_REQUIRED, "Selecting users requires Shizuku or Root")
             }

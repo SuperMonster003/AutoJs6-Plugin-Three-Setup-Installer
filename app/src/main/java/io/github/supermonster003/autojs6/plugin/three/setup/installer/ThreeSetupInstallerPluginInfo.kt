@@ -56,7 +56,8 @@ internal fun ThreeSetupInstallerPluginRuntimeInfo.toPluginInfo(): PluginInfo {
  */
 internal fun ThreeSetupInstallerPluginRuntimeInfo.capabilitiesBundle(): Bundle = Bundle().apply {
     putLong(PluginCapabilityKeys.REQUIRES_HOST_VERSION, requiresHostVersion)
-    putInt(InstallerCapabilityKeys.CONTRACT_VERSION, InstallerContract.CONTRACT_VERSION)
+    putInt(InstallerCapabilityKeys.CONTRACT_VERSION, InstallerContract.MIN_CONTRACT_VERSION)
+    putInt(InstallerCapabilityKeys.MAX_CONTRACT_VERSION, InstallerContract.MAX_CONTRACT_VERSION)
     putStringArray(InstallerCapabilityKeys.AUTHORIZERS, InstallerContract.AUTHORIZERS.toTypedArray())
     putStringArray(InstallerCapabilityKeys.FEATURES_KEY, arrayOf(InstallerCapabilityKeys.FEATURE_BATCH,
         InstallerCapabilityKeys.FEATURE_SPLITS, InstallerCapabilityKeys.FEATURE_SILENT_UNINSTALL,

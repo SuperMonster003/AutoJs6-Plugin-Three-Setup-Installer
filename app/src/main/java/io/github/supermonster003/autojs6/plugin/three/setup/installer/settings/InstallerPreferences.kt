@@ -37,7 +37,16 @@ internal data class AuthorizerPreferences(
                 }.also { require(it.distinct().size == it.size) }
             }
             if (orderJson == null && enabledJson == null) AuthorizerPreferences()
-            else AuthorizerPreferences(parse(orderJson), parse(enabledJson).toSet())
+            else {
+                val order = parse(orderJson)
+                val enabled = parse(enabledJson).toSet()
+                val legacy = setOf(Authorizer.SHIZUKU, Authorizer.ROOT, Authorizer.NONE)
+                if (order.size == legacy.size && order.toSet() == legacy) {
+                    require(enabled.isNotEmpty() && enabled.all { it in legacy })
+                    // Add the new choice before the fallback, but do not enable it for existing users.
+                    AuthorizerPreferences(order.flatMap { if (it == Authorizer.NONE) listOf(Authorizer.DHIZUKU, it) else listOf(it) }, enabled)
+                } else AuthorizerPreferences(order, enabled)
+            }
         }.getOrDefault(AuthorizerPreferences())
     }
 }
@@ -50,7 +59,7 @@ internal data class InstallerPreferences(
     val progressNotifications: Boolean = true,
 ) {
     fun save(context: Context): Boolean {
-        require(InstallerContract.isInteraction(interaction))
+        require(InstallerContract.isInteraction(interaction) && interaction != InstallerContract.INTERACTION_NOTIFICATION)
         val document = optionsDocument(options)
         InstallOptions.parse(document, "installation defaults")
         return file(context).edit()
@@ -73,7 +82,7 @@ internal data class InstallerPreferences(
                 } ?: InstallOptions()
             }.getOrDefault(InstallOptions())
             val interaction = runCatching { prefs.getString("default_interaction", null) }.getOrNull()
-                ?.takeIf(InstallerContract::isInteraction) ?: InstallerContract.INTERACTION_DIALOG
+                ?.takeIf { InstallerContract.isInteraction(it) && it != InstallerContract.INTERACTION_NOTIFICATION } ?: InstallerContract.INTERACTION_DIALOG
             val authorizers = AuthorizerPreferences.decode(
                 runCatching { prefs.getString("authorizer_order", null) }.getOrNull(),
                 runCatching { prefs.getString("authorizer_enabled", null) }.getOrNull(),
