@@ -31,13 +31,15 @@ internal object DefaultInstallerLock {
     }
 }
 
-internal data class DefaultInstallerState(val component: String?, val isSelf: Boolean, val method: String, val requiresClear: Boolean) {
+internal data class DefaultInstallerState(val component: String?, val isSelf: Boolean, val method: String, val requiresClear: Boolean,
+    val persistentConfigured: Boolean = false) {
     companion object {
         fun decode(value: JsonObject) = DefaultInstallerState(
             value.get(InstallerContract.FIELD_COMPONENT)?.takeUnless { it.isJsonNull }?.asString,
             value.get(InstallerContract.FIELD_IS_SELF).asBoolean,
             value.get(InstallerContract.FIELD_METHOD).asString,
             value.get(InstallerContract.FIELD_REQUIRES_CLEAR).asBoolean,
+            value.get(InstallerContract.FIELD_PERSISTENT_CONFIGURED)?.asBoolean ?: false,
         )
     }
 }
@@ -69,7 +71,7 @@ internal class DefaultInstallerController(
         }
     }
 
-    fun setDefault(enable: Boolean) {
+    fun setDefault(enable: Boolean, persistent: Boolean = false) {
         if (closed || writing) return
         val expected = ++generation
         pending?.cancel(true)
@@ -78,7 +80,9 @@ internal class DefaultInstallerController(
             val candidates = runCatching {
                 val preferences = InstallerPreferences.read(app).authorizers
                 val states = AuthorizerStates.states(app)
-                preferences.order.filter { it in listOf(Authorizer.SHIZUKU, Authorizer.ROOT) && it in preferences.enabled && states[it]?.let { state -> state.available && state.running } == true }
+                preferences.order.filter { (if (persistent) (it == Authorizer.DHIZUKU && Build.VERSION.SDK_INT < 34) ||
+                    (it == Authorizer.ROOT && android.os.Process.myUid() / 100000 == 0) else it in listOf(Authorizer.SHIZUKU, Authorizer.ROOT)) &&
+                    it in preferences.enabled && states[it]?.let { state -> state.available && state.running } == true }
             }.getOrDefault(emptyList())
             deliver(expected) {
                 onBusy(false)
@@ -87,15 +91,15 @@ internal class DefaultInstallerController(
                     dialog?.dismiss()
                     dialog = SettingsUi(activity, activity.kit).confirmedChoice(
                         if (enable) R.string.default_installer_set else R.string.default_installer_clear,
-                        candidates.map { SettingsChoice(activity.getString(if (it == Authorizer.SHIZUKU) R.string.settings_shizuku else R.string.settings_root),
+                        candidates.map { SettingsChoice(activity.getString(when (it) { Authorizer.SHIZUKU -> R.string.settings_shizuku; Authorizer.DHIZUKU -> R.string.settings_dhizuku; else -> R.string.settings_root }),
                             activity.getString(R.string.default_installer_authorize_note)) }, 0,
-                    ) { selected -> write(enable, candidates[selected]); true }
+                    ) { selected -> write(enable, candidates[selected], persistent); true }
                 }
             }
         }
     }
 
-    private fun write(enable: Boolean, authorizer: Authorizer) {
+    private fun write(enable: Boolean, authorizer: Authorizer, persistent: Boolean) {
         writing = true
         onBusy(true)
         val expected = ++generation
@@ -105,7 +109,8 @@ internal class DefaultInstallerController(
                 fun active() { if (closed || Thread.currentThread().isInterrupted) throw InterruptedException() }
                 active()
                 val resolved = InstallerPreferences.resolveAuthorizer(app, authorizer.id)
-                DefaultInstallerState.decode(DefaultInstallerLock.get(app).set(enable, resolved, ::active))
+                DefaultInstallerState.decode(if (persistent) DefaultInstallerLock.get(app).setPersistent(enable, resolved, ::active)
+                    else DefaultInstallerLock.get(app).set(enable, resolved, ::active))
             }
             deliver(expected) {
                 writing = false

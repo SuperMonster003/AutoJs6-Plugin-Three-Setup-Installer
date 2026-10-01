@@ -250,13 +250,21 @@ class HomeActivity : HostAppearanceActivity() {
             state.isSelf -> getString(R.string.default_installer_self)
             else -> state.component ?: getString(R.string.default_installer_none)
         }, color = kit.palette.muted))
+        if (state?.isSelf == true) defaultCard.addView(kit.text(getString(when {
+            state.persistentConfigured -> R.string.default_installer_persistent
+            state.method == org.autojs.plugin.installer.api.InstallerContract.DEFAULT_METHOD_PREFERRED -> R.string.default_installer_preferred
+            else -> R.string.default_installer_resolved
+        }), color = kit.palette.muted))
         if (state?.requiresClear == true) defaultCard.addView(kit.text(getString(R.string.default_installer_requires_clear), color = kit.palette.muted))
         defaultCard.addView(kit.textButton(getString(if (state?.isSelf == true) R.string.default_installer_clear else R.string.default_installer_set), "home-default-toggle") {
-            defaults.setDefault(defaultState?.isSelf != true)
+            defaults.setDefault(defaultState?.isSelf != true, persistent = defaultState?.persistentConfigured == true)
         }.apply { isEnabled = state != null && !defaultBusy })
         defaultCard.addView(kit.textButton(getString(R.string.default_installer_state), "home-default-details") {
             startActivity(Intent(this, DefaultInstallerActivity::class.java))
         })
+        if (state?.persistentConfigured != true) defaultCard.addView(
+            kit.textButton(getString(R.string.default_installer_set_persistent), "home-default-persistent") { defaults.setDefault(true, persistent = true) }
+                .apply { isEnabled = state != null && !defaultBusy })
     }
 
     private fun scheduleTasks() {

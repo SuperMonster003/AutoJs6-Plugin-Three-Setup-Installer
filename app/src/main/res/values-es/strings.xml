@@ -66,9 +66,10 @@
     <string name="default_installer_authorize_note">Usar este método para solicitar permiso y cambiar el gestor APK predeterminado.</string>
     <string name="default_installer_authorizer_unavailable">El método de autorización ya no está disponible. Renueva el permiso y vuelve a intentarlo.</string>
     <string name="default_installer_clear">Quitar predeterminado</string>
+    <string name="default_installer_clear_persistent">Borrar opcion persistente</string>
     <string name="default_installer_current">Gestor actual</string>
     <string name="default_installer_denied">Permiso denegado. No se cambió el instalador predeterminado.</string>
-    <string name="default_installer_guide">Sin Shizuku ni Root, revisa Abrir de forma predeterminada en los ajustes del sistema. Si Android pregunta al abrir un APK, elige este instalador y Siempre. Las opciones dependen del dispositivo.</string>
+    <string name="default_installer_guide">Para preferencias ordinarias sin Shizuku ni Root, revisa Abrir de forma predeterminada en los ajustes del sistema. Si Android pregunta al abrir un APK, elige este instalador y Siempre. Las opciones dependen del dispositivo.</string>
     <string name="default_installer_loading" tools:ignore="TypographyEllipsis">Cargando solicitud...</string>
     <string name="default_installer_method">Método de detección</string>
     <string name="default_installer_none">No hay un único gestor predeterminado</string>
@@ -76,12 +77,15 @@
     <string name="default_installer_oem_note">Algunos fabricantes restringen el gestor APK predeterminado. El estado procede de Android y cambiarlo no evita todas las políticas del fabricante.</string>
     <string name="default_installer_open_settings">Abrir ajustes del sistema</string>
     <string name="default_installer_other">Esta app no es la predeterminada</string>
+    <string name="default_installer_persistent">Última configuración: persistente</string>
+    <string name="default_installer_persistent_note">Este registro local describe el último cambio completado, sin demostrar la política actual del sistema. Los cambios persistentes de Dhizuku requieren Android 8-13; las versiones nuevas necesitan la respuesta del propietario. Los cambios persistentes con Root requieren un puente compatible con UID de sistema y el usuario principal 0; se conservan las políticas de otras aplicaciones.</string>
     <string name="default_installer_preferred">Actividad preferida de Android</string>
     <string name="default_installer_read_failed">No se pudo leer el instalador predeterminado. Vuelve a esta página para reintentarlo.</string>
     <string name="default_installer_requires_clear">Android requiere borrar primero el gestor APK predeterminado actual. Abre sus ajustes, borra los valores predeterminados y vuelve a intentarlo aquí.</string>
     <string name="default_installer_resolved">Resolución de intents de Android</string>
     <string name="default_installer_self">Esta app abre APK de forma predeterminada</string>
     <string name="default_installer_set">Establecer como predeterminado</string>
+    <string name="default_installer_set_persistent">Establecer opcion persistente</string>
     <string name="default_installer_settings_unavailable">No se pudieron abrir los ajustes de la app en el sistema.</string>
     <string name="default_installer_state">Estado predeterminado</string>
     <string name="default_installer_summary">Elige la app que abre archivos APK. Solo se cambia el gestor APK.</string>

@@ -66,9 +66,10 @@
     <string name="default_installer_authorize_note">Use this method to request permission and change the APK default.</string>
     <string name="default_installer_authorizer_unavailable">The selected authorization method is no longer available. Refresh its permission and try again.</string>
     <string name="default_installer_clear">Clear default</string>
+    <string name="default_installer_clear_persistent">Clear persistent default</string>
     <string name="default_installer_current">Current handler</string>
     <string name="default_installer_denied">Authorization was denied. The default installer was not changed.</string>
-    <string name="default_installer_guide">Without Shizuku or Root, open system app settings and review Open by default. If Android asks when opening an APK, select this installer and choose Always. Available choices depend on the device.</string>
+    <string name="default_installer_guide">For ordinary preferences without Shizuku or Root, open system app settings and review Open by default. If Android asks when opening an APK, select this installer and choose Always. Available choices depend on the device.</string>
     <string name="default_installer_loading" tools:ignore="TypographyEllipsis">Loading request...</string>
     <string name="default_installer_method">Detection method</string>
     <string name="default_installer_none">No single default handler</string>
@@ -76,12 +77,15 @@
     <string name="default_installer_oem_note">Some manufacturers restrict APK defaults. The state shown here is detected from Android; changing it cannot override every manufacturer policy.</string>
     <string name="default_installer_open_settings">Open system settings</string>
     <string name="default_installer_other">This app is not the default</string>
+    <string name="default_installer_persistent">Last configured: persistent</string>
+    <string name="default_installer_persistent_note">This is a local record of the last completed policy change, not proof of the current system policy. Dhizuku persistent changes currently require Android 8-13; newer versions need owner result callbacks. Root persistent changes require a supported system-UID bridge and primary user 0; existing competing policies are preserved.</string>
     <string name="default_installer_preferred">Android preferred activity</string>
     <string name="default_installer_read_failed">Unable to read the current default installer. Try again after returning to this page.</string>
     <string name="default_installer_requires_clear">Android requires the existing APK default to be cleared first. Open the current handler\'s app settings, clear its defaults, then return here and try again.</string>
     <string name="default_installer_resolved">Android intent resolution</string>
     <string name="default_installer_self">This app handles APK files by default</string>
     <string name="default_installer_set">Set as default</string>
+    <string name="default_installer_set_persistent">Set persistent default</string>
     <string name="default_installer_settings_unavailable">System app settings could not be opened.</string>
     <string name="default_installer_state">Default status</string>
     <string name="default_installer_summary">Choose which app opens APK files. This only changes the APK handler.</string>

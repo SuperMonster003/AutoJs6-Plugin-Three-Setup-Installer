@@ -62,7 +62,8 @@ internal fun ThreeSetupInstallerPluginRuntimeInfo.capabilitiesBundle(): Bundle =
     putStringArray(InstallerCapabilityKeys.FEATURES_KEY, arrayOf(InstallerCapabilityKeys.FEATURE_BATCH,
         InstallerCapabilityKeys.FEATURE_SPLITS, InstallerCapabilityKeys.FEATURE_SILENT_UNINSTALL,
         InstallerCapabilityKeys.FEATURE_USERS, InstallerCapabilityKeys.FEATURE_INSPECT,
-        InstallerCapabilityKeys.FEATURE_DELETE_SOURCE, InstallerCapabilityKeys.FEATURE_DEFAULT_INSTALLER))
+        InstallerCapabilityKeys.FEATURE_DELETE_SOURCE, InstallerCapabilityKeys.FEATURE_DEFAULT_INSTALLER,
+        InstallerCapabilityKeys.FEATURE_PERSISTENT_DEFAULT_INSTALLER))
     putInt(InstallerCapabilityKeys.MAX_BATCH, InstallerContract.MAX_BATCH_SOURCES)
     putInt(InstallerCapabilityKeys.MAX_SPLITS, InstallerContract.MAX_SPLITS_PER_PACKAGE)
 }

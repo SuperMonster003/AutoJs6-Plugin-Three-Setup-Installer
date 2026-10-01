@@ -66,9 +66,10 @@
     <string name="default_installer_authorize_note">استخدم هذه الطريقة لطلب الإذن وتغيير معالج APK الافتراضي.</string>
     <string name="default_installer_authorizer_unavailable">طريقة التفويض المحددة لم تعد متاحة. جدد الإذن وحاول مجددا.</string>
     <string name="default_installer_clear">إزالة الإعداد الافتراضي</string>
+    <string name="default_installer_clear_persistent">مسح الخيار الدائم</string>
     <string name="default_installer_current">المعالج الحالي</string>
     <string name="default_installer_denied">تم رفض الإذن. لم يتغير المثبت الافتراضي.</string>
-    <string name="default_installer_guide">بدون Shizuku أو Root, راجع الفتح الافتراضي في إعدادات التطبيق بالنظام. إذا طلب Android الاختيار عند فتح APK, اختر هذا المثبت ثم دائما. تعتمد الخيارات على الجهاز.</string>
+    <string name="default_installer_guide">للتفضيلات العادية دون Shizuku أو Root, راجع الفتح الافتراضي في إعدادات التطبيق بالنظام. إذا طلب Android الاختيار عند فتح APK, اختر هذا المثبت ثم دائما. تعتمد الخيارات على الجهاز.</string>
     <string name="default_installer_loading" tools:ignore="TypographyEllipsis">جار تحميل الطلب...</string>
     <string name="default_installer_method">طريقة الكشف</string>
     <string name="default_installer_none">لا يوجد معالج افتراضي واحد</string>
@@ -76,12 +77,15 @@
     <string name="default_installer_oem_note">تقيد بعض الشركات إعدادات APK الافتراضية. الحالة المعروضة مستمدة من Android, ولا يمكن للتغيير تجاوز جميع سياسات الشركة.</string>
     <string name="default_installer_open_settings">فتح إعدادات النظام</string>
     <string name="default_installer_other">هذا التطبيق ليس الافتراضي</string>
+    <string name="default_installer_persistent">آخر إعداد: دائم</string>
+    <string name="default_installer_persistent_note">هذا سجل محلي لآخر تغيير مكتمل وليس دليلا على سياسة النظام الحالية. تتطلب تغييرات Dhizuku الدائمة حاليا Android 8-13; وتحتاج الإصدارات الأحدث إلى نتيجة المالك. تتطلب التغييرات الدائمة عبر Root دعما لهوية النظام والمستخدم الأساسي 0; يتم الاحتفاظ بالسياسات المنافسة.</string>
     <string name="default_installer_preferred">Activity المفضلة في Android</string>
     <string name="default_installer_read_failed">تعذر قراءة المثبت الافتراضي. عد إلى هذه الصفحة وحاول مجددا.</string>
     <string name="default_installer_requires_clear">يتطلب Android إزالة إعداد APK الافتراضي الحالي أولا. افتح إعدادات المعالج الحالي وامسح إعداداته الافتراضية ثم عد للمحاولة.</string>
     <string name="default_installer_resolved">حل Intent في Android</string>
     <string name="default_installer_self">هذا التطبيق يعالج ملفات APK افتراضيا</string>
     <string name="default_installer_set">تعيين كافتراضي</string>
+    <string name="default_installer_set_persistent">تعيين الخيار الدائم</string>
     <string name="default_installer_settings_unavailable">تعذر فتح إعدادات التطبيق بالنظام.</string>
     <string name="default_installer_state">الحالة الافتراضية</string>
     <string name="default_installer_summary">اختر التطبيق الذي يفتح ملفات APK. يتغير معالج APK فقط.</string>

@@ -66,9 +66,10 @@
     <string name="default_installer_authorize_note">使用此方式请求授权并更改 APK 默认处理程序.</string>
     <string name="default_installer_authorizer_unavailable">所选授权方式已不可用. 请重新授权后重试.</string>
     <string name="default_installer_clear">取消默认</string>
+    <string name="default_installer_clear_persistent">清除持久默认安装器</string>
     <string name="default_installer_current">当前处理程序</string>
     <string name="default_installer_denied">授权被拒绝. 默认安装器未更改.</string>
-    <string name="default_installer_guide">没有 Shizuku 或 Root 时, 请打开系统应用设置查看默认打开方式. 打开 APK 时若出现选择框, 请选择本安装器并选择始终. 可用选项取决于设备.</string>
+    <string name="default_installer_guide">普通首选项缺少 Shizuku 或 Root 时, 请打开系统应用设置查看默认打开方式. 打开 APK 时若出现选择框, 请选择本安装器并选择始终. 可用选项取决于设备.</string>
     <string name="default_installer_loading" tools:ignore="TypographyEllipsis">正在读取请求...</string>
     <string name="default_installer_method">检测方式</string>
     <string name="default_installer_none">没有唯一默认处理程序</string>
@@ -76,12 +77,15 @@
     <string name="default_installer_oem_note">部分厂商限制 APK 默认处理方式. 此处显示 Android 检测结果, 更改默认项无法绕过所有厂商策略.</string>
     <string name="default_installer_open_settings">打开系统设置</string>
     <string name="default_installer_other">本应用不是默认安装器</string>
+    <string name="default_installer_persistent">上次配置: 持久</string>
+    <string name="default_installer_persistent_note">此处记录上次完整完成的策略配置, 不证明当前系统策略. Dhizuku 持久设置目前支持 Android 8-13; 更高版本需要所有者策略结果回执. Root 持久设置需要设备支持 system 身份调用及主用户 0; 不覆盖已有竞争策略.</string>
     <string name="default_installer_preferred">Android 首选 Activity</string>
     <string name="default_installer_read_failed">无法读取当前默认安装器. 请返回此页面重试.</string>
     <string name="default_installer_requires_clear">Android 要求先清除现有 APK 默认项. 请打开当前处理程序的应用设置, 清除默认项后返回重试.</string>
     <string name="default_installer_resolved">Android Intent 解析</string>
     <string name="default_installer_self">本应用默认处理 APK 文件</string>
     <string name="default_installer_set">设为默认</string>
+    <string name="default_installer_set_persistent">设为持久默认安装器</string>
     <string name="default_installer_settings_unavailable">无法打开系统应用设置.</string>
     <string name="default_installer_state">默认状态</string>
     <string name="default_installer_summary">选择打开 APK 文件的应用. 此项仅更改 APK 处理程序.</string>

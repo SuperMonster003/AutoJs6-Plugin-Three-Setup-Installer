@@ -60,6 +60,29 @@ class DhizukuInstallerDeviceTest {
         }
     }
 
+    @Test fun deviceOwnerPersistentDefaultRoundTripOnDedicatedAvd() {
+        requireDhizuku()
+        assumeTrue("Dedicated policy-test AVD opt-in required", args.getString("persistentFixture") == "true")
+        val baseline = DefaultInstallerUiRecovery.snapshot(instrumentation)
+        check(DefaultInstallerUiRecovery.unsafeReason(context, baseline) == null) { "Existing APK/default records must be preserved" }
+        val preferenceFile = File(context.applicationInfo.dataDir, "shared_prefs/installer_persistent_default.xml")
+        check(!preferenceFile.exists()) { "An earlier persistent policy receipt exists" }
+        val engine = DefaultInstaller(AndroidDefaultInstaller(context))
+        check(!engine.state().get(InstallerContract.FIELD_IS_SELF).asBoolean)
+        try {
+            val on = engine.setPersistent(true, Authorizer.DHIZUKU)
+            assertTrue(on.get(InstallerContract.FIELD_IS_SELF).asBoolean)
+            assertEquals(InstallerContract.DEFAULT_METHOD_PERSISTENT, on.get(InstallerContract.FIELD_METHOD).asString)
+            val off = engine.setPersistent(false, Authorizer.DHIZUKU)
+            assertFalse(off.get(InstallerContract.FIELD_IS_SELF).asBoolean)
+            evidence("persistent=true publicResolution=4/4 clear=true")
+        } finally {
+            engine.setPersistent(false, Authorizer.DHIZUKU)
+            context.deleteSharedPreferences("installer_persistent_default")
+            assertEquals(baseline.document(), DefaultInstallerUiRecovery.snapshot(instrumentation).document())
+        }
+    }
+
     private fun requireDhizuku() {
         assumeTrue("Explicit confirmDhizukuFixture=true is required", args.getString("confirmDhizukuFixture") == "true")
         check(AuthorizerStates.state(context, Authorizer.DHIZUKU).usable) { "Activate the dedicated Dhizuku owner and grant the plugin first" }
