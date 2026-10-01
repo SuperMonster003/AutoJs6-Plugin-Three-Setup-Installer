@@ -110,7 +110,7 @@ class DialogGeometryActivity : AppCompatActivity() {
             lastRow = kit.text(getString(R.string.install_commit_notice), 16f)
             dialog.content.addView(lastRow, LinearLayout.LayoutParams(-1, -2))
         }
-        negative = kit.textButton(getString(android.R.string.cancel), "geometry_cancel") { finish() }
+        negative = kit.textButton(getString(R.string.action_cancel), "geometry_cancel") { finish() }
         positive = kit.textButton(getString(R.string.action_install), "geometry_confirm") { positiveClicks++ }
         dialog.actions.addView(negative)
         dialog.actions.addView(positive)

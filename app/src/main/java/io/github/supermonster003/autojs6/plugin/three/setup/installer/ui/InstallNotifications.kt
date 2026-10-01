@@ -296,7 +296,7 @@ internal object InstallNotifications {
             .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
             .setProgress(100, (entry.progress * 100).toInt(), entry.stage != InstallerContract.STAGE_WRITING)
         entry.payload.intent?.let { builder.setContentIntent(activityPendingIntent(context, entry.token, "progress", it)) }
-        if (!entry.cancellationRequested) builder.addAction(0, localized.getString(android.R.string.cancel), cancelPendingIntent(context, entry.token))
+        if (!entry.cancellationRequested) builder.addAction(0, localized.getString(R.string.action_cancel), cancelPendingIntent(context, entry.token))
         return builder.build()
     }
 

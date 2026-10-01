@@ -14,6 +14,9 @@
         "Identidad del plugin `three-setup-installer` (engine `installer`) con el servicio INFO, la Wake Activity y el esqueleto del servicio `org.autojs.plugin.INSTALLER` para el descubrimiento por el host",
         "README, instrucciones del centro de plugins y registro de cambios en 10 idiomas"
       ],
+      "fix": [
+        "Las acciones de cancelar no seguían el idioma del complemento en dispositivos sin la traducción correspondiente del sistema"
+      ],
       "improvement": [
         "El id del plugin, el motor, la accion / categoria del servicio, el descriptor Binder y la version minima del host provienen ahora de las constantes del contrato installer-api del host; las capacidades declaran la version 1 del contrato del instalador y la build minima del host se fija en 5299",
         "Las fuentes con acceso aleatorio evitan una copia completa en caché, y los flujos se almacenan temporalmente cuando es necesario. Se admiten paquetes divididos en ZIP, AAB solo permite inspección y se rechazan fuentes modificadas.",

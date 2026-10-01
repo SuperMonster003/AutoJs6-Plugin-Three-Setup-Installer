@@ -11,6 +11,7 @@
 * `提示` P3 开发预览. 已实现确认, 进度, 结果与批量对话框, 外部打开与分享, 可选来源删除, 系统确认及前台通知. 脚本 API, 独立首页与设置, 安装历史及默认安装器配置仍属于后续规划. 进度与设备覆盖见 [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md). AutoJs6 >= 6.8.0 (5299).
 * `新增` 插件标识 `three-setup-installer` (engine `installer`), 含 INFO 服务, Wake Activity 以及供宿主发现的 `org.autojs.plugin.INSTALLER` 服务骨架
 * `新增` 10 种语言的 README, 插件中心说明与更新日志
+* `修复` 系统缺少对应翻译时, 取消操作文案未跟随插件语言的问题
 * `优化` 插件 ID, engine, 服务 action / category, Binder descriptor 与最低宿主版本改由宿主 installer-api 契约常量提供; 能力声明加入安装器契约版本 1, 最低宿主构建回填为 5299
 * `优化` 可随机访问的来源避免完整缓存副本, 流来源按需暂存. 支持普通 ZIP 分包, AAB 仅供检查, 拒绝内容发生变化的来源.
 * `优化` 显式选择的授权方式不回退, 区分拒绝, 超时与不兼容, 并发请求共享授权过程与特权连接.
