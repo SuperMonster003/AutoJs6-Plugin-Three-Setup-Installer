@@ -52,7 +52,7 @@
 | D29 | 许可证边界 | 插件 MPL-2.0; InstallerX 系 GPL-3.0 只做架构 / 行为 / 选项目录参考, 不复制源码, 资源, 字符串; 隐藏 API 存根按 AOSP 接口签名自写并在 `THIRD_PARTY_NOTICES.md` 注明 Apache-2.0 来源; 第三方运行时依赖: Shizuku-API 13.1.5, libsu (建仓时 Maven Central 最新稳定版), HiddenApiBypass 6.1 |
 | D30 | 错误码与阶段 | 错误码集合与安装阶段枚举见附录 B.4 / B.5, 宿主 `installer-api` 与脚本 `InstallerError.code` 使用同一字符串 |
 | D31 | 契约上限 | 单次批量 <= 32 个安装包, 单个分包集合 <= 64 个文件, JSON 文档 <= 64 KiB, 安装者包名 <= 255 字节, 用户确认默认超时 5 分钟, 单会话默认超时 30 分钟, 并发会话 <= 4 |
-| D32 | 附录 D 拍板 (2026-09-30) | Q1 / Q2 / Q4 / Q5 / Q6 / Q9 按推荐值实施; Q3 按推荐值且文档必须明确提示 "特权可用时脚本默认静默安装"; Q4 另要求 `app.uninstall` 与 `installer.uninstall` 的文档互相提示对方的存在与用途简述; Q8 插件仓库可随时推送, 宿主仓库只本地提交, 不推送远端 |
+| D32 | 附录 D 拍板 (2026-09-30) | Q1 / Q2 / Q4 / Q5 / Q6 / Q9 按推荐值实施; Q3 按推荐值且文档必须明确提示 "特权可用时脚本默认静默安装"; Q4 另要求 `app.uninstall` 与 `installer.uninstall` 的文档互相提示对方的存在与用途简述; Q8 推送按最新指示执行, 当前插件与宿主均仅本地提交, 暂不推送远端 (2026-10-01 更新) |
 | D33 | 首页 | 插件拥有首页 `HomeActivity` (Three 系列惯例, 即 launcher 入口): 顶部两张状态卡 (授权方式: Shizuku / Root 可用与授权状态, 一键请求授权; 默认安装器: 当前处理者, 锁定 / 解锁), 下方为进行中与最近安装任务列表, FAB 选择安装包 (多选进入批量队列), 顶栏溢出菜单提供已安装应用与设置; 更新检查与发行历史保留在设置页 |
 | D34 | 安装历史 | 持久化到插件私有存储, 上限 200 条 (包名 / 版本 / 结果 / 时间 / 来源 (宿主 / 脚本 / 外部 / 首页) / 授权方式 / 失败时的错误码与系统消息), 可单条删除与清空, 不保存安装包内容, 进程重建后恢复 |
 | D35 | 默认安装器入口 | 首页状态卡可直接锁定 / 解锁; 设置页保留一行进入同一 `DefaultInstallerActivity` 详情页 (无特权时的系统设置引导与 OEM 限制说明), 取代原 Q7 的 "仅设置页一行" |
@@ -341,9 +341,9 @@ runtime/api/augment/installer/          Installer.kt (AugmentableKey("installer"
 
 小项完善 (2026-10-01, N1-N4): Record 的框架句柄关闭由同步标志保证只调用一次; P0 设备测试的终态清理改用 `release`; D32 的十语言提示增加醒目的 "注意" 并明示默认不主动弹出确认; 特权 UID 按引擎实例与 Binder 身份缓存, 重绑时刷新. API 35 Shizuku 与 API 28 Root 各 8 项针对性回归通过, 见交接文档.
 
-- [ ] (插件) `InstallEngine` 接口: `install(request, sources, listener)`; `NoneInstallEngine` (D17): `PackageInstaller.Session` 创建 / 写入 (每个分包一个 `openWrite`, 1 MiB 缓冲, 进度按字节; 2026-10-01 从 8 MiB 调整以降低并发内存占用并细化进度) / `commit(IntentSender)` -> `STATUS_PENDING_USER_ACTION` 交 `UserActionActivity` (P3.3) / 结果广播 -> 回调; `PrivilegedInstallEngine`: 经 `IPrivilegedInstaller` 创建会话 (`installFlags` 映射: `allowDowngrade` -> `INSTALL_REQUEST_DOWNGRADE | INSTALL_ALLOW_DOWNGRADE`, `allowTestOnly` -> `INSTALL_ALLOW_TEST`, `bypassLowTargetSdk` -> `INSTALL_BYPASS_LOW_TARGET_SDK_BLOCK` (API 34+, 低版本忽略并在结果 `notes` 说明), `user: 'all'` -> `INSTALL_ALL_USERS`, `installer` -> `installerPackageName`, `user: <id>` -> `userId`), 写入用返回的 PFD, `commit` 后经 `IntentSender` (插件 `PendingIntent` 广播) 取结果.
+- [x] (插件) `InstallEngine` 接口: `install(request, sources, listener)`; `NoneInstallEngine` (D17): `PackageInstaller.Session` 创建 / 写入 (每个分包一个 `openWrite`, 1 MiB 缓冲, 进度按字节; 2026-10-01 从 8 MiB 调整以降低并发内存占用并细化进度) / `commit(IntentSender)` -> `STATUS_PENDING_USER_ACTION` 交 `UserActionActivity` (P3.3) / 结果广播 -> 回调; `PrivilegedInstallEngine`: 经 `IPrivilegedInstaller` 创建会话 (`installFlags` 映射: `allowDowngrade` -> `INSTALL_REQUEST_DOWNGRADE | INSTALL_ALLOW_DOWNGRADE`, `allowTestOnly` -> `INSTALL_ALLOW_TEST`, `bypassLowTargetSdk` -> `INSTALL_BYPASS_LOW_TARGET_SDK_BLOCK` (API 34+, 低版本忽略并在结果 `notes` 说明), `user: 'all'` -> `INSTALL_ALL_USERS`, `installer` -> `installerPackageName`, `user: <id>` -> `userId`), 写入用返回的 PFD, `commit` 后经 `IntentSender` (插件 `PendingIntent` 广播) 取结果. (SOURCE / DEVICE 2026-10-01: P3.3 已接入独立 UserActionActivity, 未知来源设置和通知回退; API 24 none 真实安装 / 更新, API 28 Root 与 API 35 Shizuku 回归通过. 安装标志的完整设备交叉矩阵仍按下方测试项保留未完成, 见 docs/dev/p3-ui-evidence.md)
 - [x] (插件) 结果规范化: `PackageInstaller.STATUS_*` -> 错误码 (附录 B.4), `EXTRA_STATUS_MESSAGE` 原样进 `systemMessage`, `EXTRA_PACKAGE_NAME` 进结果; 安装成功后按目标用户读取已安装版本, 按契约字段 `versionCode` / `previousVersionCode` 返回. (JVM: `InstallEngineTest`, `InstallFailureTest`, `InstallSessionTest`; DEVICE 2026-10-01: API 24 none / API 35 Shizuku / API 28 Root 的批量新装与更新返回正确旧版本; `Result.interaction` 原样用于成功结果; 见 `docs/dev/p2-session-evidence.md`)
-- [ ] (插件) `deleteSource` (D25) 与 `keepSourceOnFailure`; 会话超时 (D31) 与取消 (`abandon`).
+- [ ] (插件) `deleteSource` (D25) 与 `keepSourceOnFailure`; 会话超时 (D31) 与取消 (`abandon`). (部分 SOURCE / DEVICE 2026-10-01: 外部 URI 的安装成功后删除与提供方拒绝删除已通过 API 24 实装; 删除失败保留成功结果并显示说明, 安装失败保留来源. 宿主 PFD 所有权不变; keepSourceOnFailure 设置策略尚未交付. 见 docs/dev/p3-ui-evidence.md)
 - [ ] (测试) 设备矩阵: 三种授权方式 x (新装 / 更新 / 降级 / 测试包 / 分包集合 xapk) 于 AVD API 24 与一台 API 33+ 真机; 记录降级在 user 版本 ROM 的实际结果 (预期 `INSTALL_FAILED_VERSION_DOWNGRADE`); `bypassLowTargetSdk` 用 targetSdk 22 的夹具 APK 于 API 34+ 验证.
 
 ### P2.4 卸载引擎
@@ -360,10 +360,10 @@ runtime/api/augment/installer/          Installer.kt (AugmentableKey("installer"
 
 ### P2.6 Binder 路由与上限
 
-- [x] (插件) `ThreeSetupInstallerPluginService` (`IInstallerPlugin.Stub`): 按宿主协议用 `HostCallerGuard` 校验官方包名 / UID / 相同签名 / 实际宿主版本, 会话方法检查所有者; D31 输入与只读 PFD 校验; 四并发会话, 有界工作队列, `linkToDeath` 取消并清理, 终态十分钟回收. 能力声明 `CONTRACT_VERSION=1`, 三种 AUTHORIZERS, MAX_BATCH / MAX_SPLITS, `FEATURES=[batch,splits,silent-uninstall,users,inspect]`. (SOURCE / JVM / BINDER 2026-10-01, 见 `docs/dev/p2-binder-evidence.md`; `delete-source` / `default-installer` 随实际外部入口交付再声明)
-- [x] (插件) 默认安装器协调层: 只读状态不拉起特权进程, 设置结果验证全部四个 APK filter, 保留 `DEFAULT_REQUIRES_CLEAR`, 只解除本插件默认项, 无正式 APK 入口时拒绝 enable 且不声明能力. (JVM: `DefaultInstallerTest` 3 项; BINDER: API 24 / 28 / 35 只读状态; 真实默认项操作已有 P0 证据, 正式入口启用仍在 P3 / P5)
+- [x] (插件) `ThreeSetupInstallerPluginService` (`IInstallerPlugin.Stub`): 按宿主协议用 `HostCallerGuard` 校验官方包名 / UID / 相同签名 / 实际宿主版本, 会话方法检查所有者; D31 输入与只读 PFD 校验; 四并发会话, 有界工作队列, `linkToDeath` 取消并清理, 终态十分钟回收. 能力声明 `CONTRACT_VERSION=1`, 三种 AUTHORIZERS, MAX_BATCH / MAX_SPLITS, `FEATURES=[batch,splits,silent-uninstall,users,inspect,delete-source,default-installer]`. (SOURCE / JVM / BINDER 2026-10-01, 见 `docs/dev/p2-binder-evidence.md`; `delete-source` / `default-installer` 已随 P3.2 正式入口交付并由 API 24 / 35 契约回归验证)
+- [x] (插件) 默认安装器协调层: 只读状态不拉起特权进程, 设置结果验证全部四个 APK filter, 保留 `DEFAULT_REQUIRES_CLEAR`, 只解除本插件默认项, 无正式 APK 入口时拒绝 enable 且不声明能力. (JVM: `DefaultInstallerTest` 3 项; BINDER: API 24 / 28 / 35 只读状态; 真实默认项操作已有 P0 证据, 正式入口启用仍在 P3 / P5) (P3.2 DEVICE 2026-10-01: 正式 ExternalInstallActivity 已接入; API 24 Shizuku 在无既有 APK 默认项的前提下设置并验证全部四个 filter, 再只清除本插件默认项. 专用设置页仍在 P5)
 - [x] (测试) instrumentation: 发现 / 绑定 / descriptor; 敌意输入 (超长数组, 非法 JSON, 未知枚举, 空 / 可写 / 关闭的 PFD) 返回 `INVALID_ARGUMENT`; 四并发与第五项拒绝; 客户端进程死亡取消会话. (BINDER 2026-10-01: `InstallerBinderDeviceTest` 于 API 24 / 28 / 35; 跨进程测试使用非导出 debug 入口和独立回调进程, 生产入口拒绝插件 UID 冒充宿主. 关闭的 PFD 在同进程入口测试, 因其无法被正常封送. 详见 `docs/dev/p2-binder-evidence.md`)
-- [ ] (宿主 / 插件) 完整宿主界面联调: API 34+ 前台宿主绑定的 `BIND_ALLOW_ACTIVITY_STARTS` 授权与 P3 通知回退, 三处宿主入口的实际安装 / 退化, 正式外部入口和默认项能力; 不能用测试身份或同进程真实包测试替代.
+- [ ] (宿主 / 插件) 完整宿主界面联调: API 34+ 前台宿主绑定的 `BIND_ALLOW_ACTIVITY_STARTS` 授权与 P3 通知回退, 三处宿主入口的实际安装 / 退化, 正式外部入口和默认项能力; 不能用测试身份或同进程真实包测试替代. (部分 DEVICE 2026-10-01: 宿主 1e6d8d09eb 仅对安装插件开启 API 34+ 绑定标志, API 35 用真实宿主 UID=10890 经正式 PackageInstallRouter 完成前台确认与安装, 无调用身份替换; 默认项与正式外部入口已验证. 三处实际 UI 的安装 / 退化尚未全部点击验收, 见 docs/dev/p3-ui-evidence.md)
 
 验收条件: P2 全部条目在 AVD API 24 与至少一台 API 33+ 真机上按授权方式矩阵通过; JVM 测试覆盖来源 / 格式 / 解析顺序 / 批量 / 上限; 证据写入 `docs/dev/p2-core-evidence.md`.
 
@@ -375,27 +375,27 @@ runtime/api/augment/installer/          Installer.kt (AugmentableKey("installer"
 
 ### P3.1 安装对话框
 
-- [ ] (插件) `InstallDialogActivity` (对话框主题 `Theme.ThreeSetupInstaller.Dialog`, `excludeFromRecents`, `launchMode=singleTask` 按会话 id 区分 task): 确认段 (D26: 图标, 名称, 包名, 版本 旧 -> 新 或 "新安装", 大小, minSdk / targetSdk, 签名匹配 (与已安装签名一致 / 不一致 / 未安装), 分包列表可勾选, 选项开关 (授权方式, 降级, 测试包, 绕过低 targetSdk, 安装后删除, 目标用户) 默认取设置页), 进度段 (阶段文案 + 百分比 + 取消), 结果段 (成功: 打开 / 完成; 失败: 错误码 + 系统消息 + 复制).
-- [ ] (插件) 批量对话框: 列表逐项状态, 全部取消, 单项重试; AAB 项显示 "无法安装 AAB" 与信息入口 (D9).
-- [ ] (插件) 遵循独立设置页规范的对话框几何 (24 dp 圆角, 手机左右 24 dp, 宽屏 560 dp, 内容滚动按钮固定), 中性色表面, 主题色只用于控件; 10 语言文案; RTL / 大字号 / 夜间 / 进程重建 (会话 id 持久到 `SavedStateHandle`, 重建后从 `SessionRegistry` 恢复).
-- [ ] (测试) instrumentation: 确认 -> 安装 -> 结果的 happy path (none 路径在 AVD), 取消, 旋转重建, 失败结果展示.
+- [x] (插件) `InstallDialogActivity` (对话框主题 `Theme.ThreeSetupInstaller.Dialog`, `excludeFromRecents`, `launchMode=standard` + `documentLaunchMode=intoExisting` + 会话 token URI 区分 task (平台必要适配, 见 docs/dev/p3-ui-evidence.md)): 确认段 (D26: 图标, 名称, 包名, 版本 旧 -> 新 或 "新安装", 大小, minSdk / targetSdk, 签名匹配 (与已安装签名一致 / 不一致 / 未安装), 分包列表可勾选, 选项开关 (授权方式, 降级, 测试包, 绕过低 targetSdk, 安装后删除, 目标用户) 默认取设置页), 进度段 (阶段文案 + 百分比 + 取消), 结果段 (成功: 打开 / 完成; 失败: 错误码 + 系统消息 + 复制). (SOURCE / JVM / DEVICE 2026-10-01: 完整信息 / 选项 / 分包复验 / 取消 / 结果操作已接入 Binder 与外部会话; 默认选项消费统一存储格式, 编辑设置页留在 P5. 见 docs/dev/p3-ui-evidence.md)
+- [x] (插件) 批量对话框: 列表逐项状态, 全部取消, 单项重试; AAB 项显示 "无法安装 AAB" 与信息入口 (D9). (SOURCE / DEVICE 2026-10-01: 逐项状态, 全部取消, AAB 信息与说明已实现; 外部来源在 URI 授权仍有效时可独立重试. 已释放的宿主 PFD 提示调用方重新发起, 不延长描述符所有权. API 24 实际坏包 / 正常包 / 修复来源后重试通过)
+- [ ] (插件) 遵循独立设置页规范的对话框几何 (24 dp 圆角, 手机左右 24 dp, 宽屏 560 dp, 内容滚动按钮固定), 中性色表面, 主题色只用于控件; 10 语言文案; RTL / 大字号 / 夜间 / 进程重建 (会话 id 持久到 `SavedStateHandle`, 重建后从 `SessionRegistry` 恢复). (部分 JVM / DEVICE 2026-10-01: 10 语言, 中性色 / 主题控件, RTL / 字号 / 夜间及几何断言已通过; SavedStateHandle token 旋转恢复不重复执行. 进程记录丢失后只显示中断, 尚未持久化恢复; 真实 IME 和 API 35 全部几何边界亦待补测. 见 docs/dev/p3-appearance-evidence.md)
+- [x] (测试) instrumentation: 确认 -> 安装 -> 结果的 happy path (none 路径在 AVD), 取消, 旋转重建, 失败结果展示. (DEVICE 2026-10-01: AVD API 24 none 真实安装 / 更新 / 删除与拒绝删除 / 批量重试; InstallDialogDeviceTest 8 项含取消, 重建和结果展示. P3 UI 组合 47 项无跳过通过, 见 docs/dev/p3-ui-evidence.md)
 
 ### P3.2 外部入口
 
-- [ ] (插件) `ExternalInstallActivity` (`exported=true`, 无权限保护, `Theme.NoDisplay` 后转 `InstallDialogActivity`): 两组 intent-filter 从宿主原 `PackageInstallerEntryActivity` 迁来 (`ACTION_VIEW` + `ACTION_INSTALL_PACKAGE`, `content` / `file` scheme, 7 种 MIME; `content` + `application/zip` / `application/octet-stream` + 大小写 `pathPattern` 覆盖 6 种扩展名); 多 URI (`ACTION_SEND_MULTIPLE`) 作为批量.
-- [ ] (插件) 外部来源的安全处理: 只读打开, 不信任文件名, 大小上限与共享 AAR 的检查上限; `file://` 在 API 24+ 仅接受可读路径, 失败给出 `SOURCE_UNREADABLE` 文案.
-- [ ] (测试) 设备: 从系统文件管理器与浏览器下载列表各打开一次 `.apk` / `.xapk`; 宿主已删除入口后, 系统 "打开方式" 列表只出现插件.
+- [x] (插件) `ExternalInstallActivity` (`exported=true`, 无权限保护, `Theme.NoDisplay` 后转 `InstallDialogActivity`): 两组 intent-filter 从宿主原 `PackageInstallerEntryActivity` 迁来 (`ACTION_VIEW` + `ACTION_INSTALL_PACKAGE`, `content` / `file` scheme, 7 种 MIME; `content` + `application/zip` / `application/octet-stream` + 大小写 `pathPattern` 覆盖 6 种扩展名); 多 URI (`ACTION_SEND_MULTIPLE`) 作为批量. (SOURCE / DEVICE 2026-10-01: 正式导出入口与受限 URI 转交完成; 7 MIME x action / scheme, 6 扩展名大小写与分享的解析矩阵通过, 宿主 5299 不再出现于 APK 处理列表)
+- [x] (插件) 外部来源的安全处理: 只读打开, 不信任文件名, 大小上限与共享 AAR 的检查上限; `file://` 在 API 24+ 仅接受可读路径, 失败给出 `SOURCE_UNREADABLE` 文案. (SOURCE / DEVICE 2026-10-01: 只读打开, URI / 数量 / 大小限制, 实际内容识别和共享解析器检查, 取消与错误展示已接入, 见 ExternalInstallDeviceTest 和 docs/dev/p3-ui-evidence.md)
+- [ ] (测试) 设备: 从系统文件管理器与浏览器下载列表各打开一次 `.apk` / `.xapk`; 宿主已删除入口后, 系统 "打开方式" 列表只出现插件. (部分 DEVICE 2026-10-01: 已通过真实 exported VIEW / SEND_MULTIPLE 和系统解析列表验证, 尚未逐一从文件管理器与浏览器下载 UI 打开 APK / XAPK, 不以合成 Intent 代替该矩阵)
 
 ### P3.3 用户确认与卸载对话框
 
-- [ ] (插件) `UserActionActivity`: 接管 `STATUS_PENDING_USER_ACTION` 的 intent sender (`startActivityForResult`), 未知来源权限缺失时先引导 `ACTION_MANAGE_UNKNOWN_APP_SOURCES` 再重试, 超时 (D31) 后取消会话.
-- [ ] (插件) `UninstallDialogActivity`: `none` 路径承载 `ACTION_UNINSTALL_PACKAGE`; 特权路径的确认对话框 (脚本以 `interaction = dialog` 卸载时) 显示应用信息与 `keepData` 开关.
-- [ ] (测试) 设备: none 路径新装 (含未知来源引导), 用户取消, 超时; 特权卸载确认.
+- [x] (插件) `UserActionActivity`: 接管 `STATUS_PENDING_USER_ACTION` 的 intent sender (`startActivityForResult`), 未知来源权限缺失时先引导 `ACTION_MANAGE_UNKNOWN_APP_SOURCES` 再重试, 超时 (D31) 后取消会话. (SOURCE / JVM / DEVICE 2026-10-01: token 桥接, 权限设置返回, 超时, 任务清理与通知回退完成; 最终结果以 PackageInstaller 广播为准, 不把 API 24 的 RESULT_CANCELED 当成安装失败. 见 docs/dev/p3-ui-evidence.md)
+- [x] (插件) `UninstallDialogActivity`: `none` 路径承载 `ACTION_UNINSTALL_PACKAGE`; 特权路径的确认对话框 (脚本以 `interaction = dialog` 卸载时) 显示应用信息与 `keepData` 开关. (SOURCE / JVM / DEVICE 2026-10-01: 系统卸载桥接保留, 特权确认使用插件外观和 keepData 草稿; 旋转不重复启动, 选择值进入 UninstallEngine. API 24 / 28 / 35 桥接和特权确认回归通过)
+- [ ] (测试) 设备: none 路径新装 (含未知来源引导), 用户取消, 超时; 特权卸载确认. (部分 DEVICE 2026-10-01: API 24 none 新装 / 取消, 确认超时与特权卸载通过; API 35 实际打开未知来源 Settings 并拒绝, 返回 USER_CANCELLED 且未改变许可. 首次授予权限后继续安装只覆盖桥接状态测试, 实际 UI 授权流程仍待完成)
 
 ### P3.4 前台服务与通知
 
-- [ ] (插件) `InstallForegroundService`: 会话进入写入阶段时启动, 类型在 `dataSync` 与 `specialUse` 之间按 API 34+ 实测选定 (附录 D Q6), 通知显示阶段与进度, 完成后结束; 通知通道 `installation`; API 33+ `POST_NOTIFICATIONS` 缺失时静默降级 (不阻塞安装).
-- [ ] (测试) 设备: 静默安装 2 GiB 级 xapk 期间切到后台, 进程未被杀且进度通知更新; API 34+ 无异常.
+- [x] (插件) `InstallForegroundService`: 会话进入写入阶段时启动, 类型在 `dataSync` 与 `specialUse` 之间按 API 34+ 实测选定 (附录 D Q6), 通知显示阶段与进度, 完成后结束; 通知通道 `installation`; API 33+ `POST_NOTIFICATIONS` 缺失时静默降级 (不阻塞安装). (SOURCE / JVM / DEVICE 2026-10-01: 采用 dataSync, API 35 两次真实 2 GiB 写入与后台存活通过; 共享服务 / 取消 / 完成 / 通知发布竞态 / onTimeout 清理已实现, 通知拒绝不阻塞. 见 docs/dev/p3-notification-evidence.md)
+- [ ] (测试) 设备: 静默安装 2 GiB 级 xapk 期间切到后台, 进程未被杀且进度通知更新; API 34+ 无异常. (部分 DEVICE 2026-10-01: API 35 Shizuku 真实 APK 写入 2,147,500,874 字节, 最终后台 11,556 ms / 44 个 FGS 样本 / PID 不变; 真机通知保持拒绝. API 24 独立短包验证可见通知 [0,100], 不与大包拼接为同一次可见进度验收. 同次 2 GiB 可见通知更新仍待补测)
 
 验收条件: P3 全部对话框在 AVD API 24 / 真机 API 33+ 走通; 外部入口在系统列表出现且宿主不再出现; 前台服务在 API 34+ 合规; 证据写入 `docs/dev/p3-ui-evidence.md`.
 
@@ -838,6 +838,7 @@ if (!installer.isDefault()) installer.setDefault(true);
 - 现状: API 34+ 要求声明类型; 候选 `dataSync` (语义接近, 有时长限制但足够) 与 `specialUse` (需 `PROPERTY_SPECIAL_USE_FGS_SUBTYPE` 说明).
 - 推荐: `dataSync`, 实测超时行为后定.
 - 拍板 (2026-09-30): 按推荐值实施, `dataSync` 实测后定.
+- 实施 (2026-10-01): API 35 两次真实 2 GiB 安装确认 dataSync 可启动并持续保护后台写入, 正式选定此类型; 保留系统累计超时清理实现, 不宣称已耗尽系统时长预算. 见 docs/dev/p3-notification-evidence.md.
 
 ### Q7 (P5 前): 默认安装器锁定的 UI 位置
 
@@ -849,6 +850,7 @@ if (!installer.isDefault()) installer.setDefault(true);
 
 - 推荐: 插件仓库在 P0.1 初始提交后即创建远端并推送 (便于 CI 运行); 宿主提交按既有惯例本地保留, 由维护者决定推送.
 - 拍板 (2026-09-30): 插件仓库可随时推送 (远端 `SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer` 于 2026-09-30 创建并推送); 宿主仓库只本地提交, 不推送.
+- 最新指示 (2026-10-01): 插件仓库当前亦仅作本地提交, 暂时避免推送到 GitHub 远端. 此指示取代此前插件可随时推送的授权, 直至维护者明确恢复推送; 宿主仍只本地提交.
 
 ### Q9 (P8 前): Root 以 system 身份 (uid 1000) 调用 `addPersistentPreferredActivity` 是否纳入
 
@@ -957,3 +959,13 @@ if (!installer.isDefault()) installer.setDefault(true);
 - 验证: 插件 129 JVM 用例, 宿主解析器 54 JVM 用例, debug / androidTest / 混淆 release 与 lint (0 错误, debug 14 / release 17 警告), 十语言 Markdown 与图标检查通过. 分设备通过数, 有意跳过项, 首轮失败与修复过程见 docs/dev/p2-core-evidence.md; 未把整组中失败的初次运行记为通过.
 - 保留未完成: P2.3 的完整系统确认接管, 来源删除与全设备矩阵; P2.6 正式宿主 UID 和三处入口联调; P3 的完整信息/进度/结果界面, 外部入口, 未知来源引导与前台通知. HyperOS API 35 未设置低 targetSdk 绕过标志就接受 targetSdk 22, 已验证带标志的新装但不声称解除实际拦截; user: all 的真实安装也未宣称完成.
 - 下一步: 按原顺序从 P3.1 继续, 连同 P3.2/P3.3/P3.4 完成后收尾依赖它们的 P2 项目. 宿主本轮仅提交共享解析器修复及协议说明 (55712c7009), 未改公开 AIDL, 未推送任一仓库. 插件最终 VERSION_BUILD=17, 与本分支提交数对齐.
+
+### 2026-10-01 (P3 安装界面, 外部入口与前台通知)
+
+- 完成 P3.1-P3.4 的主要实现: 插件信息 / 确认 / 进度 / 结果与批量界面, 逐项选择实际进入引擎, 外部打开 / 分享与正式默认安装器, 系统确认与未知来源桥接, keepData 卸载确认, 宿主外观和 dataSync 通知. 原有条目新增勾选 9 项 (含 P2.3 引擎接管), 未增加或分拆小节.
+- 平台适配: 文档任务要求 standard, 使用会话 token URI + intoExisting 达成原定任务隔离. API 24 确认 Activity 的 RESULT_CANCELED 不代表最终拒绝, 改等 PackageInstaller 广播. 宿主仅安装插件开启 API 34+ BIND_ALLOW_ACTIVITY_STARTS, 后台使用直接 Activity 通知入口.
+- 设备: API 24 none 实装 / 来源删除 / 删除拒绝 / 重试, API 28 Root 真实 Binder dialog, API 35 Shizuku 真实宿主 UID 前台安装及未知来源设置拒绝通过. API 35 两次完成两枚 1 GiB APK 组成的真实 xapk 安装, 最终实际写入 2,147,500,874 字节, 后台 11,556 ms / 44 FGS 样本, 进程不变. 保留用户通知拒绝状态; API 24 单独验证可见通知更新. 详见 docs/dev/p3-ui-evidence.md.
+- 构建: 插件 180 JVM 用例, debug / androidTest / 混淆 release 与两种 lint 通过; 宿主 3204 JVM 用例中 6 个既有跳过, 无失败, assembleAppDebug 通过. 十语言源文案 / 生成产物和图标检查通过. 实际用例分组, 首轮失败与修复, 后续回归见证据文档.
+- 未完成边界保留原 checkbox: 跨进程持久化恢复与真实 IME / API 35 全几何, 文件管理器和浏览器下载 UI 的 APK / XAPK 矩阵, 实际首次授予未知来源后继续安装, 同一次 2 GiB 的可见通知, 宿主三处入口与 P2 完整标志 / 用户矩阵. P4 / P5 尚未开始.
+- 提交: 插件按外观, 通知, 安装 UI, 系统 / 卸载确认, 外部入口, 设备验收与文档分开提交; 宿主前台绑定修复为 1e6d8d09eb, 探针任务清理为 53faf617a7. 遵循维护者本轮最新指示, 两仓库当前均仅本地提交, 不推送 GitHub. 插件最终 VERSION_BUILD=24, 与可达提交数对齐.
+- 下一步: 优先补齐上述原有验收项和进程恢复, 然后按 P4 接入宿主 installer / $installer 脚本 API; 继续保持原有路线图结构.

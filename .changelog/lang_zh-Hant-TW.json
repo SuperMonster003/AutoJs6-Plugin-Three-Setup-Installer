@@ -8,14 +8,13 @@
     "v1.0.0": {
       "released_date": "2026/10/01",
       "hint": [
-        "P2 開發預覽: 安裝, 安裝套件資訊查詢, 使用者查詢和解除安裝核心已接入主程式服務, 支援明確確認及工作階段自動清理. 完整主程式入口驗收, 完整介面, 外部開啟, 預設安裝器啟用, 腳本 API 和設定仍在推進."
+        "P3 開發預覽. 已實作確認, 進度, 結果與批次對話框, 外部開啟與分享, 可選來源刪除, 系統確認及前景通知. 指令碼 API, 獨立首頁與設定, 安裝歷程及預設安裝器設定仍屬後續規劃. 進度與裝置涵蓋範圍見 [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md). AutoJs6 >= 6.8.0 (5299)."
       ],
       "feature": [
         "外掛程式標識 `three-setup-installer` (engine `installer`), 含 INFO 服務, Wake Activity 以及供宿主發現的 `org.autojs.plugin.INSTALLER` 服務骨架",
         "10 種語言的 README, 外掛程式中心說明與更新日誌"
       ],
       "improvement": [
-        "P0 已驗證 Shizuku 和 Root 靜默安裝, 更新, 解除安裝及一般預設安裝器設定. 宿主與腳本安裝入口尚未開放, 本版本仍不支援持久預設項.",
         "外掛程式 ID, engine, 服務 action / category, Binder descriptor 與最低宿主版本改由宿主 installer-api 契約常數提供; 能力宣告加入安裝器契約版本 1, 最低宿主建置回填為 5299",
         "可隨機存取的來源避免完整快取副本, 串流來源按需暫存. 支援一般 ZIP 分割套件, AAB 僅供檢查, 拒絕內容發生變化的來源.",
         "明確選擇的授權方式不回退, 區分拒絕, 逾時與不相容, 並行請求共用授權過程與特權連線.",

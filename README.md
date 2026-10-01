@@ -8,7 +8,7 @@
     </picture>
   </p>
 
-  <p>为 AutoJs6 及其脚本安装, 更新和卸载 Android 应用, 支持通过 Shizuku 或 Root 静默安装</p>
+  <p>通过系统确认, Shizuku 或 Root 安装, 更新与卸载 Android 应用</p>
 
   <p>
     <a href="https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/releases"><img alt="GitHub release (latest by date)" src="https://img.shields.io/github/v/release/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer?label=Release"/></a>
@@ -42,7 +42,7 @@
 
 ******
 
-3-Setup Installer 接管 AutoJs6 的安装器: 文件管理器, 插件中心与脚本打包页的安装按钮, `.apk`, `.apks`, `.xapk`, `.apkm` 与 `.apkz` 文件的外部 "打开方式" 入口, 以及脚本侧用于安装, 更新, 检查与卸载应用的全局对象 `installer`. 除常规的系统确认外, 还可通过 Shizuku 或 Root 静默安装与卸载.
+3-Setup Installer 通过 AutoJs6 的安装入口及安装包文件的外部打开或分享请求, 安装, 更新, 检查与卸载 Android 应用. 支持常规 Android 确认以及通过 Shizuku 或 Root 进行特权安装. 脚本 API, 独立首页与设置页仍属于后续规划.
 
 AutoJs6 通过 Binder 服务发现插件, 以只读文件描述符交出安装包; 插件解析安装包, 选择授权方式, 按需显示自己的确认与进度对话框, 并回报阶段, 进度与结果. 特权操作在 Shizuku 用户服务或 libsu Root 服务中执行, 直接与系统包安装器对话.
 
@@ -52,7 +52,7 @@ AutoJs6 通过 Binder 服务发现插件, 以只读文件描述符交出安装�
 
 ******
 
-1.0.0: P2 开发预览: 安装, 包信息查询, 用户查询和卸载核心已接入宿主服务, 支持显式确认和会话自动清理. 完整宿主入口验收, 完整界面, 外部打开, 默认安装器启用, 脚本 API 和设置仍在推进. [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md). AutoJs6 >= 6.8.0 (5299).
+1.0.0: P3 开发预览. 已实现确认, 进度, 结果与批量对话框, 外部打开与分享, 可选来源删除, 系统确认及前台通知. 脚本 API, 独立首页与设置, 安装历史及默认安装器配置仍属于后续规划. 进度与设备覆盖见 [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md). AutoJs6 >= 6.8.0 (5299).
 
 ******
 
@@ -60,14 +60,19 @@ AutoJs6 通过 Binder 服务发现插件, 以只读文件描述符交出安装�
 
 ******
 
-目标能力, 按路线图分阶段交付:
+本开发预览已提供的能力, 后续功能另行标明:
 
 - 安装包格式: `.apk`, `.apks`, `.xapk`, `.apkm`, `.apkz` 以及包含 APK 的 ZIP 压缩包; 分包按设备选择; `.aab` 文件只识别与说明, 不安装.
-- 授权方式: `none` (系统 PackageInstaller 会话 + 用户确认), `shizuku` 与 `root`; `auto` 按设置页中的顺序选择第一个可用者, 脚本也可显式指定.
-- 安装选项: 批量安装, 成功后删除源文件, 允许降级, 允许测试包, 绕过低 targetSdk 拦截 (Android 14+), 安装者包名与目标用户 (仅特权授权方式).
+- 授权方式: `none` 使用 Android 确认; `shizuku` 与 `root` 提供特权操作. `auto` 依次选择可用的 Shizuku, Root 和系统确认. 安装对话框可选择授权方式.
+- 安装成功后可选尽力删除来源. 降级, 测试包, 绕过低 targetSdk 拦截 (Android 14+), 安装者归属及其他目标用户需要 Shizuku 或 Root, 并仍受 Android 规则限制.
 - 通过 Shizuku 或 Root 静默卸载并可选保留数据; 其它情况使用常规系统对话框.
-- 设为默认安装器: 有 Shizuku 或 Root 时插件成为安装包文件的首选处理者; 无特权时为你打开系统的 "默认打开" 页面.
-- 脚本 API `installer` (别名 `$installer`) 提供同步, `...Async` 与会话三种形态; 每个失败都是带稳定 `code` 的 `InstallerError`.
+- 确认界面显示应用信息, 新旧版本, 签名和可勾选的 APK 分包; 进度可取消, 结果显示成功操作或可复制的错误详情. 批量安装逐项显示状态.
+- 可用插件打开安装包, 或分享单个及多个安装包. 外部来源安装失败后, 在 URI 及其访问权限仍可用时可重试对应项目.
+- 提供前台安装进度, 取消操作及结果通知. 未授予通知权限不会阻止安装.
+- 对话框默认跟随 AutoJs6 的语言, 夜间模式与主题色; 宿主不可用时回退系统语言和夜间模式及约定默认颜色.
+- 后续规划: 默认安装器配置, 包括通过特权选择处理程序, 以及必要时引导系统默认设置.
+- P4 规划: 脚本 API `installer` (别名 `$installer`) 提供同步, `...Async` 与会话形态, 失败以带稳定 `code` 的 `InstallerError` 表示.
+- P5 规划: 独立首页与设置页, 安装历史及已安装应用管理.
 
 ******
 
@@ -77,7 +82,7 @@ AutoJs6 通过 Binder 服务发现插件, 以只读文件描述符交出安装�
 
 1. 在安装了 AutoJs6 构建 5299 (6.8.0) 或更高版本的设备上, 从 [Releases](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/releases) 安装插件 APK.
 2. 打开 AutoJs6 插件中心, 确认 `3-Setup Installer` 已被识别并启用它.
-3. 在 AutoJs6 文件管理器中点击安装包, 在任意文件管理器中用 3-Setup Installer 打开安装包, 或在脚本中调用 `installer.install(...)`. 需要静默安装时, 按插件提示启动 Shizuku 或授予 Root, 或在插件设置中选择授权方式.
+3. 使用 AutoJs6 的安装操作, 或在打开及分享安装包时选择 3-Setup Installer. 出现确认对话框时, 先检查应用与安装选项再确认安装. 选择特权方式时, 请准备 Shizuku 或 Root 授权.
 
 ******
 
@@ -88,9 +93,9 @@ AutoJs6 通过 Binder 服务发现插件, 以只读文件描述符交出安装�
 各授权方式能做什么以及需要什么:
 
 - `none`: 标准 PackageInstaller 会话; Android 会要求用户确认每次安装, 支持分包, 不提供特权选项.
-- `shizuku`: 需要 Shizuku 应用处于运行状态 (经无线调试, ADB 或 Root 启动) 并已向插件授权; 以 shell 权限运行, 可静默安装, 静默卸载, 面向其他用户安装以及锁定默认安装器.
+- `shizuku`: 需要 Shizuku 正在运行 (经无线调试, ADB 或 Root 启动) 并已向插件授权. 其 shell 权限支持静默安装, 静默卸载及面向其他用户的操作.
 - `root`: 需要 Root 管理器向插件授予 `su`; 通过 libsu Root 服务提供与 Shizuku 相同的操作. 在普通 (user) 固件上降级仍只对 debuggable 应用生效, 这是框架规则而非插件限制.
-- **注意:** 特权授权可用时, 脚本 API 默认静默安装, 不会主动弹出任何确认对话框. 若系统仍要求确认, `interaction: 'auto'` 会允许系统确认并写入 `notes`. 需要安装前确认时, 请显式使用 `interaction: 'dialog'`; 禁止系统确认时使用 `interaction: 'silent'`, 此时需要确认的安装会失败.
+- **注意:** 特权可用时, 宿主请求使用 `interaction: 'auto'` 默认静默安装, 不会主动打开确认界面. 若 Android 仍要求确认, `auto` 允许系统确认并记录到 `notes`. 需要安装前确认时使用 `interaction: 'dialog'`; 禁止系统确认时使用 `interaction: 'silent'`, 此时需要确认的安装会失败. 后续脚本 API 沿用相同默认语义.
 
 ******
 
@@ -126,7 +131,7 @@ if (!installer.isDefault()) installer.setDefault(true);
 
 决定插件能力边界的平台事实:
 
-- Android 7.0 (API 24) 及以上; 宿主构建与插件在 [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md) 列出的设备矩阵上一起验证.
+- Android 7.0 (API 24) 及以上. 设备验证情况和剩余覆盖范围记录在 [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md) 中.
 - 绕过低 targetSdk 拦截自 Android 14 (API 34) 起存在; 更早的系统忽略该选项并在结果中注明.
 - 部分 OEM 系统限制哪个应用可以成为默认安装器, 或要求其信任的安装者包名 (HyperOS 接受 `com.android.shell`); 插件按原样回报系统的答复.
 
@@ -136,8 +141,10 @@ if (!installer.isDefault()) installer.setDefault(true);
 
 ******
 
-- **为什么安装仍然要求确认?** `none` 授权方式始终经过系统确认. 启动 Shizuku 或授予 Root, 然后在设置中选择该授权方式, 或在脚本中传入 `authorizer: 'shizuku'`.
+- **为什么安装仍然要求确认?** `none` 始终使用系统确认. 准备好授权后, 可在安装对话框中选择 Shizuku 或 Root. Android 或设备策略仍可能要求系统确认.
 - **能安装 `.aab` 吗?** 不能. Android App Bundle 是发布格式, 请先用 bundletool 转换为 `.apks` 集合. 插件会识别 `.aab` 文件并显示其包名与模块信息.
+- **为什么来源没有删除?** 仅在安装成功后尝试删除, 来源提供方可能拒绝. 这不会改变安装成功的结果. 当来源由 AutoJs6 或其他发送应用拥有时, 删除由该来源应用负责.
+- **可以重试或恢复吗?** 失败的外部 URI 项目在来源及访问权限仍可用时可以重试. 来源或访问权限释放后, 请重新打开安装包. 进程丢失后, 恢复的界面显示中断, 不会自动重新安装. 再次开始前请检查应用的实际安装状态.
 
 ******
 
@@ -149,6 +156,7 @@ if (!installer.isDefault()) installer.setDefault(true);
 
 - Binder 入口受 `org.autojs.permission.PLUGIN` 签名权限保护, 只有 AutoJs6 能够访问; 外部 "打开方式" 入口只接受安装包文件, 从不运行脚本.
 - REQUEST_INSTALL_PACKAGES 与 REQUEST_DELETE_PACKAGES 支撑常规的安装与卸载对话框; QUERY_ALL_PACKAGES 让插件在更新前显示已安装版本并比对签名.
+- FOREGROUND_SERVICE 与 FOREGROUND_SERVICE_DATA_SYNC 支持后台安装工作; POST_NOTIFICATIONS 用于进度与结果通知. 缺少通知权限不会阻止安装.
 - Shizuku 与 Root 只用于你发起的操作; 特权服务不保存状态, 操作之间不保持打开的 shell, 也不会被插件之外的任何方访问.
 - 安装包以只读方式打开; 插件不发起网络请求, 不收集数据, 并将私有存储排除在备份之外.
 
@@ -196,10 +204,9 @@ minimum host build: 5299 (6.8.0)
 
 _2026/10/01_
 
-- `提示` P2 开发预览: 安装, 包信息查询, 用户查询和卸载核心已接入宿主服务, 支持显式确认和会话自动清理. 完整宿主入口验收, 完整界面, 外部打开, 默认安装器启用, 脚本 API 和设置仍在推进.
+- `提示` P3 开发预览. 已实现确认, 进度, 结果与批量对话框, 外部打开与分享, 可选来源删除, 系统确认及前台通知. 脚本 API, 独立首页与设置, 安装历史及默认安装器配置仍属于后续规划. 进度与设备覆盖见 [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md). AutoJs6 >= 6.8.0 (5299).
 - `新增` 插件标识 `three-setup-installer` (engine `installer`), 含 INFO 服务, Wake Activity 以及供宿主发现的 `org.autojs.plugin.INSTALLER` 服务骨架
 - `新增` 10 种语言的 README, 插件中心说明与更新日志
-- `优化` P0 已验证 Shizuku 和 Root 静默安装, 更新, 卸载及普通默认安装器设置. 宿主与脚本安装入口尚未开放, 本版本仍不支持持久默认项.
 - `优化` 插件 ID, engine, 服务 action / category, Binder descriptor 与最低宿主版本改由宿主 installer-api 契约常量提供; 能力声明加入安装器契约版本 1, 最低宿主构建回填为 5299
 - `优化` 可随机访问的来源避免完整缓存副本, 流来源按需暂存. 支持普通 ZIP 分包, AAB 仅供检查, 拒绝内容发生变化的来源.
 - `优化` 显式选择的授权方式不回退, 区分拒绝, 超时与不兼容, 并发请求共享授权过程与特权连接.
