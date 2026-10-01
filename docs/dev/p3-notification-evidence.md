@@ -2,7 +2,7 @@
 
 Date: 2026-10-01.
 
-Real 2 GiB XAPK installation has passed in the background on the Xiaomi API 35 device with its existing notification denial preserved. Visible progress updates have separately passed with a short real APK on the API 24 emulator. These two results do not establish visible notification updates during a 2 GiB transfer. The final publication-lock fix has passed the full build, its deterministic JVM tests, and subsequent device replay on both API 24 and API 35.
+Real 2 GiB XAPK installation has passed in the background on the Xiaomi API 35 device, first with notifications denied and subsequently with visible progress updates during the same real 2 GiB transfer. The earlier API 24 short-APK notification result is retained separately. The final publication-lock fix has passed the full build, deterministic JVM tests, and device replay on API 24 and API 35.
 
 ## Implementation and platform behavior
 
@@ -65,7 +65,26 @@ The final fix was replayed using the same real installation checks on both permi
 
 Both installations succeeded with matching installed version and APK byte totals, stopped their foreground service, and preserved the pre-existing notification permission state. Both groups also include the updated plugin capability contract and notification-bridge cases. API 24 reruns the PendingIntent and external-entry tests; API 35 additionally covers actual unknown-source cancellation and task cleanup. Detailed acceptance for those surrounding flows belongs to the main P3 integration record.
 
-The publication-lock device replay is complete. The large-file notification-denial branch and the short-file visible-progress branch remain distinct; this replay still does not demonstrate a visible notification during a 2 GiB transfer.
+The publication-lock device replay is complete. At this point the large-file denial branch and the short-file visible-progress branch were separate; the later follow-up below supplies the same-transfer large-file visible-progress evidence.
+
+## Follow-up: visible notifications during the same real 2 GiB transfer
+
+`build/p3-followup-api35-large-visible-complete.log` records `OK (1 test)` in 30.269 seconds on Xiaomi 23046RP50C / API 35. The source was the same 2147501419-byte XAPK, and both the actual APK write total and installed APK total were 2147500874 bytes. Installation succeeded with the confirmed expected version.
+
+| Observation | Measured value |
+|---|---|
+| Notification state during this run | `postPermission=true`, `drawerEnabled=true` |
+| Background Activity | `STOPPED`, `focus=false`, `visibility=8` |
+| Background interval | 11679 ms |
+| Foreground-service observations | 46 |
+| Process | PID 31136 remained unchanged |
+| Actual write/installed byte total | 2147500874 |
+| Byte-callback observation hold | 0 ms |
+| Measured operation elapsed time | 27500 ms |
+
+Visible progress samples from that same transfer were `[0, 4, 10, 14, 18, 26, 31, 36, 47, 50, 53, 56, 58, 61, 64, 67, 69, 72, 75, 77, 80, 83, 87, 89, 92, 95, 98]`. The recorded percentages are intermediate write progress; the final installation result and installed byte/version assertions establish completion. This run closes the earlier 2 GiB visible-notification evidence gap without combining separate short- and large-package runs.
+
+The runner temporarily granted notification permission to exercise this branch, then restored the runtime permission to false and the UID-level `POST_NOTIFICATION` app-op to `ignore`. Permission-sensitive flags and effective notification disablement were restored to their original state. The package-level operation has a default `allow` entry; this is not a claim that no AppOps access/operation record was created or changed. The instrumentation test itself preserved the permission state with which it was launched.
 
 ## Fixture and ownership controls
 
@@ -79,7 +98,6 @@ Before either installation, all device users' package lists, including retained 
 
 ## Remaining matrix
 
-- A 2 GiB transfer with notification permission already granted on API 34+ and visibly changing notification progress has not been demonstrated. The API 35 denial run and API 24 short visible run cannot be combined to claim that result.
 - The cumulative `dataSync` timeout callback, background-start rejection followed by notification-tap recovery, multiple concurrent foreground sessions, and physical notification cancellation/taps need dedicated runtime evidence beyond these transfer and PendingIntent checks.
 - This file does not claim the complete P3 device matrix, real host-UID integration, or every install/uninstall dialog path. Detailed results for the surrounding confirmation, refusal and task-lifecycle checks are retained in the main P3 integration evidence.
 

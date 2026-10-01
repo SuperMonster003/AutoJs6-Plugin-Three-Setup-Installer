@@ -94,6 +94,11 @@ class LargeInstallForegroundDeviceTest {
         check(context.cacheDir.usableSpace >= needed) { "Insufficient cache space for extraction and the real package session: need $needed bytes" }
         val permissionBefore = postPermissionGranted()
         val drawerEnabledBefore = drawerEnabled()
+        if (arguments.getString("foregroundRequireNotifications") == "true") {
+            check(permissionBefore && drawerEnabledBefore) {
+                "Visible-notification acceptance requires the existing notification permission and drawer to be enabled"
+            }
+        }
         check(AuthorizerStates.request(context, requireNotNull(authorizer), 30_000)) { "The selected authorizer is not granted" }
 
         val sessionRef = AtomicReference<InstallSession>()
