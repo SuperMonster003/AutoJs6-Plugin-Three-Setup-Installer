@@ -235,7 +235,7 @@ runtime/api/augment/installer/          Installer.kt (AugmentableKey("installer"
 
 建议会话切分: P0 一次 (骨架 + spike); P1 两到三次 (共享 AAR 为一次; 契约 + 客户端 + 路由为一次; 删除旧安装器 + 调用方改造 + 文档为一次); P2 两到三次 (来源与授权; 安装引擎; 卸载 / 批量 / 路由); P3 一到两次; P4 两次 (install / session / errors; uninstall / inspect / authorizer / setDefault / 示例); P5 一到两次; P6 一到两次; P7 一次; P8 两次; P9 两到三次.
 
-当前进度 (2026-10-01): P0, P1, P3, P4 与 P5 原有条目已完成当前范围验收; P1 宿主三入口完整有/无插件六种实际 UI 组合通过, P2.6 联调条目随之完成. P2 核心来源/授权/安装/卸载/批量/Binder 已交付, 失败保留来源明确为固定策略, 其余原矩阵边界继续保留. P6.1 健壮性, P6.2 安全和 P6.4 性能/体积/混淆 Release 往返已完成所列范围验收. P6.3 的 API 37/16 KiB 插件安装与运行已验证, OEM 兼容性/FAQ 文案完成, 原完整 OEM 矩阵仍待收口. 特权恢复的 API/元数据边界及 API 24 大字号/系统多窗口独立显示边界见专项证据. 本轮进一步补齐G8441 Root默认页/Files和API 35 Shizuku/API 33 none, 完成P7.2十语言README/changelog定稿; P2.3与P6.3剩余环境/原记录边界继续保留. 下一步先满足原矩阵剩余条件, P7远端发布仍受仅本地提交的指示限制.
+当前进度 (2026-10-01): P0, P1, P3, P4 与 P5 原有条目已完成当前范围验收; P1 宿主三入口完整有/无插件六种实际 UI 组合通过, P2.6 联调条目随之完成. P2 核心来源/授权/安装/卸载/批量/Binder 已交付, 失败保留来源明确为固定策略, 其余原矩阵边界继续保留. P6.1 健壮性, P6.2 安全和 P6.4 性能/体积/混淆 Release 往返已完成所列范围验收. P6.3 的 API 37/16 KiB 插件安装与运行已验证, OEM 兼容性/FAQ 文案完成, 原完整 OEM 矩阵仍待收口. 特权恢复的 API/元数据边界及 API 24 大字号/系统多窗口独立显示边界见专项证据. 本轮进一步补齐G8441 Root默认页/Files和API 35 Shizuku/API 33 none, 完成P7.2十语言README/changelog定稿和P7.3本地构建检查; P2.3与P6.3剩余环境/原记录边界继续保留. 下一步先满足原矩阵剩余条件, P7远端发布仍受仅本地提交的指示限制.
 
 ---
 
@@ -511,7 +511,7 @@ runtime/api/augment/installer/          Installer.kt (AugmentableKey("installer"
 
 ### P7.3 发布 gate
 
-- [ ] (发布) 平台验收构建 (Temurin 参数) + `:app:testDebugUnitTest` + `:app:assembleDebugAndroidTest` + `:app:lintDebug` + `:app:appendDigestToReleasedFiles` (签名 APK, CRC32 文件名 `autojs6-plugin-three-setup-installer-v1.0.0-XXXXXXXX.apk`); `git diff --check`; `VERSION_BUILD == git rev-list --count HEAD`; 工作树干净.
+- [x] (发布) 平台验收构建 (Temurin 参数) + `:app:testDebugUnitTest` + `:app:assembleDebugAndroidTest` + `:app:lintDebug` + `:app:appendDigestToReleasedFiles` (签名 APK, CRC32 文件名 `autojs6-plugin-three-setup-installer-v1.0.0-XXXXXXXX.apk`); `git diff --check`; `VERSION_BUILD == git rev-list --count HEAD`; 工作树干净. (RELEASE / JVM / DEVICE 2026-10-01: build 48平台检查通过, 268 JVM零失败/跳过, Debug/Release lint零错误, 签名R8包CRC32=8601e5e9, 1,902,783字节. API 24/35/37同包跨进程契约各2/2, 八台保留数据覆盖Release并核验. VERSION_BUILD与最终提交数48一致, 工作树干净; 仅本地gate, 不代表原P2/P6缺口或远端发布已完成. 见 docs/dev/p7-local-gate-evidence.md.)
 - [ ] (发布) GitHub 仓库 `SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer` (功能性描述, 例如 `App installer plugin for AutoJs6 with Shizuku and Root silent installation`), 推送, tag `v1.0.0`, Release 附 APK 与 SHA-256.
 - [ ] (索引) `official-repositories.json` 插入仓库名 (字母序, 总数 45 -> 46, README 计数同步), `release-manifests/io.github.supermonster003.autojs6.plugin.three.setup.installer/<versionCode>.json` 准入清单, 本地运行生成器验证后提交推送 `main`, 确认 Actions 生成成功.
 - [ ] (宿主) 宿主提交 (`feat(installer): ...` 系列) 是否推送按维护者指示; 宿主 `PluginInstallWizardCatalog` 条目在索引可解析后生效.
@@ -1079,3 +1079,11 @@ if (!installer.isDefault()) installer.setDefault(true);
 - 原P7.2两项完成, 不新增线路图条目. README补齐install/installAsync/session/uninstall/setDefault和分包/事件示例, 顶层仅只读状态查询; 明确同步查询/会话创建/wait不能在UI线程, 会话对象绑定创建线程. 依据实际宿主路由区分脚本auto默认特权静默与宿主界面dialog确认, 避免误导宿主按钮默认静默.
 - 十语言授权前提/失败来源保留/逐项批量删除/设备降级差异/默认安装器限制及未公开发布状态同步. v1.0.0发行历史收敛为用户可读行为和六项依赖, 内部迁移过程不再作为功能说明. 版本/最低宿主在历史中固定, 不随未来模板值漂移.
 - 文档10语言36产物与图标15项校验通过, 源码事实经独立子代理复核, 先前268项JVM/Debug装配/lint通过. 本次build 47仅本地文档提交. 下一步执行原P7.3的本地构建检查, 保留P2/P6缺口和远端发布禁令, 不提前进入P8.
+
+### 2026-10-01 (P7.3 本地构建检查与 build 48 交付)
+
+- 原P7.3本地构建条目完成. Temurin平台参数输出单组决策, Debug/androidTest/签名R8 Release/独立Release测试APK及原生库检查通过; 268 JVM零失败/跳过, Debug lint 0错误/22警告, 普通Release 0错误/23警告, Release测试源集0错误/29警告. 文档/图标生成器及最终文档标点检查通过.
+- 同一build 48 Release在API 24/35/37各2/2真实跨UID/PID契约往返, API 37实际16,384字节页. 八台设备全部保留数据覆盖该Release, 摘要/版本/UID/无Debug核验通过. 原许可/全默认记录/系统session/server与交付基线相同, 无固定夹具/安装FGS; API 24交付前外部新增的终端测试包单独记录并保留, 不回滚其他工作.
+- 产物autojs6-plugin-three-setup-installer-v1.0.0-8601e5e9.apk, 1,902,783字节, SHA-256=6cc923343072e52ad9cf27fcc939ce35bf8488394ad6b2f4b7f4e4cc8b9f3efe, v2签名通过. releases只保留本包, 旧包核验摘要后移入忽略目录. 详见 docs/dev/p7-local-gate-evidence.md.
+- 本轮四个逻辑提交对应build 45-48, 仅本插件仓库变更, 未推送或发布. VERSION_BUILD=48与可达提交数一致, 工作树干净. P2.3/P6.3完整矩阵及P7.3远端各项保留未完成, 不改动原小节结构, 不进入P8/P9.
+- 后续所需条件: API 24应用可用Root; XQ-DQ72向插件授予Shizuku以补同机三授权; 原生拦截targetSdk 22的API 34+特权环境; XQ-AT72默认页可验收基线. 该机插件既有最近使用仍保护, 不推定有清除许可. Redmi实际Files路由限制如实保留. 下一会话从这些原矩阵缺口继续, 远端发布仍待维护者解除仅本地限制.
