@@ -233,6 +233,7 @@ _2026/10/01_
 - `Correctif` Correction de l'absence du plugin dans le sélecteur pour les conteneurs de paquets ouverts depuis Files by Google ou un fournisseur utilisant une URI opaque et un type MIME ZIP ou binaire générique
 - `Correctif` Refus des fournisseurs de paquets renvoyant des descripteurs modifiables et fermeture immédiate des descripteurs rejetés
 - `Correctif` Conservation des erreurs de stockage insuffisant pendant la préparation, l'extraction et les écritures privilégiées par tube, au lieu de signaler un paquet invalide ou une rupture de tube générique
+- `Correctif` Signaler rapidement que le mode d'autorisation est indisponible lorsque la connexion Shizuku ou Root est interrompue
 - `Amélioration` L'identifiant du plugin, le moteur, l'action / la categorie du service, le descripteur Binder et la version minimale de l'hote proviennent desormais des constantes du contrat installer-api de l'hote; les capacites declarent la version 1 du contrat d'installation et la build minimale de l'hote est fixee a 5299
 - `Amélioration` Les sources à accès aléatoire évitent une copie complète en cache, tandis que les flux sont stockés temporairement si nécessaire. Les paquets fractionnés en ZIP sont pris en charge, les AAB restent limités à l'inspection et les sources modifiées sont refusées.
 - `Amélioration` Le mode d'autorisation choisi explicitement ne bascule jamais vers un autre. Le refus, le délai dépassé et l'incompatibilité sont distingués, et les requêtes simultanées partagent l'autorisation et les connexions privilégiées.
@@ -247,6 +248,7 @@ _2026/10/01_
 - `Amélioration` Ouvrez ou partagez un ou plusieurs paquets, réessayez les sources externes encore accessibles et demandez leur suppression après succès. Un refus de suppression préserve la réussite de l'installation.
 - `Amélioration` L'ouverture des paquets APKS partagés par MT Manager prend en charge le type MIME application/vnd.android.package-archives
 - `Amélioration` Installation du même paquet en série entre utilisateurs et modes de privilèges, avec annulation et délai pendant l'attente, et nettoyage sûr des dossiers temporaires inactifs depuis 24 heures au démarrage autonome
+- `Amélioration` Réessayer une fois une connexion privilégiée interrompue pendant son établissement; les installations et désinstallations déjà commencées ne sont jamais répétées automatiquement
 - `Dépendance` Ajout de Shizuku API 13.1.5 (`dev.rikka.shizuku:api`, `dev.rikka.shizuku:provider`) pour le mode d'autorisation Shizuku
 - `Dépendance` Ajout de libsu 6.0.0 (`com.github.topjohnwu.libsu:core`, `service`) pour le mode d'autorisation Root
 - `Dépendance` Ajout de AndroidHiddenApiBypass 6.1 pour les API cachées de l'installateur de paquets utilisées par le service privilégié

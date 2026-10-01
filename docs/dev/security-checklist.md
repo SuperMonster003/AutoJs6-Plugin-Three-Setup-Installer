@@ -96,3 +96,11 @@ For the original P6.2 checkboxes:
 1. The implementation/audit checkbox is supported by the descriptor and compatibility regressions above, plus this component/privacy review.
 2. The optional `pm install-*` checkbox is **not applicable**: P0.2 did not enable this path and P6 does not add it. Record N/A with that reason rather than claiming a shell-install whitelist was tested.
 3. The non-host rejection and static component/permission checkbox is supported by the actual production-service/merged-manifest device tests and JVM manifest/caller policy checks above.
+
+## Process-death follow-up (2026-10-01)
+
+The new private process-identity and session-recovery methods retain the plugin UID guard. Recovery does not scan or adopt sessions: it can only abandon a previously returned id after matching the platform's real installer UID, originating UID, target user, creation time, installer package, target package and size. Missing framework fields disable this additional recovery path; AOSP exposes the complete identity on API 33+. The existing instance-owned `abandon` method was not broadened. API 35 Shizuku and API 33 Root each reject ten deliberately corrupted recovery identities without removing the live session.
+
+`InstallProcessDeathProbeActivity` is Debug-only, exported under `android.permission.DUMP`, and is included in the device component allowlist. Its self-termination control accepts only its current PID and an already recorded, active fixture case. A restarted process ignores a stale termination request. No Release component or Binder method can request arbitrary process termination. The official host uses a separate DUMP-protected debug caller process and a non-exported read-only source provider; its temporary enablement journal changes and restores only this plugin's existing enable key, never trust or priority.
+
+The lifecycle/security combination passed 11/11 on API 24 and API 35. Actual official-host cancellation and privileged process tests are recorded separately in `p6-process-death-evidence.md`; these now provide positive official-host UID evidence in addition to the earlier non-host rejection checks.

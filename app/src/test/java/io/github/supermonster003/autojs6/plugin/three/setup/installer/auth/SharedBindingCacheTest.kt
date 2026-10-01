@@ -96,6 +96,22 @@ class SharedBindingCacheTest {
         fresh.connected(service)
         assertSame(service, retry.get(3, TimeUnit.SECONDS))
     }
+    @Test fun `a late failed handshake cannot invalidate a replacement connection`() = fixture { f ->
+        val first = f.workers.submit<Connection> { f.cache.acquire("root", 5_000) }
+        val old = f.next()
+        val oldService = Connection()
+        old.connected(oldService)
+        assertSame(oldService, first.get(3, TimeUnit.SECONDS))
+        f.cache.invalidate("root", oldService)
+        val second = f.workers.submit<Connection> { f.cache.acquire("root", 5_000) }
+        val fresh = f.next()
+        val replacement = Connection()
+        fresh.connected(replacement)
+        assertSame(replacement, second.get(3, TimeUnit.SECONDS))
+        f.cache.invalidate("root", oldService)
+        assertSame(replacement, f.cache.acquire("root", 1))
+        assertEquals(1L, fresh.closed.count)
+    }
     private fun fixture(block: (Fixture) -> Unit) {
         val f = Fixture()
         try { block(f) } finally {

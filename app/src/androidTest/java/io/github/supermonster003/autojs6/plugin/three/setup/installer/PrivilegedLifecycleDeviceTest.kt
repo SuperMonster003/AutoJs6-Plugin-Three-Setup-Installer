@@ -4,6 +4,7 @@ import android.content.Intent
 import android.content.IntentSender
 import android.content.pm.PackageInstaller
 import android.os.Binder
+import android.os.DeadObjectException
 import android.os.ParcelFileDescriptor
 import android.os.RemoteException
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -18,6 +19,7 @@ import io.github.supermonster003.autojs6.plugin.three.setup.installer.priv.Privi
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.priv.hidden.HiddenApiAccess
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.source.PlannedApk
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.source.PreparedPackage
+import org.autojs.plugin.installer.api.InstallerErrorCodes
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -93,6 +95,28 @@ class PrivilegedLifecycleDeviceTest {
         assertEquals(listOf("example.custom"), service.installers)
     }
 
+    @Test fun anAmbiguousCreateReplyIsNeverReplayed() = withSource { directory, request ->
+        val service = FakeService(directory, 2000).apply { dieAfterCreate = true }
+        var acquisitions = 0
+        val engine = PrivilegedInstallEngine(context, Authorizer.SHIZUKU) { acquisitions++; service.proxy() }
+        val failure = assertThrows(InstallFailure::class.java) { engine.install(request, listener) }
+        assertEquals(InstallerErrorCodes.AUTHORIZER_UNAVAILABLE, failure.code)
+        assertEquals(1, acquisitions)
+        assertEquals(1, service.installers.size)
+        assertEquals(0, service.commits)
+    }
+
+    @Test fun anAmbiguousCommitReplyIsNeverReplayed() = withSource { directory, request ->
+        val service = FakeService(directory, 2000).apply { dieAfterCommit = true }
+        var acquisitions = 0
+        val engine = PrivilegedInstallEngine(context, Authorizer.SHIZUKU) { acquisitions++; service.proxy() }
+        val failure = assertThrows(InstallFailure::class.java) { engine.install(request, listener) }
+        assertEquals(InstallerErrorCodes.AUTHORIZER_UNAVAILABLE, failure.code)
+        assertEquals(1, acquisitions)
+        assertEquals(1, service.installers.size)
+        assertEquals(1, service.commits)
+    }
+
     private fun recordCloser(close: () -> Unit): () -> Unit {
         HiddenApiAccess.initialize()
         val frameworkInterface = Class.forName("android.content.pm.IPackageInstallerSession")
@@ -126,6 +150,9 @@ class PrivilegedLifecycleDeviceTest {
         private val binder = Binder()
         var uidReads = 0
         var failUidOnce = false
+        var dieAfterCreate = false
+        var dieAfterCommit = false
+        var commits = 0
         val installers = mutableListOf<String>()
 
         fun proxy(): IPrivilegedInstaller = Proxy.newProxyInstance(
@@ -138,14 +165,21 @@ class PrivilegedLifecycleDeviceTest {
                     if (failUidOnce) { failUidOnce = false; throw RemoteException("Temporary UID lookup failure") }
                     uid
                 }
-                "createSession" -> { installers += args!![1] as String; installers.size }
+                "createSession" -> {
+                    installers += args!![1] as String
+                    if (dieAfterCreate) throw DeadObjectException()
+                    installers.size
+                }
                 "openWrite" -> ParcelFileDescriptor.open(File(directory, "destination.apk"),
                     ParcelFileDescriptor.MODE_CREATE or ParcelFileDescriptor.MODE_TRUNCATE or ParcelFileDescriptor.MODE_WRITE_ONLY)
                 "commit" -> {
+                    commits++
+                    if (dieAfterCommit) throw DeadObjectException()
                     (args!![1] as IntentSender).sendIntent(context, 0, Intent().putExtra(PackageInstaller.EXTRA_STATUS, PackageInstaller.STATUS_SUCCESS), null, null)
                     null
                 }
                 "release", "abandon" -> null
+                "getSessionRecoveryInfo" -> null
                 else -> error("Unexpected private operation: ${method.name}")
             }
         } as IPrivilegedInstaller

@@ -26,7 +26,8 @@
         "Se corrigió la marca de selección invisible de los APK divididos obligatorios como base.apk cuando su casilla está deshabilitada, tanto en el tema claro como en el oscuro",
         "Se corrigió la ausencia del plugin en el selector de instalación para contenedores abiertos desde Files by Google u otros proveedores con URI opacas y tipos MIME ZIP o binarios genéricos",
         "Se rechazan los proveedores de paquetes que devuelven descriptores de origen con escritura y se cierran de inmediato los descriptores rechazados",
-        "Se conserva el error de espacio insuficiente durante la preparación, extracción y escritura por canal privilegiado en lugar de informar un paquete no válido o un error de canal genérico"
+        "Se conserva el error de espacio insuficiente durante la preparación, extracción y escritura por canal privilegiado en lugar de informar un paquete no válido o un error de canal genérico",
+        "Informar de inmediato que el método de autorización no está disponible si se pierde la conexión con Shizuku o Root"
       ],
       "improvement": [
         "El id del plugin, el motor, la accion / categoria del servicio, el descriptor Binder y la version minima del host provienen ahora de las constantes del contrato installer-api del host; las capacidades declaran la version 1 del contrato del instalador y la build minima del host se fija en 5299",
@@ -42,7 +43,8 @@
         "La confirmación del sistema incorpora orientación sobre fuentes desconocidas e interrupciones. La desinstalación con privilegios muestra información y la opción de conservar datos antes de confirmar.",
         "Abre o comparte uno o varios paquetes, reintenta orígenes externos mientras haya acceso e intenta eliminarlos opcionalmente tras el éxito. El rechazo de la eliminación mantiene la instalación correcta.",
         "La apertura de paquetes APKS compartidos por MT Manager admite el tipo MIME application/vnd.android.package-archives",
-        "Las instalaciones simultáneas del mismo paquete se ejecutan en serie entre usuarios y métodos de autorización, conservando la cancelación y los plazos de espera, y se limpian los directorios temporales inactivos durante más de 24 horas"
+        "Las instalaciones simultáneas del mismo paquete se ejecutan en serie entre usuarios y métodos de autorización, conservando la cancelación y los plazos de espera, y se limpian los directorios temporales inactivos durante más de 24 horas",
+        "Reintentar una vez una conexión privilegiada interrumpida mientras se establece; las instalaciones y desinstalaciones ya iniciadas nunca se repiten automáticamente"
       ],
       "dependency": [
         "Se añade Shizuku API 13.1.5 (`dev.rikka.shizuku:api`, `dev.rikka.shizuku:provider`) para el modo de autorización Shizuku",

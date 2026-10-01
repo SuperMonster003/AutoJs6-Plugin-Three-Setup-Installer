@@ -14,6 +14,7 @@ internal object PrivilegedOptions {
     const val MAX_SPLITS = 64
     const val FLAGS = "flags"
     const val SIZE = "size"
+    const val PACKAGE_NAME = "packageName"
     const val DEFAULT_REQUIRES_CLEAR = -1
     // Exact private Binder marker. Only a verified ENOSPC/EDQUOT cause may produce it.
     const val ERROR_INSUFFICIENT_STORAGE = "THREE_SETUP_INSTALLER:INSUFFICIENT_STORAGE"

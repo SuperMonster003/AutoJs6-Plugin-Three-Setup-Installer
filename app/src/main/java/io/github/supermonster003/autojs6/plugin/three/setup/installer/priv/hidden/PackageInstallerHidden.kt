@@ -32,6 +32,9 @@ internal class PackageInstallerHidden(private val remote: Any) {
         call("abandonSession", arrayOf(intType), id)
     }
 
+    fun sessionInfo(id: Int): PackageInstaller.SessionInfo? =
+        call("getSessionInfo", arrayOf(intType), id) as PackageInstaller.SessionInfo?
+
     fun uninstall(name: String, caller: String, flags: Int, user: Int, sender: IntentSender) {
         val packageType: Class<*>
         val packageValue: Any

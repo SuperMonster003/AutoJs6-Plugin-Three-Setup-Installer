@@ -23,6 +23,7 @@
 * `Fix` Package containers opened from Files by Google and other content providers with opaque URIs now appear in the installer chooser even when the provider uses a generic ZIP or binary MIME type
 * `Fix` Reject package providers that return writable source handles and close rejected handles promptly
 * `Fix` Preserve insufficient-storage errors during staging, extraction and privileged pipe writes instead of reporting an invalid package or generic broken pipe
+* `Fix` Report the authorizer as unavailable promptly when a Shizuku or Root connection is lost
 * `Improvement` The plugin id, engine, service action / category, Binder descriptor and minimum host version now come from the host installer-api contract constants; the capabilities declare installer contract version 1 and the minimum host build is back-filled to 5299
 * `Improvement` Seekable sources avoid a full cache copy, while streams are staged as needed. ZIP split packages are supported, AAB files support inspection only, and changed sources are rejected.
 * `Improvement` Explicit authorization choices never fall back. Refusal, timeouts and incompatibility are distinguished, and concurrent requests share authorization and privileged connections.
@@ -37,6 +38,7 @@
 * `Improvement` Open or share one or multiple packages, retry failed external sources while access remains available, and optionally attempt source deletion after success. Deletion refusal preserves the successful installation result.
 * `Improvement` Opening APKS packages shared by MT Manager supports the application/vnd.android.package-archives MIME type
 * `Improvement` Serialize concurrent installations of the same package across users and authorizers, retain cancellation and timeouts while waiting, and safely reclaim inactive staging directories after 24 hours
+* `Improvement` Retry an interrupted privileged connection once while establishing it; never automatically repeat installation or uninstallation that has already started
 * `Dependency` Shizuku API 13.1.5 (`dev.rikka.shizuku:api`, `dev.rikka.shizuku:provider`) for the Shizuku authorizer
 * `Dependency` libsu 6.0.0 (`com.github.topjohnwu.libsu:core`, `service`) for the Root authorizer
 * `Dependency` AndroidHiddenApiBypass 6.1 for the hidden package installer APIs used by the privileged service

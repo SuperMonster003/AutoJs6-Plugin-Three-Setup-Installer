@@ -235,7 +235,7 @@ runtime/api/augment/installer/          Installer.kt (AugmentableKey("installer"
 
 建议会话切分: P0 一次 (骨架 + spike); P1 两到三次 (共享 AAR 为一次; 契约 + 客户端 + 路由为一次; 删除旧安装器 + 调用方改造 + 文档为一次); P2 两到三次 (来源与授权; 安装引擎; 卸载 / 批量 / 路由); P3 一到两次; P4 两次 (install / session / errors; uninstall / inspect / authorizer / setDefault / 示例); P5 一到两次; P6 一到两次; P7 一次; P8 两次; P9 两到三次.
 
-当前进度 (2026-10-01): P0, P3, P4 与 P5 原有条目已完成当前范围验收; P1契约/解析AAR/宿主路由已交付, 宿主三入口完整有/无插件组合仍待完成. P2核心来源/授权/安装/卸载/批量/Binder已交付, 其余原矩阵边界继续保留. 本轮补齐P5.2的Shizuku API24/31/35及KernelSU Root API33真实默认页面/Files入口, 完成P6.2安全审查与设备守卫, P6.1空间/暂存/同包安装串行化子项. P6进程死亡, 完整OEM设备与性能/Release往返仍待继续; API24大字号图形故障与系统多窗口的独立显示边界见P5证据, 未用默认页测试替代. 下一步继续P6与P1剩余验收, 不进入P7发布.
+当前进度 (2026-10-01): P0, P3, P4 与 P5 原有条目已完成当前范围验收; P1 契约/解析 AAR/宿主路由已交付, 宿主三入口完整有/无插件组合仍待完成. P2 核心来源/授权/安装/卸载/批量/Binder 已交付, 其余原矩阵边界继续保留. P6.1 进程死亡/存储/并发与 P6.2 安全原条目已完成所列设备和故障范围验收; 特权会话自动恢复的 API/元数据边界见专项证据. 完整 OEM 设备与性能/Release 往返继续推进; API 24 大字号图形故障与系统多窗口的独立显示边界见 P5 证据. 下一步继续 P6 与 P1 剩余验收, 不进入 P7 发布.
 
 ---
 
@@ -471,9 +471,9 @@ runtime/api/augment/installer/          Installer.kt (AugmentableKey("installer"
 
 ### P6.1 健壮性
 
-- [ ] (插件) 进程死亡矩阵: 宿主死亡 (会话取消 + 暂存清理), 插件主进程死亡 (特权进程会话 `abandon`, 前台服务重建后不重复安装), 特权进程死亡 (`DeadObjectException` -> `AUTHORIZER_UNAVAILABLE`, 重绑一次后再失败), Shizuku 服务停止.
+- [x] (插件) 进程死亡矩阵: 宿主死亡 (会话取消 + 暂存清理), 插件主进程死亡 (特权进程会话 `abandon`, 前台服务重建后不重复安装), 特权进程死亡 (`DeadObjectException` -> `AUTHORIZER_UNAVAILABLE`, 重绑一次后再失败), Shizuku 服务停止. (SOURCE / JVM / DEVICE 2026-10-01: 官方宿主 UID 独立调用进程死亡触发 CANCELLED 并清除 262,144 字节实际暂存; API 35 Shizuku/API 33 Root 主进程真实死亡后平台 session 消失, 新 PID 历史中断且空 FGS 不重放. 两种特权路径各四项真实 peer 测试通过, 握手最多重绑一次, 已开始的创建/写入/提交/卸载不重放. API 24 临时 Shizuku server 停止 1/1, 正常退出 hook 先清理会话. 完整系统身份具备时才能精确恢复已知 id, AOSP 为 API 33+, 不承诺低 API SIGKILL 或创建答复丢失窗口的自动清理. 见 docs/dev/p6-process-death-evidence.md.)
 - [x] (插件) 存储不足 (`INSTALL_FAILED_INSUFFICIENT_STORAGE` -> `INSUFFICIENT_STORAGE`), 暂存目录清理策略 (启动时清理超过 24 小时的残留), 超大包 (>= 2 GiB xapk 流式写入不占用等量堆), 同一包名并发会话串行化. (SOURCE / JVM / DEVICE 2026-10-01: 同包安装跨用户/授权方式公平串行, 等待取消/超时与每项清理完成后释放; 独立入口首用回收24小时残留并保护活跃目录/不跟随symlink; 真实errno及私有Binder写失败原因映射空间不足. 新增17项JVM, 261项全量通过; API24/35/33空间故障注入均5/5, Root33/Shizuku35真实v1/v2并发及等待取消各2/2, 核验第二项previousVersionCode=1和夹具/源/历史清理. 既有2GiB流式设备证据保留, 本轮未重测堆峰值, 不将故障注入冒充整盘耗尽; 见 docs/dev/p6-robustness-evidence.md.)
-- [ ] (测试) instrumentation 覆盖上述矩阵; 用 `am kill` / `Shizuku` 停止模拟.
+- [x] (测试) instrumentation 覆盖上述矩阵; 用 `am kill` / `Shizuku` 停止模拟. (DEVICE 2026-10-01: 采用核验 PID/UID/名称/出生 ticks 后的 SIGKILL; OEM 拒绝 run-as signal 时使用仅 Debug/DUMP 的自终止入口, 不假造 Binder 死亡. Root peer 4/4, Shizuku peer 四项通过另有一项显式 server PID 缺失跳过, API 24 临时 server 停止 1/1; 三次独立 host/main 驱动完整通过并恢复原偏好/清理自有数据. API 24/35 生命周期和安全回归各 11/11. 初轮残留和探针故障均保留, 不计为通过; 268 JVM 全量通过, 证据及复测命令见 docs/dev/p6-process-death-evidence.md.)
 
 ### P6.2 安全
 
@@ -1016,3 +1016,11 @@ if (!installer.isDefault()) installer.setDefault(true);
 - P6.1第二生产项: 同包安装跨用户/授权串行且等待可取消/超时, 独立入口回收24小时非活动暂存并防symlink跟随, 本地和私有Binder空间错误保真, EPIPE诊断保留明确Binder死亡错误. Root33和Shizuku35实际v1/v2并发及等待取消各2/2, 最终空间注入API24/35各6/6. 历史2GiB真实流式证据保留, 不冒充本轮堆峰值测试. 本地提交a6f61b7/build37.
 - 收尾: 全量261 JVM, Debug/androidTest/签名Release和两种lint通过 (0错误, 22/23警告), 十语言生成与图标检查通过. 自建包/来源/五条外部取消历史均按归属清理, 四份默认项journal为restored; 临时启动的两台AVD Shizuku恢复停止, 模拟器保留运行. QV710AF65F与QV770340J7已覆盖build38 Release, 无spike入口, 原默认项保持.
 - 新增勾选原条目5项 (P5.2测试1, P6.1生产1, P6.2三项含1项N/A), 未增删或拆分路线图. 插件最终VERSION_BUILD=38与可达提交数对齐, 仅本地提交, 宿主/其它仓库本轮未改且未推送. 下一步继续P6进程死亡与完整设备/性能/Release往返, 以及P1宿主三入口遗留验收.
+
+### 2026-10-01 (P6.1 实际进程死亡与恢复)
+
+- 完成原 P6.1 剩余两项. 只读握手最多重绑一次且共用超时预算; 安装/卸载等待期间发现特权 Binder 死亡及时返回 AUTHORIZER_UNAVAILABLE, 已发起操作不自动重放. 实测发现 SIGKILL 的平台 session 残留, 新增完整系统身份校验后精确回收已知 id; AOSP 需要 API 33+, 旧系统/信息丢失窗口不猜测归属.
+- 真实设备: API 35 Shizuku peer 四项通过, server-stop opt-in 一项有意跳过; API 33 KernelSU Root peer 四项无跳过通过. 两侧各拒绝十项篡改的恢复字段. API 24 临时 Shizuku server 停止首次暴露 bootstrap 正常退出未清理, 加入 VM shutdown hook 后 1/1 通过, server 恢复停止. 原真机 Shizuku server 未停止.
+- 官方宿主 UID 10890 的独立调用进程死亡, 实际 262,144 字节暂存立即删除; API 35 Shizuku/API 33 Root 插件主进程死亡后本次平台 session 消失, 历史恢复为中断, 空 FGS 重建后退出且不重放. 原 6/20 条 OEM/系统 session 保留, 所有自有来源/历史/case 清理, 宿主单个临时启用 key 精确恢复. 24 小时过期暂存使用仅归属本次的时间加速验收, 不声称重启即删除全部暂存.
+- 宿主 9545a7f4aa/build 5303 仅增加 Debug 正式 UID 探针和持久恢复工具, 不变更公开 JS/AIDL, 不需要文档/d.ts/Ace/离线文档契约同步. 插件本逻辑提交为 build 39, 十语言使用者日志同步. 268 JVM 无失败或跳过, API 24/35 生命周期/安全各 11/11, Debug/androidTest/Release 编译及两种 lint 通过; 详细失败与复测证据见 docs/dev/p6-process-death-evidence.md.
+- 未增删或拆分路线图. 当前继续 P6.4 签名 Release 正式往返/100 MiB 性能与维护者手动启动的 API 37/16 KB 模拟器验收, 不进入 P7 发布, 所有仓库仅本地提交.

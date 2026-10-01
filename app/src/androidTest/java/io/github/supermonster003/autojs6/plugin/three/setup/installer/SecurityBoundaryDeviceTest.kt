@@ -111,6 +111,7 @@ class SecurityBoundaryDeviceTest {
         )
         if (BuildConfig.DEBUG) {
             expected["$prefix.spike.InstallRecoveryProbeActivity"] = "android.permission.DUMP"
+            expected["$prefix.spike.InstallProcessDeathProbeActivity"] = "android.permission.DUMP"
             expected["$prefix.spike.SpikeInstallerActivity"] = null
             expected["$prefix.spike.SpikeOtherInstallerActivity"] = null
         }

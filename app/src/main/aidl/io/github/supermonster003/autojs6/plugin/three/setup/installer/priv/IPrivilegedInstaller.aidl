@@ -25,4 +25,10 @@ interface IPrivilegedInstaller {
     void destroy() = 16777114;
     // Nonblocking lookup of a pipe writer's original failure after the client observes EPIPE.
     void checkWriteStatus(int sessionId) = 11;
+    // Read-only identity of this attached service process, not the authorization server.
+    Bundle getProcessIdentity() = 12;
+    // Captured only for a session created by this instance. Null on APIs without full identity.
+    Bundle getSessionRecoveryInfo(int sessionId) = 13;
+    // A replacement process checks exact platform identity before abandoning this one session.
+    void abandonRecoveredSession(int sessionId, in Bundle expected) = 14;
 }

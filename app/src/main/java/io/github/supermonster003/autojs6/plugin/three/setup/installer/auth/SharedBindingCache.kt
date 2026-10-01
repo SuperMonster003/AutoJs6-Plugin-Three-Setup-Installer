@@ -12,6 +12,8 @@ internal class SharedBindingCache<K, V : Any>(
     private val create: (K, (V) -> Unit, () -> Unit) -> Binding,
 ) : Closeable {
     interface Binding : Closeable { fun bind() }
+    /** A transport died, as distinct from explicit cancellation, refusal or a binding timeout. */
+    class ConnectionDied : IllegalStateException("Privileged service disconnected")
     private class Entry<V> {
         val ready = CountDownLatch(1)
         var binding: Binding? = null
@@ -39,7 +41,8 @@ internal class SharedBindingCache<K, V : Any>(
             return synchronized(lock) {
                 entry.failure?.let { throw it }
                 entry.value?.takeIf { !entry.retired && alive(it) }
-                    ?: throw IllegalStateException("Privileged service disconnected")
+                    ?: if (!entry.retired) throw ConnectionDied()
+                    else throw IllegalStateException("Privileged service binding was closed")
             }
         } finally {
             synchronized(lock) {
@@ -56,7 +59,13 @@ internal class SharedBindingCache<K, V : Any>(
                 synchronized(lock) {
                     if (!entry.retired) { entry.value = value; entry.ready.countDown() }
                 }
-            }, { synchronized(lock) { retire(key, entry) } })
+            }, { synchronized(lock) {
+                // A refusal/null binding before any service was delivered is not evidence of
+                // Binder death, and must not cause a second Root permission/startup attempt.
+                if (!entry.retired) entry.failure = if (entry.value != null) ConnectionDied()
+                    else IllegalStateException("Privileged service unavailable while binding")
+                retire(key, entry)
+            } })
             synchronized(lock) {
                 if (entry.retired) { binding.close(); return }
                 entry.binding = binding
@@ -77,6 +86,11 @@ internal class SharedBindingCache<K, V : Any>(
     }
 
     fun invalidate(key: K) = synchronized(lock) { entries[key]?.let { retire(key, it) } }
+
+    /** A late failed handshake must not retire a replacement acquired by another caller. */
+    fun invalidate(key: K, expected: V) = synchronized(lock) {
+        entries[key]?.takeIf { it.value === expected }?.let { retire(key, it) }
+    }
 
     override fun close() = synchronized(lock) {
         entries.toMap().forEach { (key, value) -> retire(key, value) }
