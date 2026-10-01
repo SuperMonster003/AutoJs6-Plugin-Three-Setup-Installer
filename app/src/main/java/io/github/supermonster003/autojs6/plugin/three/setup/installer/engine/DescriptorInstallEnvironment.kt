@@ -26,6 +26,9 @@ internal class DescriptorInstallEnvironment private constructor(
     context: Context,
     private val descriptors: List<ParcelFileDescriptor>,
     private val confirmation: (PreparedPackage, InstallSession.Target, Long, () -> Unit) -> Unit,
+    private val configuration: ((Int, PreparedPackage, InstallSession.Target, InstallRequest, Long, () -> Unit) -> InstallSession.Selection)?,
+    private val preparedListener: (Int, PreparedPackage) -> Unit,
+    private val installed: (Int, InstallOptions) -> InstallSession.SourceCleanup,
 ) : InstallSession.Environment {
     private val context = context.applicationContext
     private var directory: File? = null
@@ -64,7 +67,7 @@ internal class DescriptorInstallEnvironment private constructor(
             ArchiveOpener.open(opened.file, source.displayName, device, folder, prepareForInstallation = true, checkActive = checkActive)
         }
         checkActive()
-        return ArchiveOpener.combine(parts)
+        return ArchiveOpener.combine(parts).also { preparedListener(index, it) }
     }
 
     override fun installedVersion(packageName: String, target: InstallSession.Target): InstallSession.Version? {
@@ -82,6 +85,11 @@ internal class DescriptorInstallEnvironment private constructor(
     }
 
     override fun confirm(prepared: PreparedPackage, target: InstallSession.Target, deadlineMillis: Long, checkActive: () -> Unit) = confirmation(prepared, target, deadlineMillis, checkActive)
+    override fun configure(index: Int, prepared: PreparedPackage, target: InstallSession.Target, request: InstallRequest,
+        deadlineMillis: Long, checkActive: () -> Unit): InstallSession.Selection =
+        configuration?.invoke(index, prepared, target, request, deadlineMillis, checkActive)
+            ?: super<InstallSession.Environment>.configure(index, prepared, target, request, deadlineMillis, checkActive)
+    override fun onInstalled(index: Int, options: InstallOptions) = installed(index, options)
     override fun onUserAction(intent: Intent) = UserActionLauncher.launch(context, intent)
     override fun discardItem(index: Int) {
         openedSources.remove(index)?.forEach { runCatching { it.close() } }
@@ -100,6 +108,9 @@ internal class DescriptorInstallEnvironment private constructor(
 
     companion object {
         fun acquire(context: Context, descriptors: List<ParcelFileDescriptor>,
+            configuration: ((Int, PreparedPackage, InstallSession.Target, InstallRequest, Long, () -> Unit) -> InstallSession.Selection)? = null,
+            preparedListener: (Int, PreparedPackage) -> Unit = { _, _ -> },
+            installed: (Int, InstallOptions) -> InstallSession.SourceCleanup = { _, _ -> InstallSession.SourceCleanup() },
             confirmation: (PreparedPackage, InstallSession.Target, Long, () -> Unit) -> Unit = { _, _, _, _ ->
                 throw InstallFailure(InstallerErrorCodes.AUTHORIZER_REQUIRED, "Plugin confirmation UI is not connected")
             },
@@ -110,7 +121,7 @@ internal class DescriptorInstallEnvironment private constructor(
             val owned = mutableListOf<ParcelFileDescriptor>()
             try {
                 descriptors.forEach { owned += ParcelFileDescriptor.dup(it.fileDescriptor) }
-                return DescriptorInstallEnvironment(context, owned, confirmation)
+                return DescriptorInstallEnvironment(context, owned, confirmation, configuration, preparedListener, installed)
             } catch (failure: Exception) {
                 owned.forEach { runCatching { it.close() } }
                 throw RequestDocuments.invalid("Package source descriptor is closed or invalid")

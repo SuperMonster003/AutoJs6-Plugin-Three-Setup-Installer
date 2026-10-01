@@ -103,6 +103,11 @@
             android:excludeFromRecents="true"
             android:theme="@style/Theme.ThreeSetupInstaller.Confirmation" />
 
+        <activity android:name=".ui.InstallDialogActivity" android:exported="false"
+            android:excludeFromRecents="true" android:launchMode="standard" android:documentLaunchMode="intoExisting"
+            android:configChanges="uiMode|locale|layoutDirection"
+            android:theme="@style/Theme.ThreeSetupInstaller.Dialog" />
+
         <service android:name=".ui.InstallForegroundService" android:exported="false"
             android:foregroundServiceType="dataSync" />
         <receiver android:name=".ui.InstallNotifications$CancelReceiver" android:exported="false" />
