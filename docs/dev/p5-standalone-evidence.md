@@ -113,3 +113,5 @@ MT 的 APKS MIME `application/vnd.android.package-archives` 已加入本轮 VIEW
 - JVM 243 项与 Debug/androidTest 构建通过, `build/base-checkbox/debug-build34.log`. 签名 Release 与两种 lint 在 39 秒内通过, Debug 0 errors / 22 warnings, Release 0 errors / 23 warnings, 见 `build/base-checkbox/release-build34.log`.
 - build 34 产物为 `releases/autojs6-plugin-three-setup-installer-v1.0.0-62466b78.apk`, 1,879,779 字节, CRC32 `62466b78`, SHA-256 `3704eb55af43e68032f9b3bb70663ce035eb2fe33c56e971d095d27689e26596`, apksigner v2 校验通过. 收尾时 QV710AF65F 仍在旧确认页, 新包尚未覆盖该设备; 等页面退出后部署.
 - 未自动确认用户 APKS 的安装. 已请求维护者取消当前确认页, 覆盖修复包前再次确认没有活动安装. build 33 的旧生成 APK 移至本地 `build/base-checkbox/build33-74362257.apk`, 不入 Git.
+
+后续维护者反馈已通过 MT 完成微信 APKS 安装, 并提供成功状态/包名/版本和浏览器/Files 的额外测试. build 35 修复 Files 的 opaque content URI 匹配后已覆盖 QV710AF65F, 同时交付本节的勾选显示修复; 实际 XAPK/APKM 确认页和 base.apk 的可见勾选均已复核. 完整反馈, 复现过程与新产物见 `p3-external-entry-evidence.md`, 本节此前尚未覆盖的说明保留为 build 34 会话结束时的状态.

@@ -235,7 +235,7 @@ runtime/api/augment/installer/          Installer.kt (AugmentableKey("installer"
 
 建议会话切分: P0 一次 (骨架 + spike); P1 两到三次 (共享 AAR 为一次; 契约 + 客户端 + 路由为一次; 删除旧安装器 + 调用方改造 + 文档为一次); P2 两到三次 (来源与授权; 安装引擎; 卸载 / 批量 / 路由); P3 一到两次; P4 两次 (install / session / errors; uninstall / inspect / authorizer / setDefault / 示例); P5 一到两次; P6 一到两次; P7 一次; P8 两次; P9 两到三次.
 
-当前进度 (2026-10-01): P0 已完成; P1 契约 / 解析 AAR / 宿主路由已交付, 三入口有/无插件的完整设备验收仍待完成. P2 核心来源 / 授权 / 安装 / 卸载 / 批量 / Binder 路由和 P3 安装界面 / 展示恢复 / 系统确认 / 通知已交付; 本轮补齐 P3.3 未知来源授权后成功安装, P3.2 的系统文件管理器 / 浏览器 APK / XAPK 矩阵继续保留. P4 脚本 API 及四套关联文档已完成. P5.0-P5.4 独立首页 / 历史 / 应用管理 / 设置 / 默认安装器 / 关于 / 启动器主要实现及基础设备验收已完成, P5.2 跨设备特权锁定矩阵仍未勾选; API 24 大字号 GPU 故障和系统多窗口的未测边界见 docs/dev/p5-standalone-evidence.md. 下一步按原条目收尾剩余验收并推进 P6, 不进入 P7 发布.
+当前进度 (2026-10-01): P0 已完成; P1 契约 / 解析 AAR / 宿主路由已交付, 三入口有/无插件的完整设备验收仍待完成. P2 核心来源 / 授权 / 安装 / 卸载 / 批量 / Binder 路由和 P3 安装界面 / 展示恢复 / 系统确认 / 通知已交付; 本轮补齐 P3.3 未知来源授权后成功安装, P3.2 已结合维护者浏览器/Files 的安装反馈和 build 35 的实际 Files XAPK 确认页复核补齐, APKM 与 MT APKS 成功证据另行记录. P4 脚本 API 及四套关联文档已完成. P5.0-P5.4 独立首页 / 历史 / 应用管理 / 设置 / 默认安装器 / 关于 / 启动器主要实现及基础设备验收已完成, P5.2 跨设备特权锁定矩阵仍未勾选; API 24 大字号 GPU 故障和系统多窗口的未测边界见 docs/dev/p5-standalone-evidence.md. 下一步按原条目收尾剩余验收并推进 P6, 不进入 P7 发布.
 
 ---
 
@@ -382,9 +382,9 @@ runtime/api/augment/installer/          Installer.kt (AugmentableKey("installer"
 
 ### P3.2 外部入口
 
-- [x] (插件) `ExternalInstallActivity` (`exported=true`, 无权限保护, `Theme.NoDisplay` 后转 `InstallDialogActivity`): 两组 intent-filter 从宿主原 `PackageInstallerEntryActivity` 迁来 (`ACTION_VIEW` + `ACTION_INSTALL_PACKAGE`, `content` / `file` scheme, 7 种 MIME; `content` + `application/zip` / `application/octet-stream` + 大小写 `pathPattern` 覆盖 6 种扩展名); 多 URI (`ACTION_SEND_MULTIPLE`) 作为批量. (SOURCE / DEVICE 2026-10-01: 正式导出入口与受限 URI 转交完成; 7 MIME x action / scheme, 6 扩展名大小写与分享的解析矩阵通过, 宿主 5299 不再出现于 APK 处理列表)
+- [x] (插件) `ExternalInstallActivity` (`exported=true`, 无权限保护, `Theme.NoDisplay` 后转 `InstallDialogActivity`): 两组 intent-filter 从宿主原 `PackageInstallerEntryActivity` 迁来 (`ACTION_VIEW` + `ACTION_INSTALL_PACKAGE`, `content` / `file` scheme, 7 种 MIME; `content` + `application/zip` / `application/octet-stream` + 大小写 `pathPattern` 覆盖 6 种扩展名); 多 URI (`ACTION_SEND_MULTIPLE`) 作为批量. (SOURCE / DEVICE 2026-10-01: 正式导出入口与受限 URI 转交完成; 7 MIME x action / scheme, 6 扩展名大小写与分享的解析矩阵通过, 宿主 5299 不再出现于 APK 处理列表) (build 35 兼容修正: Files by Google 使用数字 ID URI, 通用 ZIP/octet-stream filter 不再要求 pathPattern; 保留 content scheme 与精确 MIME, 实际格式仍由解析器验证. 该必要适配及八种专用 MIME 回归见 docs/dev/p3-external-entry-evidence.md.)
 - [x] (插件) 外部来源的安全处理: 只读打开, 不信任文件名, 大小上限与共享 AAR 的检查上限; `file://` 在 API 24+ 仅接受可读路径, 失败给出 `SOURCE_UNREADABLE` 文案. (SOURCE / DEVICE 2026-10-01: 只读打开, URI / 数量 / 大小限制, 实际内容识别和共享解析器检查, 取消与错误展示已接入, 见 ExternalInstallDeviceTest 和 docs/dev/p3-ui-evidence.md)
-- [ ] (测试) 设备: 从系统文件管理器与浏览器下载列表各打开一次 `.apk` / `.xapk`; 宿主已删除入口后, 系统 "打开方式" 列表只出现插件. (部分 DEVICE 2026-10-01: 既有 exported VIEW / SEND_MULTIPLE 与系统解析列表验证通过; 本轮准备本机无代码夹具后, 启动 Chrome 的命令被自动审批拒绝, 只返回 blocked by policy. HTTP 服务与端口转发已停止. 实际文件管理器 / 浏览器下载列表的 APK / XAPK 矩阵仍未完成, 不以合成 Intent 代替)
+- [x] (测试) 设备: 从系统文件管理器与浏览器下载列表各打开一次 `.apk` / `.xapk`; 宿主已删除入口后, 系统 "打开方式" 列表只出现插件. (MANUAL / DEVICE 2026-10-01: 维护者在 QV710AF65F / API 31 确认浏览器 APK/XAPK 与 Files by Google APK 的候选/安装/启动使用均成功; 已澄清 apkx 为 xapk 笔误. Files 的 XAPK 在 build 33 因 opaque content URI 未匹配, build 35 修复后由代理从真实 Downloads 列表打开到插件确认页并取消, APKM 同样复核. API 24 / 35 入口/来源回归各 4/4, 含官方宿主不占用安装入口断言. 文件管理器按维护者指定使用 Files by Google, 未冒充 AOSP DocumentsUI 或所有 OEM 覆盖; 详见 docs/dev/p3-external-entry-evidence.md, 先前浏览器启动受限记录保留在历史证据中.)
 
 ### P3.3 用户确认与卸载对话框
 
@@ -997,3 +997,12 @@ if (!installer.isDefault()) installer.setDefault(true);
 - 修复 base.apk 禁用状态下看起来未选中的问题. 实际设备节点为 checked=true / enabled=false, 原因是方框和勾选标记都使用同一 disabledText 颜色. 禁用勾选标记改为对填充可读的中性色, 保留分包必选约束和实际安装选择.
 - 新设备断言能在旧 APK 上准确复现失败; 修复后 API 24 / 35 各 7/7 通过, 包括浅色/深色标记对比度和真实确认页重建前后 base.apk 保持已选中且不可取消. 插件 JVM 243 项通过; 十语言 changelog 和生成物同步, 详见 docs/dev/p5-standalone-evidence.md 的 build 34 补充.
 - 本次为 P3 安装界面的单一缺陷修复, 使用 VERSION_BUILD=34 的独立本地提交, 不推送远端. 未自动安装用户 APKS 中的应用.
+
+
+### 2026-10-01 (Files by Google 容器入口兼容与 P3.2 验收)
+
+- 维护者确认 MT APKS 微信安装成功, Installation successful, com.tencent.mm / 8.0.72; 浏览器 APK/XAPK/APKM 与 Files by Google APK 均可安装使用, 并明确 apkx 是 xapk 笔误. 实机只读查询补充 Facebook 582.0.0.0.30 和 Instagram 449.0.0.52.84 的已安装版本.
+- 复现 Files by Google 的 XAPK/APKM 候选缺失: application/octet-stream + content://com.google.android.apps.nbu.files.provider/2/<数字ID>, URI 没有扩展名. 通用 ZIP/二进制 filter 移除 pathPattern 依赖, 内容解析与只读来源边界保持; 未增加通配 MIME 或网络入口.
+- build 35 已覆盖 QV710AF65F, 从真实 Files Downloads 页面分别打开 XAPK/APKM, 两者均可选择插件并进入正确包名/版本的确认页. 系统第二次把最近使用的插件提升到标题区域, 仍使用 Just once, 未设默认项. 代理在确认页取消并结束, 未重复安装用户应用; 三个用户应用版本保持, 活动 session/安装前台服务为零. build 34 的 base.apk 勾选修复也已交付并经实际截图复核.
+- 原 P3.2 测试条目据上述反馈与真实 Files 复核勾选, 不增加/拆分/丢弃路线图小节. 范围明确为维护者指定的 Files by Google, 不声称所有 OEM/AOSP 文件管理器完成验收. 新 opaque URI 测试在旧 APK 准确失败, 修复后 API 24 / 35 各 4/4, 无跳过; JVM 243 项, Debug/androidTest/签名 Release 与两种 lint 通过, 详见 docs/dev/p3-external-entry-evidence.md.
+- 插件 VERSION_BUILD=35, 对应一个本地修复提交, 工作区改动按本次外部入口意图收口; 宿主与其它插件未修改, 未推送远端. 下一步仍按 P5.2 默认安装器矩阵和 P6 原有条目推进.

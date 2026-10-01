@@ -230,6 +230,7 @@ _2026/10/01_
 - `Feature` About and the built-in release history are available from settings in ten languages. Manual update checks use the plugin's GitHub Releases API with a 12-hour interval, cached results and ignored-version management. Release pages open in the browser; updates are not downloaded or installed automatically
 - `Fix` Cancel actions did not follow the plugin language on devices missing the corresponding system translation
 - `Fix` Required split APKs such as base.apk now retain a visible checkmark when disabled in both light and dark themes
+- `Fix` Package containers opened from Files by Google and other content providers with opaque URIs now appear in the installer chooser even when the provider uses a generic ZIP or binary MIME type
 - `Improvement` The plugin id, engine, service action / category, Binder descriptor and minimum host version now come from the host installer-api contract constants; the capabilities declare installer contract version 1 and the minimum host build is back-filled to 5299
 - `Improvement` Seekable sources avoid a full cache copy, while streams are staged as needed. ZIP split packages are supported, AAB files support inspection only, and changed sources are rejected.
 - `Improvement` Explicit authorization choices never fall back. Refusal, timeouts and incompatibility are distinguished, and concurrent requests share authorization and privileged connections.
