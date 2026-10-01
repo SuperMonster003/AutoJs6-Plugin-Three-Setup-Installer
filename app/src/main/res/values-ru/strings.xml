@@ -1,4 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="action_install">Установить</string>
+    <string name="action_uninstall">Удалить</string>
+    <string name="confirm_all_users">Все пользователи</string>
+    <string name="confirm_allow_downgrade">Разрешить понижение версии</string>
+    <string name="confirm_allow_test">Разрешить тестовые пакеты</string>
+    <string name="confirm_bypass_target">Обойти ограничение старого целевого SDK</string>
+    <string name="confirm_install_body">%1$s\n%2$s\nВерсия: %3$s\nАвторизация: %4$s\nПользователь: %5$s</string>
+    <string name="confirm_install_title">Подтвердить установку</string>
+    <string name="confirm_installer">Установщик: %1$s</string>
+    <string name="confirm_keep_data">Сохранить данные приложения</string>
+    <string name="confirm_system">Системное подтверждение</string>
+    <string name="confirm_uninstall_body">%1$s\nАвторизация: %2$s\nПользователь: %3$s</string>
+    <string name="confirm_uninstall_title">Подтвердить удаление</string>
     <string name="plugin_description">Устанавливает, обновляет и удаляет приложения Android, включая тихую установку через Shizuku или Root</string>
 </resources>

@@ -34,7 +34,7 @@ object ThreeSetupInstallerPlugin {
 
     /**
      * Binder descriptor of the `IInstallerPlugin` AIDL of the host `installer-api` module. The
-     * placeholder Binder of P0 carries it until roadmap P2.6 replaces it with the real stub.
+     * service implements it through the guarded P2.6 router.
      */
     const val SERVICE_DESCRIPTOR = IInstallerPlugin.DESCRIPTOR
 

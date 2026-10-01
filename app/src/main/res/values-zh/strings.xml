@@ -1,4 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="action_install">安装</string>
+    <string name="action_uninstall">卸载</string>
+    <string name="confirm_all_users">所有用户</string>
+    <string name="confirm_allow_downgrade">允许降级</string>
+    <string name="confirm_allow_test">允许测试包</string>
+    <string name="confirm_bypass_target">绕过低目标 SDK 限制</string>
+    <string name="confirm_install_body">%1$s\n%2$s\n版本: %3$s\n授权方式: %4$s\n用户: %5$s</string>
+    <string name="confirm_install_title">确认安装</string>
+    <string name="confirm_installer">安装者标识: %1$s</string>
+    <string name="confirm_keep_data">保留应用数据</string>
+    <string name="confirm_system">系统确认</string>
+    <string name="confirm_uninstall_body">%1$s\n授权方式: %2$s\n用户: %3$s</string>
+    <string name="confirm_uninstall_title">确认卸载</string>
     <string name="plugin_description">安装, 更新和卸载 Android 应用, 支持通过 Shizuku 或 Root 静默安装</string>
 </resources>

@@ -96,13 +96,19 @@
                 android:value="5299" />
         </service>
 
-        <!-- Explicit PendingIntent target for system package-installation results. -->
+        <activity
+            android:name=".ui.ConfirmationActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:theme="@style/Theme.ThreeSetupInstaller.Confirmation" />
+
         <activity
             android:name=".ui.UninstallDialogActivity"
             android:exported="false"
             android:excludeFromRecents="true"
             android:theme="@android:style/Theme.Translucent.NoTitleBar" />
 
+        <!-- Explicit PendingIntent target for system package-installation results. -->
         <receiver
             android:name=".engine.InstallStatusReceiver"
             android:exported="false" />

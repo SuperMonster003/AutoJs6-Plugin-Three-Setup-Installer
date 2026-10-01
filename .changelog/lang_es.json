@@ -8,7 +8,7 @@
     "v1.0.0": {
       "released_date": "2026/10/01",
       "hint": [
-        "Vista previa de desarrollo P0: el esqueleto del repositorio, la identidad del plugin reconocida por el centro de plugins de AutoJs6 y la validación (spike) de la instalación privilegiada. El contrato Binder, el motor de instalación, los diálogos, la API de scripts y la página de ajustes siguen las fases de ROADMAP.md."
+        "Vista previa de desarrollo P2: instalación, inspección, consultas de usuarios y desinstalación conectadas al servicio anfitrión, con confirmación explícita y limpieza automática de sesiones. Siguen pendientes la validación completa de las entradas del anfitrión, la interfaz completa, la apertura externa, la activación como instalador predeterminado, la API de scripts y los ajustes."
       ],
       "feature": [
         "Identidad del plugin `three-setup-installer` (engine `installer`) con el servicio INFO, la Wake Activity y el esqueleto del servicio `org.autojs.plugin.INSTALLER` para el descubrimiento por el host",
@@ -21,7 +21,8 @@
         "El método de autorización elegido explícitamente no cambia a otro. Se distinguen rechazo, tiempo de espera agotado e incompatibilidad, y las solicitudes simultáneas comparten autorización y conexiones privilegiadas.",
         "El núcleo de instalación y actualización utiliza la confirmación del sistema, Shizuku o Root, permite cancelar y devuelve el modo de confirmación real y la respuesta del sistema.",
         "El núcleo de desinstalación admite la confirmación del sistema, Shizuku y Root, con la opción de conservar los datos al usar autorización privilegiada.",
-        "La instalación por lotes secuencial permite continuar tras los fallos o cancelar los elementos restantes, y admite validar y seleccionar usuarios de destino con privilegios."
+        "La instalación por lotes secuencial permite continuar tras los fallos o cancelar los elementos restantes, y admite validar y seleccionar usuarios de destino con privilegios.",
+        "El servicio del anfitrión admite inspección, instalación, desinstalación y consulta de usuarios, con confirmación explícita, cancelación al salir el solicitante, hasta cuatro sesiones simultáneas y limpieza automática."
       ],
       "dependency": [
         "Se añade Shizuku API 13.1.5 (`dev.rikka.shizuku:api`, `dev.rikka.shizuku:provider`) para el modo de autorización Shizuku",

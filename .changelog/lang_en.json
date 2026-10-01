@@ -8,7 +8,7 @@
     "v1.0.0": {
       "released_date": "2026/10/01",
       "hint": [
-        "P0 development preview: the repository skeleton, the plugin identity recognized by the AutoJs6 plugin center, and the privileged installation spike. The Binder contract, the installer engine, the dialogs, the script API and the settings page follow the phases of ROADMAP.md."
+        "P2 development preview: core installation, inspection, user queries and uninstallation are connected to the host service, with explicit confirmation and automatic session cleanup. Full host-entry validation, the complete interface, external opening, default-installer activation, the script API and settings remain in progress."
       ],
       "feature": [
         "Plugin identity `three-setup-installer` (engine `installer`) with the INFO service, the Wake Activity and the `org.autojs.plugin.INSTALLER` service skeleton for host discovery",
@@ -21,7 +21,8 @@
         "Explicit authorization choices never fall back. Refusal, timeouts and incompatibility are distinguished, and concurrent requests share authorization and privileged connections.",
         "Core installation and updates use system confirmation, Shizuku or Root, with cancellation and results that reflect the actual confirmation and system response.",
         "Core uninstallation supports system confirmation, Shizuku and Root, with optional data retention when using a privileged authorizer.",
-        "Serial batch installation can continue after failures or cancel remaining items, and supports validating and selecting target users with privileges."
+        "Serial batch installation can continue after failures or cancel remaining items, and supports validating and selecting target users with privileges.",
+        "Host service requests support inspection, installation, uninstallation and user queries, with explicit confirmation, cancellation when callers exit, up to four concurrent sessions and automatic cleanup."
       ],
       "dependency": [
         "Shizuku API 13.1.5 (`dev.rikka.shizuku:api`, `dev.rikka.shizuku:provider`) for the Shizuku authorizer",

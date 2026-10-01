@@ -4,6 +4,8 @@
         <provider android:name=".spike.SourceFixtureProvider"
             android:authorities="${applicationId}.source-fixtures"
             android:exported="false" android:grantUriPermissions="false" />
+        <service android:name=".spike.InstallerBinderTestService" android:exported="false" android:process=":binder_test" />
+        <service android:name=".spike.InstallerDeathProbeService" android:exported="false" android:process=":binder_death_client" />
         <activity android:name=".spike.SpikeInstallerActivity" android:exported="true"
             android:theme="@android:style/Theme.NoDisplay" android:excludeFromRecents="true">
             <intent-filter>
