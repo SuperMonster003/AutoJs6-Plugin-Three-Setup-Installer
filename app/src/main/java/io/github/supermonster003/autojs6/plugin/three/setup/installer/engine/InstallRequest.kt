@@ -153,6 +153,7 @@ internal data class InstallRequest(
     val interaction: String,
     val options: InstallOptions,
     val isBatch: Boolean = sources.map { it.item }.distinct().size > 1,
+    val origin: String = InstallerContract.SOURCE_HOST,
 ) {
     /** The request items in first-appearance order; each holds the descriptors of one package. */
     val items: List<List<SourceEntry>> = sources.groupBy { it.item }.values.toList()
@@ -188,12 +189,15 @@ internal data class InstallRequest(
                 value.asBoolean
             } ?: (items.size > 1)
             if (!isBatch && items.size != 1) throw invalid("$WHAT: a non-batch request must contain exactly one package")
+            val origin = root.string(InstallerContract.FIELD_SOURCE_ORIGIN) ?: InstallerContract.SOURCE_HOST
+            if (origin !in setOf(InstallerContract.SOURCE_HOST, InstallerContract.SOURCE_SCRIPT)) throw invalid("$WHAT: invalid source origin")
             InstallRequest(
                 id = id,
                 sources = entries,
                 interaction = interactionOf(root.string(InstallerContract.FIELD_INTERACTION), WHAT),
                 options = InstallOptions.parse(root.obj(InstallerContract.FIELD_OPTIONS), WHAT),
                 isBatch = isBatch,
+                origin = origin,
             )
         }
     }

@@ -66,12 +66,13 @@ class ThreeSetupInstallerPluginContractTest {
     }
 
     @Test
-    fun noLauncherEntryExistsBeforeTheStandaloneUi() {
-        // Roadmap P5.4 adds the launcher aliases; until then the plugin must not appear in the app drawer.
+    fun exactlyOneLauncherAliasOpensTheStandaloneHome() {
         val launcherIntent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER).setPackage(packageName)
         @Suppress("DEPRECATION")
         val matches = context.packageManager.queryIntentActivities(launcherIntent, 0)
-        assertTrue("No launcher activity is expected in P0", matches.isEmpty())
+        assertEquals("Exactly one icon choice must be enabled", 1, matches.size)
+        assertTrue(matches.single().activityInfo.name.startsWith("$packageName.launcher."))
+        assertEquals("$packageName.ui.HomeActivity", matches.single().activityInfo.targetActivity)
     }
 
     @Test

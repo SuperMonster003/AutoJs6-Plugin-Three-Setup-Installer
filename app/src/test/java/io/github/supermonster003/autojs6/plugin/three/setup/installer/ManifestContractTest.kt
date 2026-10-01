@@ -35,6 +35,7 @@ class ManifestContractTest {
                 "android.permission.FOREGROUND_SERVICE_DATA_SYNC",
                 "android.permission.POST_NOTIFICATIONS",
                 "moe.shizuku.manager.permission.API_V23",
+                "android.permission.INTERNET",
             ),
             permissions,
         )
@@ -70,7 +71,9 @@ class ManifestContractTest {
     fun `the wake activity follows the activation contract and uninstall is internal`() {
         val activities = manifest.child("application").children("activity").associateBy { it.androidAttribute("name") }
         assertEquals(setOf(".WakeActivity", ".ui.UninstallDialogActivity", ".ui.ConfirmationActivity",
-            ".ui.InstallDialogActivity", ".ui.UserActionActivity", ".ui.ExternalInstallActivity"), activities.keys)
+            ".ui.InstallDialogActivity", ".ui.UserActionActivity", ".ui.ExternalInstallActivity", ".ui.HomeActivity",
+            ".ui.InstalledAppsActivity", ".ui.SettingsActivity", ".ui.DefaultInstallerActivity", ".ui.AboutActivity",
+            ".ui.ReleaseHistoryActivity", ".ui.InstallerSettingsActivity"), activities.keys)
         listOf(".ui.InstallDialogActivity", ".ui.UserActionActivity").forEach { name ->
             assertEquals("false", activities.getValue(name).androidAttribute("exported"))
             assertEquals("true", activities.getValue(name).androidAttribute("excludeFromRecents"))
@@ -100,10 +103,27 @@ class ManifestContractTest {
         val wakeFilter = wake.child("intent-filter")
         assertEquals(listOf("org.autojs.plugin.action.WAKE"), wakeFilter.children("action").map { it.androidAttribute("name") })
         assertEquals(listOf("android.intent.category.DEFAULT"), wakeFilter.children("category").map { it.androidAttribute("name") })
-        assertTrue(manifest.child("application").children("activity-alias").isEmpty())
+        val aliases = manifest.child("application").children("activity-alias")
+        assertEquals(4, aliases.size)
+        assertEquals(listOf(".launcher.AdaptiveAutoIconAlias"), aliases.filter { it.androidAttribute("enabled") == "true" }.map { it.androidAttribute("name") })
+        aliases.forEach {
+            assertEquals(".ui.HomeActivity", it.androidAttribute("targetActivity"))
+            assertEquals("true", it.androidAttribute("exported"))
+            assertEquals("android.intent.action.MAIN", it.child("intent-filter").child("action").androidAttribute("name"))
+            assertEquals("android.intent.category.LAUNCHER", it.child("intent-filter").child("category").androidAttribute("name"))
+        }
+        listOf(".ui.HomeActivity", ".ui.SettingsActivity", ".ui.DefaultInstallerActivity", ".ui.AboutActivity", ".ui.ReleaseHistoryActivity", ".ui.InstalledAppsActivity").forEach {
+            assertEquals("false", activities.getValue(it).androidAttribute("exported"))
+        }
+        assertEquals(PLUGIN_PERMISSION, activities.getValue(".ui.InstallerSettingsActivity").androidAttribute("permission"))
         val receivers = manifest.child("application").children("receiver")
-        assertEquals(setOf(".engine.InstallStatusReceiver", ".ui.InstallNotifications\$CancelReceiver"), receivers.map { it.androidAttribute("name") }.toSet())
-        receivers.forEach { assertEquals("false", it.androidAttribute("exported")); assertTrue(it.children("intent-filter").isEmpty()) }
+        assertEquals(setOf(".engine.InstallStatusReceiver", ".ui.InstallNotifications\$CancelReceiver", ".ui.LauncherIconUpdateReceiver"), receivers.map { it.androidAttribute("name") }.toSet())
+        receivers.forEach {
+            assertEquals("false", it.androidAttribute("exported"))
+            if (it.androidAttribute("name") == ".ui.LauncherIconUpdateReceiver") {
+                assertEquals("android.intent.action.MY_PACKAGE_REPLACED", it.child("intent-filter").child("action").androidAttribute("name"))
+            } else assertTrue(it.children("intent-filter").isEmpty())
+        }
     }
 
     @Test
@@ -137,12 +157,17 @@ class ManifestContractTest {
     }
 
     @Test
-    fun `only discovery, activation and the shizuku provider are exported`() {
+    fun `only discovery activation settings launcher and external package entry are exported`() {
         val expected = mapOf(
             ".WakeActivity" to PLUGIN_PERMISSION,
             ".ThreeSetupInstallerPluginInfoService" to PLUGIN_PERMISSION,
             ".ThreeSetupInstallerPluginService" to PLUGIN_PERMISSION,
             ".ui.ExternalInstallActivity" to null,
+            ".ui.InstallerSettingsActivity" to PLUGIN_PERMISSION,
+            ".launcher.AdaptiveLightIconAlias" to null,
+            ".launcher.AdaptiveDarkIconAlias" to null,
+            ".launcher.AdaptiveAutoIconAlias" to null,
+            ".launcher.TransparentIconAlias" to null,
             "rikka.shizuku.ShizukuProvider" to "android.permission.INTERACT_ACROSS_USERS_FULL",
         )
         val components = listOf("activity", "activity-alias", "service", "receiver", "provider")

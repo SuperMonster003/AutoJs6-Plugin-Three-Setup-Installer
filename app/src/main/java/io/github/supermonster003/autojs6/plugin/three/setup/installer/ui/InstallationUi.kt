@@ -27,7 +27,7 @@ internal object InstallationUi {
     fun needsDialog(context: Context, request: InstallRequest): Boolean = when (request.interaction) {
         InstallerContract.INTERACTION_DIALOG -> true
         InstallerContract.INTERACTION_SILENT -> false
-        else -> !AuthorizerResolver.resolve(request.options.authorizer, AuthorizerStates.states(context)).privileged
+        else -> !io.github.supermonster003.autojs6.plugin.three.setup.installer.settings.InstallerPreferences.resolveAuthorizer(context, request.options.authorizer).privileged
     }
 
     fun configure(context: Context, record: InstallPresentation.Record, environment: InstallSession.Environment,

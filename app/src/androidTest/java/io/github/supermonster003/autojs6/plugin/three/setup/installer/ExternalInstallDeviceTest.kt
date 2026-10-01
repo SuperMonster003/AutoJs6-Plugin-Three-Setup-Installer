@@ -20,6 +20,7 @@ import io.github.supermonster003.autojs6.plugin.three.setup.installer.source.Ext
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.ui.ExternalInstallActivity
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.ui.ExternalInstaller
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.ui.InstallDialogActivity
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.ui.InstallDefaults
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.ui.InstallPresentation
 import org.autojs.plugin.installer.api.InstallerContract
 import org.autojs.plugin.installer.api.InstallerErrorCodes
@@ -80,6 +81,7 @@ class ExternalInstallDeviceTest {
 
     @Test fun externalViewActivityShowsTheOwnedSourceAndCancellationNeverAllocatesAnInstallSession() {
         unlocked()
+        assumeTrue("This route test requires the local dialog preference", InstallDefaults.interaction(context) == InstallerContract.INTERACTION_DIALOG)
         FixturePackageOwnership(setOf(FIXTURE)).use {
             val directory = providerDirectory()
             var record: InstallPresentation.Record? = null
@@ -326,7 +328,8 @@ class ExternalInstallDeviceTest {
         startWithOptions(sources, InstallOptions(authorizer = InstallerContract.AUTHORIZER_NONE, deleteSource = deleteSource, timeoutMillis = 90_000))
 
     private fun startWithOptions(sources: ExternalSources, options: InstallOptions): InstallPresentation.Record =
-        requireNotNull(InstallPresentation.find(ExternalInstaller.start(context, sources, options)))
+        requireNotNull(InstallPresentation.find(ExternalInstaller.start(context, sources, options,
+            interaction = InstallerContract.INTERACTION_DIALOG)))
 
     private fun drive(record: InstallPresentation.Record) {
         var clickedConfirmation = false

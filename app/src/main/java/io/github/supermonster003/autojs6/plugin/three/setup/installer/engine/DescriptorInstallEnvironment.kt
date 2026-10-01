@@ -43,7 +43,7 @@ internal class DescriptorInstallEnvironment private constructor(
     override fun resolve(request: InstallRequest, deadlineMillis: Long, checkActive: () -> Unit): InstallSession.Target {
         deadline = deadlineMillis
         checkActive()
-        val authorizer = AuthorizerResolver.resolve(request.options.authorizer, AuthorizerStates.states(context))
+        val authorizer = io.github.supermonster003.autojs6.plugin.three.setup.installer.settings.InstallerPreferences.resolveAuthorizer(context, request.options.authorizer)
         if (!authorizer.privileged && (request.interaction == InstallerContract.INTERACTION_SILENT || request.options.privilegedOptions.isNotEmpty())) {
             throw InstallFailure(InstallerErrorCodes.AUTHORIZER_REQUIRED, "Silent installation and privileged options require Shizuku or Root")
         }

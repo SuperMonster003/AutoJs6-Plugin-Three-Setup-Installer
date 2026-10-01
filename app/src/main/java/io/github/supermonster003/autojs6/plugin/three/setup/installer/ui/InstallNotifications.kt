@@ -261,8 +261,11 @@ internal object InstallNotifications {
                 startPending = false
             }
         }
-        if (!startPending && notificationsAllowed(context)) {
+        val showOptionalProgress = io.github.supermonster003.autojs6.plugin.three.setup.installer.settings.InstallerPreferences.read(context).progressNotifications
+        if (!startPending && notificationsAllowed(context) && showOptionalProgress) {
             writers.forEach { entry -> notify(context, progressTag(entry.token), PROGRESS_ID, progressNotification(context, entry, fallback = true)) }
+        } else if (!showOptionalProgress) {
+            writers.forEach { entry -> cancelNotice(context, progressTag(entry.token), PROGRESS_ID) }
         }
     }
 

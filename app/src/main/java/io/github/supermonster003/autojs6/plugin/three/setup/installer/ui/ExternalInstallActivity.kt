@@ -21,19 +21,16 @@ class ExternalInstallActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         try {
-            if (savedInstanceState == null) ExternalInstaller.start(this, ExternalSources.fromIntent(intent))
+            if (savedInstanceState == null) {
+                val sources = ExternalSources.fromIntent(intent)
+                io.github.supermonster003.autojs6.plugin.three.setup.installer.queue.InstallQueue.start(this, sources,
+                    origin = InstallerContract.SOURCE_EXTERNAL,
+                    isBatch = intent.action == android.content.Intent.ACTION_SEND_MULTIPLE || sources.uris.size > 1)
+            }
         } catch (failure: Exception) {
             ExternalInstaller.showFailure(this, InstallFailure.from(failure))
         } finally { finish() }
     }
-}
-
-/** Defaults use the same request schema that the future settings page edits. */
-internal object InstallDefaults {
-    fun options(context: Context): InstallOptions = runCatching {
-        val json = context.getSharedPreferences("installer_settings", Context.MODE_PRIVATE).getString("default_options", null)
-        if (json == null) InstallOptions() else InstallOptions.parse(RequestDocuments.parseObject(json, "installation defaults"), "installation defaults")
-    }.getOrDefault(InstallOptions())
 }
 
 internal object ExternalInstaller {
@@ -45,23 +42,32 @@ internal object ExternalInstaller {
     }
     private val tasks = ConcurrentHashMap<String, Task>()
 
-    fun start(context: Context, sources: ExternalSources, options: InstallOptions = InstallDefaults.options(context)): String {
+    fun start(context: Context, sources: ExternalSources, options: InstallOptions = InstallDefaults.options(context),
+        origin: String = InstallerContract.SOURCE_EXTERNAL, isBatch: Boolean = sources.uris.size > 1,
+        interaction: String = InstallDefaults.interaction(context)): String {
+        require(origin == InstallerContract.SOURCE_EXTERNAL || origin == InstallerContract.SOURCE_HOME)
+        require(InstallerContract.isInteraction(interaction))
         val slot = InstallSlots.acquire()
         try {
-            val request = InstallRequest(UUID.randomUUID().toString(), sources.provisionalEntries(), InstallerContract.INTERACTION_DIALOG, options)
+            val request = InstallRequest(UUID.randomUUID().toString(), sources.provisionalEntries(), interaction, options,
+                isBatch = isBatch, origin = origin)
             val task = Task(context.applicationContext, request, sources, slot)
             tasks[task.presentation.token] = task
             try {
                 InstallationUi.show(context, task.presentation, sources.grantIntent)
                 workers.execute(task::run)
-            } catch (failure: Exception) { task.dispose(); throw failure }
+            } catch (failure: Exception) {
+                task.presentation.onFailed(InstallFailure.from(failure))
+                task.dispose()
+                throw failure
+            }
             return task.presentation.token
         } catch (failure: Throwable) { slot.close(); throw failure }
     }
 
-    fun showFailure(context: Context, failure: InstallFailure) {
+    fun showFailure(context: Context, failure: InstallFailure, origin: String = InstallerContract.SOURCE_EXTERNAL) {
         val request = InstallRequest(UUID.randomUUID().toString(), listOf(SourceEntry(0, 0, "package", -1)),
-            InstallerContract.INTERACTION_DIALOG, InstallOptions())
+            InstallerContract.INTERACTION_DIALOG, InstallOptions(), origin = origin)
         runCatching {
             InstallPresentation.create(context, request, InstallPresentation.Callbacks(cancel = {})).apply {
                 onFailed(failure)
@@ -85,7 +91,7 @@ internal object ExternalInstaller {
             cancel = ::cancel,
             retry = { index ->
                 if (!finished.get() || disposed.get() || index !in sources.uris.indices) false else {
-                    start(context, sources.single(index), presentationOptions(index))
+                    start(context, sources.single(index), presentationOptions(index), origin = request.origin, interaction = request.interaction)
                     true
                 }
             },
@@ -104,8 +110,9 @@ internal object ExternalInstaller {
             synchronized(workerLock) { worker = Thread.currentThread() }
             try {
                 checkActive()
-                val actual = request.copy(options = request.options.copy(
-                    timeoutMillis = (deadline - SystemClock.elapsedRealtime()).coerceAtLeast(1)))
+                val actual = request.copy(
+                    interaction = if (InstallationUi.needsDialog(context, request)) InstallerContract.INTERACTION_DIALOG else request.interaction,
+                    options = request.options.copy(timeoutMillis = (deadline - SystemClock.elapsedRealtime()).coerceAtLeast(1)))
                 lateinit var environment: DescriptorInstallEnvironment
                 environment = DescriptorInstallEnvironment.acquireSources(context,
                     sourceLoader = { source, check ->

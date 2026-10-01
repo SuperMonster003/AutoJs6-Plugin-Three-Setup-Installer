@@ -14,10 +14,13 @@ import io.github.supermonster003.autojs6.plugin.three.setup.installer.engine.Ins
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.engine.InstallOptions
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.engine.InstallRequest
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.engine.InstallSession
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.history.InstallHistoryCapture
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.history.InstallHistoryStore
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.source.PreparedPackage
 import org.autojs.plugin.installer.api.InstallerContract
 import org.autojs.plugin.installer.api.InstallerErrorCodes
 import java.lang.ref.WeakReference
+import java.io.Closeable
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
@@ -29,6 +32,9 @@ internal object InstallPresentation {
     private const val MAX_PRESENTATIONS = 128
     private val main = Handler(Looper.getMainLooper())
     private val records = ConcurrentHashMap<String, Record>()
+    private class Observer(@Volatile var action: (() -> Unit)?)
+    private val observers = mutableSetOf<Observer>()
+    private val observerUpdate = AtomicBoolean()
     private var reaperScheduled = false
     private val reaper = object : Runnable {
         override fun run() {
@@ -80,6 +86,8 @@ internal object InstallPresentation {
         val recovered: Boolean = false,
         val interrupted: Boolean = false,
     )
+    /** Application-independent view used by Home; ownership remains in the installation worker. */
+    data class TaskSnapshot(val token: String, val origin: String, val createdAt: Long, val state: Snapshot)
     class Prompt internal constructor(
         val index: Int,
         val metadata: Metadata,
@@ -100,6 +108,7 @@ internal object InstallPresentation {
         }
         evicted?.close()
         record.startPersistence()
+        notifyObservers()
         main.post {
             if (!reaperScheduled) {
                 reaperScheduled = true
@@ -111,6 +120,25 @@ internal object InstallPresentation {
 
     fun find(token: String): Record? = records[token]
 
+    fun snapshots(includeTerminal: Boolean = false): List<TaskSnapshot> = records.values.map { record ->
+        TaskSnapshot(record.token, record.request.origin, record.createdAt, record.snapshot())
+    }.filter { includeTerminal || !it.state.terminal }.sortedByDescending { it.createdAt }
+
+    fun observe(observer: () -> Unit): Closeable {
+        val entry = Observer(observer)
+        synchronized(observers) { observers += entry }
+        main.post { entry.action?.invoke() }
+        return Closeable { synchronized(observers) { entry.action = null; observers -= entry } }
+    }
+
+    private fun notifyObservers() {
+        if (!observerUpdate.compareAndSet(false, true)) return
+        main.post {
+            observerUpdate.set(false)
+            synchronized(observers) { observers.toList() }.forEach { entry -> runCatching { entry.action?.invoke() } }
+        }
+    }
+
     class Record internal constructor(
         private val context: Context,
         val request: InstallRequest,
@@ -118,6 +146,7 @@ internal object InstallPresentation {
         private val canDeleteSource: Boolean,
     ) {
         val token: String = UUID.randomUUID().toString()
+        val createdAt: Long = System.currentTimeMillis()
         private val lock = Any()
         private var activity = WeakReference<InstallDialogActivity>(null)
         private var items = request.items.map { Item(it.first().displayName) }
@@ -133,6 +162,7 @@ internal object InstallPresentation {
         private var retrying = false
         private var cancellationRequested = false
         private var recovery: InstallRecoveryWriter.Ticket? = null
+        private var history: InstallHistoryStore.Ticket? = null
         private val recoveryDeadline = SystemClock.elapsedRealtime() + request.options.timeoutMillis
         private val queuedUpdate = AtomicBoolean()
         @Volatile internal var expiresAt = Long.MAX_VALUE
@@ -150,13 +180,19 @@ internal object InstallPresentation {
         }
 
         internal fun startPersistence() {
+            history = runCatching { InstallHistoryStore.get(context).begin(token) }.getOrNull()
             recovery = InstallRecoveryPersistence.writer(context).begin(token)
             persist()
         }
 
         private fun persist(durable: Boolean = false) {
+            val state = snapshot()
             runCatching {
-                val state = snapshot()
+                val completion = history?.save(InstallHistoryCapture.capture(token, request, state, createdAt, System.currentTimeMillis()),
+                    state.revision, finish = state.terminal)
+                if (durable && !InstallRecoveryPersistence.mainThread()) completion?.await()
+            }.onFailure { android.util.Log.w("InstallHistory", "Installation history could not be saved") }
+            runCatching {
                 if (synchronized(lock) { closed }) return
                 val remaining = if (state.terminal) expiresAt - SystemClock.elapsedRealtime()
                     else recoveryDeadline - SystemClock.elapsedRealtime() + InstallRecoverySnapshot.RETENTION_MILLIS
@@ -301,7 +337,8 @@ internal object InstallPresentation {
 
         fun onItemResult(index: Int, result: JsonObject) {
             synchronized(lock) {
-                if (closed || terminal || index !in items.indices) return
+                // Closing a window cannot discard the worker's authoritative package outcome.
+                if (terminal || index !in items.indices) return
                 val successful = result.get(InstallerContract.FIELD_OK)?.asBoolean == true
                 items = items.toMutableList().also {
                     it[index] = it[index].copy(result = result.deepCopy(), stage = if (successful) InstallerContract.STAGE_COMPLETED else InstallerContract.STAGE_FAILED,
@@ -316,7 +353,7 @@ internal object InstallPresentation {
         fun onCompleted(result: JsonObject) {
             val outcomes = result.getAsJsonArray(InstallerContract.FIELD_RESULTS)?.map { it.asJsonObject } ?: listOf(result)
             synchronized(lock) {
-                if (closed || terminal) return
+                if (terminal) return
                 items = items.mapIndexed { i, item ->
                     outcomes.getOrNull(i)?.let { outcome ->
                         item.copy(result = outcome.deepCopy(), stage = if (outcome.get(InstallerContract.FIELD_OK)?.asBoolean == true)
@@ -336,7 +373,7 @@ internal object InstallPresentation {
 
         fun onFailed(value: InstallFailure) {
             synchronized(lock) {
-                if (closed || terminal) return
+                if (terminal) return
                 failure = value
                 terminal = true
                 stage = if (value.code == InstallerErrorCodes.CANCELLED || value.code == InstallerErrorCodes.USER_CANCELLED)
@@ -401,6 +438,7 @@ internal object InstallPresentation {
                 prompt = null
             }
             records.remove(token, this)
+            notifyObservers()
             val released = AtomicBoolean()
             val removed = AtomicBoolean()
             val finishQueued = AtomicBoolean()
@@ -420,6 +458,7 @@ internal object InstallPresentation {
         }
 
         private fun changed() {
+            notifyObservers()
             if (!queuedUpdate.compareAndSet(false, true)) return
             main.post {
                 queuedUpdate.set(false)

@@ -10,7 +10,7 @@ license, reproduced in full in the distribution of the respective project.
 | --- | --- | --- | --- | --- |
 | `common-plugin-api.aar` | AutoJs6 module `plugin-api/common-plugin-api` (https://github.com/SuperMonster003/AutoJs6) | host build 6.8.0 / 5298, commit `86d9bfa26b` | MPL 2.0 | `ee7eb7879a53506c4cca5e2d19d3058e28df2168fb33351a52302a3b9e532e15` |
 | `package-archive-parser.aar` | AutoJs6 module `plugin-api/package-archive-parser` (the shared package archive parser, roadmap D10 / D28) | host 6.8.0 / 5299 (V1 line), commit `0767971bc9`, 2026-10-01 | MPL 2.0 | `1441bbcee8468362b0ee41f7b3d5ab47eb87b4df78a1388bb1134223055f46e7` |
-| `installer-api.aar` | AutoJs6 module `plugin-api/installer-api` (installer contract V1) | host build 6.8.0 / 5300, commit a5c6bc7b4c, 2026-10-01; release AAR, 30,940 bytes | MPL 2.0 | `ba633d8dfc5a08ed2659654780e2de2dfe3468af080e8c847f8e370c7bfb93f7` |
+| `installer-api.aar` | AutoJs6 module `plugin-api/installer-api` (installer contract V1) | host build 6.8.0 / 5302, commit `bf102da416`, 2026-10-01; release AAR, 31,086 bytes | MPL 2.0 | `90a337b1cd645270e41368af0d6dc28a73509e505d4b049fdbeececa0997b441` |
 
 ## Runtime dependencies (Gradle)
 
@@ -43,6 +43,13 @@ InstallerX (https://github.com/iamr0s/InstallerX) and InstallerX Revived (https:
 are licensed under the GNU General Public License v3.0. They served only as an architecture, behavior and option
 catalog reference for the roadmap (decision D29); no source code, resource, string or asset of either project is
 included in this repository.
+
+## Project-owned standalone UI reference
+
+The standalone settings layout, theme controls and launcher icon handling draw on the maintainer's own
+3-Stove Agent implementation and shared Three-series conventions. These components are maintained here
+under this repository's project license. The standalone pages introduce no additional third-party runtime
+library beyond the dependencies listed above.
 
 ## Build tooling (not distributed)
 

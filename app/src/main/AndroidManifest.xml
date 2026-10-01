@@ -19,6 +19,8 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- Shizuku authorizer (roadmap D2 / D11). -->
     <uses-permission android:name="moe.shizuku.manager.permission.API_V23" />
+    <!-- Used only by the user's manual GitHub release check. Installation remains offline. -->
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <queries>
         <package android:name="org.autojs.autojs6" />
@@ -41,6 +43,37 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.ThreeSetupInstaller"
         tools:targetApi="33">
+
+        <activity android:name=".ui.HomeActivity" android:exported="false"
+            android:configChanges="uiMode|locale|layoutDirection" />
+        <activity-alias android:name=".launcher.AdaptiveLightIconAlias" android:targetActivity=".ui.HomeActivity"
+            android:enabled="false" android:exported="true" android:icon="@mipmap/ic_launcher_system_light" android:roundIcon="@mipmap/ic_launcher_system_light">
+            <intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".launcher.AdaptiveDarkIconAlias" android:targetActivity=".ui.HomeActivity"
+            android:enabled="false" android:exported="true" android:icon="@mipmap/ic_launcher_system" android:roundIcon="@mipmap/ic_launcher_system">
+            <intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".launcher.AdaptiveAutoIconAlias" android:targetActivity=".ui.HomeActivity"
+            android:enabled="true" android:exported="true" android:icon="@mipmap/ic_launcher_system_auto" android:roundIcon="@mipmap/ic_launcher_system_auto">
+            <intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".launcher.TransparentIconAlias" android:targetActivity=".ui.HomeActivity"
+            android:enabled="false" android:exported="true" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher">
+            <intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent-filter>
+        </activity-alias>
+        <receiver android:name=".ui.LauncherIconUpdateReceiver" android:exported="false">
+            <intent-filter><action android:name="android.intent.action.MY_PACKAGE_REPLACED" /></intent-filter>
+        </receiver>
+        <activity android:name=".ui.InstalledAppsActivity" android:exported="false" android:configChanges="uiMode|locale|layoutDirection" />
+        <activity android:name=".ui.SettingsActivity" android:exported="false" android:configChanges="uiMode|locale|layoutDirection" />
+        <activity android:name=".ui.DefaultInstallerActivity" android:exported="false" android:configChanges="uiMode|locale|layoutDirection" />
+        <activity android:name=".ui.AboutActivity" android:exported="false" android:configChanges="uiMode|locale|layoutDirection" />
+        <activity android:name=".ui.ReleaseHistoryActivity" android:exported="false" android:configChanges="uiMode|locale|layoutDirection" />
+        <activity android:name=".ui.InstallerSettingsActivity" android:exported="true"
+            android:permission="org.autojs.permission.PLUGIN" android:excludeFromRecents="true" android:theme="@android:style/Theme.NoDisplay">
+            <intent-filter><action android:name="org.autojs.plugin.INSTALLER_SETTINGS" /><category android:name="android.intent.category.DEFAULT" /></intent-filter>
+        </activity>
 
         <meta-data
             android:name="org.autojs.plugin.contract.NATIVE_PAGE_ALIGNMENT"
@@ -122,6 +155,7 @@
                 <data android:scheme="file" />
                 <data android:mimeType="application/vnd.android.package-archive" />
                 <data android:mimeType="application/x-apks" />
+                <data android:mimeType="application/vnd.android.package-archives" />
                 <data android:mimeType="application/vnd.apkm" />
                 <data android:mimeType="application/xapk-package-archive" />
                 <data android:mimeType="application/x-apkz" />
@@ -155,6 +189,7 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="application/vnd.android.package-archive" />
                 <data android:mimeType="application/x-apks" />
+                <data android:mimeType="application/vnd.android.package-archives" />
                 <data android:mimeType="application/vnd.apkm" />
                 <data android:mimeType="application/xapk-package-archive" />
                 <data android:mimeType="application/x-apkz" />

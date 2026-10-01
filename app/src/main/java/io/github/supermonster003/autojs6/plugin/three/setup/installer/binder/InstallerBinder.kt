@@ -25,7 +25,7 @@ internal class InstallerBinder(context: Context, private val guard: CallerGuard 
     private val queue = InstallerWorkQueue()
     private val reaper = Executors.newSingleThreadScheduledExecutor()
     private val sessions = SessionRegistry(SystemClock::elapsedRealtime, scheduler = reaper)
-    private val defaults = DefaultInstaller(AndroidDefaultInstaller(context))
+    private val defaults = io.github.supermonster003.autojs6.plugin.three.setup.installer.settings.DefaultInstallerLock.get(context)
     init {
         queue.executor.execute { PackageStaging.cleanStale(this.context) }
     }
@@ -212,7 +212,7 @@ internal class InstallerBinder(context: Context, private val guard: CallerGuard 
         } finally { if (remote) sources?.forEach { runCatching { it?.close() } } }
     }
 
-    private fun resolve(value: String): Authorizer = AuthorizerResolver.resolve(value, AuthorizerStates.states(context))
+    private fun resolve(value: String): Authorizer = io.github.supermonster003.autojs6.plugin.three.setup.installer.settings.InstallerPreferences.resolveAuthorizer(context, value)
     private fun authorizer(value: String?): Authorizer = Authorizer.fromId(value) ?: throw RequestDocuments.invalid("Unknown explicit authorizer")
     private inline fun withCallback(callback: IInstallerCallback?, action: (IInstallerCallback) -> Unit) {
         requireNotNull(callback) { "Callback is required" }
