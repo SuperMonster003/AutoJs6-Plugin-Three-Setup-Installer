@@ -99,3 +99,17 @@ MT 的 APKS MIME `application/vnd.android.package-archives` 已加入本轮 VIEW
 - CRC32: `74362257`, 与文件名一致, releases 中恰好一个 APK.
 - SHA-256: `57831bd507c79eaf31d9fc5c70bda7c11b7e7e27842383c4ade8972dd17fd64c`.
 - 本地提交: P5 功能 `33f9341`, P3.3 验收 `67b296f`, 最后显示恢复测试与本证据/路线图提交使用 build 33. APK 未提交, 未推送或创建远端发行版.
+
+## MT APKS 必选分包勾选显示修复 (build 34)
+
+维护者后续确认 QV710AF65F 的 build 33 已能通过 MT 的系统建议入口显示 APKS 安装信息/确认页, 同时报告 base.apk 不能取消但看起来未选中. 这补充了第三方文件管理器 APKS 确认入口的人工证据, 不等于完成安装, 也不替代系统文件管理器/浏览器 APK/XAPK 矩阵.
+
+在该实际确认页只读检查到 base.apk 的 accessibility 状态为 checked=true / enabled=false, 其它可选分包为 checked=true / enabled=true. 原截图 `build/base-checkbox/qv-before.png` 显示灰色实心框没有可见勾选标记. 原因是 InstallerUiKit 给禁用的方框和勾选图标都使用 disabledText, 两者对比度为 1:1; InstallChoices 的必选约束及实际选中集合没有缺失 base.apk.
+
+修复为禁用勾选图标选择对方框填充有足够对比度的中性色, 保持必选项已选中且不可取消, 不修改分包选择或安装语义. 十语言 changelog 与生成文档已同步.
+
+- 回归测试先对 API 35 上旧版本执行, 精确失败于 `Required split checkmark disappears in dark=false`, 1 项失败; `build/base-checkbox/old-build-regression-api35.log` 证明新断言能捕获原缺陷.
+- 修复后 API 24 / API 35 各 7/7 通过, 无跳过, 2.388 / 1.441 秒; 日志为 `build/base-checkbox/fixed-api24.log` / `fixed-api35.log`. 包括六项对话框几何/控件检查和一项真实确认页重建用例. 新断言检查浅色/深色禁用勾选标记对比度至少 3:1, 恢复启用后正常着色, 以及 base.apk 在重建前后始终已选中且禁用.
+- JVM 243 项与 Debug/androidTest 构建通过, `build/base-checkbox/debug-build34.log`. 签名 Release 与两种 lint 在 39 秒内通过, Debug 0 errors / 22 warnings, Release 0 errors / 23 warnings, 见 `build/base-checkbox/release-build34.log`.
+- build 34 产物为 `releases/autojs6-plugin-three-setup-installer-v1.0.0-62466b78.apk`, 1,879,779 字节, CRC32 `62466b78`, SHA-256 `3704eb55af43e68032f9b3bb70663ce035eb2fe33c56e971d095d27689e26596`, apksigner v2 校验通过. 收尾时 QV710AF65F 仍在旧确认页, 新包尚未覆盖该设备; 等页面退出后部署.
+- 未自动确认用户 APKS 的安装. 已请求维护者取消当前确认页, 覆盖修复包前再次确认没有活动安装. build 33 的旧生成 APK 移至本地 `build/base-checkbox/build33-74362257.apk`, 不入 Git.

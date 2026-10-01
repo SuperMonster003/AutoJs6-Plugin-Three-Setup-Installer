@@ -990,3 +990,10 @@ if (!installer.isDefault()) installer.setDefault(true);
 - 宿主: 493b229f4c 将 APK Inspector 收入更多菜单并置于 More information 上方, 异步菜单快照避免索引错位, InfoDialogInstrumentationTest 6/6. bf102da416 增加可选 sourceOrigin 以区分 host/script 历史, V1 AIDL 不变; 自带 release AAR 与哈希锁已同步. 宿主最终 build 5302, 3273 JVM 中 6 个既有跳过, 无失败; 最终 appDebug/androidTest 构建通过.
 - 提交与边界: 插件独立界面依赖图为 33f9341, P3 授权验收为 67b296f, 显示恢复与证据另作提交; 最终 VERSION_BUILD=33 与提交数对齐. 本轮源码功能共用 Manifest/资源/导航, 为保持提交可构建一起提交, 原路线图仍逐项记录验收. 两仓库仅本地提交, 不推送 GitHub. 完整证据见 docs/dev/p5-standalone-evidence.md.
 - 下一步: 保留 P5.2 跨 API Shizuku/Root 默认锁定矩阵, P3.2 系统文件管理器/浏览器 APK/XAPK, P1.4 宿主三入口组合, API 24 大字号复验与系统多窗口未测边界, 按原线路图继续 P6. 暂无新的产品决策或设备采购要求.
+
+### 2026-10-01 (MT APKS 必选分包勾选显示)
+
+- 维护者确认 QV710AF65F 的 build 33 经 MT 系统建议入口已显示 APKS 安装信息/确认页. 该反馈记录为第三方文件管理器入口成功, 不替代原 P3.2 的系统文件管理器/浏览器 APK/XAPK 安装矩阵, 原 checkbox 不变.
+- 修复 base.apk 禁用状态下看起来未选中的问题. 实际设备节点为 checked=true / enabled=false, 原因是方框和勾选标记都使用同一 disabledText 颜色. 禁用勾选标记改为对填充可读的中性色, 保留分包必选约束和实际安装选择.
+- 新设备断言能在旧 APK 上准确复现失败; 修复后 API 24 / 35 各 7/7 通过, 包括浅色/深色标记对比度和真实确认页重建前后 base.apk 保持已选中且不可取消. 插件 JVM 243 项通过; 十语言 changelog 和生成物同步, 详见 docs/dev/p5-standalone-evidence.md 的 build 34 补充.
+- 本次为 P3 安装界面的单一缺陷修复, 使用 VERSION_BUILD=34 的独立本地提交, 不推送远端. 未自动安装用户 APKS 中的应用.

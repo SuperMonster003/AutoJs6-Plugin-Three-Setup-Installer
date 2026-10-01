@@ -74,6 +74,7 @@ class InstallDialogDeviceTest {
                 waitForView(scenario, InstallDialogActivity.TAG_CONFIRM)
                 scenario.onActivity { activity ->
                     val base = activity.window.decorView.findViewWithTag<CheckBox>("install_split_base.apk")
+                    assertTrue(base.isChecked)
                     assertFalse(base.isEnabled)
                     activity.window.decorView.findViewWithTag<CheckBox>("install_split_feature.apk").performClick()
                     assertEquals(setOf("base.apk"), record.snapshot().prompt!!.choices.snapshot().selectedApkNames)
@@ -83,6 +84,9 @@ class InstallDialogDeviceTest {
                 assertSinglePresentation(record.token, originalTask)
                 assertEquals(1L, done.count)
                 scenario.onActivity { activity ->
+                    val base = activity.window.decorView.findViewWithTag<CheckBox>("install_split_base.apk")
+                    assertTrue(base.isChecked)
+                    assertFalse(base.isEnabled)
                     assertFalse(activity.window.decorView.findViewWithTag<CheckBox>("install_split_feature.apk").isChecked)
                     activity.window.decorView.findViewWithTag<View>(InstallDialogActivity.TAG_CONFIRM).performClick()
                 }

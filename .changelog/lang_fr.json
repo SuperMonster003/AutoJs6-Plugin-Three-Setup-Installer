@@ -22,7 +22,8 @@
         "Les paramètres donnent accès à la page À propos et à l'historique des versions intégré en dix langues. La recherche manuelle de mises à jour utilise l'API GitHub Releases du plugin avec un intervalle de 12 heures, un cache et la gestion des versions ignorées. Les pages de publication s'ouvrent dans le navigateur; aucune mise à jour n'est téléchargée ni installée automatiquement"
       ],
       "fix": [
-        "Les actions d'annulation ne suivaient pas la langue du plugin sur les appareils dépourvus de la traduction système correspondante"
+        "Les actions d'annulation ne suivaient pas la langue du plugin sur les appareils dépourvus de la traduction système correspondante",
+        "Correction de la coche invisible des APK fractionnés obligatoires tels que base.apk lorsque leur case est désactivée, dans les thèmes clair et sombre"
       ],
       "improvement": [
         "L'identifiant du plugin, le moteur, l'action / la categorie du service, le descripteur Binder et la version minimale de l'hote proviennent desormais des constantes du contrat installer-api de l'hote; les capacites declarent la version 1 du contrat d'installation et la build minimale de l'hote est fixee a 5299",

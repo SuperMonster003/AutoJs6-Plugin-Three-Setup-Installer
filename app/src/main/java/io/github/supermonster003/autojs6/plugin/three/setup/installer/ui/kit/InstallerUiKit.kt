@@ -65,7 +65,8 @@ internal class InstallerUiKit(val context: Context, val palette: InstallerPalett
             setTextColor(states(palette.disabledText, palette.text))
             textAlignment = View.TEXT_ALIGNMENT_VIEW_START
             buttonTintList = choiceTint()
-            buttonIconTintList = states(palette.disabledText, palette.onAccent)
+            // Disabled checked boxes still need a visible mark against the disabled fill.
+            buttonIconTintList = states(InstallerColorPolicy.onFilledColor(palette.disabledText), palette.onAccent)
             minHeight = dp(56)
             setPaddingRelative(dp(4), dp(8), dp(4), dp(8))
             background = RippleDrawable(ColorStateList.valueOf(palette.ripple), null, roundedFill(Color.WHITE, 8))
