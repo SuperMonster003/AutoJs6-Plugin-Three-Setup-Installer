@@ -42,7 +42,7 @@
 
 ******
 
-3-Setup Installer는 AutoJs6 설치 기능과 외부 패키지 열기 또는 공유 요청을 통해 Android 앱을 설치, 업데이트, 검사 및 제거합니다. 일반 Android 확인과 Shizuku 또는 Root를 통한 권한 설치를 지원합니다. 스크립트 API와 독립 홈 및 설정 페이지는 향후 계획입니다.
+3-Setup Installer는 AutoJs6 설치 기능과 외부 패키지 열기 또는 공유 요청을 통해 Android 앱을 설치, 업데이트, 검사 및 제거합니다. 일반 Android 확인과 Shizuku 또는 Root를 통한 권한 설치를 지원합니다. 호환되는 호스트 빌드에서 `installer` 스크립트 API를 제공합니다. 독립 홈 및 설정 페이지는 향후 계획입니다.
 
 AutoJs6는 Binder 서비스를 통해 플러그인을 찾고 패키지 파일을 읽기 전용 파일 디스크립터로 전달합니다. 플러그인은 패키지를 분석하고 인증 방식을 선택하며 필요하면 자체 확인 및 진행률 대화 상자를 표시하고 단계, 진행률, 결과를 보고합니다. 특권 작업은 시스템 패키지 설치 프로그램과 직접 통신하는 Shizuku 사용자 서비스 또는 libsu Root 서비스에서 실행됩니다.
 
@@ -52,7 +52,7 @@ AutoJs6는 Binder 서비스를 통해 플러그인을 찾고 패키지 파일을
 
 ******
 
-1.0.0: P3 개발 미리보기. 확인, 진행률, 결과 및 일괄 대화상자, 외부 열기와 공유, 선택적 원본 삭제, 시스템 확인 및 포그라운드 알림이 구현되었습니다. 프로세스가 다시 시작되면 복원된 화면에 저장된 확정 결과가 표시되고 미완료 항목은 중단으로 표시됩니다. 복원된 화면은 읽기 전용이며 설치나 재시도를 자동으로 실행하지 않습니다. 스크립트 API, 독립 홈과 설정, 설치 기록 및 기본 설치 프로그램 설정은 향후 계획입니다. 진행 상황과 기기 검증 범위는 [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md)를 참고하세요. AutoJs6 >= 6.8.0 (5299).
+1.0.0: 개발 미리보기. 확인, 진행률, 결과 및 일괄 대화상자, 외부 열기와 공유, 선택적 원본 삭제, 시스템 확인 및 포그라운드 알림이 구현되었습니다. 프로세스가 다시 시작되면 복원된 화면에 저장된 확정 결과가 표시되고 미완료 항목은 중단으로 표시됩니다. 복원된 화면은 읽기 전용이며 설치나 재시도를 자동으로 실행하지 않습니다. `installer` 스크립트 API에는 AutoJs6 >= 6.8.0 (5300)이 필요합니다. 독립 홈과 설정, 설치 기록 및 기본 설치 프로그램 설정 화면은 향후 계획입니다. 진행 상황과 기기 검증 범위는 [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md)를 참고하세요. 플러그인 기본 호환성: AutoJs6 >= 6.8.0 (5299).
 
 ******
 
@@ -70,8 +70,8 @@ AutoJs6는 Binder 서비스를 통해 플러그인을 찾고 패키지 파일을
 - 패키지를 플러그인으로 열거나 하나 또는 여러 패키지를 공유할 수 있습니다. 실패한 외부 원본은 URI와 접근 권한을 사용할 수 있는 동안 항목별로 다시 시도할 수 있습니다.
 - 포그라운드 설치 진행률, 취소 작업 및 결과 알림을 제공합니다. 알림 권한을 거부해도 설치를 차단하지 않습니다.
 - 대화상자는 기본적으로 AutoJs6의 언어, 야간 모드 및 테마 색상을 따릅니다. 호스트를 사용할 수 없으면 시스템 언어와 야간 모드 및 기본 색상을 사용합니다.
-- 향후 계획: 특권을 통한 기본 설치 프로그램 선택과 필요한 경우 시스템 기본 설정 안내.
-- P4 계획: 동기, `...Async` 및 세션 방식의 스크립트 API `installer` (별칭 `$installer`)와 안정적인 `code`를 가진 `InstallerError`.
+- 스크립트는 `installer.isDefault`로 기본 설치 프로그램을 조회하고 Shizuku 또는 Root를 사용하는 `installer.setDefault` / `setDefaultAsync`로 설정할 수 있습니다. 독립 설정 화면과 시스템 설정 안내는 향후 계획입니다.
+- 스크립트 API `installer` (별칭 `$installer`)는 동기, `...Async` 및 세션 방식을 제공하며 단일 / 일괄 / 분할 설치, 제거, 검사, 권한 방식과 사용자 조회 및 기본 설치 프로그램 설정을 지원합니다. 실패는 안정적인 `code`를 가진 `InstallerError`입니다 (AutoJs6 >= 6.8.0 (5300) 필요).
 - P5 계획: 독립 홈 및 설정 페이지, 설치 기록과 설치된 앱 관리.
 
 ******
@@ -95,7 +95,7 @@ AutoJs6는 Binder 서비스를 통해 플러그인을 찾고 패키지 파일을
 - `none`: 표준 PackageInstaller 세션. Android가 매번 사용자 확인을 요구하며 분할 패키지를 지원하고 특권 옵션은 사용할 수 없습니다.
 - `shizuku`: Shizuku가 실행 중이어야 하며 (무선 디버깅, ADB 또는 Root로 시작), 플러그인에 권한이 부여되어야 합니다. shell 권한으로 자동 설치, 자동 제거 및 다른 사용자에 대한 작업을 수행할 수 있습니다.
 - `root`: Root 관리자가 플러그인에 `su`를 허용해야 합니다. libsu Root 서비스를 통해 Shizuku와 같은 작업을 제공합니다. 일반 (user) 펌웨어에서 다운그레이드는 debuggable 앱에만 성공하며 이는 프레임워크 규칙이지 플러그인의 제한이 아닙니다.
-- **참고:** 특권을 사용할 수 있을 때 `interaction: 'auto'` 호스트 요청은 확인 화면을 먼저 열지 않고 자동으로 설치합니다. Android가 확인을 요구하면 `auto`는 이를 허용하고 `notes`에 기록합니다. 설치 전 확인에는 `interaction: 'dialog'`를, 시스템 확인이 필요한 경우 실패하게 하려면 `interaction: 'silent'`를 사용하세요. 향후 스크립트 API에도 같은 기본 동작이 적용됩니다.
+- **참고:** 특권을 사용할 수 있을 때 `interaction: 'auto'` 호스트 요청은 확인 화면을 먼저 열지 않고 자동으로 설치합니다. Android가 확인을 요구하면 `auto`는 이를 허용하고 `notes`에 기록합니다. 설치 전 확인에는 `interaction: 'dialog'`를, 시스템 확인이 필요한 경우 실패하게 하려면 `interaction: 'silent'`를 사용하세요. 스크립트 API에도 같은 기본 동작이 적용됩니다.
 
 ******
 
@@ -103,24 +103,31 @@ AutoJs6는 Binder 서비스를 통해 플러그인을 찾고 패키지 파일을
 
 ******
 
-무음 설치, 다운그레이드 허용 업데이트, 세션 감시, 제거를 수행하는 스크립트 (로드맵 P4부터 사용 가능):
+설치, 일괄 처리 및 세션용 템플릿 함수 (AutoJs6 >= 6.8.0 (5300) 필요). 함수를 호출하기 전에 원본을 직접 선택하고 확인하세요. 이 예제는 자동으로 설치, 제거하거나 기본 설치 프로그램을 변경하지 않습니다.:
 
 ```js
-// Silent installation through the first available authorizer (Shizuku, then Root); the plugin dialog otherwise.
-let result = installer.install('/sdcard/Download/app.apk');
-console.log(result.ok, result.packageName, result.authorizer);
+// Read-only probe. The functions below run only when explicitly called with chosen sources.
+console.log(installer.status);
 
-// Explicit authorizer and options; every failure is an InstallerError with a stable code.
-installer.installAsync('/sdcard/Download/old.apk', { authorizer: 'shizuku', allowDowngrade: true, deleteSource: true })
-    .then(r => console.log(r.ok ? 'done' : r.error.code))
-    .catch(e => console.error(e.code, e.systemMessage));
+// An already authorized Shizuku service is required; silent never falls back to a dialog.
+let installChosen = source => installer.install(source, {
+    authorizer: 'shizuku', interaction: 'silent', deleteSource: false,
+});
 
-// Session form with progress events, batch installation, uninstallation and the default installer.
-let session = installer.session({ splits: ['/sdcard/base.apk', '/sdcard/split_config.arm64_v8a.apk'] });
-session.on('progress', p => console.log(Math.round(p * 100) + '%')).on('complete', r => console.log(r.versionName));
-installer.install(['/sdcard/a.apk', '/sdcard/b.xapk']).forEach(r => console.log(r.packageName, r.ok));
-installer.uninstall('com.example.app', { keepData: true });
-if (!installer.isDefault()) installer.setDefault(true);
+// An array means independent applications, including an array containing one source.
+let installBatchChosen = sources => installer.installAsync(sources, {
+    interaction: 'dialog', continueOnError: true, deleteSource: false,
+}).then(results => results.forEach(result => console.log(result.ok, result.packageName, result.error)))
+    .catch(error => console.error(error.code, error.systemMessage));
+
+// A source may also be { splits: [...] } for one application's split files.
+let watchChosen = source => {
+    let session = installer.session(source, { interaction: 'dialog', deleteSource: false });
+    session.on('progress', progress => console.log(Math.round(progress * 100) + '%'))
+        .on('complete', result => console.log(result))
+        .on('error', error => console.error(error.code, error.systemMessage));
+    return session;
+};
 ```
 
 ******
@@ -143,7 +150,7 @@ if (!installer.isDefault()) installer.setDefault(true);
 
 - **왜 여전히 설치 확인이 필요한가요?** `none`은 항상 시스템 확인을 사용합니다. 권한을 준비한 후 설치 대화상자에서 Shizuku 또는 Root를 선택하세요. Android 또는 기기 정책에 따라 시스템 확인이 필요할 수 있습니다.
 - **`.aab`를 설치할 수 있나요?** 아니요. Android App Bundle은 배포 형식이므로 먼저 bundletool로 `.apks` 세트로 변환하세요. 플러그인은 `.aab` 파일을 인식하고 패키지와 모듈 정보를 표시합니다.
-- **원본이 삭제되지 않은 이유는 무엇인가요?** 삭제는 설치 성공 후에만 시도하며 원본 제공자가 거부할 수 있습니다. 설치 성공 결과는 유지됩니다. AutoJs6 또는 다른 발신 앱이 원본을 소유한 경우 해당 앱이 삭제를 담당합니다.
+- **원본이 삭제되지 않은 이유는?** 설치 성공 후에만 삭제를 시도하며 삭제 실패는 설치 성공 결과를 바꾸지 않습니다. 외부 제공자가 삭제를 거부할 수 있습니다. 스크립트의 `deleteSource`는 호스트가 경로 또는 `file://` 원본을 삭제하고 `content://`와 실패한 항목은 유지합니다. `sourceDeleted`와 `notes`를 확인하세요.
 - **다시 시도하거나 이어서 실행할 수 있나요?** 실패한 외부 URI는 원본과 접근 권한을 사용할 수 있는 동안 다시 시도할 수 있습니다. 원본 또는 접근 권한이 해제되면 패키지를 다시 여세요. 프로세스가 다시 시작되면 복원된 화면에 저장된 확정 결과가 표시되고 미완료 항목은 중단으로 표시됩니다. 복원된 화면은 읽기 전용이며 설치나 재시도를 자동으로 실행하지 않습니다. 다시 시작하기 전에 실제 설치 상태를 확인하세요.
 
 ******
@@ -204,9 +211,10 @@ minimum host build: 5299 (6.8.0)
 
 _2026/10/01_
 
-- `힌트` P3 개발 미리보기. 확인, 진행률, 결과 및 일괄 대화상자, 외부 열기와 공유, 선택적 원본 삭제, 시스템 확인 및 포그라운드 알림이 구현되었습니다. 스크립트 API, 독립 홈과 설정, 설치 기록 및 기본 설치 프로그램 설정은 향후 계획입니다. 진행 상황과 기기 검증 범위는 [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md)를 참고하세요. AutoJs6 >= 6.8.0 (5299).
+- `힌트` 개발 미리보기. 확인, 진행률, 결과 및 일괄 대화상자, 외부 열기와 공유, 선택적 원본 삭제, 시스템 확인 및 포그라운드 알림이 구현되었습니다. `installer` 스크립트 API에는 AutoJs6 >= 6.8.0 (5300)이 필요합니다. 독립 홈과 설정, 설치 기록 및 기본 설치 프로그램 설정 화면은 향후 계획입니다. 진행 상황과 기기 검증 범위는 [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md)를 참고하세요. 플러그인 기본 호환성: AutoJs6 >= 6.8.0 (5299).
 - `기능` 플러그인 식별자 `three-setup-installer` (engine `installer`), INFO 서비스, Wake Activity 및 호스트 검색용 `org.autojs.plugin.INSTALLER` 서비스 골격
 - `기능` 10개 언어의 README, 플러그인 센터 안내 및 변경 기록
+- `기능` 스크립트 API `installer` (별칭 `$installer`)는 동기, `...Async` 및 세션 방식을 제공하며 단일 / 일괄 / 분할 설치, 제거, 검사, 권한 방식과 사용자 조회 및 기본 설치 프로그램 설정을 지원합니다. 실패는 안정적인 `code`를 가진 `InstallerError`입니다 (AutoJs6 >= 6.8.0 (5300) 필요)
 - `수정` 해당 시스템 번역이 없는 기기에서 취소 문구가 플러그인 언어를 따르지 않던 문제
 - `개선` 플러그인 ID, engine, 서비스 action / category, Binder descriptor 및 최소 호스트 버전을 호스트 installer-api 계약 상수에서 가져오도록 변경; 기능 선언에 설치기 계약 버전 1을 추가하고 최소 호스트 빌드를 5299로 갱신
 - `개선` 임의 접근이 가능한 원본은 전체 캐시 복사를 생략하고, 스트림은 필요할 때 임시 저장합니다. ZIP 분할 패키지를 지원하며, AAB는 정보 확인만 허용하고 내용이 변경된 원본은 거부합니다.
@@ -224,7 +232,7 @@ _2026/10/01_
 - `의존성` Root 인증 방식을 위해 libsu 6.0.0 (`com.github.topjohnwu.libsu:core`, `service`) 추가
 - `의존성` 특권 서비스가 숨겨진 패키지 설치 API에 접근하도록 AndroidHiddenApiBypass 6.1 추가
 - `의존성` 공유 플러그인 계약으로 `common-plugin-api.aar` (AutoJs6 모듈 `plugin-api/common-plugin-api`, 호스트 빌드 6.8.0 / 5298, MPL 2.0) 추가 및 `locks/host-api-aars.lock`에 해시 고정
-- `의존성` `package-archive-parser.aar` 및 `installer-api.aar` (AutoJs6 모듈 `plugin-api/package-archive-parser` 및 `plugin-api/installer-api`, 호스트 P1 빌드 6.8.0 / 5299, MPL 2.0) 추가 및 `common-plugin-api.aar`와 함께 `locks/host-api-aars.lock`에 해시 고정
+- `의존성` `package-archive-parser.aar` 및 `installer-api.aar` (AutoJs6 모듈 `plugin-api/package-archive-parser` 및 `plugin-api/installer-api`, MPL 2.0) 추가 및 `common-plugin-api.aar`와 함께 `locks/host-api-aars.lock`에 해시 고정
 - `의존성` 일반 ZIP 분할 패키지를 인식하도록 내장 패키지 분석기 업데이트
 
 ##### 더 많은 릴리스 기록

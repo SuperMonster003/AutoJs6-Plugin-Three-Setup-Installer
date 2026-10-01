@@ -42,7 +42,7 @@
 
 ******
 
-3-Setup Installer 透過 AutoJs6 的安裝入口及安裝套件檔案的外部開啟或分享請求, 安裝, 更新, 檢查與解除安裝 Android 應用程式. 支援一般 Android 確認以及透過 Shizuku 或 Root 進行特權安裝. 腳本 API, 獨立首頁與設定頁仍屬後續規劃.
+3-Setup Installer 透過 AutoJs6 的安裝入口及安裝套件檔案的外部開啟或分享請求, 安裝, 更新, 檢查與解除安裝 Android 應用程式. 支援一般 Android 確認以及透過 Shizuku 或 Root 進行特權安裝. 相容宿主已提供 `installer` 腳本 API; 獨立首頁與設定頁仍屬後續規劃.
 
 AutoJs6 透過 Binder 服務發現外掛程式, 以唯讀檔案描述元交出安裝套件; 外掛程式解析安裝套件, 選擇授權方式, 視需要顯示自己的確認與進度對話方塊, 並回報階段, 進度與結果. 特權操作在 Shizuku 使用者服務或 libsu Root 服務中執行, 直接與系統套件安裝器對話.
 
@@ -52,7 +52,7 @@ AutoJs6 透過 Binder 服務發現外掛程式, 以唯讀檔案描述元交出�
 
 ******
 
-1.0.0: P3 開發預覽. 已實作確認, 進度, 結果與批量對話框, 外部開啟與分享, 可選來源刪除, 系統確認及前景通知. 程序重新啟動後, 恢復介面顯示已確認並儲存的結果, 未完成項目標為中斷. 恢復介面為唯讀, 不會自動安裝或重試. 腳本 API, 獨立首頁與設定, 安裝歷史及預設安裝器設定仍屬後續規劃. 進度與裝置涵蓋範圍見 [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md). AutoJs6 >= 6.8.0 (5299).
+1.0.0: 開發預覽. 已實作確認, 進度, 結果與批量對話框, 外部開啟與分享, 可選來源刪除, 系統確認及前景通知. 程序重新啟動後, 恢復介面顯示已確認並儲存的結果, 未完成項目標為中斷. 恢復介面為唯讀, 不會自動安裝或重試. `installer` 腳本 API 需要 AutoJs6 >= 6.8.0 (5300). 獨立首頁與設定, 安裝歷史及預設安裝器設定介面仍屬後續規劃. 進度與裝置涵蓋範圍見 [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md). 插件基本相容性: AutoJs6 >= 6.8.0 (5299).
 
 ******
 
@@ -70,8 +70,8 @@ AutoJs6 透過 Binder 服務發現外掛程式, 以唯讀檔案描述元交出�
 - 可用插件開啟安裝套件, 或分享單個及多個安裝套件. 外部來源安裝失敗後, 在 URI 及其存取權限仍可用時可重試對應項目.
 - 提供前景安裝進度, 取消操作及結果通知. 未授予通知權限不會阻止安裝.
 - 對話框預設跟隨 AutoJs6 的語言, 夜間模式與主題色; 宿主無法使用時退回系統語言和夜間模式及約定預設顏色.
-- 後續規劃: 預設安裝器設定, 包括透過特權選擇處理程式, 以及必要時引導系統預設設定.
-- P4 規劃: 腳本 API `installer` (別名 `$installer`) 提供同步, `...Async` 與工作階段形態, 失敗以帶穩定 `code` 的 `InstallerError` 表示.
+- 腳本可透過 `installer.isDefault` 查詢預設安裝器, 透過 `installer.setDefault` / `setDefaultAsync` 使用 Shizuku 或 Root 設定. 獨立設定介面和系統設定引導仍屬後續規劃.
+- 腳本 API `installer` (別名 `$installer`) 提供同步, `...Async` 與工作階段形態, 支援單項 / 批量 / 分包安裝, 卸載, 檢查, 授權方式與使用者查詢及預設安裝器設定; 失敗為帶穩定 `code` 的 `InstallerError` (需要 AutoJs6 >= 6.8.0 (5300)).
 - P5 規劃: 獨立首頁與設定頁, 安裝歷史及已安裝應用程式管理.
 
 ******
@@ -95,7 +95,7 @@ AutoJs6 透過 Binder 服務發現外掛程式, 以唯讀檔案描述元交出�
 - `none`: 標準 PackageInstaller 工作階段; Android 會要求使用者確認每次安裝, 支援分包, 不提供特權選項.
 - `shizuku`: 需要 Shizuku 正在執行 (經無線偵錯, ADB 或 Root 啟動) 並已向插件授權. 其 shell 權限支援靜默安裝, 靜默解除安裝及面向其他使用者的操作.
 - `root`: 需要 Root 管理器向外掛程式授予 `su`; 透過 libsu Root 服務提供與 Shizuku 相同的操作. 在一般 (user) 韌體上降級仍只對 debuggable 應用程式生效, 這是框架規則而非外掛程式限制.
-- **注意:** 特權可用時, 宿主請求使用 `interaction: 'auto'` 預設靜默安裝, 不會主動開啟確認介面. 若 Android 仍要求確認, `auto` 允許系統確認並記錄至 `notes`. 需要安裝前確認時使用 `interaction: 'dialog'`; 禁止系統確認時使用 `interaction: 'silent'`, 此時需要確認的安裝會失敗. 後續腳本 API 沿用相同預設語義.
+- **注意:** 特權可用時, 宿主請求使用 `interaction: 'auto'` 預設靜默安裝, 不會主動開啟確認介面. 若 Android 仍要求確認, `auto` 允許系統確認並記錄至 `notes`. 需要安裝前確認時使用 `interaction: 'dialog'`; 禁止系統確認時使用 `interaction: 'silent'`, 此時需要確認的安裝會失敗. 腳本 API 沿用相同預設語義.
 
 ******
 
@@ -103,24 +103,31 @@ AutoJs6 透過 Binder 服務發現外掛程式, 以唯讀檔案描述元交出�
 
 ******
 
-一個靜默安裝, 允許降級地更新, 監聽工作階段並卸載應用程式的腳本 (自路線圖 P4 起可用):
+安裝, 批量與工作階段操作的範本函數 (需要 AutoJs6 >= 6.8.0 (5300)); 先自行選擇並核實來源, 再呼叫對應函數. 以下範例不會自動安裝, 卸載或修改預設安裝器.:
 
 ```js
-// Silent installation through the first available authorizer (Shizuku, then Root); the plugin dialog otherwise.
-let result = installer.install('/sdcard/Download/app.apk');
-console.log(result.ok, result.packageName, result.authorizer);
+// Read-only probe. The functions below run only when explicitly called with chosen sources.
+console.log(installer.status);
 
-// Explicit authorizer and options; every failure is an InstallerError with a stable code.
-installer.installAsync('/sdcard/Download/old.apk', { authorizer: 'shizuku', allowDowngrade: true, deleteSource: true })
-    .then(r => console.log(r.ok ? 'done' : r.error.code))
-    .catch(e => console.error(e.code, e.systemMessage));
+// An already authorized Shizuku service is required; silent never falls back to a dialog.
+let installChosen = source => installer.install(source, {
+    authorizer: 'shizuku', interaction: 'silent', deleteSource: false,
+});
 
-// Session form with progress events, batch installation, uninstallation and the default installer.
-let session = installer.session({ splits: ['/sdcard/base.apk', '/sdcard/split_config.arm64_v8a.apk'] });
-session.on('progress', p => console.log(Math.round(p * 100) + '%')).on('complete', r => console.log(r.versionName));
-installer.install(['/sdcard/a.apk', '/sdcard/b.xapk']).forEach(r => console.log(r.packageName, r.ok));
-installer.uninstall('com.example.app', { keepData: true });
-if (!installer.isDefault()) installer.setDefault(true);
+// An array means independent applications, including an array containing one source.
+let installBatchChosen = sources => installer.installAsync(sources, {
+    interaction: 'dialog', continueOnError: true, deleteSource: false,
+}).then(results => results.forEach(result => console.log(result.ok, result.packageName, result.error)))
+    .catch(error => console.error(error.code, error.systemMessage));
+
+// A source may also be { splits: [...] } for one application's split files.
+let watchChosen = source => {
+    let session = installer.session(source, { interaction: 'dialog', deleteSource: false });
+    session.on('progress', progress => console.log(Math.round(progress * 100) + '%'))
+        .on('complete', result => console.log(result))
+        .on('error', error => console.error(error.code, error.systemMessage));
+    return session;
+};
 ```
 
 ******
@@ -143,7 +150,7 @@ if (!installer.isDefault()) installer.setDefault(true);
 
 - **為何安裝仍要求確認?** `none` 始終使用系統確認. 準備好授權後, 可在安裝對話框中選擇 Shizuku 或 Root. Android 或裝置原則仍可能要求系統確認.
 - **能安裝 `.aab` 嗎?** 不能. Android App Bundle 是發佈格式, 請先用 bundletool 轉換為 `.apks` 集合. 外掛程式會識別 `.aab` 檔案並顯示其套件名稱與模組資訊.
-- **為何來源沒有刪除?** 僅在安裝成功後嘗試刪除, 來源提供方可能拒絕. 這不會改變安裝成功的結果. 當來源由 AutoJs6 或其他傳送應用程式擁有時, 刪除由該來源應用程式負責.
+- **為甚麼來源沒有刪除?** 僅在安裝成功後嘗試刪除, 失敗不會改變安裝成功的結果. 外部來源提供者可能拒絕刪除. 腳本的 `deleteSource` 由宿主刪除路徑或 `file://` 來源, 保留 `content://` 與失敗項來源; 請檢查 `sourceDeleted` 和 `notes`.
 - **可以重試或恢復嗎?** 失敗的外部 URI 項目在來源及存取權限仍可用時可以重試. 來源或存取權限釋放後, 請重新開啟安裝套件. 程序重新啟動後, 恢復介面顯示已確認並儲存的結果, 未完成項目標為中斷. 恢復介面為唯讀, 不會自動安裝或重試. 再次開始前請檢查應用程式的實際安裝狀態.
 
 ******
@@ -204,9 +211,10 @@ minimum host build: 5299 (6.8.0)
 
 _2026/10/01_
 
-- `提示` P3 開發預覽. 已實作確認, 進度, 結果與批量對話框, 外部開啟與分享, 可選來源刪除, 系統確認及前景通知. 腳本 API, 獨立首頁與設定, 安裝歷史及預設安裝器設定仍屬後續規劃. 進度與裝置涵蓋範圍見 [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md). AutoJs6 >= 6.8.0 (5299).
+- `提示` 開發預覽. 已實作確認, 進度, 結果與批量對話框, 外部開啟與分享, 可選來源刪除, 系統確認及前景通知. `installer` 腳本 API 需要 AutoJs6 >= 6.8.0 (5300). 獨立首頁與設定, 安裝歷史及預設安裝器設定介面仍屬後續規劃. 進度與裝置涵蓋範圍見 [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md). 插件基本相容性: AutoJs6 >= 6.8.0 (5299).
 - `新增` 外掛程式標識 `three-setup-installer` (engine `installer`), 含 INFO 服務, Wake Activity 以及供宿主發現的 `org.autojs.plugin.INSTALLER` 服務骨架
 - `新增` 10 種語言的 README, 外掛程式中心說明與更新日誌
+- `新增` 腳本 API `installer` (別名 `$installer`) 提供同步, `...Async` 與工作階段形態, 支援單項 / 批量 / 分包安裝, 卸載, 檢查, 授權方式與使用者查詢及預設安裝器設定; 失敗為帶穩定 `code` 的 `InstallerError` (需要 AutoJs6 >= 6.8.0 (5300))
 - `修復` 系統缺少對應翻譯時, 取消操作文字未跟隨外掛程式語言的問題
 - `優化` 插件 ID, engine, 服務 action / category, Binder descriptor 與最低宿主版本改由宿主 installer-api 契約常量提供; 能力聲明加入安裝器契約版本 1, 最低宿主建置回填為 5299
 - `優化` 可隨機存取的來源避免完整快取副本, 串流來源按需暫存. 支援一般 ZIP 分包, AAB 僅供檢查, 拒絕內容發生變化的來源.
@@ -224,7 +232,7 @@ _2026/10/01_
 - `依賴` 附加 libsu 6.0.0 (`com.github.topjohnwu.libsu:core`, `service`) 用於 Root 授權方式
 - `依賴` 附加 AndroidHiddenApiBypass 6.1 用於特權服務存取隱藏的套件安裝器 API
 - `依賴` 附加 `common-plugin-api.aar` (AutoJs6 模組 `plugin-api/common-plugin-api`, 宿主建置 6.8.0 / 5298, MPL 2.0) 作為共用外掛程式契約, 並在 `locks/host-api-aars.lock` 中鎖定雜湊
-- `依賴` 附加 `package-archive-parser.aar` 與 `installer-api.aar` (AutoJs6 模組 `plugin-api/package-archive-parser` 與 `plugin-api/installer-api`, 宿主 P1 建置 6.8.0 / 5299, MPL 2.0), 與 `common-plugin-api.aar` 一同在 `locks/host-api-aars.lock` 中鎖定雜湊
+- `依賴` 附加 `package-archive-parser.aar` 與 `installer-api.aar` (AutoJs6 模組 `plugin-api/package-archive-parser` 與 `plugin-api/installer-api`, MPL 2.0), 與 `common-plugin-api.aar` 一同在 `locks/host-api-aars.lock` 中鎖定雜湊
 - `依賴` 升級共用安裝包解析器, 支援普通 ZIP 分包容器
 
 ##### 更多發行歷史

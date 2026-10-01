@@ -42,7 +42,7 @@
 
 ******
 
-يثبت 3-Setup Installer تطبيقات Android ويحدثها ويفحصها ويزيلها عبر مداخل التثبيت في AutoJs6 وطلبات فتح الحزم أو مشاركتها من تطبيقات أخرى. يدعم تأكيد Android المعتاد والتثبيت بصلاحيات Shizuku أو Root. واجهة السكربت وصفحتا الرئيسية والإعدادات المستقلتان ما زالت ضمن الخطط القادمة.
+يثبت 3-Setup Installer تطبيقات Android ويحدثها ويفحصها ويزيلها عبر مداخل التثبيت في AutoJs6 وطلبات فتح الحزم أو مشاركتها من تطبيقات أخرى. يدعم تأكيد Android المعتاد والتثبيت بصلاحيات Shizuku أو Root. توفر إصدارات المضيف المتوافقة واجهة السكربت `installer`; ما زالت صفحتا الرئيسية والإعدادات المستقلتان ضمن الخطط القادمة.
 
 يكتشف AutoJs6 الإضافة عبر خدمة Binder الخاصة بها ويسلمها ملفات الحزم كواصفات ملفات للقراءة فقط. تحلل الإضافة الحزمة وتختار طريقة التفويض وتعرض عند الحاجة مربع حوار التأكيد والتقدم الخاص بها ثم تبلغ عن المراحل والتقدم والنتائج. تعمل العمليات ذات الامتيازات داخل خدمة مستخدم Shizuku أو خدمة root من libsu تتخاطب مباشرة مع مثبت حزم النظام.
 
@@ -52,7 +52,7 @@
 
 ******
 
-1.0.0: معاينة تطوير P3. تم تنفيذ حوارات التأكيد والتقدم والنتائج والدفعات, والفتح والمشاركة الخارجية, والحذف الاختياري للمصدر, وتأكيد النظام وإشعارات الخدمة الأمامية. بعد إعادة تشغيل العملية, تعرض الواجهة المستعادة النتائج المؤكدة المحفوظة وتحدد العناصر غير المكتملة على أنها منقطعة. الواجهة المستعادة للقراءة فقط ولا تثبت أو تعيد المحاولة تلقائيا. واجهة السكربت والرئيسية والإعدادات المستقلة وسجل التثبيت وإعداد المثبت الافتراضي ما زالت مخططة. راجع [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md) للتقدم وتغطية الأجهزة. AutoJs6 >= 6.8.0 (5299).
+1.0.0: معاينة تطوير. تم تنفيذ حوارات التأكيد والتقدم والنتائج والدفعات, والفتح والمشاركة الخارجية, والحذف الاختياري للمصدر, وتأكيد النظام وإشعارات الخدمة الأمامية. بعد إعادة تشغيل العملية, تعرض الواجهة المستعادة النتائج المؤكدة المحفوظة وتحدد العناصر غير المكتملة على أنها منقطعة. الواجهة المستعادة للقراءة فقط ولا تثبت أو تعيد المحاولة تلقائيا. تتطلب واجهة السكربت `installer` إصدار AutoJs6 >= 6.8.0 (5300). ما زالت الرئيسية والإعدادات المستقلة وسجل التثبيت وشاشة إعداد المثبت الافتراضي مخططة. راجع [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md) للتقدم وتغطية الأجهزة. التوافق الأساسي للإضافة: AutoJs6 >= 6.8.0 (5299).
 
 ******
 
@@ -70,8 +70,8 @@
 - افتح ملفات الحزم بالإضافة أو شارك حزمة واحدة أو عدة حزم معها. يمكن إعادة محاولة المصادر الخارجية الفاشلة ما دام URI وصلاحية الوصول متاحين.
 - إشعارات تقدم التثبيت في الخدمة الأمامية والإلغاء والنتائج. رفض إذن الإشعارات لا يمنع التثبيت.
 - تتبع الحوارات افتراضيا لغة AutoJs6 والوضع الليلي ولون السمة. عند غياب المضيف تستخدم لغة النظام ووضعه الليلي ولونا افتراضيا.
-- مخطط: إعداد المثبت الافتراضي, بما يشمل الاختيار بصلاحيات وإرشادات إعدادات النظام عند الحاجة.
-- مخطط في P4: واجهة السكربت `installer` (الاسم البديل `$installer`) بصيغ متزامنة و`...Async` وجلسات, وأخطاء `InstallerError` بقيم `code` ثابتة.
+- يمكن للسكربتات الاستعلام عن المثبت الافتراضي عبر `installer.isDefault` وتعيينه بصلاحيات Shizuku أو Root عبر `installer.setDefault` / `setDefaultAsync`. ما زالت شاشة الإعداد المستقلة وإرشادات إعدادات النظام مخططة.
+- توفر واجهة السكربت `installer` (الاسم البديل `$installer`) صيغ التزامن و`...Async` والجلسات للتثبيت الفردي والدفعات والحزم المقسمة, والإزالة والفحص والاستعلام عن طرق التفويض والمستخدمين وتعيين المثبت الافتراضي. الأخطاء من نوع `InstallerError` بقيم `code` ثابتة (يتطلب AutoJs6 >= 6.8.0 (5300)).
 - مخطط في P5: صفحتا الرئيسية والإعدادات المستقلتان وسجل التثبيت وإدارة التطبيقات المثبتة.
 
 ******
@@ -95,7 +95,7 @@
 - `none`: جلسة PackageInstaller القياسية. يطلب Android من المستخدم تأكيد كل تثبيت, والحزم المقسمة مدعومة, والخيارات ذات الامتيازات غير متاحة.
 - `shizuku`: يتطلب تشغيل Shizuku (بالتصحيح اللاسلكي أو ADB أو Root) ومنح الإضافة الإذن. تدعم صلاحيات shell التثبيت والإزالة الصامتين والعمليات للمستخدمين الآخرين.
 - `root`: يحتاج إلى مدير Root يمنح `su` للإضافة. يوفر العمليات نفسها التي يوفرها Shizuku عبر خدمة root من libsu. الرجوع إلى إصدار أقدم على البرامج الثابتة العادية (user) لا ينجح إلا مع التطبيقات القابلة للتصحيح, وهذه قاعدة من إطار العمل وليست قيدا من الإضافة.
-- **ملاحظة:** عند توفر الصلاحيات, تثبت طلبات المضيف التي تستخدم `interaction: 'auto'` بصمت دون فتح التأكيد تلقائيا. إذا طلب Android التأكيد, يسمح به `auto` ويسجله في `notes`. استخدم `interaction: 'dialog'` لطلب التأكيد قبل التثبيت, أو `interaction: 'silent'` لفشل العملية إن احتاجت تأكيد النظام. ستتبع واجهة السكربت المخططة السلوك الافتراضي نفسه.
+- **ملاحظة:** عند توفر الصلاحيات, تثبت طلبات المضيف التي تستخدم `interaction: 'auto'` بصمت دون فتح التأكيد تلقائيا. إذا طلب Android التأكيد, يسمح به `auto` ويسجله في `notes`. استخدم `interaction: 'dialog'` لطلب التأكيد قبل التثبيت, أو `interaction: 'silent'` لفشل العملية إن احتاجت تأكيد النظام. تتبع واجهة السكربت السلوك الافتراضي نفسه.
 
 ******
 
@@ -103,24 +103,31 @@
 
 ******
 
-برنامج نصي يثبت بصمت ويحدث مع السماح بالرجوع إلى إصدار أقدم ويراقب جلسة ويزيل تطبيقا (متاح اعتبارا من المرحلة P4):
+دوال نموذجية للتثبيت والدفعات والجلسات (يتطلب AutoJs6 >= 6.8.0 (5300)). اختر المصادر وتحقق منها قبل استدعاء الدالة. لا يثبت المثال أو يزيل أو يغير المثبت الافتراضي تلقائيا.:
 
 ```js
-// Silent installation through the first available authorizer (Shizuku, then Root); the plugin dialog otherwise.
-let result = installer.install('/sdcard/Download/app.apk');
-console.log(result.ok, result.packageName, result.authorizer);
+// Read-only probe. The functions below run only when explicitly called with chosen sources.
+console.log(installer.status);
 
-// Explicit authorizer and options; every failure is an InstallerError with a stable code.
-installer.installAsync('/sdcard/Download/old.apk', { authorizer: 'shizuku', allowDowngrade: true, deleteSource: true })
-    .then(r => console.log(r.ok ? 'done' : r.error.code))
-    .catch(e => console.error(e.code, e.systemMessage));
+// An already authorized Shizuku service is required; silent never falls back to a dialog.
+let installChosen = source => installer.install(source, {
+    authorizer: 'shizuku', interaction: 'silent', deleteSource: false,
+});
 
-// Session form with progress events, batch installation, uninstallation and the default installer.
-let session = installer.session({ splits: ['/sdcard/base.apk', '/sdcard/split_config.arm64_v8a.apk'] });
-session.on('progress', p => console.log(Math.round(p * 100) + '%')).on('complete', r => console.log(r.versionName));
-installer.install(['/sdcard/a.apk', '/sdcard/b.xapk']).forEach(r => console.log(r.packageName, r.ok));
-installer.uninstall('com.example.app', { keepData: true });
-if (!installer.isDefault()) installer.setDefault(true);
+// An array means independent applications, including an array containing one source.
+let installBatchChosen = sources => installer.installAsync(sources, {
+    interaction: 'dialog', continueOnError: true, deleteSource: false,
+}).then(results => results.forEach(result => console.log(result.ok, result.packageName, result.error)))
+    .catch(error => console.error(error.code, error.systemMessage));
+
+// A source may also be { splits: [...] } for one application's split files.
+let watchChosen = source => {
+    let session = installer.session(source, { interaction: 'dialog', deleteSource: false });
+    session.on('progress', progress => console.log(Math.round(progress * 100) + '%'))
+        .on('complete', result => console.log(result))
+        .on('error', error => console.error(error.code, error.systemMessage));
+    return session;
+};
 ```
 
 ******
@@ -143,7 +150,7 @@ if (!installer.isDefault()) installer.setDefault(true);
 
 - **لماذا ما زال التثبيت يطلب التأكيد?** يستخدم `none` تأكيد النظام دائما. جهز التفويض ثم اختر Shizuku أو Root في حوار التثبيت. قد يظل Android أو نهج الجهاز يطلب تأكيد النظام.
 - **هل يمكن تثبيت ملف `.aab`?** لا. Android App Bundle صيغة نشر, فحوله أولا باستخدام bundletool إلى مجموعة `.apks`. تتعرف الإضافة على ملفات `.aab` وتعرض معلومات الحزمة والوحدات.
-- **لماذا لم يحذف المصدر?** تجري محاولة الحذف بعد نجاح التثبيت فقط, وقد يرفضها موفر المصدر. يظل التثبيت ناجحا. إذا كان AutoJs6 أو تطبيق مرسل آخر يملك المصدر, يكون ذلك التطبيق مسؤولا عن الحذف.
+- **لماذا لم يحذف المصدر?** تجري محاولة الحذف بعد نجاح التثبيت فقط ولا يغير فشل الحذف نتيجة التثبيت. قد يرفض المزود الخارجي الحذف. في السكربتات ينفذ المضيف `deleteSource` للمسارات ومصادر `file://` ويحتفظ بمصادر `content://` والعناصر الفاشلة. راجع `sourceDeleted` و`notes`.
 - **هل يمكن إعادة المحاولة أو الاستئناف?** يمكن إعادة محاولة URI خارجي فاشل ما دام المصدر والوصول متاحين. بعد تحرير المصدر أو صلاحية الوصول, افتح الحزمة مجددا. بعد إعادة تشغيل العملية, تعرض الواجهة المستعادة النتائج المؤكدة المحفوظة وتحدد العناصر غير المكتملة على أنها منقطعة. الواجهة المستعادة للقراءة فقط ولا تثبت أو تعيد المحاولة تلقائيا. تحقق من حالة التطبيق المثبت قبل البدء مجددا.
 
 ******
@@ -204,9 +211,10 @@ minimum host build: 5299 (6.8.0)
 
 _2026/10/01_
 
-- `تلميح` معاينة تطوير P3. تم تنفيذ حوارات التأكيد والتقدم والنتائج والدفعات, والفتح والمشاركة الخارجية, والحذف الاختياري للمصدر, وتأكيد النظام وإشعارات الخدمة الأمامية. واجهة السكربت والرئيسية والإعدادات المستقلة وسجل التثبيت وإعداد المثبت الافتراضي ما زالت مخططة. راجع [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md) للتقدم وتغطية الأجهزة. AutoJs6 >= 6.8.0 (5299).
+- `تلميح` معاينة تطوير. تم تنفيذ حوارات التأكيد والتقدم والنتائج والدفعات, والفتح والمشاركة الخارجية, والحذف الاختياري للمصدر, وتأكيد النظام وإشعارات الخدمة الأمامية. تتطلب واجهة السكربت `installer` إصدار AutoJs6 >= 6.8.0 (5300). ما زالت الرئيسية والإعدادات المستقلة وسجل التثبيت وشاشة إعداد المثبت الافتراضي مخططة. راجع [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md) للتقدم وتغطية الأجهزة. التوافق الأساسي للإضافة: AutoJs6 >= 6.8.0 (5299).
 - `ميزة` هوية الإضافة `three-setup-installer` (engine `installer`) مع خدمة INFO و Wake Activity وهيكل خدمة `org.autojs.plugin.INSTALLER` لاكتشاف المضيف
 - `ميزة` README وتعليمات مركز الإضافات وسجل التغييرات بعشر لغات
+- `ميزة` توفر واجهة السكربت `installer` (الاسم البديل `$installer`) صيغ التزامن و`...Async` والجلسات للتثبيت الفردي والدفعات والحزم المقسمة, والإزالة والفحص والاستعلام عن طرق التفويض والمستخدمين وتعيين المثبت الافتراضي. الأخطاء من نوع `InstallerError` بقيم `code` ثابتة (يتطلب AutoJs6 >= 6.8.0 (5300))
 - `إصلاح` عدم اتباع نص الإلغاء لغة الإضافة على الأجهزة التي تفتقد ترجمة النظام المقابلة
 - `تحسين` أصبح معرّف الاضافة والمحرك و action / category الخاصة بالخدمة وواصف Binder والحد الأدنى لإصدار المضيف تأتي من ثوابت عقد installer-api في المضيف; تعلن القدرات الإصدار 1 من عقد المثبّت, وتم تحديث الحد الأدنى لبناء المضيف إلى 5299
 - `تحسين` تجنب المصادر ذات الوصول العشوائي نسخ الملف بالكامل إلى الذاكرة المؤقتة, مع تخزين التدفقات مؤقتا عند الحاجة. تدعم حزم ZIP المجزأة, وتقتصر ملفات AAB على الفحص, وترفض المصادر التي تغير محتواها.
@@ -224,7 +232,7 @@ _2026/10/01_
 - `تبعية` إضافة libsu 6.0.0 (`com.github.topjohnwu.libsu:core` و `service`) لطريقة تفويض Root
 - `تبعية` إضافة AndroidHiddenApiBypass 6.1 لواجهات مثبت الحزم المخفية التي تستخدمها الخدمة ذات الامتيازات
 - `تبعية` إضافة `common-plugin-api.aar` (وحدة AutoJs6 `plugin-api/common-plugin-api`, بنية المضيف 6.8.0 / 5298, MPL 2.0) كاتفاقية إضافات مشتركة مع قفل التجزئة في `locks/host-api-aars.lock`
-- `تبعية` إضافة `package-archive-parser.aar` و `installer-api.aar` (وحدتا AutoJs6 `plugin-api/package-archive-parser` و `plugin-api/installer-api`, بنية المضيف P1 6.8.0 / 5299, MPL 2.0) مع قفل التجزئة في `locks/host-api-aars.lock` إلى جانب `common-plugin-api.aar`
+- `تبعية` إضافة `package-archive-parser.aar` و `installer-api.aar` (وحدتا AutoJs6 `plugin-api/package-archive-parser` و `plugin-api/installer-api`, MPL 2.0) مع قفل التجزئة في `locks/host-api-aars.lock` إلى جانب `common-plugin-api.aar`
 - `تبعية` تحديث محلل الحزم المضمن للتعرف على حاويات ZIP العادية للحزم المقسمة
 
 ##### لمزيد من سجل الإصدارات

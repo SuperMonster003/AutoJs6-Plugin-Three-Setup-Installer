@@ -407,22 +407,22 @@ runtime/api/augment/installer/          Installer.kt (AugmentableKey("installer"
 
 ### P4.1 服务层与 augment
 
-- [ ] (宿主) `runtime/api/installer/InstallerService.kt` (每脚本, `Closeable`, 脚本停止时取消全部会话并释放 PFD), `InstallerScriptOptions.kt` (选项规范化: `authorizer`, `interaction`, `allowDowngrade`, `allowTestOnly`, `bypassLowTargetSdk`, `installer`, `user`, `deleteSource`, `splits`, `timeout`, `continueOnError`), `InstallerScriptArguments.kt` (来源规范化: 字符串路径 / `content://` / `java.io.File` / `android.net.Uri` / 数组 / `{ splits }`), `InstallerScriptValues.kt`.
-- [ ] (宿主) `runtime/api/augment/installer/Installer.kt` (`AugmentableKey("installer")`, `$installer` 别名与其它模块一致), `InstallSessionNativeObject.kt` (EventEmitter: `stage`, `progress`, `complete`, `error`, `cancel`; 方法 `cancel()`, `wait(timeout?)`, 属性 `id`, `state`, `result`), `InstallerJsErrors.kt` (`InstallerError` 构造与 `code` / `status` / `systemMessage` / `packageName`), `InstallerPromises.kt`; 在 `ScriptRuntime.augment` 装配 (与 `Mail` 相邻).
-- [ ] (宿主) 方法: `install` / `installAsync` (单个与数组重载), `session`, `uninstall` / `uninstallAsync`, `inspect` / `inspectAsync`, `authorizer` 对象 (`state(name?)`, `request(name)` / `requestAsync`, `available`), `isDefault` / `setDefault` / `setDefaultAsync`, `users` / `usersAsync`, `isAvailable`, `status` 属性; 草案见附录 A.
-- [ ] (测试) JVM: 选项 / 来源规范化边界 (空, 非法枚举, 超限数组, Unicode 路径), 错误映射, 数组与 `{ splits }` 判别; 宿主 `testAppDebugUnitTest` 通过.
+- [x] (宿主) `runtime/api/installer/InstallerService.kt` (每脚本, `Closeable`, 脚本停止时取消全部会话并释放 PFD), `InstallerScriptOptions.kt` (选项规范化: `authorizer`, `interaction`, `allowDowngrade`, `allowTestOnly`, `bypassLowTargetSdk`, `installer`, `user`, `deleteSource`, `splits`, `timeout`, `continueOnError`), `InstallerScriptArguments.kt` (来源规范化: 字符串路径 / `content://` / `java.io.File` / `android.net.Uri` / 数组 / `{ splits }`), `InstallerScriptValues.kt`.
+- [x] (宿主) `runtime/api/augment/installer/Installer.kt` (`AugmentableKey("installer")`, `$installer` 别名与其它模块一致), `InstallSessionNativeObject.kt` (EventEmitter: `stage`, `progress`, `complete`, `error`, `cancel`; 方法 `cancel()`, `wait(timeout?)`, 属性 `id`, `state`, `result`), `InstallerJsErrors.kt` (`InstallerError` 构造与 `code` / `status` / `systemMessage` / `packageName`), `InstallerPromises.kt`; 在 `ScriptRuntime.augment` 装配 (与 `Mail` 相邻).
+- [x] (宿主) 方法: `install` / `installAsync` (单个与数组重载), `session`, `uninstall` / `uninstallAsync`, `inspect` / `inspectAsync`, `authorizer` 对象 (`state(name?)`, `request(name)` / `requestAsync`, `available`), `isDefault` / `setDefault` / `setDefaultAsync`, `users` / `usersAsync`, `isAvailable`, `status` 属性; 草案见附录 A.
+- [x] (测试) JVM: 选项 / 来源规范化边界 (空, 非法枚举, 超限数组, Unicode 路径), 错误映射, 数组与 `{ splits }` 判别; 宿主 `testAppDebugUnitTest` 通过. (JVM 2026-10-01: 宿主 3,272 项, 0 失败, 6 项既有跳过; 其中 installer 82 项全过; 插件 201 项全过, 含单元素批量协议回归.)
 
 ### P4.2 会话形态与同步等待
 
-- [ ] (宿主) 同步形态阻塞当前脚本线程 (Looper 脚本用 `Condition` 等待, 与 `mail` 一致), 停止脚本取消未完成调用; Async 形态回调在脚本线程; `session` 形态事件在脚本线程分发, 未监听 `error` 时不抛到全局 (记录到控制台).
-- [ ] (测试) 设备 (需 P2 插件): `install` 同步 / Async / session 三形态各一次 (Shizuku), `uninstall`, `inspect` (含 AAB), 停止脚本时会话被取消.
+- [x] (宿主) 同步形态阻塞当前脚本线程 (Looper 脚本用 `Condition` 等待, 与 `mail` 一致), 停止脚本取消未完成调用; Async 形态回调在脚本线程; `session` 形态事件在脚本线程分发, 未监听 `error` 时不抛到全局 (记录到控制台).
+- [x] (测试) 设备 (需 P2 插件): `install` 同步 / Async / session 三形态各一次 (Shizuku), `uninstall`, `inspect` (含 AAB), 停止脚本时会话被取消. (DEVICE 2026-10-01: API 35 真机 13 项全过无跳过, 含三形态安装 / Async 更新与卸载 / APK 与 AAB / 成功留源或删除 / 短 wait / cancel / wait 中 stop / 管道关闭 / 无插件错误; API 24 来源与终态竞争 8 项及无特权脚本 4 项全过. 见 docs/dev/p4-script-api-evidence.md.)
 
 ### P4.3 示例与守卫
 
-- [ ] (宿主) 示例脚本 `assets-app/sample/应用/静默安装应用.js`, `批量安装应用.js`, `设为默认安装器.js` (10 语言示例标题按既有示例目录约定); `assets-app/doc` 不在此改 (P7 生成).
-- [ ] (宿主) 宿主 `.changelog` 10 语言 `feature`: `installer 模块, 用于安装, 更新与卸载应用, 支持 Shizuku / Root 静默安装 (需要 3-Setup Installer 插件) (参阅 项目文档 > [安装器](链接))`.
+- [x] (宿主) 示例脚本 `assets-app/sample/应用/静默安装应用.js`, `批量安装应用.js`, `设为默认安装器.js` (10 语言示例标题按既有示例目录约定); `assets-app/doc` 不在此改 (P7 生成).
+- [x] (宿主) 宿主 `.changelog` 10 语言 `feature`: `installer 模块, 用于安装, 更新与卸载应用, 支持 Shizuku / Root 静默安装 (需要 3-Setup Installer 插件) (参阅 项目文档 > [安装器](链接))`.
 
-验收条件: 三形态 + 全部方法在真机走通; JVM 测试覆盖规范化与错误; 示例脚本可运行; changelog 已写.
+验收条件: 三形态 + 全部方法在真机走通; JVM 测试覆盖规范化与错误; 示例脚本可运行; changelog 已写. (本轮完成 P4.1 至 P4.3 实现与上述设备测试; 同步 getter / setter 的无插件守卫已验收, 实际改写系统首选项及新授予特权的成功路径仍沿用 P2 / P5 / P6 设备矩阵, 未宣称已覆盖. 示例沿用现有资产中文文件名, 当前无 10 语言标题映射消费者. 四仓文档同步按宿主 AGENTS.md 完成, 对应原 P7.1 条目.)
 
 ---
 
@@ -500,9 +500,9 @@ runtime/api/augment/installer/          Installer.kt (AugmentableKey("installer"
 
 ### P7.1 文档与声明
 
-- [ ] (文档) `D:/webstorm-projects/AutoJs6-Documentation`: `api/installer.md` (模块页, 结构参照 `api/mail.md`: 插件依赖说明, `PLUGIN_UNAVAILABLE`, 同步 / Async / 会话三形态, `installer` 与 `$installer`), `api/installerInstallOptionsType.md`, `api/installerInstallResultType.md`, `api/installerSessionType.md`, `api/installerPackageInfoType.md`, `api/installerErrorType.md` (或合并进模块页, 按既有 mail 页面粒度); `api/sidebar.md` / `api/toc.md` 登记; `api/app.md` 的 `uninstall` 与 `api/installer.md` 的 `uninstall` 互相提示对方的存在与用途简述 (D32); 模块页与 README / 插件说明明确提示 "特权授权可用时脚本安装默认静默进行, 需要确认时传 `interaction: 'dialog'`" (D32); 运行 `generator/auto-generate-for-autojs6.bat`, 随后提交文档仓库与 `AutoJs6-Plugin-Offline-Docs` (版本号自动变更).
-- [ ] (文档) `D:/webstorm-projects/AutoJs6-TypeScript-Declarations`: `declarations/autojs6/aj6-int-installer.d.ts` (`@Source` 指向宿主 `runtime/api/augment/installer/*.kt` 与 `runtime/api/installer/*.kt`, `Internal.Installer` 命名空间, 重载与事件类型), `index.d.ts` 引用; 运行 `D:/idea-projects/android-dts-generator/aj6dts.bat -Publish`; 声明仓库与 `AutoJs6-Plugin-Ace-Editor` 的 `aj6-int-installer.d.ts` 同步, 两仓库版本号 +1 且版本名称按语义升级 (新增模块 -> y+1), Ace 仓库执行 `:app:generateAutoJs6LspDeclarations`; 分别提交.
-- [ ] (宿主) `docs/dev/installer-plugin-protocol-v1.md` 补齐脚本 API 章节; 宿主 changelog 核对 (P1.5 / P4.3 已写条目合并整理, 日期为当日).
+- [x] (文档) `D:/webstorm-projects/AutoJs6-Documentation`: `api/installer.md` (模块页, 结构参照 `api/mail.md`: 插件依赖说明, `PLUGIN_UNAVAILABLE`, 同步 / Async / 会话三形态, `installer` 与 `$installer`), `api/installerInstallOptionsType.md`, `api/installerInstallResultType.md`, `api/installerSessionType.md`, `api/installerPackageInfoType.md`, `api/installerErrorType.md` (或合并进模块页, 按既有 mail 页面粒度); `api/sidebar.md` / `api/toc.md` 登记; `api/app.md` 的 `uninstall` 与 `api/installer.md` 的 `uninstall` 互相提示对方的存在与用途简述 (D32); 模块页与 README / 插件说明明确提示 "特权授权可用时脚本安装默认静默进行, 需要确认时传 `interaction: 'dialog'`" (D32); 运行 `generator/auto-generate-for-autojs6.bat`, 随后提交文档仓库与 `AutoJs6-Plugin-Offline-Docs` (版本号自动变更).
+- [x] (文档) `D:/webstorm-projects/AutoJs6-TypeScript-Declarations`: `declarations/autojs6/aj6-int-installer.d.ts` (`@Source` 指向宿主 `runtime/api/augment/installer/*.kt` 与 `runtime/api/installer/*.kt`, `Internal.Installer` 命名空间, 重载与事件类型), `index.d.ts` 引用; 运行 `D:/idea-projects/android-dts-generator/aj6dts.bat -Publish`; 声明仓库与 `AutoJs6-Plugin-Ace-Editor` 的 `aj6-int-installer.d.ts` 同步, 两仓库版本号 +1 且版本名称按语义升级 (新增模块 -> y+1), Ace 仓库执行 `:app:generateAutoJs6LspDeclarations`; 分别提交.
+- [x] (宿主) `docs/dev/installer-plugin-protocol-v1.md` 补齐脚本 API 章节; 宿主 changelog 核对 (P1.5 / P4.3 已写条目合并整理, 日期为当日).
 
 ### P7.2 插件 README 与 changelog
 

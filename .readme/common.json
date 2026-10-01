@@ -21,5 +21,6 @@
   "required_host_version_code": "5299",
   "required_host_version_name": "6.8.0",
   "android_min_sdk": "24",
-  "min_android_version": "7.0"
+  "min_android_version": "7.0",
+  "script_host_version_code": "5300"
 }
