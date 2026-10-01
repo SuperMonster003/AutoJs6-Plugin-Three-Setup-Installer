@@ -136,6 +136,17 @@ class InstallEngineTest {
         assertEquals(0, engine.opened)
     }
 
+    @Test fun `notification interaction remains distinct for privileged and ordinary engines`() {
+        for (authorizer in listOf(Authorizer.NONE, Authorizer.SHIZUKU, Authorizer.ROOT)) {
+            val source = apk("base-${authorizer.id}.apk")
+            val engine = FakeEngine(authorizer)
+            val result = engine.install(request(source).copy(interaction = InstallerContract.INTERACTION_NOTIFICATION), RecordingListener())
+            assertEquals(InstallerContract.INTERACTION_NOTIFICATION, result.interaction)
+            assertTrue(engine.session.committed)
+            assertFalse(engine.session.abandoned)
+        }
+    }
+
     @Test fun `maps privileged options including all users and reports unsupported low target override`() {
         for (sdk in listOf(24, 34)) {
             val engine = FakeEngine(sdk = sdk)

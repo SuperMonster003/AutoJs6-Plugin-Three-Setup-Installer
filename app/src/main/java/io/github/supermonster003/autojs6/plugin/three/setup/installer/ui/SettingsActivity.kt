@@ -191,8 +191,8 @@ class SettingsActivity : SettingsPageActivity() {
         internal val modeLabels = listOf(R.string.app_settings_follow_autojs6, R.string.app_settings_follow_system,
             R.string.app_settings_always_light, R.string.app_settings_always_dark)
         internal val iconLabels = listOf(R.string.launcher_icon_light, R.string.launcher_icon_dark, R.string.launcher_icon_auto, R.string.launcher_icon_transparent)
-        private val interactions = listOf(InstallerContract.INTERACTION_AUTO, InstallerContract.INTERACTION_DIALOG, InstallerContract.INTERACTION_SILENT)
-        private val interactionLabels = listOf(R.string.install_authorizer_auto, R.string.settings_interaction_dialog, R.string.settings_interaction_silent)
+        private val interactions = listOf(InstallerContract.INTERACTION_AUTO, InstallerContract.INTERACTION_DIALOG, InstallerContract.INTERACTION_SILENT, InstallerContract.INTERACTION_NOTIFICATION)
+        private val interactionLabels = listOf(R.string.install_authorizer_auto, R.string.settings_interaction_dialog, R.string.settings_interaction_silent, R.string.settings_interaction_notification)
     }
 }
 

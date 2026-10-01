@@ -66,6 +66,12 @@ internal object ExternalInstaller {
     }
 
     fun showFailure(context: Context, failure: InstallFailure, origin: String = InstallerContract.SOURCE_EXTERNAL) {
+        if (InstallDefaults.interaction(context) == InstallerContract.INTERACTION_NOTIFICATION) {
+            // A disabled notification channel cannot display its own error. The external caller
+            // has no result callback; show a brief explicit failure without opening a dialog.
+            android.widget.Toast.makeText(context, "${failure.code}: ${failure.message}", android.widget.Toast.LENGTH_LONG).show()
+            return
+        }
         val request = InstallRequest(UUID.randomUUID().toString(), listOf(SourceEntry(0, 0, "package", -1)),
             InstallerContract.INTERACTION_DIALOG, InstallOptions(), origin = origin)
         runCatching {
@@ -124,6 +130,8 @@ internal object ExternalInstaller {
                     },
                     preparedListener = { index, prepared -> presentation.onPrepared(index, prepared) },
                     installed = { index, options -> sources.deleteInstalled(context, index, options) },
+                    availability = presentation::checkNotificationAvailable,
+                    userAction = presentation::showSystemConfirmation,
                 )
                 val session = InstallSession(actual, environment, object : InstallSession.Listener {
                     override fun onStage(stage: String, detail: JsonObject) {
@@ -170,6 +178,7 @@ internal object ExternalInstaller {
         private fun checkActive() {
             if (cancelled.get() || Thread.currentThread().isInterrupted) throw InstallFailure(InstallerErrorCodes.CANCELLED, "Installation cancelled")
             if (SystemClock.elapsedRealtime() >= deadline) throw InstallFailure(InstallerErrorCodes.TIMEOUT, "Installation timed out")
+            presentation.checkNotificationAvailable()
         }
         private fun cancel() {
             cancelled.set(true)

@@ -196,9 +196,11 @@
     <string name="notification_channel_installation">インストール</string>
     <string name="notification_install_complete">インストール完了</string>
     <string name="notification_install_failed">インストール失敗</string>
+    <string name="notification_install_prompt">パッケージ: %1$s\nバージョン: %2$s\nユーザー: %3$d\n選択した設定で実行するにはインストールを, 中止するにはキャンセルを選択してください.</string>
     <string name="notification_installing">インストール中</string>
     <string name="notification_open_for_progress">タップしてインストーラーを開き, 進捗を確認してください.</string>
     <string name="notification_preparing">パッケージを準備中</string>
+    <string name="notification_unavailable">通知によるインストールを利用できません. 通知を許可し, インストールの通知チャンネルを有効にして再試行してください.</string>
     <string name="notification_writing">パッケージを書き込み中</string>
     <string name="plugin_description">Android アプリのインストール, 更新, アンインストールを行い, Shizuku, Root または Dhizuku によるサイレントインストールに対応</string>
     <string name="release_history_error">内蔵ドキュメントを読み込めません.</string>
@@ -220,6 +222,7 @@
     <string name="settings_interaction">既定の操作方法</string>
     <string name="settings_interaction_auto_note">自動モードは Shizuku, Root または Dhizuku が許可されている場合に無操作でインストールできます. それ以外は Android が確認を求めます.</string>
     <string name="settings_interaction_dialog">インストール画面を表示</string>
+    <string name="settings_interaction_notification">通知を使用</string>
     <string name="settings_interaction_silent">サイレント (権限が必要)</string>
     <string name="settings_invalid_package">有効な Android パッケージ名を入力するか, 空欄にしてください.</string>
     <string name="settings_license">ライセンス</string>

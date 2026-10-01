@@ -161,6 +161,51 @@ class InstallSessionTest {
         assertTrue(fixture.calls.isEmpty())
     }
 
+    @Test fun `notification refusal never starts installation or deletes its source`() {
+        val fixture = Fixture(request(items = listOf(0), interaction = "notification"))
+        fixture.confirm = { throw InstallFailure(InstallerErrorCodes.USER_CANCELLED, "notification declined") }
+        fixture.run()
+        assertEquals(InstallerErrorCodes.USER_CANCELLED, fixture.failure?.code)
+        assertTrue(fixture.calls.isEmpty())
+        assertTrue(fixture.cleanups.isEmpty())
+        assertEquals(1, fixture.closes)
+    }
+
+    @Test fun `unavailable notification fails before preparing any source`() {
+        val fixture = Fixture(request(items = listOf(0), interaction = "notification"))
+        fixture.availability = { throw InstallFailure(InstallerErrorCodes.NOTIFICATION_UNAVAILABLE, "channel disabled") }
+        fixture.run()
+        assertEquals(InstallerErrorCodes.NOTIFICATION_UNAVAILABLE, fixture.failure?.code)
+        assertTrue(fixture.prepared.isEmpty())
+        assertTrue(fixture.calls.isEmpty())
+        assertEquals(1, fixture.terminalCallbacks)
+        assertEquals(1, fixture.closes)
+    }
+
+    @Test fun `notification loss after approval stops before installation and keeps sources`() {
+        val fixture = Fixture(request(items = listOf(0), interaction = "notification"))
+        fixture.confirm = {
+            fixture.availability = { throw InstallFailure(InstallerErrorCodes.NOTIFICATION_UNAVAILABLE, "permission revoked") }
+        }
+        fixture.run()
+        assertEquals(InstallerErrorCodes.NOTIFICATION_UNAVAILABLE, fixture.failure?.code)
+        assertTrue(fixture.calls.isEmpty())
+        assertTrue(fixture.cleanups.isEmpty())
+        assertEquals(listOf(0), fixture.discarded)
+    }
+
+    @Test fun `notification loss cannot turn a confirmed installation into failure`() {
+        val fixture = Fixture(request(items = listOf(0), interaction = "notification"))
+        fixture.install = {
+            fixture.availability = { throw InstallFailure(InstallerErrorCodes.NOTIFICATION_UNAVAILABLE, "permission revoked after success") }
+            InstallEngine.Result("example.package", emptyList(), "notification")
+        }
+        fixture.run()
+        assertTrue(requireNotNull(fixture.completed)["ok"].asBoolean)
+        assertEquals("notification", fixture.completed!!["interaction"].asString)
+        assertNull(fixture.failure)
+    }
+
     @Test fun `prestart cancellation closes owned resources without preparing`() {
         val fixture = Fixture(request())
         assertTrue(fixture.session.cancel())
@@ -419,6 +464,7 @@ class InstallSessionTest {
         val itemResults = mutableListOf<Pair<Int, JsonObject>>()
         var afterPrepare: () -> Unit = {}
         var confirm: () -> Unit = {}
+        var availability: () -> Unit = {}
         var install: () -> InstallEngine.Result = { success() }
         var configuration: ((Int, PreparedPackage, InstallSession.Target, InstallRequest) -> InstallSession.Selection)? = null
         var cleanup: (Int, InstallOptions) -> InstallSession.SourceCleanup = { _, _ -> InstallSession.SourceCleanup() }
@@ -437,6 +483,7 @@ class InstallSessionTest {
 
         fun run() = session.start(direct)
         fun results() = requireNotNull(completed).getAsJsonArray("results").map { it.asJsonObject }
+        override fun checkAvailable() = availability()
         override fun resolve(request: InstallRequest, deadlineMillis: Long, checkActive: () -> Unit) = InstallSession.Target(Authorizer.ROOT, 42, engine)
         override fun prepare(index: Int, sources: List<SourceEntry>, checkActive: () -> Unit): PreparedPackage {
             prepared += sources.map { it.descriptor }

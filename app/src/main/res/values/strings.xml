@@ -196,9 +196,11 @@
     <string name="notification_channel_installation">Installations</string>
     <string name="notification_install_complete">Installation complete</string>
     <string name="notification_install_failed">Installation failed</string>
+    <string name="notification_install_prompt">Package: %1$s\nVersion: %2$s\nUser: %3$d\nChoose Install to use the selected installation options, or Cancel.</string>
     <string name="notification_installing">Installing</string>
     <string name="notification_open_for_progress">Tap to open the installer and view progress.</string>
     <string name="notification_preparing">Preparing package</string>
+    <string name="notification_unavailable">Notification installation is unavailable. Allow notifications and enable the Installations notification channel, then try again.</string>
     <string name="notification_writing">Writing package</string>
     <string name="plugin_description">Installs, updates and uninstalls Android apps, with silent installation through Shizuku, Root or Dhizuku</string>
     <string name="release_history_error">Unable to read the bundled document.</string>
@@ -220,6 +222,7 @@
     <string name="settings_interaction">Default interaction</string>
     <string name="settings_interaction_auto_note">Automatic may install silently when Shizuku, Root or Dhizuku is authorized. Otherwise Android asks for confirmation.</string>
     <string name="settings_interaction_dialog">Show installation dialog</string>
+    <string name="settings_interaction_notification">Use notifications</string>
     <string name="settings_interaction_silent">Silent (requires authorization)</string>
     <string name="settings_invalid_package">Enter a valid Android package name, or leave empty.</string>
     <string name="settings_license">License</string>

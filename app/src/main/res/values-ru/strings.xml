@@ -196,9 +196,11 @@
     <string name="notification_channel_installation">Установки</string>
     <string name="notification_install_complete">Установка завершена</string>
     <string name="notification_install_failed">Ошибка установки</string>
+    <string name="notification_install_prompt">Пакет: %1$s\nВерсия: %2$s\nПользователь: %3$d\nВыберите Установить с заданными параметрами или Отмена.</string>
     <string name="notification_installing">Установка</string>
     <string name="notification_open_for_progress">Нажмите, чтобы открыть установщик и увидеть ход установки.</string>
     <string name="notification_preparing">Подготовка пакета</string>
+    <string name="notification_unavailable">Установка через уведомления недоступна. Разрешите уведомления и включите канал установок, затем повторите попытку.</string>
     <string name="notification_writing">Запись пакета</string>
     <string name="plugin_description">Устанавливает, обновляет и удаляет приложения Android, включая тихую установку через Shizuku, Root или Dhizuku</string>
     <string name="release_history_error">Не удалось прочитать встроенный документ.</string>
@@ -220,6 +222,7 @@
     <string name="settings_interaction">Взаимодействие по умолчанию</string>
     <string name="settings_interaction_auto_note">В автоматическом режиме установка может идти без диалога при разрешенном Shizuku, Root или Dhizuku. Иначе Android запрашивает подтверждение.</string>
     <string name="settings_interaction_dialog">Показывать диалог установки</string>
+    <string name="settings_interaction_notification">Использовать уведомления</string>
     <string name="settings_interaction_silent">Без диалога (нужно разрешение)</string>
     <string name="settings_invalid_package">Введите корректное имя пакета Android или оставьте поле пустым.</string>
     <string name="settings_license">Лицензия</string>

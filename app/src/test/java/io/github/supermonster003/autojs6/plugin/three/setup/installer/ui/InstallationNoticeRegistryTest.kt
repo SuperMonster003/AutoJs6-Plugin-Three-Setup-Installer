@@ -5,6 +5,21 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class InstallationNoticeRegistryTest {
+    @Test fun notificationConfirmationOwnsForegroundAndCanCancelBeforeAnyWrite() {
+        val state = InstallationNoticeRegistry<String>()
+        val change = state.update("notice", "Package", C.STAGE_PREPARING, 0f, "owner", mandatory = true)
+        assertFalse(change.beganWriting)
+        assertTrue(change.beganForeground)
+        assertTrue(state.writers().single().mandatory)
+        assertEquals(listOf("owner"), state.cancel("notice"))
+        assertFalse(state.update("notice", "Package", C.STAGE_CONFIRMING, 0f, "same-owner").beganForeground)
+        assertTrue(state.writers().single().mandatory)
+        assertTrue(state.cancel("notice").isEmpty())
+        state.finish("notice")
+        assertTrue(state.writers().isEmpty())
+        assertFalse(state.update("notice", "Old action", C.STAGE_CONFIRMING, 0f, "late", mandatory = true).accepted)
+    }
+
     @Test fun preparingDoesNotStartForegroundAndBatchKeepsTheServiceAfterItsFirstWrite() {
         val state = InstallationNoticeRegistry<String>()
         assertFalse(state.update("one", "App", C.STAGE_PREPARING, 0f, "first").beganWriting)

@@ -161,18 +161,26 @@ internal class InstallerBinder(context: Context, private val guard: CallerGuard 
                 val capacity = slot
                 val reserved = lease
                 lateinit var core: InstallSession
+                val earlyCancellation = java.util.concurrent.atomic.AtomicBoolean()
+                val cancellableCore = java.util.concurrent.atomic.AtomicReference<InstallSession?>()
                 val interactive = InstallationUi.needsDialog(context, decoded)
                 val actual = if (interactive) decoded.copy(interaction = InstallerContract.INTERACTION_DIALOG) else decoded
                 // Silent requests have a passive record for notification taps, never an automatic popup.
                 val record = InstallPresentation.create(context, actual,
-                    InstallPresentation.Callbacks(cancel = { core.cancel() }, close = { reserved.close() }))
+                    InstallPresentation.Callbacks(cancel = {
+                        earlyCancellation.set(true)
+                        cancellableCore.get()?.cancel()
+                        Unit
+                    }, close = { reserved.close() }))
                 presentation = record
                 lateinit var owned: DescriptorInstallEnvironment
                 owned = DescriptorInstallEnvironment.acquire(context, descriptors,
-                    configuration = if (!interactive) null else { index, prepared, target, selectedRequest, deadline, check ->
+                    configuration = if (!interactive && !record.notificationMode) null else { index, prepared, target, selectedRequest, deadline, check ->
                         InstallationUi.configure(context, record, owned, index, prepared, target, selectedRequest, deadline, check)
                     },
                     preparedListener = { index, prepared -> record?.onPrepared(index, prepared) },
+                    availability = record::checkNotificationAvailable,
+                    userAction = record::showSystemConfirmation,
                 )
                 environment = owned
                 val notificationToken = record?.token ?: java.util.UUID.randomUUID().toString()
@@ -208,6 +216,8 @@ internal class InstallerBinder(context: Context, private val guard: CallerGuard 
                         callback.onFailed(id, InstallerBundles.error(failure))
                     }
                 }, SystemClock::elapsedRealtime)
+                cancellableCore.set(core)
+                if (earlyCancellation.get()) core.cancel()
                 val handle = object : IInstallerSession.Stub() {
                     override fun getId(): String { guard.enforceOwner(owner); return id }
                     override fun getStatus(): Bundle {
@@ -226,7 +236,10 @@ internal class InstallerBinder(context: Context, private val guard: CallerGuard 
             } catch (failure: Exception) {
                 environment?.close()
                 slot?.close()
-                presentation?.onFailed(InstallFailure.from(failure))
+                presentation?.let {
+                    it.onFailed(InstallFailure.from(failure))
+                    InstallNotifications.complete(context, it.token, false, openIntent = it.activityIntent())
+                }
                 lease?.close()
                 lease?.finished()
                 runCatching { callback.onFailed(id, InstallerBundles.error(InstallFailure.from(failure))) }

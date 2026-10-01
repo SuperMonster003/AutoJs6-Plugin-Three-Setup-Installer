@@ -30,6 +30,8 @@ internal class DescriptorInstallEnvironment private constructor(
     private val preparedListener: (Int, PreparedPackage) -> Unit,
     private val installed: (Int, InstallOptions) -> InstallSession.SourceCleanup,
     private val sourceLoader: ((SourceEntry, () -> Unit) -> SourceDescriptor)? = null,
+    private val availability: () -> Unit = {},
+    private val userAction: (Intent) -> Unit = { UserActionLauncher.launch(context, it) },
 ) : InstallSession.Environment {
     /** A lazily opened external source; prepare owns and closes its descriptor immediately. */
     data class SourceDescriptor(val descriptor: ParcelFileDescriptor, val displayName: String, val size: Long)
@@ -98,7 +100,8 @@ internal class DescriptorInstallEnvironment private constructor(
         configuration?.invoke(index, prepared, target, request, deadlineMillis, checkActive)
             ?: super<InstallSession.Environment>.configure(index, prepared, target, request, deadlineMillis, checkActive)
     override fun onInstalled(index: Int, options: InstallOptions) = installed(index, options)
-    override fun onUserAction(intent: Intent) = UserActionLauncher.launch(context, intent)
+    override fun checkAvailable() = availability()
+    override fun onUserAction(intent: Intent) = userAction(intent)
     override fun discardItem(index: Int) {
         openedSources.remove(index)?.forEach { runCatching { it.close() } }
         directory?.let { File(it, "item-$index").deleteRecursively() }
@@ -121,9 +124,12 @@ internal class DescriptorInstallEnvironment private constructor(
             configuration: (Int, PreparedPackage, InstallSession.Target, InstallRequest, Long, () -> Unit) -> InstallSession.Selection,
             preparedListener: (Int, PreparedPackage) -> Unit,
             installed: (Int, InstallOptions) -> InstallSession.SourceCleanup,
+            availability: () -> Unit = {},
+            userAction: (Intent) -> Unit = { UserActionLauncher.launch(context, it) },
         ): DescriptorInstallEnvironment = DescriptorInstallEnvironment(context, emptyList(),
             confirmation = { _, _, _, _ -> throw InstallFailure(InstallerErrorCodes.INTERNAL, "External confirmation configuration is missing") },
-            configuration = configuration, preparedListener = preparedListener, installed = installed, sourceLoader = sourceLoader)
+            configuration = configuration, preparedListener = preparedListener, installed = installed, sourceLoader = sourceLoader,
+            availability = availability, userAction = userAction)
 
         fun acquire(context: Context, descriptors: List<ParcelFileDescriptor>,
             configuration: ((Int, PreparedPackage, InstallSession.Target, InstallRequest, Long, () -> Unit) -> InstallSession.Selection)? = null,
@@ -132,6 +138,8 @@ internal class DescriptorInstallEnvironment private constructor(
             confirmation: (PreparedPackage, InstallSession.Target, Long, () -> Unit) -> Unit = { _, _, _, _ ->
                 throw InstallFailure(InstallerErrorCodes.AUTHORIZER_REQUIRED, "Plugin confirmation UI is not connected")
             },
+            availability: () -> Unit = {},
+            userAction: (Intent) -> Unit = { UserActionLauncher.launch(context, it) },
         ): DescriptorInstallEnvironment {
             if (descriptors.isEmpty() || descriptors.size > InstallerContract.MAX_BATCH_SOURCES * InstallerContract.MAX_SPLITS_PER_PACKAGE) {
                 throw RequestDocuments.invalid("Invalid source descriptor count")
@@ -139,7 +147,8 @@ internal class DescriptorInstallEnvironment private constructor(
             val owned = mutableListOf<ParcelFileDescriptor>()
             try {
                 descriptors.forEach { owned += ParcelFileDescriptor.dup(it.fileDescriptor) }
-                return DescriptorInstallEnvironment(context, owned, confirmation, configuration, preparedListener, installed)
+                return DescriptorInstallEnvironment(context, owned, confirmation, configuration, preparedListener, installed,
+                    availability = availability, userAction = userAction)
             } catch (failure: Exception) {
                 owned.forEach { runCatching { it.close() } }
                 throw RequestDocuments.invalid("Package source descriptor is closed or invalid")

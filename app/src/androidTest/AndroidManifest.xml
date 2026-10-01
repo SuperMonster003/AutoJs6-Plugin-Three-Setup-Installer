@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <!-- A different APK/UID owns this read-only fixture. It is absent from every plugin APK. -->
+        <provider
+            android:name="io.github.supermonster003.autojs6.plugin.three.setup.installer.notificationfixture.NotificationSourceProvider"
+            android:authorities="io.github.supermonster003.autojs6.plugin.three.setup.installer.test.notification-source"
+            android:exported="false"
+            android:grantUriPermissions="true" />
+        <activity
+            android:name="io.github.supermonster003.autojs6.plugin.three.setup.installer.notificationfixture.NotificationSourceRelayActivity"
+            android:exported="true"
+            android:permission="android.permission.DUMP"
+            android:excludeFromRecents="true"
+            android:theme="@android:style/Theme.NoDisplay" />
+    </application>
+</manifest>

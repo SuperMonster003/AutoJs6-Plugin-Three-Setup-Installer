@@ -31,7 +31,11 @@ class UserActionActivity : Activity() {
         super.onCreate(savedInstanceState)
         val id = intent.getStringExtra(UserActionBridge.EXTRA_TOKEN)
         val pending = id?.let { UserActionBridge.attach(it, this) }
-        if (pending == null) { finish(); return }
+        if (pending == null) {
+            id?.let { InstallNotifications.dismissAction(this, it) }
+            finish()
+            return
+        }
         token = id
         ticket = pending
         perform(pending.start(canRequestInstalls()))
@@ -177,8 +181,13 @@ internal object UserActionBridge {
         val awaitingPlatformResult: Boolean get() = ticket.awaitingPlatformResult
 
         override fun close() {
-            if (!tickets.remove(token, ticket)) return
-            ticket.close()
+            val removed = synchronized(ticket) {
+                if (!tickets.remove(token, ticket)) false else {
+                    ticket.close()
+                    true
+                }
+            }
+            if (!removed) return
             ticket.context?.let { UserActionLauncher.dismissNotification(it, token) }
             main.post { ticket.activity.get()?.dismissConfirmation() }
         }
@@ -199,6 +208,29 @@ internal object UserActionBridge {
     }
 
     fun isAttached(token: String): Boolean = tickets[token]?.activity?.get()?.let { !it.isFinishing && !it.isDestroyed } == true
+
+    /** Notification mode never calls startActivity; only this direct, immutable user action can. */
+    fun notifyOnly(context: Context, intent: Intent) {
+        val token = intent.getStringExtra(EXTRA_TOKEN)
+            ?: throw InstallFailure(InstallerErrorCodes.INTERNAL, "Missing system-confirmation ticket")
+        val ticket = tickets[token] ?: throw InstallFailure(InstallerErrorCodes.CANCELLED, "System confirmation is no longer active")
+        // Ticket removal and publication share this lock. A close cannot cancel a notice first
+        // and then race with a late publication that resurrects it.
+        synchronized(ticket) {
+            val pending = activityIntent(context, token)?.takeIf { tickets[token] === ticket }
+                ?: throw InstallFailure(InstallerErrorCodes.CANCELLED, "System confirmation is no longer active")
+            if (intent.component != pending.component) throw InstallFailure(InstallerErrorCodes.INVALID_ARGUMENT, "Invalid system-confirmation owner")
+            InstallNotifications.requireAvailable(context)
+            if (!InstallNotifications.notifyAction(context, token, pending,
+                    cancelIntent = InstallNotificationActionReceiver.cancelSystem(context, token))) {
+                throw InstallFailure(InstallerErrorCodes.NOTIFICATION_UNAVAILABLE, "The system-confirmation notification could not be posted")
+            }
+        }
+    }
+
+    fun cancelFromNotification(token: String) {
+        tickets[token]?.fail(InstallFailure(InstallerErrorCodes.USER_CANCELLED, "Installation confirmation was cancelled from its notification"))
+    }
 
     fun attach(token: String, activity: UserActionActivity): Ticket? {
         val ticket = tickets[token] ?: return null

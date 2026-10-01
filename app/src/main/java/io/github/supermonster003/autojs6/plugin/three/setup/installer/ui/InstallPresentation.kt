@@ -14,6 +14,7 @@ import io.github.supermonster003.autojs6.plugin.three.setup.installer.engine.Ins
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.engine.InstallOptions
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.engine.InstallRequest
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.engine.InstallSession
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.engine.UserActionLauncher
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.history.InstallHistoryCapture
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.history.InstallHistoryStore
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.source.PreparedPackage
@@ -94,10 +95,12 @@ internal object InstallPresentation {
         val choices: InstallChoices,
         val users: List<DeviceUser>,
     ) {
+        val token: String = UUID.randomUUID().toString()
         internal val decision = InstallDecision<Choice>()
     }
 
     fun create(context: Context, request: InstallRequest, callbacks: Callbacks, canDeleteSource: Boolean = false): Record {
+        if (request.interaction == InstallerContract.INTERACTION_NOTIFICATION) InstallNotifications.requireAvailable(context)
         val record = Record(context.applicationContext, request, callbacks, canDeleteSource)
         val evicted = synchronized(records) {
             val oldest = if (records.size >= MAX_PRESENTATIONS) records.values.filter { it.snapshot().terminal }.minByOrNull { it.expiresAt } else null
@@ -108,6 +111,8 @@ internal object InstallPresentation {
         }
         evicted?.close()
         record.startPersistence()
+        if (record.notificationMode) InstallNotifications.update(context, record.token, request.sources.first().displayName,
+            InstallerContract.STAGE_PENDING, 0f, cancel = record::cancel)
         notifyObservers()
         main.post {
             if (!reaperScheduled) {
@@ -146,6 +151,7 @@ internal object InstallPresentation {
         private val canDeleteSource: Boolean,
     ) {
         val token: String = UUID.randomUUID().toString()
+        val notificationMode: Boolean get() = request.interaction == InstallerContract.INTERACTION_NOTIFICATION
         val createdAt: Long = System.currentTimeMillis()
         private val lock = Any()
         private var activity = WeakReference<InstallDialogActivity>(null)
@@ -161,6 +167,8 @@ internal object InstallPresentation {
         private var shown = false
         private var retrying = false
         private var cancellationRequested = false
+        private var sourceGrantsInService = false
+        @Volatile private var notificationTransportFailure: InstallFailure? = null
         private var recovery: InstallRecoveryWriter.Ticket? = null
         private var history: InstallHistoryStore.Ticket? = null
         private val recoveryDeadline = SystemClock.elapsedRealtime() + request.options.timeoutMillis
@@ -169,7 +177,8 @@ internal object InstallPresentation {
             private set
         val isAttached: Boolean get() = synchronized(lock) { activity.get()?.let { !it.isFinishing && !it.isDestroyed } == true }
 
-        fun activityIntent(): Intent = Intent(context, InstallDialogActivity::class.java)
+        fun activityIntent(): Intent = if (notificationMode) Intent(context, HomeActivity::class.java)
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) else Intent(context, InstallDialogActivity::class.java)
             .putExtra(EXTRA_TOKEN, token)
             .setData(Uri.parse("three-setup-install://session/$token"))
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NEW_DOCUMENT)
@@ -209,6 +218,14 @@ internal object InstallPresentation {
 
         /** May run on the caller/worker; Activity creation is the only presentation side effect. */
         fun show(grantIntent: Intent? = null) {
+            if (notificationMode) {
+                checkNotificationAvailable()
+                if (grantIntent?.clipData != null) {
+                    synchronized(lock) { sourceGrantsInService = true }
+                    InstallNotifications.retainSourceGrants(context, token, grantIntent)
+                }
+                return
+            }
             synchronized(lock) {
                 if (closed || shown) return
                 shown = true
@@ -271,7 +288,8 @@ internal object InstallPresentation {
             val expires = SystemClock.elapsedRealtime() + InstallerContract.DEFAULT_USER_ACTION_TIMEOUT_MILLIS
             try {
                 persist()
-                show()
+                if (notificationMode) InstallNotifications.confirm(context, token, waiting, target)
+                else show()
                 changed()
                 while (true) {
                     checkActive()
@@ -286,6 +304,7 @@ internal object InstallPresentation {
                     }
                 }
             } finally {
+                if (notificationMode) InstallNotifications.dismissAction(context, token)
                 synchronized(lock) {
                     if (prompt === waiting) {
                         prompt = null
@@ -303,6 +322,39 @@ internal object InstallPresentation {
                 if (!waiting.choices.valid()) return
                 val value = waiting.choices.snapshot()
                 waiting.decision.answer(Choice(value.options, value.selectedApkNames))
+            }
+        }
+
+        internal fun acceptFromNotification(promptToken: String): Boolean = synchronized(lock) {
+                if (!notificationMode || closed || terminal || cancellationRequested || prompt?.token != promptToken) return@synchronized false
+                // Permission/channel loss cannot turn a stale action into an unobservable install.
+                if (!InstallNotifications.available(context)) return@synchronized false
+                val waiting = prompt ?: return@synchronized false
+                if (!waiting.choices.valid()) return@synchronized false
+                val choice = waiting.choices.snapshot()
+                waiting.decision.answer(Choice(choice.options, choice.selectedApkNames))
+        }
+
+        fun checkNotificationAvailable() {
+            if (!notificationMode) return
+            notificationTransportFailure?.let { throw it }
+            InstallNotifications.requireAvailable(context)
+        }
+
+        fun showSystemConfirmation(intent: Intent) {
+            if (!notificationMode) {
+                UserActionLauncher.launch(context, intent)
+                return
+            }
+            checkNotificationAvailable()
+            UserActionBridge.notifyOnly(context, intent)
+        }
+
+        internal fun onNotificationServiceLost() {
+            synchronized(lock) {
+                if (!notificationMode || !sourceGrantsInService || terminal || closed) return
+                notificationTransportFailure = InstallFailure(InstallerErrorCodes.NOTIFICATION_UNAVAILABLE,
+                    "The notification service could not retain access to the package sources")
             }
         }
 
