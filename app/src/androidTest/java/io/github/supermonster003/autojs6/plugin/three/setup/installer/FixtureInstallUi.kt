@@ -69,13 +69,35 @@ internal object FixtureInstallUi {
     fun acceptSystemFixture(label: String): Boolean {
         require(label in setOf(FixtureInstallUi.LABEL, "3-Setup Core Fixture"))
         val root = instrumentation.uiAutomation.rootInActiveWindow ?: return false
-        val owner = root.packageName?.toString()
-        if (owner !in setOf("com.android.packageinstaller", "com.google.android.packageinstaller")) return false
-        if (root.findAccessibilityNodeInfosByText(label).none { it.text?.toString() == label }) return false
-        val candidates = root.findAccessibilityNodeInfosByViewId("android:id/button1") +
-            root.findAccessibilityNodeInfosByViewId("$owner:id/ok_button") +
-            listOf("INSTALL", "OK").flatMap { text -> root.findAccessibilityNodeInfosByText(text).filter { it.text?.toString().equals(text, true) } }
-        return candidates.firstOrNull { it.isEnabled && it.isClickable }?.performAction(AccessibilityNodeInfo.ACTION_CLICK) == true
+        val nodes = mutableListOf<AccessibilityNodeInfo>()
+        try {
+            val owner = root.packageName?.toString()
+            if (owner !in setOf("com.android.packageinstaller", "com.google.android.packageinstaller")) return false
+            val labels = root.findAccessibilityNodeInfosByText(label).also(nodes::addAll)
+            if (labels.none { it.isVisibleToUser && it.text?.toString() == label }) return false
+            // Standard positive-button IDs can also appear in warnings. Only the normal install,
+            // update or OK labels are accepted; never "Install anyway" or a generic continuation.
+            val normalLabels = mutableSetOf("Install", "Update", "OK", "安装", "更新", "确定")
+            runCatching { instrumentation.targetContext.packageManager.getResourcesForApplication(requireNotNull(owner)) }.getOrNull()?.let { resources ->
+                for (name in listOf("install", "update", "ok")) {
+                    @Suppress("DiscouragedApi")
+                    val id = resources.getIdentifier(name, "string", owner)
+                    if (id != 0) runCatching { resources.getString(id) }.getOrNull()?.let(normalLabels::add)
+                }
+            }
+            val candidates = (root.findAccessibilityNodeInfosByViewId("android:id/button1") +
+                root.findAccessibilityNodeInfosByViewId("$owner:id/ok_button") +
+                normalLabels.flatMap(root::findAccessibilityNodeInfosByText)).also(nodes::addAll)
+            return candidates.firstOrNull { node ->
+                node.isVisibleToUser && node.isEnabled && node.isClickable &&
+                    normalLabels.any { it.equals(node.text?.toString()?.trim(), true) }
+            }?.performAction(AccessibilityNodeInfo.ACTION_CLICK) == true
+        } finally {
+            @Suppress("DEPRECATION")
+            nodes.forEach { it.recycle() }
+            @Suppress("DEPRECATION")
+            root.recycle()
+        }
     }
 }
 

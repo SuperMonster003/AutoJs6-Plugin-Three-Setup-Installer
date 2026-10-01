@@ -180,7 +180,12 @@ internal class UnknownSourceGrantTrace(private val context: Context) : Instrumen
 }
 
 /** Only known standard Settings controls inside the task rooted at this test's live bridge. */
-internal class OwnedUnknownSourceUi(private val context: Context, private val bridgeToken: String) {
+internal class OwnedUnknownSourceUi(
+    private val context: Context,
+    private val bridgeToken: String,
+    private val fixtureLabel: String = FixtureInstallUi.LABEL,
+) {
+    init { require(fixtureLabel in setOf(FixtureInstallUi.LABEL, "3-Setup Core Fixture")) }
     private val instrumentation = InstrumentationRegistry.getInstrumentation()
     private val manager = context.getSystemService(ActivityManager::class.java)
     private var scanLookupReported = false
@@ -266,7 +271,7 @@ internal class OwnedUnknownSourceUi(private val context: Context, private val br
         val root = instrumentation.uiAutomation.rootInActiveWindow ?: return false
         if (root.packageName?.toString() != "com.android.vending") return false
         val actionText = if (acceptScan) "Scan app" else "Don't install app"
-        val expected = setOf(FixtureInstallUi.LABEL, "App scan recommended", actionText)
+        val expected = setOf(fixtureLabel, "App scan recommended", actionText)
         val matched = mutableListOf<AccessibilityNodeInfo>()
         val pending = java.util.ArrayDeque<Pair<AccessibilityNodeInfo, Int>>()
         pending.addLast(root to 0)
@@ -293,12 +298,12 @@ internal class OwnedUnknownSourceUi(private val context: Context, private val br
         fun exact(text: String) = matched.filter { it.text?.toString() == text }
         if (!scanLookupReported) {
             scanLookupReported = true
-            UnknownSourcePermissionState.evidence("scan lookup: fixtureLabelHit=${exact(FixtureInstallUi.LABEL).isNotEmpty()} " +
+            UnknownSourcePermissionState.evidence("scan lookup: fixtureLabelHit=${exact(fixtureLabel).isNotEmpty()} " +
                 "scanTitleHit=${exact("App scan recommended").isNotEmpty()} action=$actionText actionHit=${exact(actionText).isNotEmpty()} nodes=$visited")
         }
         // A truncated tree cannot establish that the requested action is unique.
         if (!complete) return false
-        if (exact(FixtureInstallUi.LABEL).isEmpty() || exact("App scan recommended").isEmpty()) return false
+        if (exact(fixtureLabel).isEmpty() || exact("App scan recommended").isEmpty()) return false
         val actions = exact(actionText).distinct()
         check(actions.size <= 1) { "Ambiguous action on the fixed fixture's scan prompt" }
         var candidate = actions.singleOrNull() ?: return false
@@ -321,7 +326,7 @@ internal class OwnedUnknownSourceUi(private val context: Context, private val br
         val title = "This app looks safe"
         val body = "You can continue to install it"
         val action = "Install"
-        val expected = setOf(FixtureInstallUi.LABEL, title, body, action)
+        val expected = setOf(fixtureLabel, title, body, action)
         val matched = mutableListOf<AccessibilityNodeInfo>()
         val pending = java.util.ArrayDeque<Pair<AccessibilityNodeInfo, Int>>()
         pending.addLast(root to 0)
@@ -348,10 +353,10 @@ internal class OwnedUnknownSourceUi(private val context: Context, private val br
         fun exact(text: String) = matched.filter { it.text?.toString() == text }
         if (!safeScanLookupReported && exact(title).isNotEmpty()) {
             safeScanLookupReported = true
-            UnknownSourcePermissionState.evidence("safe scan lookup: fixtureLabelHit=${exact(FixtureInstallUi.LABEL).isNotEmpty()} " +
+            UnknownSourcePermissionState.evidence("safe scan lookup: fixtureLabelHit=${exact(fixtureLabel).isNotEmpty()} " +
                 "safeTitleHit=true safeBodyHit=${exact(body).isNotEmpty()} installHit=${exact(action).isNotEmpty()} nodes=$visited complete=$complete")
         }
-        if (!complete || exact(FixtureInstallUi.LABEL).isEmpty() || exact(title).isEmpty() || exact(body).isEmpty()) return false
+        if (!complete || exact(fixtureLabel).isEmpty() || exact(title).isEmpty() || exact(body).isEmpty()) return false
         val actions = exact(action).distinct()
         check(actions.size <= 1) { "Ambiguous installation action on the fixed fixture's clean scan result" }
         var candidate = actions.singleOrNull() ?: return false

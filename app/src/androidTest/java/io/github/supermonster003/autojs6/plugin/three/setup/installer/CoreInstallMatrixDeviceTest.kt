@@ -1,12 +1,13 @@
 package io.github.supermonster003.autojs6.plugin.three.setup.installer
 
+import android.app.KeyguardManager
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.os.ParcelFileDescriptor
+import android.os.PowerManager
 import android.os.SystemClock
-import android.view.accessibility.AccessibilityNodeInfo
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.auth.Authorizer
@@ -15,6 +16,7 @@ import io.github.supermonster003.autojs6.plugin.three.setup.installer.auth.Privi
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.engine.*
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.source.ArchiveOpener
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.source.PreparedPackage
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.ui.UserActionBridge
 import org.autojs.plugin.installer.api.InstallerContract
 import org.autojs.plugin.installer.api.InstallerErrorCodes
 import org.autojs.plugin.packagearchive.PackageDeviceSpec
@@ -34,6 +36,39 @@ class CoreInstallMatrixDeviceTest {
     private val arguments = InstrumentationRegistry.getArguments()
     private val selected get() = Authorizer.fromId(arguments.getString("engineAuthorizer"))
 
+    /** P6.3: one fixed APK identity, with strict silent semantics on each available privilege. */
+    @Test fun newInstallUpdateAndPrivilegedUninstall() = withFixture("release") { authorizer, directory ->
+        val packageName = "io.github.supermonster003.autojs6.installer.core.release"
+        val interaction = if (authorizer.privileged) InstallerContract.INTERACTION_SILENT else InstallerContract.INTERACTION_DIALOG
+        assertNull(installedVersion(packageName, authorizer, 0))
+        for (version in 1..2) {
+            val prepared = prepare(directory, "release-v$version.apk")
+            assertEquals(packageName, prepared.packageName)
+            assertEquals(version.toLong(), prepared.versionCode)
+            val started = SystemClock.elapsedRealtime()
+            val result = install(prepared, authorizer, interaction = interaction)
+            assertEquals(packageName, result.packageName)
+            assertEquals(interaction, result.interaction)
+            assertEquals(version.toLong(), installedVersion(packageName, authorizer, 0))
+            @Suppress("DEPRECATION")
+            val installer = context.packageManager.getInstallerPackageName(packageName)
+            evidence("${if (version == 1) "new" else "update"}: authorizer=${authorizer.id} version=$version interaction=${result.interaction} requested=default observed=$installer durationMillis=${SystemClock.elapsedRealtime() - started}")
+        }
+        if (authorizer.privileged) {
+            val started = SystemClock.elapsedRealtime()
+            val result = PrivilegedUninstallEngine(context, authorizer).uninstall(
+                UninstallRequest(packageName, false, InstallerContract.USER_CURRENT, authorizer.id,
+                    InstallerContract.INTERACTION_SILENT, 60_000), 0,
+                object : InstallEngine.Listener {
+                    override fun onUserAction(intent: Intent) = fail("A strict silent uninstall requested user confirmation")
+                })
+            assertEquals(packageName, result.packageName)
+            assertEquals(authorizer.id, result.authorizer)
+            assertNull(installedVersion(packageName, authorizer, 0))
+            evidence("${authorizer.id} uninstall: fixtureAbsent=true interaction=silent durationMillis=${SystemClock.elapsedRealtime() - started}")
+        }
+    }
+
     @Test fun testOnlyRequiresAnExplicitPrivilegedFlag() = withFixture("testonly") { authorizer, directory ->
         val prepared = prepare(directory, "test-only.apk")
         val failure = assertThrows(InstallFailure::class.java) { install(prepared, authorizer) }
@@ -50,7 +85,6 @@ class CoreInstallMatrixDeviceTest {
     }
 
     @Test fun debuggableDowngradeRequiresTheFlag() {
-        assumeTrue(selected?.privileged == true)
         withFixture("downgrade") { authorizer, directory ->
             val v2 = prepare(directory, "debug-v2.apk")
             val v1 = prepare(directory, "debug-v1.apk")
@@ -58,8 +92,16 @@ class CoreInstallMatrixDeviceTest {
             val refused = assertThrows(InstallFailure::class.java) { install(v1, authorizer) }
             assertEquals(InstallerErrorCodes.INSTALL_FAILED, refused.code)
             assertTrue(refused.systemMessage.orEmpty().contains("INSTALL_FAILED_VERSION_DOWNGRADE"))
-            install(v1, authorizer, InstallOptions(authorizer = authorizer.id, allowDowngrade = true))
-            assertEquals(1L, installedVersion(v1.packageName!!, authorizer, 0))
+            if (authorizer.privileged) {
+                install(v1, authorizer, InstallOptions(authorizer = authorizer.id, allowDowngrade = true))
+                assertEquals(1L, installedVersion(v1.packageName!!, authorizer, 0))
+            } else {
+                assertEquals(InstallerErrorCodes.AUTHORIZER_REQUIRED,
+                    assertThrows(InstallFailure::class.java) {
+                        install(v1, authorizer, InstallOptions(authorizer = authorizer.id, allowDowngrade = true))
+                    }.code)
+                assertEquals(2L, installedVersion(v1.packageName!!, authorizer, 0))
+            }
         }
     }
 
@@ -121,9 +163,26 @@ class CoreInstallMatrixDeviceTest {
         assumeTrue(selected?.privileged == true)
         withFixture("splits") { authorizer, directory ->
             val prepared = splitContainer(directory)
-            install(prepared, authorizer, InstallOptions(authorizer = authorizer.id, installer = context.packageName))
+            val result = install(prepared, authorizer, InstallOptions(authorizer = authorizer.id, installer = context.packageName))
             @Suppress("DEPRECATION")
-            assertEquals(context.packageName, context.packageManager.getInstallerPackageName(prepared.packageName!!))
+            val actual = context.packageManager.getInstallerPackageName(prepared.packageName!!)
+            evidence("attribution: authorizer=${authorizer.id} requested=${context.packageName} observed=$actual interaction=${result.interaction}")
+            assertEquals(context.packageName, actual)
+        }
+    }
+
+    /** Observe the OEM result without changing the user's default installer preference. */
+    @Test fun shellInstallerAttributionRecordsTheActualRomPolicy() {
+        assumeTrue(selected?.privileged == true)
+        withFixture("release") { authorizer, directory ->
+            val prepared = prepare(directory, "release-v1.apk")
+            val result = install(prepared, authorizer, InstallOptions(authorizer = authorizer.id, installer = "com.android.shell"),
+                interaction = InstallerContract.INTERACTION_SILENT)
+            assertEquals(InstallerContract.INTERACTION_SILENT, result.interaction)
+            assertEquals(1L, installedVersion(prepared.packageName!!, authorizer, 0))
+            @Suppress("DEPRECATION")
+            val actual = context.packageManager.getInstallerPackageName(prepared.packageName!!)
+            evidence("attribution: authorizer=${authorizer.id} requested=com.android.shell observed=$actual interaction=${result.interaction}")
         }
     }
 
@@ -180,6 +239,15 @@ class CoreInstallMatrixDeviceTest {
     private fun withFixture(suffix: String, run: (Authorizer, File) -> Unit) {
         assumeTrue("Opt in with engineAuthorizer=none|shizuku|root", selected != null)
         val authorizer = requireNotNull(selected)
+        assumeTrue("Opt in to fixed-fixture package operations with confirmFixture=true", arguments.getString("confirmFixture") == "true")
+        if (!authorizer.privileged) {
+            assumeTrue("Unlock the device before fixed-fixture confirmation",
+                !context.getSystemService(KeyguardManager::class.java).isKeyguardLocked &&
+                    context.getSystemService(PowerManager::class.java).isInteractive)
+            if (Build.VERSION.SDK_INT >= 26) check(context.packageManager.canRequestPackageInstalls()) {
+                "Grant unknown-source permission before this test; the matrix does not alter app-ops"
+            }
+        }
         val packageName = "io.github.supermonster003.autojs6.installer.core.$suffix"
         // -u includes retained data; checking every user prevents replacing a fixture owned elsewhere.
         val users = Regex("UserInfo\\{(\\d+):").findAll(shell("pm list users")).map { it.groupValues[1] }.toList()
@@ -187,20 +255,57 @@ class CoreInstallMatrixDeviceTest {
         check(users.none { packageName in listedPackages(it) }) {
             "Fixture already exists for a device user; refusing to modify it"
         }
+        check(context.packageManager.packageInstaller.mySessions.none { it.appPackageName == packageName }) {
+            "An earlier fixture session still exists; refusing to start another operation"
+        }
         val directory = File(context.cacheDir, "core-matrix-${System.nanoTime()}").apply { check(mkdir()) }
+        var primaryFailure: Throwable? = null
         try {
             if (authorizer.privileged) check(AuthorizerStates.request(context, authorizer, 30_000)) { "Authorizer grant is required" }
             run(authorizer, directory)
             evidence("${authorizer.id} $suffix verified")
+        } catch (failure: Throwable) {
+            primaryFailure = failure
+            runCatching { evidence("FAILED authorizer=${authorizer.id} package=$packageName cause=${failureChain(failure)}") }
+            throw failure
         } finally {
-            try {
-                val answer = shell("pm uninstall $packageName")
-                check(answer.contains("Success") || answer.contains("not installed") || answer.contains("DELETE_FAILED_INTERNAL_ERROR")) { answer }
-                check(users.none { packageName in listedPackages(it) }) { "Fixture cleanup failed" }
-            } finally {
-                directory.deleteRecursively()
-                PrivilegedClient.get(context).releaseAll()
+            var cleanupFailure: Throwable? = null
+            fun cleanup(phase: String, action: () -> Unit) {
+                try { action() } catch (failure: Throwable) {
+                    runCatching { evidence("CLEANUP_FAILED phase=$phase authorizer=${authorizer.id} package=$packageName cause=${failureChain(failure)}") }
+                    if (primaryFailure != null) primaryFailure!!.addSuppressed(failure)
+                    else if (cleanupFailure == null) cleanupFailure = failure
+                    else cleanupFailure!!.addSuppressed(failure)
+                }
             }
+            var sessionsSettled = false
+            cleanup("platform-session") {
+                val settleDeadline = SystemClock.elapsedRealtime() + 10_000
+                while (context.packageManager.packageInstaller.mySessions.any { it.appPackageName == packageName } &&
+                    SystemClock.elapsedRealtime() < settleDeadline) SystemClock.sleep(50)
+                val remaining = context.packageManager.packageInstaller.mySessions.filter { it.appPackageName == packageName }
+                check(remaining.isEmpty()) {
+                    "The owned fixture session did not settle before package cleanup: " + remaining.joinToString { session ->
+                        "id=${session.sessionId},package=${session.appPackageName},installer=${session.installerPackageName},size=${session.size},active=${session.isActive}"
+                    }
+                }
+                sessionsSettled = true
+            }
+            if (sessionsSettled) {
+                cleanup("package") {
+                    if (users.any { packageName in listedPackages(it) }) {
+                        val answer = shell("pm uninstall $packageName")
+                        check(answer.contains("Success")) { "Owned fixture uninstall did not report success: $answer" }
+                    }
+                    check(users.none { packageName in listedPackages(it) }) { "Fixture cleanup failed" }
+                    evidence("cleanup: authorizer=${authorizer.id} package=$packageName fixtureAbsentAcrossUsers=true")
+                }
+                cleanup("sources") { check(directory.deleteRecursively() || !directory.exists()) { "Owned fixture sources remain: ${directory.absolutePath}" } }
+            } else {
+                runCatching { evidence("PENDING_CLEANUP package=$packageName packageCleanupSkipped=true ownedSourcesRetained=${directory.absolutePath}") }
+            }
+            cleanup("privileged-service") { PrivilegedClient.get(context).releaseAll() }
+            if (primaryFailure == null) cleanupFailure?.let { throw it }
         }
     }
 
@@ -228,27 +333,63 @@ class CoreInstallMatrixDeviceTest {
     }
 
     private fun install(prepared: PreparedPackage, authorizer: Authorizer,
-        options: InstallOptions = InstallOptions(authorizer = authorizer.id), userId: Int = 0): InstallEngine.Result {
+        options: InstallOptions = InstallOptions(authorizer = authorizer.id), userId: Int = 0,
+        interaction: String = InstallerContract.INTERACTION_AUTO): InstallEngine.Result {
         val engine = if (authorizer.privileged) PrivilegedInstallEngine(context, authorizer) else NoneInstallEngine(context)
-        return engine.install(InstallEngine.Request(prepared, options.copy(timeoutMillis = 60_000), userId), object : InstallEngine.Listener {
+        val allowScan = arguments.getString("allowPlayProtectScan") == "true"
+        val timeout = if (allowScan) 180_000L else 60_000L
+        return engine.install(InstallEngine.Request(prepared, options.copy(timeoutMillis = timeout), userId, interaction), object : InstallEngine.Listener {
             override fun onUserAction(intent: Intent) {
-                UserActionLauncher.launch(context, intent)
-                val deadline = SystemClock.elapsedRealtime() + 15_000
-                while (SystemClock.elapsedRealtime() < deadline) {
-                    val root = instrumentation.uiAutomation.rootInActiveWindow
-                    val owner = root?.packageName?.toString().orEmpty()
-                    // Only this test's fixture prompt, never an unrelated permission/dialog.
-                    if (owner in setOf("com.android.packageinstaller", "com.google.android.packageinstaller") &&
-                        root?.findAccessibilityNodeInfosByText("3-Setup Core Fixture")?.isNotEmpty() == true) {
-                        val button = (root.findAccessibilityNodeInfosByViewId("android:id/button1") +
-                            root.findAccessibilityNodeInfosByViewId("$owner:id/ok_button") +
-                            root.findAccessibilityNodeInfosByText("INSTALL").filter { it.text?.toString().equals("INSTALL", true) })
-                            .firstOrNull { it.isEnabled && it.isClickable }
-                        if (button?.performAction(AccessibilityNodeInfo.ACTION_CLICK) == true) return
-                    }
-                    SystemClock.sleep(50)
+                check(arguments.getString("confirmFixture") == "true") { "Fixture confirmation was not explicitly authorized" }
+                check(!context.getSystemService(KeyguardManager::class.java).isKeyguardLocked) { "The device became locked" }
+                val platformSession = context.packageManager.packageInstaller.mySessions.single {
+                    it.appPackageName == prepared.packageName && it.installerPackageName == context.packageName
                 }
-                throw AssertionError("The fixture's system confirmation could not be accepted")
+                val token = requireNotNull(intent.getStringExtra(UserActionBridge.EXTRA_TOKEN))
+                val ownedUi = OwnedUnknownSourceUi(context, token, "3-Setup Core Fixture")
+                evidence("CONFIRMATION authorizer=${authorizer.id} sessionId=${platformSession.sessionId} package=${prepared.packageName} installer=${platformSession.installerPackageName} bridge=$token")
+                UserActionLauncher.launch(context, intent)
+                val deadline = SystemClock.elapsedRealtime() + timeout - 5_000
+                var confirmed = false
+                var scanAccepted = false
+                var safeScanAccepted = false
+                try {
+                    while (SystemClock.elapsedRealtime() < deadline) {
+                        if (context.packageManager.packageInstaller.getSessionInfo(platformSession.sessionId) == null) return
+                        if (!confirmed && ownedUi.canApproveFixture()) {
+                            confirmed = FixtureInstallUi.acceptSystemFixture("3-Setup Core Fixture")
+                        }
+                        fun verifySession() {
+                            val current = requireNotNull(context.packageManager.packageInstaller.getSessionInfo(platformSession.sessionId)) {
+                                "The original fixture session ${platformSession.sessionId} finished before scan consent"
+                            }
+                            check(current.appPackageName == prepared.packageName && current.installerPackageName == context.packageName) {
+                                "The original session identity changed before scan consent: id=${current.sessionId},package=${current.appPackageName},installer=${current.installerPackageName}"
+                            }
+                            // Some system installers return and finish our Activity before Play Protect
+                            // completes. The already-approved platform session, not Activity attachment,
+                            // owns this scan. Its exact identity and the fixed scan text are still required.
+                        }
+                        if (confirmed) {
+                            if (!allowScan || context.packageManager.packageInstaller.getSessionInfo(platformSession.sessionId) == null) return
+                            if (!scanAccepted && !safeScanAccepted) {
+                                scanAccepted = ownedUi.handleFixedFixtureScan(true, ::verifySession)
+                                if (scanAccepted) evidence("${authorizer.id} fixture-only Play Protect scan accepted")
+                            }
+                            if (!safeScanAccepted) {
+                                safeScanAccepted = ownedUi.acceptFixedFixtureSafeScan(::verifySession)
+                                if (safeScanAccepted) evidence("${authorizer.id} fixture-only clean Play Protect result accepted")
+                            }
+                        }
+                        SystemClock.sleep(50)
+                    }
+                    throw AssertionError("The owned fixture confirmation did not finish: confirmed=$confirmed ${ownedUi.diagnostic()}")
+                } catch (failure: Throwable) {
+                    runCatching {
+                        evidence("CONFIRMATION_FAILED sessionId=${platformSession.sessionId} confirmed=$confirmed scanAccepted=$scanAccepted safeScanAccepted=$safeScanAccepted cause=${failureChain(failure)} ${ownedUi.diagnostic()}")
+                    }
+                    throw failure
+                }
             }
         })
     }
@@ -275,6 +416,9 @@ class CoreInstallMatrixDeviceTest {
     private fun shell(command: String): String = instrumentation.uiAutomation.executeShellCommand(command).use {
         ParcelFileDescriptor.AutoCloseInputStream(it).bufferedReader().use { reader -> reader.readText() }
     }
+
+    private fun failureChain(failure: Throwable): String = generateSequence(failure) { it.cause }.take(8)
+        .joinToString(" <- ") { "${it.javaClass.name}: ${it.message.orEmpty().replace('\n', ' ').replace('\r', ' ').take(512)}" }
 
     private fun evidence(message: String) = instrumentation.sendStatus(0, Bundle().apply {
         putString("matrix", "${Build.MODEL} API=${Build.VERSION.SDK_INT} $message")
