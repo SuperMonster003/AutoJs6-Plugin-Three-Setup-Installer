@@ -76,6 +76,8 @@ import java.util.concurrent.atomic.AtomicBoolean
  * -e defaultUiPreserveUnrelatedLastChosen true separately allows a chooser-only baseline with
  * proved third-party no-scheme APK last-chosen entries. It never clears them or permits existing
  * plugin records, actual defaults, or unproved entries. Full baseline restoration is still required.
+ * -e defaultUiPreserveApprovedPluginLastChosen true uses the 2026-10-02 maintainer approval for
+ * QV710AF65F only. It preserves exactly four existing plugin VIEW/no-scheme last-chosen records.
  */
 @RunWith(AndroidJUnit4::class)
 class DefaultInstallerUiDeviceTest {
@@ -128,12 +130,16 @@ class DefaultInstallerUiDeviceTest {
                 context.getSystemService(PowerManager::class.java).isInteractive)
 
         val baseline = DefaultInstallerUiRecovery.snapshot(instrumentation)
-        check(listOf("defaultUiPreserveApprovedInstallerXLastChosen", "defaultUiPreserveUnrelatedLastChosen")
+        check(listOf("defaultUiPreserveApprovedInstallerXLastChosen", "defaultUiPreserveUnrelatedLastChosen", "defaultUiPreserveApprovedPluginLastChosen")
             .count { args.getString(it) == "true" } <= 1) { "Select only one explicit last-chosen preservation mode" }
         val preservedHistory = if (args.getString("defaultUiPreserveApprovedInstallerXLastChosen") == "true") {
             check(authorizer == Authorizer.ROOT) { "The audited InstallerX last-chosen exception is only for this explicit Root UI run" }
             DefaultInstallerUiRecovery.preserveApprovedInstallerXHistory(instrumentation, baseline).also {
                 evidence("PRESERVING_APPROVED_INSTALLER_X_HISTORY partialClearRecorded=true preservedLastChosen=2 preservedGenericWildcardLastChosen=${it.proof.get("preservedGenericWildcardRecordCount").asInt} actualDefault=false")
+            }
+        } else if (args.getString("defaultUiPreserveApprovedPluginLastChosen") == "true") {
+            DefaultInstallerUiRecovery.preserveApprovedPluginHistory(instrumentation, baseline).also {
+                evidence("PRESERVING_APPROVED_PLUGIN_LAST_CHOSEN records=4 thirdPartyRecords=${it.proof.get("preservedThirdPartyRecords").asInt} noHistoryCleared=true")
             }
         } else if (args.getString("defaultUiPreserveUnrelatedLastChosen") == "true") {
             DefaultInstallerUiRecovery.preserveUnrelatedLastChosen(context, baseline).also {
@@ -184,7 +190,7 @@ class DefaultInstallerUiDeviceTest {
             assertLockedPage(page)
             val locked = DefaultInstallerUiRecovery.snapshot(instrumentation)
             assertEquals(List(4) { target.flattenToString() }, locked.resolved)
-            DefaultInstallerUiRecovery.assertUnrelatedUnchanged(context, baseline, locked)
+            DefaultInstallerUiRecovery.assertUnrelatedUnchanged(context, baseline, locked, preservedHistory)
             evidence("LOCKED authorizer=$requested uiConfirmation=true publicResolution=4/4 otherDefaultsUnchanged=true pluginPreferencesUnchanged=true")
 
             if (holdMillis > 0L) {
