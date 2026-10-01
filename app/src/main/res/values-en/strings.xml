@@ -1,4 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="action_install">Install</string>
+    <string name="action_uninstall">Uninstall</string>
+    <string name="confirm_all_users">All users</string>
+    <string name="confirm_allow_downgrade">Allow version downgrade</string>
+    <string name="confirm_allow_test">Allow test packages</string>
+    <string name="confirm_bypass_target">Bypass the low target SDK restriction</string>
+    <string name="confirm_install_body">%1$s\n%2$s\nVersion: %3$s\nAuthorization: %4$s\nUser: %5$s</string>
+    <string name="confirm_install_title">Confirm installation</string>
+    <string name="confirm_installer">Installer attribution: %1$s</string>
+    <string name="confirm_keep_data">Keep app data</string>
+    <string name="confirm_system">System confirmation</string>
+    <string name="confirm_uninstall_body">%1$s\nAuthorization: %2$s\nUser: %3$s</string>
+    <string name="confirm_uninstall_title">Confirm uninstallation</string>
     <string name="plugin_description">Installs, updates and uninstalls Android apps, with silent installation through Shizuku or Root</string>
 </resources>

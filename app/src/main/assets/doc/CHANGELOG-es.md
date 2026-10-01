@@ -8,7 +8,7 @@
 
 ###### 2026/10/01
 
-* `Aviso` Vista previa de desarrollo P0: el esqueleto del repositorio, la identidad del plugin reconocida por el centro de plugins de AutoJs6 y la validación (spike) de la instalación privilegiada. El contrato Binder, el motor de instalación, los diálogos, la API de scripts y la página de ajustes siguen las fases de ROADMAP.md.
+* `Aviso` Vista previa de desarrollo P2: instalación, inspección, consultas de usuarios y desinstalación conectadas al servicio anfitrión, con confirmación explícita y limpieza automática de sesiones. Siguen pendientes la validación completa de las entradas del anfitrión, la interfaz completa, la apertura externa, la activación como instalador predeterminado, la API de scripts y los ajustes.
 * `Función` Identidad del plugin `three-setup-installer` (engine `installer`) con el servicio INFO, la Wake Activity y el esqueleto del servicio `org.autojs.plugin.INSTALLER` para el descubrimiento por el host
 * `Función` README, instrucciones del centro de plugins y registro de cambios en 10 idiomas
 * `Mejora` P0 ha validado la instalación silenciosa, las actualizaciones, la desinstalación y la selección ordinaria del instalador predeterminado con Shizuku y Root. La instalación desde el host y los scripts aún no está disponible; los valores predeterminados persistentes quedan fuera de esta versión.
@@ -18,6 +18,7 @@
 * `Mejora` El núcleo de instalación y actualización utiliza la confirmación del sistema, Shizuku o Root, permite cancelar y devuelve el modo de confirmación real y la respuesta del sistema.
 * `Mejora` El núcleo de desinstalación admite la confirmación del sistema, Shizuku y Root, con la opción de conservar los datos al usar autorización privilegiada.
 * `Mejora` La instalación por lotes secuencial permite continuar tras los fallos o cancelar los elementos restantes, y admite validar y seleccionar usuarios de destino con privilegios.
+* `Mejora` El servicio del anfitrión admite inspección, instalación, desinstalación y consulta de usuarios, con confirmación explícita, cancelación al salir el solicitante, hasta cuatro sesiones simultáneas y limpieza automática.
 * `Dependencia` Se añade Shizuku API 13.1.5 (`dev.rikka.shizuku:api`, `dev.rikka.shizuku:provider`) para el modo de autorización Shizuku
 * `Dependencia` Se añade libsu 6.0.0 (`com.github.topjohnwu.libsu:core`, `service`) para el modo de autorización Root
 * `Dependencia` Se añade AndroidHiddenApiBypass 6.1 para las API ocultas del instalador de paquetes que usa el servicio privilegiado

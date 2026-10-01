@@ -1,4 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="action_install">Installer</string>
+    <string name="action_uninstall">Désinstaller</string>
+    <string name="confirm_all_users">Tous les utilisateurs</string>
+    <string name="confirm_allow_downgrade">Autoriser une version antérieure</string>
+    <string name="confirm_allow_test">Autoriser les paquets de test</string>
+    <string name="confirm_bypass_target">Contourner la restriction du SDK cible ancien</string>
+    <string name="confirm_install_body">%1$s\n%2$s\nVersion: %3$s\nAutorisation: %4$s\nUtilisateur: %5$s</string>
+    <string name="confirm_install_title">Confirmer l\'installation</string>
+    <string name="confirm_installer">Attribution de l\'installateur: %1$s</string>
+    <string name="confirm_keep_data">Conserver les données de l\'application</string>
+    <string name="confirm_system">Confirmation système</string>
+    <string name="confirm_uninstall_body">%1$s\nAutorisation: %2$s\nUtilisateur: %3$s</string>
+    <string name="confirm_uninstall_title">Confirmer la désinstallation</string>
     <string name="plugin_description">Installe, met à jour et désinstalle des applications Android, avec installation silencieuse via Shizuku ou Root</string>
 </resources>

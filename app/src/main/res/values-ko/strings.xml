@@ -1,4 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="action_install">설치</string>
+    <string name="action_uninstall">제거</string>
+    <string name="confirm_all_users">모든 사용자</string>
+    <string name="confirm_allow_downgrade">다운그레이드 허용</string>
+    <string name="confirm_allow_test">테스트 패키지 허용</string>
+    <string name="confirm_bypass_target">낮은 대상 SDK 제한 우회</string>
+    <string name="confirm_install_body">%1$s\n%2$s\n버전: %3$s\n인증 방식: %4$s\n사용자: %5$s</string>
+    <string name="confirm_install_title">설치 확인</string>
+    <string name="confirm_installer">설치 관리자 정보: %1$s</string>
+    <string name="confirm_keep_data">앱 데이터 보존</string>
+    <string name="confirm_system">시스템 확인</string>
+    <string name="confirm_uninstall_body">%1$s\n인증 방식: %2$s\n사용자: %3$s</string>
+    <string name="confirm_uninstall_title">제거 확인</string>
     <string name="plugin_description">Android 앱을 설치, 업데이트, 제거하며 Shizuku 또는 Root를 통한 무음 설치를 지원</string>
 </resources>

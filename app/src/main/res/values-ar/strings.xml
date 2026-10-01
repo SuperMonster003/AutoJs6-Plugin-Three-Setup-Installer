@@ -1,4 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="action_install">تثبيت</string>
+    <string name="action_uninstall">إلغاء التثبيت</string>
+    <string name="confirm_all_users">جميع المستخدمين</string>
+    <string name="confirm_allow_downgrade">السماح بإصدار أقدم</string>
+    <string name="confirm_allow_test">السماح بحزم الاختبار</string>
+    <string name="confirm_bypass_target">تجاوز قيد SDK المستهدف القديم</string>
+    <string name="confirm_install_body">%1$s\n%2$s\nالإصدار: %3$s\nالتفويض: %4$s\nالمستخدم: %5$s</string>
+    <string name="confirm_install_title">تأكيد التثبيت</string>
+    <string name="confirm_installer">هوية المثبت: %1$s</string>
+    <string name="confirm_keep_data">الاحتفاظ ببيانات التطبيق</string>
+    <string name="confirm_system">تأكيد النظام</string>
+    <string name="confirm_uninstall_body">%1$s\nالتفويض: %2$s\nالمستخدم: %3$s</string>
+    <string name="confirm_uninstall_title">تأكيد إلغاء التثبيت</string>
     <string name="plugin_description">يثبت تطبيقات Android ويحدثها ويزيلها مع دعم التثبيت الصامت عبر Shizuku أو Root</string>
 </resources>

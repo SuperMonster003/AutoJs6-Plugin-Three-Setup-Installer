@@ -1,4 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="action_install">インストール</string>
+    <string name="action_uninstall">アンインストール</string>
+    <string name="confirm_all_users">すべてのユーザー</string>
+    <string name="confirm_allow_downgrade">ダウングレードを許可</string>
+    <string name="confirm_allow_test">テストパッケージを許可</string>
+    <string name="confirm_bypass_target">低いターゲット SDK の制限を回避</string>
+    <string name="confirm_install_body">%1$s\n%2$s\nバージョン: %3$s\n認証方式: %4$s\nユーザー: %5$s</string>
+    <string name="confirm_install_title">インストールの確認</string>
+    <string name="confirm_installer">インストーラー情報: %1$s</string>
+    <string name="confirm_keep_data">アプリデータを保持</string>
+    <string name="confirm_system">システム確認</string>
+    <string name="confirm_uninstall_body">%1$s\n認証方式: %2$s\nユーザー: %3$s</string>
+    <string name="confirm_uninstall_title">アンインストールの確認</string>
     <string name="plugin_description">Android アプリのインストール, 更新, アンインストールを行い, Shizuku または Root によるサイレントインストールに対応</string>
 </resources>

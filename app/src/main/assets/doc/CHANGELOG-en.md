@@ -8,7 +8,7 @@
 
 ###### 2026/10/01
 
-* `Hint` P0 development preview: the repository skeleton, the plugin identity recognized by the AutoJs6 plugin center, and the privileged installation spike. The Binder contract, the installer engine, the dialogs, the script API and the settings page follow the phases of ROADMAP.md.
+* `Hint` P2 development preview: core installation, inspection, user queries and uninstallation are connected to the host service, with explicit confirmation and automatic session cleanup. Full host-entry validation, the complete interface, external opening, default-installer activation, the script API and settings remain in progress.
 * `Feature` Plugin identity `three-setup-installer` (engine `installer`) with the INFO service, the Wake Activity and the `org.autojs.plugin.INSTALLER` service skeleton for host discovery
 * `Feature` README, plugin-center instructions and changelog in 10 languages
 * `Improvement` P0 validation completed for silent installation, updates, uninstallation and ordinary default-installer selection with Shizuku and Root. Host and script installation entry points are not available yet; persistent defaults remain outside this release.
@@ -18,6 +18,7 @@
 * `Improvement` Core installation and updates use system confirmation, Shizuku or Root, with cancellation and results that reflect the actual confirmation and system response.
 * `Improvement` Core uninstallation supports system confirmation, Shizuku and Root, with optional data retention when using a privileged authorizer.
 * `Improvement` Serial batch installation can continue after failures or cancel remaining items, and supports validating and selecting target users with privileges.
+* `Improvement` Host service requests support inspection, installation, uninstallation and user queries, with explicit confirmation, cancellation when callers exit, up to four concurrent sessions and automatic cleanup.
 * `Dependency` Shizuku API 13.1.5 (`dev.rikka.shizuku:api`, `dev.rikka.shizuku:provider`) for the Shizuku authorizer
 * `Dependency` libsu 6.0.0 (`com.github.topjohnwu.libsu:core`, `service`) for the Root authorizer
 * `Dependency` AndroidHiddenApiBypass 6.1 for the hidden package installer APIs used by the privileged service

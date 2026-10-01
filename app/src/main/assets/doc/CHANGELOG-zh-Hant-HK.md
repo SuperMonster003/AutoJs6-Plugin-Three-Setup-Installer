@@ -8,7 +8,7 @@
 
 ###### 2026/10/01
 
-* `提示` P0 開發預覽: 倉庫骨架, 可被 AutoJs6 外掛程式中心識別的外掛程式身分, 以及特權安裝 spike. Binder 契約, 安裝引擎, 對話方塊, 腳本 API 與設定頁按 ROADMAP.md 的階段推進.
+* `提示` P2 開發預覽: 安裝, 安裝套件資訊查詢, 使用者查詢和解除安裝核心已接入主程式服務, 支援明確確認及工作階段自動清理. 完整主程式入口驗收, 完整介面, 外部開啟, 預設安裝器啟用, 腳本 API 和設定仍在推進.
 * `新增` 外掛程式標識 `three-setup-installer` (engine `installer`), 含 INFO 服務, Wake Activity 以及供宿主發現的 `org.autojs.plugin.INSTALLER` 服務骨架
 * `新增` 10 種語言的 README, 外掛程式中心說明與更新日誌
 * `優化` P0 已驗證 Shizuku 和 Root 靜默安裝, 更新, 解除安裝及一般預設安裝器設定. 宿主與腳本安裝入口尚未開放, 本版本仍不支援持久預設項.
@@ -18,6 +18,7 @@
 * `優化` 安裝與更新核心支援系統確認, Shizuku 和 Root, 可取消操作並傳回實際確認方式與系統處理結果.
 * `優化` 解除安裝核心支援系統確認, Shizuku 和 Root, 特權解除安裝可選擇保留應用程式資料.
 * `優化` 支援依序批次安裝, 失敗後繼續或取消剩餘項目, 並可透過特權方式驗證和選擇目標使用者.
+* `優化` 主程式服務接入套件資訊查詢, 安裝, 解除安裝和使用者查詢, 支援明確確認, 呼叫方退出時取消, 最多四個並行工作階段及自動清理.
 * `依賴` 附加 Shizuku API 13.1.5 (`dev.rikka.shizuku:api`, `dev.rikka.shizuku:provider`) 用於 Shizuku 授權方式
 * `依賴` 附加 libsu 6.0.0 (`com.github.topjohnwu.libsu:core`, `service`) 用於 Root 授權方式
 * `依賴` 附加 AndroidHiddenApiBypass 6.1 用於特權服務存取隱藏的套件安裝器 API

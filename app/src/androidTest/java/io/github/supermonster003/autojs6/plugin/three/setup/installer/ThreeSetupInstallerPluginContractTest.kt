@@ -116,7 +116,7 @@ class ThreeSetupInstallerPluginContractTest {
     }
 
     @Test
-    fun installerServiceAnswersThePlaceholderContractBinder() {
+    fun installerServiceAnswersTheInstallerContractBinder() {
         val serviceInfo = discoverSingleService(
             ThreeSetupInstallerPlugin.SERVICE_ACTION,
             ThreeSetupInstallerPluginService::class.java.name,
@@ -127,8 +127,9 @@ class ThreeSetupInstallerPluginContractTest {
             assertEquals(ThreeSetupInstallerPlugin.SERVICE_DESCRIPTOR, binder.interfaceDescriptor)
             assertTrue(binder.isBinderAlive)
             assertTrue(binder.pingBinder())
-            // The placeholder owns no IInterface; roadmap P1.2 replaces it with IInstallerPlugin.Stub.
-            assertNull(binder.queryLocalInterface(ThreeSetupInstallerPlugin.SERVICE_DESCRIPTOR))
+            val installer = org.autojs.plugin.installer.api.IInstallerPlugin.Stub.asInterface(binder)
+            assertEquals(ThreeSetupInstallerPlugin.ID, installer.info.id)
+            assertCapabilities(installer.capabilities)
         }
     }
 
@@ -143,9 +144,13 @@ class ThreeSetupInstallerPluginContractTest {
 
     private fun assertCapabilities(capabilities: Bundle) {
         assertEquals(ThreeSetupInstallerPlugin.REQUIRED_HOST_VERSION, capabilities.getLong(PluginCapabilityKeys.REQUIRES_HOST_VERSION))
-        // P1.2 negotiates the host build and the contract version; the authorizer and feature arrays arrive with P2.6.
         assertEquals(InstallerContract.CONTRACT_VERSION, capabilities.getInt(InstallerCapabilityKeys.CONTRACT_VERSION))
-        assertEquals(setOf(PluginCapabilityKeys.REQUIRES_HOST_VERSION, InstallerCapabilityKeys.CONTRACT_VERSION), capabilities.keySet())
+        assertEquals(InstallerContract.AUTHORIZERS, capabilities.getStringArray(InstallerCapabilityKeys.AUTHORIZERS)?.toList())
+        assertEquals(InstallerContract.MAX_BATCH_SOURCES, capabilities.getInt(InstallerCapabilityKeys.MAX_BATCH))
+        assertEquals(InstallerContract.MAX_SPLITS_PER_PACKAGE, capabilities.getInt(InstallerCapabilityKeys.MAX_SPLITS))
+        assertEquals(setOf(InstallerCapabilityKeys.FEATURE_BATCH, InstallerCapabilityKeys.FEATURE_SPLITS,
+            InstallerCapabilityKeys.FEATURE_INSPECT, InstallerCapabilityKeys.FEATURE_USERS, InstallerCapabilityKeys.FEATURE_SILENT_UNINSTALL),
+            capabilities.getStringArray(InstallerCapabilityKeys.FEATURES_KEY)?.toSet())
     }
 
     private fun discoverSingleService(action: String, expectedClassName: String): ServiceInfo {

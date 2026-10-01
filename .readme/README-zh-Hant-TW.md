@@ -52,7 +52,7 @@ AutoJs6 透過 Binder 服務發現外掛程式, 以唯讀檔案描述元交出�
 
 ******
 
-版本 1.0.0 為 P0 開發預覽: 儲存庫骨架, 可被 AutoJs6 外掛程式中心識別的外掛程式身分, 以及特權安裝 spike. Binder 契約, 安裝引擎, 對話方塊, 腳本 API 與設定頁按 [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md) 的階段推進. 需要 AutoJs6 6.8.0 (build 5299) 或更高版本. P0 已驗證 Shizuku 和 Root 靜默安裝, 更新, 解除安裝及一般預設安裝器設定. 宿主與腳本安裝入口尚未開放, 本版本仍不支援持久預設項.
+1.0.0: P2 開發預覽: 安裝, 安裝套件資訊查詢, 使用者查詢和解除安裝核心已接入主程式服務, 支援明確確認及工作階段自動清理. 完整主程式入口驗收, 完整介面, 外部開啟, 預設安裝器啟用, 腳本 API 和設定仍在推進. [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md). AutoJs6 >= 6.8.0 (5299).
 
 ******
 
@@ -60,7 +60,7 @@ AutoJs6 透過 Binder 服務發現外掛程式, 以唯讀檔案描述元交出�
 
 ******
 
-外掛程式提供以下能力:
+目標能力, 按路線圖分階段交付:
 
 - 安裝套件格式: `.apk`, `.apks`, `.xapk`, `.apkm`, `.apkz` 以及包含 APK 的 ZIP 壓縮檔; 分包按裝置選擇; `.aab` 檔案只識別與說明, 不安裝.
 - 授權方式: `none` (系統 PackageInstaller 工作階段 + 使用者確認), `shizuku` 與 `root`; `auto` 按設定頁中的順序選擇第一個可用者, 腳本也可明確指定.
@@ -90,6 +90,7 @@ AutoJs6 透過 Binder 服務發現外掛程式, 以唯讀檔案描述元交出�
 - `none`: 標準 PackageInstaller 工作階段; Android 會要求使用者確認每次安裝, 支援分包, 不提供特權選項.
 - `shizuku`: 需要 Shizuku 應用程式處於執行狀態 (經無線偵錯, ADB 或 Root 啟動) 並已向外掛程式授權; 以 shell 權限執行, 可靜默安裝, 靜默解除安裝, 為其他使用者安裝以及鎖定預設安裝器.
 - `root`: 需要 Root 管理器向外掛程式授予 `su`; 透過 libsu Root 服務提供與 Shizuku 相同的操作. 在一般 (user) 韌體上降級仍只對 debuggable 應用程式生效, 這是框架規則而非外掛程式限制.
+- **注意:** 特權授權可用時, 腳本 API 預設靜默安裝, 不會主動顯示任何確認對話方塊. 若系統仍要求確認, `interaction: 'auto'` 會允許系統確認並寫入 `notes`. 需要安裝前確認時, 請明確使用 `interaction: 'dialog'`; 禁止系統確認時使用 `interaction: 'silent'`, 此時需要確認的安裝會失敗.
 
 ******
 
@@ -193,18 +194,25 @@ minimum host build: 5299 (6.8.0)
 
 #### v1.0.0
 
-_2026/09/30_
+_2026/10/01_
 
-- `提示` P0 開發預覽: 儲存庫骨架, 可被 AutoJs6 外掛程式中心識別的外掛程式身分, 以及特權安裝 spike. Binder 契約, 安裝引擎, 對話方塊, 腳本 API 與設定頁按 ROADMAP.md 的階段推進.
+- `提示` P2 開發預覽: 安裝, 安裝套件資訊查詢, 使用者查詢和解除安裝核心已接入主程式服務, 支援明確確認及工作階段自動清理. 完整主程式入口驗收, 完整介面, 外部開啟, 預設安裝器啟用, 腳本 API 和設定仍在推進.
 - `新增` 外掛程式標識 `three-setup-installer` (engine `installer`), 含 INFO 服務, Wake Activity 以及供宿主發現的 `org.autojs.plugin.INSTALLER` 服務骨架
 - `新增` 10 種語言的 README, 外掛程式中心說明與更新日誌
 - `優化` P0 已驗證 Shizuku 和 Root 靜默安裝, 更新, 解除安裝及一般預設安裝器設定. 宿主與腳本安裝入口尚未開放, 本版本仍不支援持久預設項.
 - `優化` 外掛程式 ID, engine, 服務 action / category, Binder descriptor 與最低宿主版本改由宿主 installer-api 契約常數提供; 能力宣告加入安裝器契約版本 1, 最低宿主建置回填為 5299
+- `優化` 可隨機存取的來源避免完整快取副本, 串流來源按需暫存. 支援一般 ZIP 分割套件, AAB 僅供檢查, 拒絕內容發生變化的來源.
+- `優化` 明確選擇的授權方式不回退, 區分拒絕, 逾時與不相容, 並行請求共用授權過程與特權連線.
+- `優化` 安裝與更新核心支援系統確認, Shizuku 和 Root, 可取消操作並傳回實際確認方式與系統處理結果.
+- `優化` 解除安裝核心支援系統確認, Shizuku 和 Root, 特權解除安裝可選擇保留應用程式資料.
+- `優化` 支援依序批次安裝, 失敗後繼續或取消剩餘項目, 並可透過特權方式驗證和選擇目標使用者.
+- `優化` 主程式服務接入套件資訊查詢, 安裝, 解除安裝和使用者查詢, 支援明確確認, 呼叫方退出時取消, 最多四個並行工作階段及自動清理.
 - `相依性` 附加 Shizuku API 13.1.5 (`dev.rikka.shizuku:api`, `dev.rikka.shizuku:provider`) 用於 Shizuku 授權方式
 - `相依性` 附加 libsu 6.0.0 (`com.github.topjohnwu.libsu:core`, `service`) 用於 Root 授權方式
 - `相依性` 附加 AndroidHiddenApiBypass 6.1 用於特權服務存取隱藏的套件安裝器 API
 - `相依性` 附加 `common-plugin-api.aar` (AutoJs6 模組 `plugin-api/common-plugin-api`, 宿主建置 6.8.0 / 5298, MPL 2.0) 作為共用外掛程式契約, 並在 `locks/host-api-aars.lock` 中鎖定雜湊
 - `相依性` 附加 `package-archive-parser.aar` 與 `installer-api.aar` (AutoJs6 模組 `plugin-api/package-archive-parser` 與 `plugin-api/installer-api`, 宿主 P1 建置 6.8.0 / 5299, MPL 2.0), 與 `common-plugin-api.aar` 一同在 `locks/host-api-aars.lock` 中鎖定雜湊
+- `相依性` 升級共用安裝套件解析器, 支援一般 ZIP 分割套件容器
 
 ##### 更多發行歷史
 

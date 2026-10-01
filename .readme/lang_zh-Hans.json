@@ -8,9 +8,9 @@
   "p_introduction_what": "3-Setup Installer 接管 AutoJs6 的安装器: 文件管理器, 插件中心与脚本打包页的安装按钮, `.apk`, `.apks`, `.xapk`, `.apkm` 与 `.apkz` 文件的外部 \"打开方式\" 入口, 以及脚本侧用于安装, 更新, 检查与卸载应用的全局对象 `installer`. 除常规的系统确认外, 还可通过 Shizuku 或 Root 静默安装与卸载.",
   "p_introduction_how": "AutoJs6 通过 Binder 服务发现插件, 以只读文件描述符交出安装包; 插件解析安装包, 选择授权方式, 按需显示自己的确认与进度对话框, 并回报阶段, 进度与结果. 特权操作在 Shizuku 用户服务或 libsu Root 服务中执行, 直接与系统包安装器对话.",
   "h3_status": "当前状态",
-  "p_status": "版本 {{ version_name }} 为 P0 开发预览: 仓库骨架, 可被 AutoJs6 插件中心识别的插件身份, 以及特权安装 spike. Binder 契约, 安装引擎, 对话框, 脚本 API 与设置页按 [ROADMAP.md]({{ roadmap_url }}) 的阶段推进. 需要 AutoJs6 {{ required_host_version_name }} (build {{ required_host_version_code }}) 或更高版本. P0 已验证 Shizuku 和 Root 静默安装, 更新, 卸载及普通默认安装器设置. 宿主与脚本安装入口尚未开放, 本版本仍不支持持久默认项.",
+  "p_status": "{{ version_name }}: P2 开发预览: 安装, 包信息查询, 用户查询和卸载核心已接入宿主服务, 支持显式确认和会话自动清理. 完整宿主入口验收, 完整界面, 外部打开, 默认安装器启用, 脚本 API 和设置仍在推进. [ROADMAP.md]({{ roadmap_url }}). AutoJs6 >= {{ required_host_version_name }} ({{ required_host_version_code }}).",
   "h3_features": "功能",
-  "p_features_intro": "插件提供以下能力",
+  "p_features_intro": "目标能力, 按路线图分阶段交付",
   "features": [
     "安装包格式: `.apk`, `.apks`, `.xapk`, `.apkm`, `.apkz` 以及包含 APK 的 ZIP 压缩包; 分包按设备选择; `.aab` 文件只识别与说明, 不安装.",
     "授权方式: `none` (系统 PackageInstaller 会话 + 用户确认), `shizuku` 与 `root`; `auto` 按设置页中的顺序选择第一个可用者, 脚本也可显式指定.",
@@ -30,7 +30,8 @@
   "authorizer_points": [
     "`none`: 标准 PackageInstaller 会话; Android 会要求用户确认每次安装, 支持分包, 不提供特权选项.",
     "`shizuku`: 需要 Shizuku 应用处于运行状态 (经无线调试, ADB 或 Root 启动) 并已向插件授权; 以 shell 权限运行, 可静默安装, 静默卸载, 面向其他用户安装以及锁定默认安装器.",
-    "`root`: 需要 Root 管理器向插件授予 `su`; 通过 libsu Root 服务提供与 Shizuku 相同的操作. 在普通 (user) 固件上降级仍只对 debuggable 应用生效, 这是框架规则而非插件限制."
+    "`root`: 需要 Root 管理器向插件授予 `su`; 通过 libsu Root 服务提供与 Shizuku 相同的操作. 在普通 (user) 固件上降级仍只对 debuggable 应用生效, 这是框架规则而非插件限制.",
+    "**注意:** 特权授权可用时, 脚本 API 默认静默安装, 不会主动弹出任何确认对话框. 若系统仍要求确认, `interaction: 'auto'` 会允许系统确认并写入 `notes`. 需要安装前确认时, 请显式使用 `interaction: 'dialog'`; 禁止系统确认时使用 `interaction: 'silent'`, 此时需要确认的安装会失败."
   ],
   "h3_quick_start": "快速开始",
   "p_quick_start_intro": "一个静默安装, 允许降级地更新, 监听会话并卸载应用的脚本 (自路线图 P4 起可用)",
