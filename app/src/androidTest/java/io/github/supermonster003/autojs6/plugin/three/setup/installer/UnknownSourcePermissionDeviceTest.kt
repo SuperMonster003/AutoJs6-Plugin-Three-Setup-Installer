@@ -2,6 +2,7 @@ package io.github.supermonster003.autojs6.plugin.three.setup.installer
 
 import android.app.KeyguardManager
 import android.app.ActivityManager
+import android.content.Context
 import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
@@ -12,12 +13,15 @@ import android.view.KeyEvent
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.engine.InstallOptions
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.history.InstallHistoryEntry
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.history.InstallHistoryStore
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.source.ExternalSources
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.ui.ExternalInstaller
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.ui.InstallDialogActivity
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.ui.InstallPresentation
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.ui.UserActionActivity
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.ui.UserActionBridge
+import org.autojs.plugin.installer.api.InstallerContract
 import org.junit.Assert.*
 import org.junit.AssumptionViolatedException
 import org.junit.Assume.assumeTrue
@@ -26,6 +30,9 @@ import org.junit.runner.RunWith
 import java.io.File
 import java.io.Closeable
 import java.security.MessageDigest
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.zip.ZipFile
 
 /** Opt-in checks of the real unknown-source Settings flow; permission changes are restored. */
@@ -35,6 +42,8 @@ class UnknownSourcePermissionDeviceTest {
         assumeTrue(Build.VERSION.SDK_INT >= 26 && InstrumentationRegistry.getArguments().getString("unknownSourceGrant") == "true")
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         val context = instrumentation.targetContext
+        val allowScan = InstrumentationRegistry.getArguments().getString("allowPlayProtectScan") == "true"
+        val timeout = if (allowScan) 180_000L else 60_000L
         assumeTrue("Unlock the test device", !context.getSystemService(KeyguardManager::class.java).isKeyguardLocked)
         UnknownSourcePermissionState(context).useWithVerifiedCleanup { permission ->
             FixturePackageOwnership(setOf(FixtureInstallUi.PACKAGE_NAME)).use { ownership ->
@@ -56,9 +65,10 @@ class UnknownSourcePermissionDeviceTest {
                         ownership.installationStarted()
                         val token = ExternalInstaller.start(context,
                             ExternalSources.fromIntent(Intent(Intent.ACTION_VIEW, Uri.fromFile(source))),
-                            InstallOptions(authorizer = "none", deleteSource = false, timeoutMillis = 60_000))
+                            InstallOptions(authorizer = "none", deleteSource = false, timeoutMillis = timeout),
+                            interaction = InstallerContract.INTERACTION_DIALOG)
                         val pending = requireNotNull(InstallPresentation.find(token)).also { record = it }
-                        val deadline = SystemClock.elapsedRealtime() + 55_000
+                        val deadline = SystemClock.elapsedRealtime() + timeout - 5_000
                         assertTrue("The fixed fixture did not reach its plugin confirmation", waitUntil(deadline) {
                             pending.snapshot().prompt?.metadata?.packageName == FixtureInstallUi.PACKAGE_NAME &&
                                 FixtureInstallUi.clickInstall(InstallDialogActivity.TAG_CONFIRM, token = token, packageName = FixtureInstallUi.PACKAGE_NAME)
@@ -129,16 +139,33 @@ class UnknownSourcePermissionDeviceTest {
                             fail("The same session did not show the fixed fixture's system confirmation: $diagnostic")
                         }
                         var extraScanDeclined = false
+                        var extraScanAccepted = false
+                        var safeScanAccepted = false
                         val finished = waitUntil(deadline) {
                             if (pending.snapshot().terminal) true else {
-                                if (!extraScanDeclined) {
-                                    extraScanDeclined = ownedUi.declineFixedFixtureScan {
+                                if (!extraScanDeclined && !extraScanAccepted && !safeScanAccepted) {
+                                    val handled = ownedUi.handleFixedFixtureScan(allowScan) {
                                         assertEquals(listOf(sessionId), trace.createdSessions.toList())
                                         assertEquals(listOf(sessionId), trace.confirmationSessions.toList())
                                         assertEquals(sessionId, trace.originalSession().sessionId)
                                     }
+                                    extraScanDeclined = handled && !allowScan
+                                    extraScanAccepted = handled && allowScan
                                     if (extraScanDeclined) UnknownSourcePermissionState.evidence(
                                         "Declined the fixed fixture's additional Play Protect scan consent; platformSession=$sessionId")
+                                    if (extraScanAccepted) UnknownSourcePermissionState.evidence(
+                                        "Accepted the explicitly authorized fixed fixture Play Protect scan; platformSession=$sessionId")
+                                }
+                                if (allowScan && !extraScanDeclined && !safeScanAccepted) {
+                                    // Play Protect can reuse a prior clean result for this exact fixture.
+                                    // Still require the observed clean title/body and the original session.
+                                    safeScanAccepted = ownedUi.acceptFixedFixtureSafeScan {
+                                        assertEquals(listOf(sessionId), trace.createdSessions.toList())
+                                        assertEquals(listOf(sessionId), trace.confirmationSessions.toList())
+                                        assertEquals(sessionId, trace.originalSession().sessionId)
+                                    }
+                                    if (safeScanAccepted) UnknownSourcePermissionState.evidence(
+                                        "Accepted the fixed fixture's explicitly safe Play Protect result; platformSession=$sessionId")
                                 }
                                 false
                             }
@@ -206,12 +233,15 @@ class UnknownSourcePermissionDeviceTest {
                         cleanup("record") { record?.close() }
                         cleanup("owned-task") { permissionUi?.closeOwnedTask() }
                         cleanup("platform-session") { trace.settleOwnedFixtureSessions() }
-                        cleanup("fixture-source") { folder.deleteRecursively() }
+                        cleanup("owned-history") { record?.let { removeOwnedHistory(context, it) } }
+                        cleanup("fixture-source") { check(folder.deleteRecursively() || !folder.exists()) { "The owned fixture source was not removed" } }
                         if (primaryFailure == null) cleanupFailure?.let { throw it }
                     }
                 }
             }
         }
+        val restoration = if (InstrumentationRegistry.getArguments().getString("unknownSourcePermissionRestore") == "driver") "driver" else "instrumentation"
+        UnknownSourcePermissionState.evidence("CLEANUP fixtureAbsent=true ownedSessionSettled=true permissionRestore=$restoration")
     }
 
     @Test fun closingTheActualUnknownSourceSettingsTaskCancelsWithoutGrantingPermission() {
@@ -228,7 +258,7 @@ class UnknownSourcePermissionDeviceTest {
             try {
                 ownership.installationStarted()
                 val token = ExternalInstaller.start(context, ExternalSources.fromIntent(Intent(Intent.ACTION_VIEW, Uri.fromFile(source))),
-                    InstallOptions(authorizer = "none", timeoutMillis = 45_000))
+                    InstallOptions(authorizer = "none", timeoutMillis = 45_000), interaction = InstallerContract.INTERACTION_DIALOG)
                 record = requireNotNull(InstallPresentation.find(token))
                 val deadline = SystemClock.elapsedRealtime() + 30_000
                 var settingsSeen = false
@@ -279,6 +309,25 @@ class UnknownSourcePermissionDeviceTest {
             "confirmationSessions=${trace.confirmationSessions} finishedSessions=${trace.finishedSessions} " +
             "${ownedUi?.diagnostic() ?: "ownedTask=unavailable"} " +
             "recordStage=${snapshot?.stage} recordTerminal=${snapshot?.terminal} recordFailure=${snapshot?.failure?.code}"
+    }
+
+    private fun removeOwnedHistory(context: Context, record: InstallPresentation.Record) {
+        val history = InstallHistoryStore.get(context)
+        // Compute the full owned ID set before looking at the asynchronous cache. remove marks
+        // each ticket item deleted immediately, so a queued or late terminal save cannot revive it.
+        val ids = record.request.items.indices.map { InstallHistoryEntry.id(record.token, it) }
+        val finished = CountDownLatch(ids.size)
+        val successful = AtomicBoolean(true)
+        ids.forEach { id ->
+            history.remove(id) { written ->
+                if (!written) successful.set(false)
+                finished.countDown()
+            }
+        }
+        check(finished.await(5, TimeUnit.SECONDS)) { "Owned fixture history cleanup timed out" }
+        check(successful.get()) { "Owned fixture history deletion was not durably saved" }
+        check(history.list().none { it.token == record.token }) { "Owned fixture history remains after deletion" }
+        UnknownSourcePermissionState.evidence("history cleanup token=${record.token} removed=${ids.size}")
     }
 
     /** A skipped UI capability check must not hide failed session/package/permission cleanup. */

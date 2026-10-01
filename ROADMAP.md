@@ -390,7 +390,7 @@ runtime/api/augment/installer/          Installer.kt (AugmentableKey("installer"
 
 - [x] (插件) `UserActionActivity`: 接管 `STATUS_PENDING_USER_ACTION` 的 intent sender (`startActivityForResult`), 未知来源权限缺失时先引导 `ACTION_MANAGE_UNKNOWN_APP_SOURCES` 再重试, 超时 (D31) 后取消会话. (SOURCE / JVM / DEVICE 2026-10-01: token 桥接, 权限设置返回, 超时, 任务清理与通知回退完成; 最终结果以 PackageInstaller 广播为准, 不把 API 24 的 RESULT_CANCELED 当成安装失败. 见 docs/dev/p3-ui-evidence.md)
 - [x] (插件) `UninstallDialogActivity`: `none` 路径承载 `ACTION_UNINSTALL_PACKAGE`; 特权路径的确认对话框 (脚本以 `interaction = dialog` 卸载时) 显示应用信息与 `keepData` 开关. (SOURCE / JVM / DEVICE 2026-10-01: 系统卸载桥接保留, 特权确认使用插件外观和 keepData 草稿; 旋转不重复启动, 选择值进入 UninstallEngine. API 24 / 28 / 35 桥接和特权确认回归通过)
-- [ ] (测试) 设备: none 路径新装 (含未知来源引导), 用户取消, 超时; 特权卸载确认. (部分 DEVICE 2026-10-01: 既有 API 24 新装 / 取消, 超时 / 卸载与 API 35 实际拒绝仍有效. 新 opt-in 在 API 28 实际开启本插件来源权限并以原 session 显示一次系统确认, 随后拒绝额外 Play Protect 上传扫描并验证失败终结; API 35 在开关之后遇到额外 OEM 授权页, 明确跳过. 权限均恢复. 两者不能算完整安装成功, 见 docs/dev/p3-unknown-source-evidence.md)
+- [x] (测试) 设备: none 路径新装 (含未知来源引导), 用户取消, 超时; 特权卸载确认. (DEVICE 2026-10-01: 既有 API 24 新装 / 取消, 超时 / 卸载与 API 35 实际拒绝仍有效. 维护者允许 Play Protect 扫描后, API 31 AVD 通过真实 Settings 授权并以原 session 2078773323 安装成功, created=1 / systemConfirmationStarts=1, OK (1 test), 4.015 秒, 无跳过. 独立驱动恢复 package / UID 原权限并核验夹具与测试历史清理, 四项结果均 true; 首次扫描与后续缓存结论的运行边界分别记录, 不把先前 API 28 / 35 的失败或跳过计为成功. 见 docs/dev/p3-unknown-source-evidence.md)
 
 ### P3.4 前台服务与通知
 

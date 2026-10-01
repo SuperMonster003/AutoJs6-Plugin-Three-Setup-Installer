@@ -30,17 +30,27 @@ internal class UnknownSourcePermissionState(private val context: Context) : Clos
     val original = read()
     private val originallyAllowed = context.packageManager.canRequestPackageInstalls()
     private var touched = false
+    private val restoreMode = InstrumentationRegistry.getArguments().getString("unknownSourcePermissionRestore")
+    private val restoreByDriver = restoreMode == "driver"
 
     init {
         check(packageName == ThreeSetupInstallerPlugin.PACKAGE_NAME)
+        check(restoreMode == null || restoreMode == "driver") { "Unsupported unknown-source permission restoration owner" }
         check(context.packageManager.getPackagesForUid(Process.myUid())?.toSet() == setOf(packageName)) {
             "Refusing to change an app-op for a UID shared with another package"
         }
-        evidence("saved permission modes: user=$userId package=${original.packageMode} uid=${original.uidMode} allowed=$originallyAllowed")
+        val owner = if (restoreByDriver) "driver precondition" else "saved permission"
+        evidence("$owner modes: user=$userId package=${original.packageMode} uid=${original.uidMode} allowed=$originallyAllowed")
     }
 
     fun denyForTest() {
         touched = true
+        if (restoreByDriver) {
+            check(read() == Modes("deny", "default") && !context.packageManager.canRequestPackageInstalls()) {
+                "The external driver must establish the denied precondition before starting instrumentation"
+            }
+            return
+        }
         // A UID override would otherwise supersede the Settings page's per-package toggle.
         if (original.uidMode != "default") setMode(uid = true, mode = "default")
         setMode(uid = false, mode = "deny")
@@ -55,6 +65,11 @@ internal class UnknownSourcePermissionState(private val context: Context) : Clos
 
     override fun close() {
         if (!touched) return
+        if (restoreByDriver) {
+            evidence("permission restoration delegated to the external driver after instrumentation exits")
+            touched = false
+            return
+        }
         var failure: Throwable? = null
         fun restore(action: () -> Unit) {
             try { action() } catch (problem: Throwable) {
@@ -169,6 +184,7 @@ internal class OwnedUnknownSourceUi(private val context: Context, private val br
     private val instrumentation = InstrumentationRegistry.getInstrumentation()
     private val manager = context.getSystemService(ActivityManager::class.java)
     private var scanLookupReported = false
+    private var safeScanLookupReported = false
 
     fun settingsTask(): ActivityManager.AppTask? = task()?.takeIf {
         val top = it.info()?.topActivity
@@ -245,11 +261,12 @@ internal class OwnedUnknownSourceUi(private val context: Context, private val br
     fun canReturnFromSettings(): Boolean = settingsTask() != null &&
         instrumentation.uiAutomation.rootInActiveWindow?.packageName?.toString() == SETTINGS
 
-    /** Never accepts an upload or bypass: only declines this fixed fixture's exact scan prompt. */
-    fun declineFixedFixtureScan(verifyOriginalSession: () -> Unit): Boolean {
+    /** Explicit opt-in may scan this code-free fixture; no warning or harmful-app block is bypassed. */
+    fun handleFixedFixtureScan(acceptScan: Boolean, verifyOriginalSession: () -> Unit): Boolean {
         val root = instrumentation.uiAutomation.rootInActiveWindow ?: return false
         if (root.packageName?.toString() != "com.android.vending") return false
-        val expected = setOf(FixtureInstallUi.LABEL, "App scan recommended", "Don't install app")
+        val actionText = if (acceptScan) "Scan app" else "Don't install app"
+        val expected = setOf(FixtureInstallUi.LABEL, "App scan recommended", actionText)
         val matched = mutableListOf<AccessibilityNodeInfo>()
         val pending = java.util.ArrayDeque<Pair<AccessibilityNodeInfo, Int>>()
         pending.addLast(root to 0)
@@ -277,14 +294,67 @@ internal class OwnedUnknownSourceUi(private val context: Context, private val br
         if (!scanLookupReported) {
             scanLookupReported = true
             UnknownSourcePermissionState.evidence("scan lookup: fixtureLabelHit=${exact(FixtureInstallUi.LABEL).isNotEmpty()} " +
-                "scanTitleHit=${exact("App scan recommended").isNotEmpty()} declineHit=${exact("Don't install app").isNotEmpty()} nodes=$visited")
+                "scanTitleHit=${exact("App scan recommended").isNotEmpty()} action=$actionText actionHit=${exact(actionText).isNotEmpty()} nodes=$visited")
         }
-        // A truncated tree cannot establish that the negative action is unique.
+        // A truncated tree cannot establish that the requested action is unique.
         if (!complete) return false
         if (exact(FixtureInstallUi.LABEL).isEmpty() || exact("App scan recommended").isEmpty()) return false
-        val negatives = exact("Don't install app").distinct()
-        check(negatives.size <= 1) { "Ambiguous negative action on the fixed fixture's scan prompt" }
-        var candidate = negatives.singleOrNull() ?: return false
+        val actions = exact(actionText).distinct()
+        check(actions.size <= 1) { "Ambiguous action on the fixed fixture's scan prompt" }
+        var candidate = actions.singleOrNull() ?: return false
+        repeat(5) {
+            if (candidate.packageName?.toString() != "com.android.vending") return false
+            if (candidate.isEnabled && candidate.isVisibleToUser && candidate.isClickable) {
+                verifyOriginalSession()
+                return candidate.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+            }
+            candidate = candidate.parent ?: return false
+        }
+        return false
+    }
+
+    /** Observed API 31 clean-result page only; cached scans may reach it without a new scan prompt. */
+    fun acceptFixedFixtureSafeScan(verifyOriginalSession: () -> Unit): Boolean {
+        if (InstrumentationRegistry.getArguments().getString("allowPlayProtectScan") != "true") return false
+        val root = instrumentation.uiAutomation.rootInActiveWindow ?: return false
+        if (root.packageName?.toString() != "com.android.vending") return false
+        val title = "This app looks safe"
+        val body = "You can continue to install it"
+        val action = "Install"
+        val expected = setOf(FixtureInstallUi.LABEL, title, body, action)
+        val matched = mutableListOf<AccessibilityNodeInfo>()
+        val pending = java.util.ArrayDeque<Pair<AccessibilityNodeInfo, Int>>()
+        pending.addLast(root to 0)
+        var requested = 1
+        var visited = 0
+        var complete = true
+        while (pending.isNotEmpty()) {
+            val (node, depth) = pending.removeLast()
+            visited++
+            if (node.isVisibleToUser && node.packageName?.toString() == "com.android.vending" && node.text?.toString() in expected) {
+                matched += node
+            }
+            if (depth == 32) {
+                if (node.childCount > 0) complete = false
+                continue
+            }
+            for (index in 0 until node.childCount) {
+                if (requested >= 512) { complete = false; break }
+                requested++
+                val child = node.getChild(index)
+                if (child == null) complete = false else pending.addLast(child to depth + 1)
+            }
+        }
+        fun exact(text: String) = matched.filter { it.text?.toString() == text }
+        if (!safeScanLookupReported && exact(title).isNotEmpty()) {
+            safeScanLookupReported = true
+            UnknownSourcePermissionState.evidence("safe scan lookup: fixtureLabelHit=${exact(FixtureInstallUi.LABEL).isNotEmpty()} " +
+                "safeTitleHit=true safeBodyHit=${exact(body).isNotEmpty()} installHit=${exact(action).isNotEmpty()} nodes=$visited complete=$complete")
+        }
+        if (!complete || exact(FixtureInstallUi.LABEL).isEmpty() || exact(title).isEmpty() || exact(body).isEmpty()) return false
+        val actions = exact(action).distinct()
+        check(actions.size <= 1) { "Ambiguous installation action on the fixed fixture's clean scan result" }
+        var candidate = actions.singleOrNull() ?: return false
         repeat(5) {
             if (candidate.packageName?.toString() != "com.android.vending") return false
             if (candidate.isEnabled && candidate.isVisibleToUser && candidate.isClickable) {

@@ -49,3 +49,33 @@ P3.3 原测试 checkbox 继续保留未完成. 本轮证明了真实授权前段
 补充现场日志 build/p4-api31-restoration.log 记录 `10-01 14:18:57.976 ActivityManager: Killing 6030 ... REQUEST_INSTALL_PACKAGES changed.` 和随后 `REQUEST_INSTALL_PACKAGES: default`. 收尾检查的包列表按本次 fixture / spike 名称筛选为空, 没有安装自建夹具; 权限已经恢复. 该补充记录用于说明系统终止原因和清理状态, 不能替代缺失的 instrumentation 成功结束.
 
 本次证明了实际授权, 同会话回跳及安全拒绝额外扫描, 没有完成授权后成功安装的完整验收. P3.3 对应原条目继续保留未完成.
+
+## 维护者允许 Play Protect 扫描后的完整成功验收
+
+2026-10-01, 维护者明确允许扫描. 在用户已启动的 API 31 / x86_64 AVD `emulator-5556` 上完成正向验收, 未更改全局 Play Protect 设置. 上述失败和跳过记录保留为对应运行的事实.
+
+新增 `tools/run-unknown-source-acceptance.ps1` 将权限前置条件和恢复移到 instrumentation 进程之外. 驱动先校验指定设备, 当前用户, 插件 UID 不共享, 固定夹具在所有用户下均不存在, runner 和测试参数; 在任何权限更改前保存 package / UID 两层原始 AppOps 的恢复计划. 测试退出之后, 驱动的 finally 恢复两层原值并再次查询, 避免恢复权限时 Android 杀死目标进程而丢失 runner 的结论. 测试仍必须通过真实 Settings 开关授予权限, shell 不代替授权动作.
+
+运行方式 (PowerShell 7.2+):
+
+```powershell
+./tools/run-unknown-source-acceptance.ps1 -Serial emulator-5556 -AllowPlayProtectScan
+```
+
+扫描只允许操作本次固定无代码夹具: 同时匹配 `com.android.vending`, 固定夹具名称, `App scan recommended` 与唯一 `Scan app` 控件. 扫描后的继续操作另需精确匹配 `This app looks safe`, `You can continue to install it` 与唯一 `Install` 控件, 并确认仍为本次原安装 session. 不处理未知 OEM 对话框或有害应用警告, 不点击绕过检查的操作. 不传扫描 opt-in 时仍保留原有拒绝扫描路径.
+
+两次运行分别记录:
+
+| 本地证据目录 (`build/unknown-source-acceptance/`) | 实际结果 |
+| --- | --- |
+| `20261001-152954-bee1ab99c0a240eaad6cf6631bc69ce5` | 实际允许扫描并出现安全结果页. 当时测试尚未识别安全结果页的独立 Install 按钮, 最终超时失败; 不能算自动成功. 原权限恢复, 夹具未遗留. 页面截图为 `build/p5-api31-scan.png`. |
+| `20261001-153932-8ab59de9223545d5961c4fd59c12b62c` | 增加严格安全结果页识别后, 完整授权 / 原会话继续 / 系统安装成功 / 清理通过, `OK (1 test)`, 4.015 秒, 无跳过. 本次未再次出现扫描页, 使用了先前扫描的缓存结论, 不宣称同一次运行再次展示并点击全部扫描步骤. |
+
+成功运行的可核对值:
+
+- authorizer=`none`, platformSession=`2078773323`, created=1, systemConfirmationStarts=1, sourcePreserved=true. 授权前后复用同一个平台会话, 版本和源文件摘要断言通过.
+- 插件历史 token=`261376fb-6aaa-4c1e-850e-d5f78bfca499`, 仅删除本次 token 对应的一条测试历史; 使用删除墓碑防止晚到写入复活测试记录.
+- 原权限为 package=`default`, uid=`default`; `result.json` 中 `Passed`, `TestPassed`, `AppOpsRestored`, `FixtureAbsentAfter` 均为 true, `CleanupFailures=[]`.
+- `CLEANUP fixtureAbsent=true ownedSessionSettled=true permissionRestore=driver`; 不删除用户安装包, 不关闭用户启动的模拟器.
+
+驱动自测覆盖 AppOps 输出解析与异常拒绝, PowerShell AST 解析通过. 正向成功补齐原 P3.3 测试条目中的未知来源引导安装部分; 既有取消, 超时和特权卸载确认的设备证据仍见 `p3-ui-evidence.md`. P3.3 原测试条目据此勾选, 不代替 P3.2 的系统文件管理器 / 浏览器 APK / XAPK 手动矩阵.
