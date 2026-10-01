@@ -8,9 +8,9 @@
   "p_introduction_what": "3-Setup Installer는 독립 홈 화면, AutoJs6의 진입점과 스크립트, 외부 앱의 패키지 열기 및 공유 요청을 통해 Android 앱을 설치, 업데이트, 검사 및 제거합니다. Android 확인과 Shizuku 또는 Root를 통한 특권 작업을 지원합니다.",
   "p_introduction_how": "AutoJs6는 Binder 서비스를 통해 플러그인을 찾고 패키지 파일을 읽기 전용 파일 디스크립터로 전달합니다. 플러그인은 패키지를 분석하고 인증 방식을 선택하며 필요하면 자체 확인 및 진행률 대화 상자를 표시하고 단계, 진행률, 결과를 보고합니다. 특권 작업은 시스템 패키지 설치 프로그램과 직접 통신하는 Shizuku 사용자 서비스 또는 libsu Root 서비스에서 실행됩니다.",
   "h3_status": "현재 상태",
-  "p_status": "{{ version_name }}: 독립 홈, 설정, 설치된 앱 관리, 순차 대기열 및 설치 기록을 제공하는 개발 미리보기입니다. 설치 확인, 진행 상황, 결과 및 포그라운드 알림을 지원합니다. 프로세스가 다시 시작되면 저장된 확정 결과를 유지하고 미완료 작업을 취소됨으로 표시하며, 자동으로 재개하거나 재시도하지 않습니다. `installer` 스크립트 API에는 AutoJs6 >= {{ required_host_version_name }} ({{ script_host_version_code }})이 필요하고, 기본 호스트 연동에는 빌드 {{ required_host_version_code }}이 필요합니다. 기기 검증 범위와 남은 검증 항목은 [ROADMAP.md]({{ roadmap_url }})를 확인하세요.",
+  "p_status": "{{ version_name }}은 아래 설치, 앱 관리 및 스크립트 기능을 구현합니다. 공식 GitHub Release 게시와 플러그인 센터 등록은 아직 완료되지 않았습니다. 호스트 연동에는 AutoJs6 >= {{ required_host_version_name }} ({{ required_host_version_code }}), `installer` 스크립트 API에는 빌드 {{ script_host_version_code }} 이상이 필요합니다. 기기 검증 범위와 남은 검증 항목은 [ROADMAP.md]({{ roadmap_url }})에 기록되어 있습니다.",
   "h3_features": "기능",
-  "p_features_intro": "이 개발 미리보기에서 사용할 수 있는 기능",
+  "p_features_intro": "{{ version_name }}에 구현된 기능",
   "features": [
     "패키지 형식: `.apk`, `.apks`, `.xapk`, `.apkm`, `.apkz` 및 APK가 들어 있는 ZIP 아카이브. 분할 패키지는 기기에 맞게 선택되며 `.aab` 파일은 인식과 설명만 하고 설치하지 않습니다.",
     "권한 방식: `none`은 Android 확인을 사용하고, `shizuku`와 `root`는 특권 작업을 제공합니다. `auto`는 기본적으로 사용 가능한 Shizuku, Root, 시스템 확인 순서로 선택합니다. 설정에서 순서와 사용 여부를 바꿀 수 있으며, 명시적으로 선택한 방식이 다른 방식으로 자동 변경되지는 않습니다.",
@@ -29,7 +29,7 @@
   ],
   "h3_usage": "사용 방법",
   "usage_steps": [
-    "Android 7.0 이상에서 공식 [Releases]({{ repo_url }}/releases) 페이지의 플러그인 APK를 설치하세요. 독립 런처 진입점에서 홈 화면을 열 수 있습니다.",
+    "Android 7.0 이상에서 공식 게시 후 [Releases]({{ repo_url }}/releases)의 APK를 설치하거나 공식 색인 등록 후 AutoJs6 플러그인 센터의 설치 마법사를 사용하세요. 게시 전 테스트에는 관리자가 제공한 빌드 또는 소스에서 직접 만든 빌드를 사용하세요. 런처 아이콘으로 독립 홈 화면을 열 수 있습니다.",
     "홈에서 권한과 기본 설치 프로그램을 확인하고 추가 버튼으로 하나 또는 여러 패키지를 선택하세요. 설치 대화상자를 검토한 후 확인하고 홈에서 진행 상황과 최근 기록을 확인하세요.",
     "AutoJs6 연동에는 빌드 {{ required_host_version_code }} ({{ required_host_version_name }}) 이상을 사용하고 플러그인 센터에서 `3-Setup Installer`를 활성화하세요. 스크립트 API에는 빌드 {{ script_host_version_code }} 이상이 필요합니다.",
     "AutoJs6의 설치 기능을 사용하거나 패키지를 열거나 공유할 때 3-Setup Installer를 선택하세요. 확인 대화상자가 나타나면 앱과 옵션을 검토한 후 설치하세요. 특권 방식을 선택할 때는 Shizuku 또는 Root 권한을 준비하세요.",
@@ -39,13 +39,13 @@
   "p_authorizers_intro": "각 인증 방식이 할 수 있는 일과 필요한 것",
   "authorizer_points": [
     "`none`: 표준 PackageInstaller 세션. Android가 매번 사용자 확인을 요구하며 분할 패키지를 지원하고 특권 옵션은 사용할 수 없습니다.",
-    "`shizuku`: Shizuku가 실행 중이어야 하며 (무선 디버깅, ADB 또는 Root로 시작), 플러그인에 권한이 부여되어야 합니다. shell 권한으로 자동 설치, 자동 제거 및 다른 사용자에 대한 작업을 수행할 수 있습니다.",
-    "`root`: Root 관리자가 플러그인에 `su`를 허용해야 합니다. libsu Root 서비스를 통해 Shizuku와 같은 작업을 제공합니다. 일반 (user) 펌웨어에서 다운그레이드는 debuggable 앱에만 성공하며 이는 프레임워크 규칙이지 플러그인의 제한이 아닙니다.",
-    "**참고:** 특권을 사용할 수 있을 때 `interaction: 'auto'` 호스트 요청은 확인 화면을 먼저 열지 않고 자동으로 설치합니다. Android가 확인을 요구하면 `auto`는 이를 허용하고 `notes`에 기록합니다. 설치 전 확인에는 `interaction: 'dialog'`를, 시스템 확인이 필요한 경우 실패하게 하려면 `interaction: 'silent'`를 사용하세요. 스크립트 API에도 같은 기본 동작이 적용됩니다.",
+    "`shizuku`: Shizuku가 실행 중이어야 하며 (무선 디버깅, ADB 또는 Root로 시작), 3-Setup Installer에 별도로 권한을 부여해야 합니다. AutoJs6에 부여한 권한은 이 플러그인에 적용되지 않습니다. 설치, 제거 및 다른 사용자에 대한 작업은 실행 중인 Shizuku 서비스의 권한을 사용합니다.",
+    "`root`: Root 권한을 얻은 기기와 3-Setup Installer에 `su`를 허용하는 Root 관리자가 필요합니다. libsu로 특권 설치, 제거, 사용자 및 기본 설치 프로그램 작업을 제공합니다. 각 작업의 허용 여부는 Android와 ROM 정책이 결정합니다.",
+    "**참고:** 스크립트는 기본적으로 `interaction: 'auto'`를 사용하며 특권이 있으면 확인 창 없이 설치합니다. 호스트 UI의 설치 기능은 `dialog`를 사용합니다. Android가 확인을 요구하면 `auto`는 이를 허용하고 `notes`에 기록합니다. 설치 전에 확인하려면 `interaction: 'dialog'`를 지정하세요. 명시적 `silent`는 특권이 없거나 시스템 확인이 필요하면 `AUTHORIZER_REQUIRED`로 실패합니다.",
     "설정은 권한 방식의 순서와 사용 여부, 설치 옵션 및 진행 알림 환경설정을 저장합니다. 홈 및 외부 설치는 기본적으로 `dialog`를 사용하며 명시적으로 저장한 `auto` 또는 `silent` 선택이 적용됩니다. 호스트/스크립트 요청은 명시적 옵션을 유지하고 스크립트 API의 기본값은 계속 `auto`입니다. 선택 내용은 확인한 뒤에만 저장됩니다."
   ],
   "h3_quick_start": "빠른 시작",
-  "p_quick_start_intro": "설치, 일괄 처리 및 세션용 템플릿 함수 (AutoJs6 >= {{ required_host_version_name }} ({{ script_host_version_code }}) 필요). 함수를 호출하기 전에 원본을 직접 선택하고 확인하세요. 이 예제는 자동으로 설치, 제거하거나 기본 설치 프로그램을 변경하지 않습니다.",
+  "p_quick_start_intro": "AutoJs6 >= {{ required_host_version_name }} ({{ script_host_version_code }})용 `install`, `installAsync`, `session`, `uninstall`, `setDefault` 예제입니다. 함수는 선택한 원본, 패키지 이름 또는 기본 설치 프로그램 옵션을 전달해 호출할 때만 실행됩니다. 처음의 상태 조회는 읽기 전용입니다.",
   "h3_compatibility": "호환성",
   "p_compatibility_intro": "플러그인의 능력을 결정하는 플랫폼 사실",
   "compatibility_points": [
@@ -57,10 +57,11 @@
   "faq_items": [
     "**왜 여전히 설치 확인이 필요한가요?** `none`은 항상 시스템 확인을 사용합니다. 권한을 준비한 후 설치 대화상자에서 Shizuku 또는 Root를 선택하세요. Android 또는 기기 정책에 따라 시스템 확인이 필요할 수 있습니다.",
     "**`.aab`를 설치할 수 있나요?** 아니요. Android App Bundle은 배포 형식이므로 먼저 bundletool로 `.apks` 세트로 변환하세요. 플러그인은 `.aab` 파일을 인식하고 패키지와 모듈 정보를 표시합니다.",
+    "**`allowDowngrade: true`인데 다운그레이드가 실패하는 이유는?** 이 옵션은 다운그레이드를 요청할 뿐이며 Android가 펌웨어, 권한을 실행하는 주체 및 debuggable 여부에 따라 결정합니다. 검증한 user 펌웨어에서 Sony G8441 / API 28과 Xiaomi 23046RP50C / API 35는 debuggable이 아닌 패키지의 다운그레이드를 거부했지만 Sony XQ-DQ72 / API 33의 Root 경로는 허용했습니다. 이는 각 기기의 결과입니다. 오류와 `systemMessage`를 확인하세요. Root도 모든 ROM에서 성공을 보장하지 않습니다.",
     "**HyperOS에서 어떤 설치자 패키지 이름을 사용할 수 있나요?** ADB 또는 무선 디버깅으로 시작한 Shizuku에서는 설치자 패키지 이름을 지정하지 않으면 `com.android.shell`을 사용합니다. 검증한 Xiaomi 23046RP50C / HyperOS / API 35에서는 확인 창 없는 새 설치와 업데이트 모두 이 값이 기록되었습니다. `com.android.shell` 또는 플러그인 자체 패키지 이름을 명시한 경우에도 성공했으며 요청한 값이 기록되었습니다. 다른 패키지 이름이나 ROM 버전은 시스템 응답에 따라 달라집니다.",
     "**ColorOS 또는 다른 ROM에서 플러그인 활성화가 필요하다고 하면?** 새로 설치하거나 강제 종료한 후 Android는 사용자가 상호작용할 때까지 앱을 중지 상태로 유지할 수 있습니다. AutoJs6 플러그인 센터에 활성화 작업이 표시되면 실행하거나, 런처 아이콘으로 3-Setup Installer를 연 다음 다시 시도하세요. 이는 [Android의 중지 상태 규칙](https://developer.android.com/reference/android/content/pm/ApplicationInfo#FLAG_STOPPED)을 따릅니다. ColorOS 고유 동작은 아직 실기기에서 검증하지 않았습니다.",
     "**기본 설치 프로그램 설정이 실패하는 이유는?** ROM이 변경을 거부할 수 있습니다. 이전 Android 버전에서 기존 APK 기본 처리 앱이 있다면, 페이지 안내에 따라 시스템 설정에서 이전 앱의 기본값을 먼저 지워야 할 수 있습니다. 시스템에 기본값 삭제 기능이 없으면 교체를 보장할 수 없습니다. Shizuku 또는 Root를 사용할 수 있어도 1.0.0은 영구 고정을 보장하지 않습니다.",
-    "**원본이 삭제되지 않은 이유는?** 설치 성공 후에만 삭제를 시도합니다. 설치 실패, 취소 또는 시간 초과 시에는 원본을 항상 유지합니다. 삭제 실패는 설치 성공 결과를 바꾸지 않으며 외부 제공자가 삭제를 거부할 수 있습니다. 스크립트의 `deleteSource`는 호스트가 경로 또는 `file://` 원본을 삭제하고 `content://` 원본은 유지합니다. `sourceDeleted`와 `notes`를 확인하세요.",
+    "**원본이 삭제되지 않은 이유는?** 설치 성공 후에만 삭제를 시도합니다. 설치 실패, 취소 또는 시간 초과 시에는 원본을 항상 유지합니다. 삭제 실패는 설치 성공 결과를 바꾸지 않으며 외부 제공자가 삭제를 거부할 수 있습니다. 스크립트의 `deleteSource`는 호스트가 경로 또는 `file://` 원본을 삭제하고 `content://` 원본은 유지합니다. `sourceDeleted`와 `notes`를 확인하세요. 일괄 처리에서 다른 항목이 실패하거나 나머지 대기열이 취소되어도 성공이 확인된 항목에는 `deleteSource`가 적용됩니다.",
     "**다시 시도하거나 이어서 실행할 수 있나요?** 실패한 외부 URI는 원본과 접근 권한을 사용할 수 있는 동안 다시 시도할 수 있습니다. 원본 또는 접근 권한이 해제되면 패키지를 다시 여세요. 프로세스가 다시 시작되면 복원된 화면에 저장된 확정 결과가 표시되고 미완료 항목은 중단으로 표시됩니다. 복원된 화면은 읽기 전용이며 설치나 재시도를 자동으로 실행하지 않습니다. 다시 시작하기 전에 실제 설치 상태를 확인하세요."
   ],
   "h3_security": "권한과 보안",
@@ -73,17 +74,17 @@
     "설치, 검사, 기록 및 앱 관리는 오프라인으로 동작합니다. INTERNET은 사용자가 수동으로 버전을 확인할 때만 12시간 간격으로 플러그인의 고정 GitHub Releases API에 접근하는 데 사용됩니다. 백그라운드 업데이트 확인이나 패키지 업로드는 수행하지 않습니다.",
     "패키지 원본은 읽기 전용으로 열립니다. 기록에는 제한된 앱 메타데이터와 결과만 저장되며 패키지 내용이나 원본 URI는 저장되지 않습니다. 오류의 경로는 가려집니다. 비공개 저장소는 백업에서 제외됩니다. 기록을 삭제해도 앱이나 원본은 삭제되지 않습니다."
   ],
-  "p_security_permission": "플러그인은 공식 [Releases]({{ repo_url }}/releases) 페이지 또는 AutoJs6 플러그인 센터에서만 받으세요. 출처를 알 수 없는 패키지는 버전 번호가 같아 보여도 호스트 검증에 실패하거나 위험을 동반할 수 있습니다.",
+  "p_security_permission": "공식 게시 후 플러그인은 공식 [Releases]({{ repo_url }}/releases) 페이지 또는 AutoJs6 플러그인 센터에서만 받으세요. 출처를 알 수 없는 패키지는 버전 번호가 같아 보여도 호스트 검증에 실패하거나 위험을 동반할 수 있습니다.",
   "h3_plugin_interface": "플러그인 인터페이스",
   "p_plugin_interface": "다음 정보는 AutoJs6 호스트와 플러그인 개발자를 위한 것입니다. 호스트는 이 식별자로 플러그인을 발견하고 호환성을 협상합니다",
-  "p_contract_service": "`ThreeSetupInstallerPluginService`는 `{{ plugin_service_action }}` (category `{{ plugin_service_category }}`)에 응답하며 로드맵 P1부터 호스트 installer-api 계약 `{{ plugin_aidl_interface }}`를 구현합니다. `ThreeSetupInstallerPluginInfoService`는 `{{ plugin_info_action }}`에 PluginInfo로 응답합니다. `WakeActivity`는 호스트가 플러그인을 활성화하는 데 사용됩니다.",
+  "p_contract_service": "`ThreeSetupInstallerPluginService`는 `{{ plugin_service_action }}` (category `{{ plugin_service_category }}`)에 응답하며 호스트 installer-api 계약 `{{ plugin_aidl_interface }}`를 구현합니다. `ThreeSetupInstallerPluginInfoService`는 `{{ plugin_info_action }}`에 PluginInfo로 응답합니다. `WakeActivity`는 호스트가 플러그인을 활성화하는 데 사용됩니다.",
   "h3_roadmap": "로드맵",
   "p_roadmap": "플러그인의 계획과 진행 상황은 ROADMAP.md에 체크 가능한 목록으로 관리되며, 단계별로 수락 기준과 증거 수준이 함께 기록됩니다. 체크되지 않은 항목은 현재 기능이 아니라 의도를 나타냅니다. Issues를 통한 논의를 환영합니다.",
   "text_link_roadmap": "ROADMAP.md 보기",
   "h3_release_history": "릴리스 기록",
   "h5_for_more_release_history": "더 많은 릴리스 기록",
   "h3_build": "빌드와 검증",
-  "p_build_intro": "이 섹션은 소스에서 플러그인을 빌드하려는 개발자를 위한 것입니다. 일반 사용자는 Releases 페이지의 미리 빌드된 APK를 설치하면 됩니다.",
+  "p_build_intro": "개발자는 아래 명령으로 플러그인을 빌드하고 검증할 수 있습니다. 공식 게시 전에는 관리자가 제공한 빌드 또는 로컬 빌드를 테스트에 사용하세요. 공식 APK는 Releases 및 색인 등록 후 플러그인 센터를 통해 배포됩니다.",
   "p_build_debug": "디버그 APK 빌드",
   "p_build_test": "JVM 단위 테스트 실행 및 계측 테스트 APK 빌드",
   "p_build_release": "릴리스 APK 빌드",
@@ -100,5 +101,13 @@
   "text_link_installer_docs": "설치 프로그램 모듈 문서",
   "text_link_reference_projects": "InstallerX와 InstallerX Revived (아키텍처 참고, GPL-3.0, 코드 재사용 없음)",
   "text_link_third_party_notices": "서드파티 고지",
-  "p_instruction_more": "설치 안내와 현재 진행 상황은 [프로젝트 README]({{ repo_url }})와 [ROADMAP.md]({{ roadmap_url }})를 참고하세요."
+  "p_instruction_more": "설치 안내와 현재 진행 상황은 [프로젝트 README]({{ repo_url }})와 [ROADMAP.md]({{ roadmap_url }})를 참고하세요.",
+  "p_quick_start_details": "원본에는 경로, `file://` 또는 읽을 수 있는 `content://` URI를 사용할 수 있습니다. 배열은 독립적인 일괄 항목이며 `{ splits: [...] }`는 한 앱을 설치합니다. `session(...)`은 생성 즉시 시작하고 반환된 객체는 `cancel()`과 `wait()`를 지원합니다. 동기 호출은 `InstallerError`를 발생시킬 수 있고 UI 스레드에서는 사용할 수 없습니다. `installer.status` 읽기, `installer.session(...)` 생성 및 `session.wait()` 호출도 이 제한을 따릅니다. UI 스레드에서는 Async 메서드를 사용하거나 스크립트 작업 스레드에서 동기 작업을 실행하세요. 세션 객체는 이를 만든 스크립트 스레드에서만 사용해야 합니다. Promise 거부를 처리하고 각 일괄 결과의 `ok`와 `error`를 확인하세요. 플러그인이 없거나 호환되지 않으면 `PLUGIN_UNAVAILABLE`을 보고합니다. `setDefault`는 기본값 해제를 포함하여 요청한 상태에 도달했는지 반환합니다. `app.uninstall`은 기존 시스템 제거 바로가기로 유지됩니다. 특권 옵션에는 `installer.uninstall`을 사용하세요. 전체 옵션과 이벤트는 [installer API 문서]({{ docs_installer_url }})를 확인하세요.",
+  "example_probe": "사용 가능 여부와 호환성을 읽기 전용으로 조회합니다.",
+  "example_install": "Shizuku 권한 필요. Android가 확인을 요구하면 silent는 실패합니다.",
+  "example_batch": "배열은 독립 패키지를 나타내며 각 항목에 결과가 있습니다.",
+  "example_splits": "base APK를 포함한 모든 분할 파일은 한 앱에 속합니다.",
+  "example_session": "호출 즉시 시작합니다. 취소하거나 기다리려면 반환된 세션을 보관하세요.",
+  "example_uninstall": "제거할 패키지 이름만 전달하세요. keepData는 데이터 보존을 요청합니다.",
+  "example_default": "true는 이 플러그인을 기본값으로 설정, false는 해제합니다. ROM 제한 적용."
 }

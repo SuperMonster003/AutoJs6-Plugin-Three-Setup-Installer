@@ -8,9 +8,9 @@
   "p_introduction_what": "3-Setup Installer 可從獨立首頁, AutoJs6 入口與指令碼, 以及安裝套件的外部開啟和分享請求安裝, 更新, 檢查與解除安裝 Android 應用程式. 支援 Android 系統確認及透過 Shizuku 或 Root 執行特權操作.",
   "p_introduction_how": "AutoJs6 透過 Binder 服務發現外掛程式, 以唯讀檔案描述元交出安裝套件; 外掛程式解析安裝套件, 選擇授權方式, 視需要顯示自己的確認與進度對話方塊, 並回報階段, 進度與結果. 特權操作在 Shizuku 使用者服務或 libsu Root 服務中執行, 直接與系統套件安裝器對話.",
   "h3_status": "目前狀態",
-  "p_status": "{{ version_name }}: 開發預覽, 已提供獨立首頁, 設定, 已安裝應用程式管理, 循序佇列及安裝歷史. 支援安裝確認, 進度, 結果和前景通知. 程序重新啟動後保留已確認並儲存的結果, 未完成工作標為取消, 不會自動續裝或重試. `installer` 指令碼 API 需要 AutoJs6 >= {{ required_host_version_name }} ({{ script_host_version_code }}); 宿主基本整合需要組建 {{ required_host_version_code }}. 裝置涵蓋範圍與剩餘驗收見 [ROADMAP.md]({{ roadmap_url }}).",
+  "p_status": "{{ version_name }} 已實作下述安裝, 應用程式管理與指令碼功能. 官方 GitHub Release 和外掛中心索引收錄仍待完成. 宿主整合需要 AutoJs6 >= {{ required_host_version_name }} ({{ required_host_version_code }}), `installer` 指令碼 API 需要組建 {{ script_host_version_code }} 或更高版本. 裝置涵蓋範圍與剩餘驗收記錄在 [ROADMAP.md]({{ roadmap_url }}) 中.",
   "h3_features": "功能",
-  "p_features_intro": "本開發預覽已提供的功能",
+  "p_features_intro": "{{ version_name }} 已實作的功能",
   "features": [
     "安裝套件格式: `.apk`, `.apks`, `.xapk`, `.apkm`, `.apkz` 以及包含 APK 的 ZIP 壓縮檔; 分包按裝置選擇; `.aab` 檔案只識別與說明, 不安裝.",
     "授權方式: `none` 使用 Android 確認; `shizuku` 與 `root` 提供特權操作. `auto` 預設依序選擇可用的 Shizuku, Root 和系統確認. 設定中可調整授權順序與啟用狀態; 明確選擇的方式不會靜默改用其他方式.",
@@ -29,7 +29,7 @@
   ],
   "h3_usage": "使用方式",
   "usage_steps": [
-    "在 Android 7.0 或更高版本上, 從官方 [Releases]({{ repo_url }}/releases) 頁面安裝外掛 APK. 獨立啟動器入口可開啟首頁.",
+    "Android 7.0 及以上可在正式發布後從官方 [Releases]({{ repo_url }}/releases) 安裝 APK, 或在官方索引收錄後使用 AutoJs6 外掛中心安裝精靈. 發布前可使用維護者提供的組建或從原始碼建置進行測試. 透過啟動器圖示開啟獨立首頁.",
     "在首頁查看授權與預設安裝器狀態, 按新增按鈕選擇單個或多個安裝套件. 檢查安裝對話方塊後確認, 並在首頁查看進度和最近歷史.",
     "整合 AutoJs6 時, 使用組建 {{ required_host_version_code }} ({{ required_host_version_name }}) 或更高版本, 並在外掛中心啟用 `3-Setup Installer`. 指令碼 API 需要組建 {{ script_host_version_code }} 或更高版本.",
     "使用 AutoJs6 的安裝操作, 或在開啟及分享安裝套件時選擇 3-Setup Installer. 出現確認對話框時, 先檢查應用程式與安裝選項再確認安裝. 選擇特權方式時, 請準備 Shizuku 或 Root 授權.",
@@ -39,13 +39,13 @@
   "p_authorizers_intro": "各授權方式能做什麼以及需要什麼",
   "authorizer_points": [
     "`none`: 標準 PackageInstaller 工作階段; Android 會要求使用者確認每次安裝, 支援分包, 不提供特權選項.",
-    "`shizuku`: 需要 Shizuku 正在執行 (經無線偵錯, ADB 或 Root 啟動) 並已向插件授權. 其 shell 權限支援靜默安裝, 靜默解除安裝及面向其他使用者的操作.",
-    "`root`: 需要 Root 管理器向外掛程式授予 `su`; 透過 libsu Root 服務提供與 Shizuku 相同的操作. 在一般 (user) 韌體上降級仍只對 debuggable 應用程式生效, 這是框架規則而非外掛程式限制.",
-    "**注意:** 特權可用時, 宿主請求使用 `interaction: 'auto'` 預設靜默安裝, 不會主動開啟確認介面. 若 Android 仍要求確認, `auto` 允許系統確認並記錄至 `notes`. 需要安裝前確認時使用 `interaction: 'dialog'`; 禁止系統確認時使用 `interaction: 'silent'`, 此時需要確認的安裝會失敗. 指令碼 API 沿用相同預設語義.",
+    "`shizuku`: 需要 Shizuku 正在執行 (經無線偵錯, ADB 或 Root 啟動), 並個別向 3-Setup Installer 授權. 向 AutoJs6 授權不等於向本外掛授權. 安裝, 解除安裝及其他使用者操作使用正在執行的 Shizuku 服務身分.",
+    "`root`: 需要已 Root 的裝置, 並由 Root 管理器向 3-Setup Installer 授予 `su`. 透過 libsu 提供特權安裝, 解除安裝, 使用者及預設安裝器操作. 每項請求是否允許仍由 Android 和 ROM 原則決定.",
+    "**注意:** 指令碼預設使用 `interaction: 'auto'`, 特權可用時預設靜默安裝. 宿主介面的安裝入口使用 `dialog`. 若 Android 要求確認, `auto` 允許系統確認並記錄至 `notes`. 需要安裝前確認時, 明確使用 `interaction: 'dialog'`. 明確指定 `silent` 時, 若特權不可用或需要系統確認, 會以 `AUTHORIZER_REQUIRED` 失敗.",
     "設定可儲存授權順序與啟用狀態, 安裝選項和進度通知偏好. 首頁及外部安裝預設使用 `dialog`; 明確儲存的 `auto` 或 `silent` 選擇會生效. 宿主/指令碼請求保留其明確選項, 指令碼 API 預設仍為 `auto`. 選擇項僅在確認後儲存."
   ],
   "h3_quick_start": "快速入門",
-  "p_quick_start_intro": "安裝, 批次與工作階段操作的範本函式 (需要 AutoJs6 >= {{ required_host_version_name }} ({{ script_host_version_code }})); 先自行選擇並確認來源, 再呼叫對應函式. 以下範例不會自動安裝, 解除安裝或修改預設安裝器.",
+  "p_quick_start_intro": "適用於 AutoJs6 >= {{ required_host_version_name }} ({{ script_host_version_code }}) 的 `install`, `installAsync`, `session`, `uninstall` 和 `setDefault` 範例. 這些函式僅在傳入自行選擇的來源, 套件名稱或預設安裝器選項並呼叫時執行; 開頭的狀態查詢為唯讀操作.",
   "h3_compatibility": "相容性",
   "p_compatibility_intro": "決定外掛程式能力邊界的平台事實",
   "compatibility_points": [
@@ -57,10 +57,11 @@
   "faq_items": [
     "**為何安裝仍要求確認?** `none` 始終使用系統確認. 準備好授權後, 可在安裝對話框中選擇 Shizuku 或 Root. Android 或裝置原則仍可能要求系統確認.",
     "**能安裝 `.aab` 嗎?** 不能. Android App Bundle 是發佈格式, 請先用 bundletool 轉換為 `.apks` 集合. 外掛程式會識別 `.aab` 檔案並顯示其套件名稱與模組資訊.",
+    "**為何設定 `allowDowngrade: true` 後仍可能降級失敗?** 此選項僅請求允許降級; Android 根據韌體, 授權身分及應用程式是否 debuggable 作出決定. 已測 user 韌體中, Sony G8441 / API 28 與 Xiaomi 23046RP50C / API 35 拒絕非 debuggable 套件降級, Sony XQ-DQ72 / API 33 的 Root 路徑則接受. 這些結果只代表對應裝置. 請檢查傳回的錯誤與 `systemMessage`; Root 不保證所有 ROM 都允許降級.",
     "**HyperOS 的安裝者套件名稱應如何填寫?** Shizuku 經 ADB 或無線偵錯啟動時, 不指定安裝者套件名稱會使用 `com.android.shell`. 已測 Xiaomi 23046RP50C / HyperOS / API 35 的靜默新安裝與更新均記錄此值. 明確指定 `com.android.shell` 或外掛程式自身套件名稱也都成功, 查詢到的安裝者與請求一致. 其他套件名稱或 ROM 版本仍以系統答覆為準.",
     "**ColorOS 或其他系統提示外掛程式需要啟用時怎麼辦?** 新安裝或強制停止後, Android 可能讓應用程式保持停止狀態, 等待使用者互動. 請在 AutoJs6 外掛程式中心使用提供的啟用入口, 或從啟動器圖示開啟 3-Setup Installer 後重試. 這遵循 [Android 的停止狀態規則](https://developer.android.com/reference/android/content/pm/ApplicationInfo#FLAG_STOPPED). ColorOS 專項行為尚未完成實機驗證.",
     "**為何設定預設安裝器會失敗?** ROM 可能拒絕變更. 舊版 Android 已有 APK 預設處理程式時, 可能需要先按頁面指引在系統設定中清除原處理程式的預設值. 如果系統沒有提供清除入口, 外掛程式無法保證替換成功. 即使 Shizuku 或 Root 可用, 1.0.0 也不承諾持久鎖定.",
-    "**為什麼來源沒有刪除?** 僅在安裝成功後嘗試刪除. 安裝失敗, 取消或逾時始終保留來源. 刪除失敗不會改變安裝成功的結果, 外部來源提供者可能拒絕刪除. 指令碼的 `deleteSource` 由宿主刪除路徑或 `file://` 來源, 保留 `content://` 來源; 請檢查 `sourceDeleted` 和 `notes`.",
+    "**為什麼來源沒有刪除?** 僅在安裝成功後嘗試刪除. 安裝失敗, 取消或逾時始終保留來源. 刪除失敗不會改變安裝成功的結果, 外部來源提供者可能拒絕刪除. 指令碼的 `deleteSource` 由宿主刪除路徑或 `file://` 來源, 保留 `content://` 來源; 請檢查 `sourceDeleted` 和 `notes`. 批次中已確認成功的項目仍按 `deleteSource` 處理, 即使其他項目失敗或剩餘佇列被取消.",
     "**可以重試或恢復嗎?** 失敗的外部 URI 項目在來源及存取權限仍可用時可以重試. 來源或存取權限釋放後, 請重新開啟安裝套件. 程序重新啟動後, 恢復介面顯示已確認並儲存的結果, 未完成項目標為中斷. 恢復介面為唯讀, 不會自動安裝或重試. 再次開始前請檢查應用程式的實際安裝狀態."
   ],
   "h3_security": "權限與安全",
@@ -73,17 +74,17 @@
     "安裝, 檢查, 歷史和應用程式管理均可離線使用. INTERNET 僅在使用者手動檢查版本時存取外掛固定的 GitHub Releases API, 間隔 12 小時. 不在背景檢查更新, 不上傳安裝套件.",
     "安裝套件來源以唯讀方式開啟. 歷史只儲存有限的應用程式中繼資料與結果, 不儲存套件內容或來源 URI, 錯誤中的路徑會遮蔽. 外掛私人儲存空間不參與備份. 刪除歷史不會解除安裝對應應用程式或刪除來源."
   ],
-  "p_security_permission": "請只從官方 [Releases]({{ repo_url }}/releases) 頁面或 AutoJs6 外掛中心取得外掛. 來源不明的安裝套件即使版本號相同, 也可能無法通過主程式驗證或帶來風險.",
+  "p_security_permission": "正式發布後, 請只從官方 [Releases]({{ repo_url }}/releases) 頁面或 AutoJs6 外掛中心取得外掛. 來源不明的安裝套件即使版本號相同, 也可能無法通過主程式驗證或帶來風險.",
   "h3_plugin_interface": "外掛介面",
   "p_plugin_interface": "以下資訊面向 AutoJs6 主程式與外掛開發者; 主程式使用這些識別碼探索外掛並協商相容性",
-  "p_contract_service": "`ThreeSetupInstallerPluginService` 回應 `{{ plugin_service_action }}` (category `{{ plugin_service_category }}`), 自路線圖 P1 起實作宿主 installer-api 契約 `{{ plugin_aidl_interface }}`. `ThreeSetupInstallerPluginInfoService` 以 PluginInfo 回應 `{{ plugin_info_action }}`. `WakeActivity` 供宿主啟用外掛程式.",
+  "p_contract_service": "`ThreeSetupInstallerPluginService` 回應 `{{ plugin_service_action }}` (category `{{ plugin_service_category }}`), 實作宿主 installer-api 契約 `{{ plugin_aidl_interface }}`. `ThreeSetupInstallerPluginInfoService` 以 PluginInfo 回應 `{{ plugin_info_action }}`. `WakeActivity` 供宿主啟用外掛程式.",
   "h3_roadmap": "路線圖",
   "p_roadmap": "外掛的規劃與進度以可勾選清單的形式維護在 ROADMAP.md 中, 依階段組織並附有驗收條件與證據等級. 未勾選條目表達的是意圖而非目前能力; 歡迎透過 Issues 討論.",
   "text_link_roadmap": "檢視 ROADMAP.md",
   "h3_release_history": "發行歷史",
   "h5_for_more_release_history": "更多發行歷史",
   "h3_build": "建置與驗證",
-  "p_build_intro": "本節面向希望從原始碼建置外掛的開發者; 一般使用者直接安裝 Releases 頁面的預建 APK 即可.",
+  "p_build_intro": "開發者可使用以下命令建置並驗證外掛. 正式發布前, 使用維護者提供的組建或本機建置進行測試; 正式 APK 將透過 Releases 及完成索引收錄後的外掛中心分發.",
   "p_build_debug": "建置 Debug APK",
   "p_build_test": "執行 JVM 單元測試並建置 instrumentation 測試 APK",
   "p_build_release": "建置 Release APK",
@@ -100,5 +101,13 @@
   "text_link_installer_docs": "安裝器模組文件",
   "text_link_reference_projects": "InstallerX 與 InstallerX Revived (架構參考, GPL-3.0, 未重用程式碼)",
   "text_link_third_party_notices": "第三方聲明",
-  "p_instruction_more": "安裝指南與目前進度請參閱 [專案 README]({{ repo_url }}) 與 [ROADMAP.md]({{ roadmap_url }})."
+  "p_instruction_more": "安裝指南與目前進度請參閱 [專案 README]({{ repo_url }}) 與 [ROADMAP.md]({{ roadmap_url }}).",
+  "p_quick_start_details": "來源可為路徑, `file://` 或有讀取權限的 `content://` URI. 陣列表示獨立批次項目, `{ splits: [...] }` 表示一個應用程式的分包. `session(...)` 建立後立即開始, 傳回物件支援 `cancel()` 和 `wait()`. 同步呼叫可能擲出 `InstallerError`, 且不能在 UI 執行緒執行. 讀取 `installer.status`, 建立 `installer.session(...)` 和呼叫 `session.wait()` 同樣受此限制. UI 執行緒請使用 Async 方法, 或在指令碼工作執行緒執行同步操作. 工作階段物件只能在建立它的指令碼執行緒使用. 請處理 Promise 拒絕, 並逐項檢查批次結果的 `ok` 與 `error`. 外掛缺失或不相容時回報 `PLUGIN_UNAVAILABLE`. `setDefault` 傳回是否達到請求狀態, 清除預設項成功也傳回 true. `app.uninstall` 仍是宿主的系統解除安裝快捷入口, 需要特權選項時使用 `installer.uninstall`. 完整選項與事件見 [installer API 文件]({{ docs_installer_url }}).",
+  "example_probe": "唯讀查詢可用狀態與相容資訊.",
+  "example_install": "需要 Shizuku 授權; silent 在 Android 要求確認時失敗.",
+  "example_batch": "陣列表示獨立安裝套件, 每個項目分別傳回結果.",
+  "example_splits": "所有分包屬於同一個應用程式, 包括其 base APK.",
+  "example_session": "呼叫後立即開始; 保留傳回的工作階段可取消或等待.",
+  "example_uninstall": "僅傳入確定要解除安裝的套件名稱; keepData 請求保留資料.",
+  "example_default": "true 設本外掛為預設, false 清除其預設項; 受 ROM 限制."
 }

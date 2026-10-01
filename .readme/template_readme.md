@@ -79,32 +79,47 @@
 
 ******
 
-{{ p_quick_start_intro }}:
+{{ p_quick_start_intro }}
 
 ```js
-// Read-only probe. The functions below run only when explicitly called with chosen sources.
+// {{ example_probe }}
 console.log(installer.status);
 
-// An already authorized Shizuku service is required; silent never falls back to a dialog.
+// {{ example_install }}
 let installChosen = source => installer.install(source, {
     authorizer: 'shizuku', interaction: 'silent', deleteSource: false,
 });
 
-// An array means independent applications, including an array containing one source.
+// {{ example_batch }}
 let installBatchChosen = sources => installer.installAsync(sources, {
     interaction: 'dialog', continueOnError: true, deleteSource: false,
 }).then(results => results.forEach(result => console.log(result.ok, result.packageName, result.error)))
     .catch(error => console.error(error.code, error.systemMessage));
 
-// A source may also be { splits: [...] } for one application's split files.
+// {{ example_splits }}
+let installSplitsChosen = splitFiles => installChosen({ splits: splitFiles });
+
+// {{ example_session }}
 let watchChosen = source => {
     let session = installer.session(source, { interaction: 'dialog', deleteSource: false });
-    session.on('progress', progress => console.log(Math.round(progress * 100) + '%'))
+    session.on('stage', (stage, detail) => console.log(stage, detail))
+        .on('progress', progress => console.log(Math.round(progress * 100) + '%'))
         .on('complete', result => console.log(result))
+        .on('cancel', () => console.log('cancel'))
         .on('error', error => console.error(error.code, error.systemMessage));
     return session;
 };
+
+// {{ example_uninstall }}
+let uninstallChosen = packageName => installer.uninstall(packageName, {
+    authorizer: 'shizuku', interaction: 'silent', keepData: true,
+});
+
+// {{ example_default }}
+let setDefaultChosen = enabled => installer.setDefault(enabled, { authorizer: 'shizuku' });
 ```
+
+{{ p_quick_start_details }}
 
 ******
 

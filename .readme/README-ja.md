@@ -52,7 +52,7 @@ AutoJs6 は Binder サービスを通じてプラグインを検出し, パッ�
 
 ******
 
-1.0.0: 開発プレビュー. 独立したホーム, 設定, インストール済みアプリ管理, 順次処理キュー, インストール履歴を提供します. インストールの確認, 進捗, 結果とフォアグラウンド通知に対応します. プロセス再起動後は保存済みの確定結果を保持し, 未完了タスクをキャンセル済みにします. 自動再開や再試行は行いません. `installer` スクリプト API には AutoJs6 >= 6.8.0 (5300) が必要です. 基本的なホスト連携にはビルド 5299 が必要です. 端末の検証範囲と残りの受け入れ項目は [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md) を参照してください.
+1.0.0 は以下のインストール, アプリ管理, スクリプト機能を実装しています. GitHub Releases での正式公開とプラグインセンターへの登録は未完了です. ホスト連携には AutoJs6 >= 6.8.0 (5299), `installer` スクリプト API にはビルド 5300 以降が必要です. 端末の検証範囲と残りの受け入れ項目は [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md) に記録しています.
 
 ******
 
@@ -60,7 +60,7 @@ AutoJs6 は Binder サービスを通じてプラグインを検出し, パッ�
 
 ******
 
-この開発プレビューで利用できる機能:
+1.0.0 で実装された機能:
 
 - パッケージ形式: `.apk`, `.apks`, `.xapk`, `.apkm`, `.apkz`, および APK を含む ZIP アーカイブ. 分割パッケージは端末に合わせて選択され, `.aab` ファイルは認識と説明のみでインストールされません.
 - 権限方式: `none` は Android の確認を使用し, `shizuku` と `root` は特権操作を提供します. `auto` は既定で利用可能な Shizuku, Root, システム確認の順に選択します. 設定で順序と有効な方式を変更できます. 明示した方式が別の方式に自動で置き換わることはありません.
@@ -83,7 +83,7 @@ AutoJs6 は Binder サービスを通じてプラグインを検出し, パッ�
 
 ******
 
-1. Android 7.0 以降の端末に公式 [Releases](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/releases) ページからプラグイン APK をインストールします. ランチャーの独立した入口からホームを開けます.
+1. Android 7.0 以降で, 正式公開後に公式 [Releases](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/releases) から APK をインストールするか, 公式インデックスへの登録後に AutoJs6 のプラグイン導入ウィザードを使用してください. 公開前のテストには管理者提供のビルドまたはソースからのビルドを使用します. ランチャーのアイコンから独立したホームを開けます.
 2. ホームで権限と既定インストーラーを確認し, 追加ボタンで単一または複数のパッケージを選択します. インストールダイアログの内容を確認し, ホームで進捗と最近の履歴を確認できます.
 3. AutoJs6 連携にはビルド 5299 (6.8.0) 以降を使用し, プラグインセンターで `3-Setup Installer` を有効にします. スクリプト API にはビルド 5300 以降が必要です.
 4. AutoJs6 のインストール操作を使用するか, パッケージを開くときや共有するときに 3-Setup Installer を選択します. 確認ダイアログが表示された場合は, アプリとオプションを確認してからインストールします. 特権方式を選ぶ場合は Shizuku または Root の認可を準備してください.
@@ -98,9 +98,9 @@ AutoJs6 は Binder サービスを通じてプラグインを検出し, パッ�
 各認可方式でできることと必要なもの:
 
 - `none`: 標準の PackageInstaller セッション. Android は毎回ユーザーに確認を求め, 分割パッケージに対応し, 特権オプションは利用できません.
-- `shizuku`: Shizuku が動作中であること (ワイヤレスデバッグ, ADB, Root で起動) と, プラグインへの許可が必要です. shell 権限によりサイレントインストール, アンインストール, 他のユーザーに対する操作を行えます.
-- `root`: Root マネージャーがプラグインに `su` を許可している必要があります. libsu Root サービスを通じて Shizuku と同じ操作を提供します. 通常 (user) ファームウェアでのダウングレードは debuggable なアプリにのみ成功しますが, これはフレームワークの規則でありプラグインの制限ではありません.
-- **注意:** 特権が利用できる場合, `interaction: 'auto'` のホスト要求は確認画面を自動で開かずにサイレントインストールします. Android が確認を要求した場合, `auto` はそれを許可し `notes` に記録します. インストール前の確認には `interaction: 'dialog'`, システム確認が必要な場合に失敗させるには `interaction: 'silent'` を指定します. スクリプト API も同じ既定動作に従います.
+- `shizuku`: Shizuku が動作中であること (ワイヤレスデバッグ, ADB, Root で起動) と, 3-Setup Installer 自体への許可が必要です. AutoJs6 への許可はこのプラグインには適用されません. インストール, アンインストール, 他のユーザーへの操作は動作中の Shizuku サービスの権限を使用します.
+- `root`: Root 化した端末と, 3-Setup Installer に `su` を許可する Root 管理アプリが必要です. libsu を通じて特権インストール, アンインストール, ユーザーや既定インストーラーの操作を提供します. 各操作が許可されるかは Android と ROM のポリシーに従います.
+- **注意:** スクリプトの既定値は `interaction: 'auto'` で, 特権が利用できる場合はサイレントインストールします. ホストの UI からのインストールは `dialog` を使用します. Android が確認を要求すると, `auto` は確認を許可して `notes` に記録します. インストール前に確認するには `interaction: 'dialog'` を指定してください. 明示的な `silent` は特権がない場合やシステム確認が必要な場合に `AUTHORIZER_REQUIRED` で失敗します.
 - 設定で権限方式の順序と有効状態, インストールオプション, 進捗通知を保存します. ホームと外部からのインストールは既定で `dialog` を使用し, 明示的に保存した `auto` または `silent` が適用されます. ホスト/スクリプトの明示オプションは維持され, スクリプト API の既定は引き続き `auto` です. 選択内容は確認後にのみ保存します.
 
 ******
@@ -109,32 +109,47 @@ AutoJs6 は Binder サービスを通じてプラグインを検出し, パッ�
 
 ******
 
-インストール, 一括処理, セッション用のテンプレート関数 (AutoJs6 >= 6.8.0 (5300) が必要). 呼び出す前に対象を選択して確認してください. この例は自動でインストール, アンインストール, 既定インストーラーの変更を実行しません.:
+AutoJs6 >= 6.8.0 (5300) 向けの `install`, `installAsync`, `session`, `uninstall`, `setDefault` の例です. 関数は選択したソース, パッケージ名, 既定インストーラーの設定を渡して呼び出した場合だけ実行されます. 冒頭の状態照会は読み取り専用です.
 
 ```js
-// Read-only probe. The functions below run only when explicitly called with chosen sources.
+// 利用可否と互換性の読み取り専用照会.
 console.log(installer.status);
 
-// An already authorized Shizuku service is required; silent never falls back to a dialog.
+// Shizuku の許可が必要. silent は Android が確認を要求すると失敗します.
 let installChosen = source => installer.install(source, {
     authorizer: 'shizuku', interaction: 'silent', deleteSource: false,
 });
 
-// An array means independent applications, including an array containing one source.
+// 配列は独立したパッケージを表し, 項目ごとに結果が返ります.
 let installBatchChosen = sources => installer.installAsync(sources, {
     interaction: 'dialog', continueOnError: true, deleteSource: false,
 }).then(results => results.forEach(result => console.log(result.ok, result.packageName, result.error)))
     .catch(error => console.error(error.code, error.systemMessage));
 
-// A source may also be { splits: [...] } for one application's split files.
+// base APK を含むすべての分割ファイルは 1 つのアプリに属します.
+let installSplitsChosen = splitFiles => installChosen({ splits: splitFiles });
+
+// 呼び出し時に開始. 戻り値を保持するとキャンセルや待機ができます.
 let watchChosen = source => {
     let session = installer.session(source, { interaction: 'dialog', deleteSource: false });
-    session.on('progress', progress => console.log(Math.round(progress * 100) + '%'))
+    session.on('stage', (stage, detail) => console.log(stage, detail))
+        .on('progress', progress => console.log(Math.round(progress * 100) + '%'))
         .on('complete', result => console.log(result))
+        .on('cancel', () => console.log('cancel'))
         .on('error', error => console.error(error.code, error.systemMessage));
     return session;
 };
+
+// 削除するパッケージ名を指定. keepData はデータ保持を要求します.
+let uninstallChosen = packageName => installer.uninstall(packageName, {
+    authorizer: 'shizuku', interaction: 'silent', keepData: true,
+});
+
+// true はこのプラグインを既定に設定, false は解除. ROM の制限があります.
+let setDefaultChosen = enabled => installer.setDefault(enabled, { authorizer: 'shizuku' });
 ```
+
+ソースにはパス, `file://`, 読み取り可能な `content://` URI を指定できます. 配列は独立した一括項目, `{ splits: [...] }` は 1 つのアプリの分割ファイルです. `session(...)` は作成時に開始し, 戻り値は `cancel()` と `wait()` を提供します. 同期呼び出しは `InstallerError` を投げる場合があり, UI スレッドでは使えません. `installer.status` の読み取り, `installer.session(...)` の作成, `session.wait()` の呼び出しも同様です. UI スレッドでは Async メソッドを使用するか, スクリプトのワーカースレッドで同期処理を実行してください. セッションオブジェクトは作成したスクリプトスレッドでのみ使用できます. Promise の拒否を処理し, 一括結果ごとの `ok` と `error` を確認してください. プラグインがない場合や非互換の場合は `PLUGIN_UNAVAILABLE` です. `setDefault` は既定設定の解除も含め, 要求した状態になったかを返します. `app.uninstall` は従来のシステム削除への入口です. 特権オプションには `installer.uninstall` を使用してください. 全オプションとイベントは [installer API ドキュメント](https://docs.autojs6.com/#/installer) を参照してください.
 
 ******
 
@@ -156,10 +171,11 @@ let watchChosen = source => {
 
 - **まだインストール確認が必要なのはなぜですか?** `none` は必ずシステム確認を使用します. 認可を準備してからインストールダイアログで Shizuku または Root を選択してください. Android や端末のポリシーによってはシステム確認が必要です.
 - **`.aab` はインストールできますか?** できません. Android App Bundle は配布形式なので, まず bundletool で `.apks` セットに変換してください. プラグインは `.aab` ファイルを認識し, パッケージとモジュールの情報を表示します.
+- **`allowDowngrade: true` でもダウングレードに失敗する理由は?** この設定は許可を要求するだけです. Android がファームウェア, 権限の実行主体, アプリの debuggable 属性に応じて判断します. 検証した user ファームウェアでは Sony G8441 / API 28 と Xiaomi 23046RP50C / API 35 が非 debuggable パッケージのダウングレードを拒否し, Sony XQ-DQ72 / API 33 の Root は許可しました. これらは各端末での結果です. エラーと `systemMessage` を確認してください. Root でもすべての ROM で成功するとは限りません.
 - **HyperOS ではどのインストーラーパッケージ名を使えますか?** ADB やワイヤレスデバッグで起動した Shizuku では, 名前を指定しないと `com.android.shell` を使います. 検証した Xiaomi 23046RP50C / HyperOS / API 35 では, サイレントでの新規インストールと更新でこの値が記録されました. `com.android.shell` とプラグイン自身のパッケージ名を明示した場合も成功し, 指定どおりに記録されました. 他のパッケージ名や ROM バージョンではシステムの応答に従います.
 - **ColorOS などでプラグインの有効化を求められたら?** 新規インストールや強制停止の後, Android はユーザーが操作するまでアプリを停止状態に保つことがあります. AutoJs6 のプラグインセンターで有効化の操作が表示されたら実行するか, ランチャーのアイコンから 3-Setup Installer を開いて再試行してください. これは [Android の停止状態の規則](https://developer.android.com/reference/android/content/pm/ApplicationInfo#FLAG_STOPPED) に従います. ColorOS 固有の動作は実機で未検証です.
 - **既定インストーラーの設定に失敗する理由は?** ROM が変更を拒否する場合があります. 古い Android で APK の既定の処理アプリがある場合, 画面の案内に従い, 先にシステム設定で以前のアプリの既定値の消去が必要になる場合があります. システムに消去の操作がなければ, 置き換えは保証できません. Shizuku や Root が使えても, 1.0.0 は永続的な固定を保証しません.
-- **元ファイルが削除されない理由は?** 削除はインストール成功後だけ試みます. インストールの失敗, キャンセル, タイムアウトでは必ず元ファイルを保持します. 削除失敗でインストールの成功結果は変わらず, 外部の提供元が削除を拒否する場合があります. スクリプトの `deleteSource` はホストがパスや `file://` の元ファイルを削除し, `content://` は保持します. `sourceDeleted` と `notes` を確認してください.
+- **元ファイルが削除されない理由は?** 削除はインストール成功後だけ試みます. インストールの失敗, キャンセル, タイムアウトでは必ず元ファイルを保持します. 削除失敗でインストールの成功結果は変わらず, 外部の提供元が削除を拒否する場合があります. スクリプトの `deleteSource` はホストがパスや `file://` の元ファイルを削除し, `content://` は保持します. `sourceDeleted` と `notes` を確認してください. 一括処理では, 他の項目が失敗したり残りがキャンセルされた場合も, 成功が確定した項目には `deleteSource` が適用されます.
 - **再試行や再開はできますか?** 失敗した外部 URI はソースとアクセス権が利用できる間, 再試行できます. ソースやアクセス権が解放された場合はパッケージを開き直してください. プロセスの再起動後, 復元画面には保存済みの確定結果が表示され, 未完了の項目は中断として示されます. 復元画面は読み取り専用で, インストールや再試行を自動で実行しません. 再実行する前に実際のインストール状態を確認してください.
 
 ******
@@ -177,7 +193,7 @@ let watchChosen = source => {
 - インストール, 検査, 履歴, アプリ管理はオフラインで動作します. INTERNET は手動でバージョンを確認するときだけ, 12 時間間隔でプラグインの固定 GitHub Releases API にアクセスするために使用します. バックグラウンド更新確認やパッケージのアップロードは行いません.
 - パッケージソースは読み取り専用で開きます. 履歴には限定されたアプリ情報と結果を保存し, パッケージの内容やソース URI は保存しません. エラー内のパスは伏せられます. 非公開ストレージはバックアップ対象外です. 履歴の削除はアプリやソースを削除しません.
 
-プラグインは公式の [Releases](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/releases) ページまたは AutoJs6 のプラグインセンターからのみ入手してください. 出所不明のパッケージは, バージョン番号が同じに見えてもホストの検証に失敗したり, リスクを伴う可能性があります.
+正式公開後のプラグインは公式の [Releases](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/releases) ページまたは AutoJs6 のプラグインセンターからのみ入手してください. 出所不明のパッケージは, バージョン番号が同じに見えてもホストの検証に失敗したり, リスクを伴う可能性があります.
 
 ******
 
@@ -199,7 +215,7 @@ aidl interface: org.autojs.plugin.installer.api.IInstallerPlugin
 minimum host build: 5299 (6.8.0)
 ```
 
-`ThreeSetupInstallerPluginService` は `org.autojs.plugin.INSTALLER` (category `installer`) に応答し, ロードマップ P1 以降はホストの installer-api 契約 `org.autojs.plugin.installer.api.IInstallerPlugin` を実装します. `ThreeSetupInstallerPluginInfoService` は `org.autojs.plugin.INFO` に PluginInfo で応答します. `WakeActivity` はホストによるプラグインの有効化に使われます.
+`ThreeSetupInstallerPluginService` は `org.autojs.plugin.INSTALLER` (category `installer`) に応答し, ホストの installer-api 契約 `org.autojs.plugin.installer.api.IInstallerPlugin` を実装します. `ThreeSetupInstallerPluginInfoService` は `org.autojs.plugin.INFO` に PluginInfo で応答します. `WakeActivity` はホストによるプラグインの有効化に使われます.
 
 ******
 
@@ -221,43 +237,32 @@ minimum host build: 5299 (6.8.0)
 
 _2026/10/01_
 
-- `ヒント` 開発プレビュー. 独立したホーム, 設定, インストール済みアプリ管理, 順次処理キュー, インストール履歴を提供します. インストールの確認, 進捗, 結果とフォアグラウンド通知に対応します. プロセス再起動後は保存済みの確定結果を保持し, 未完了タスクをキャンセル済みにします. 自動再開や再試行は行いません. `installer` スクリプト API には AutoJs6 >= 6.8.0 (5300) が必要です. 基本的なホスト連携にはビルド 5299 が必要です. 端末の検証範囲と残りの受け入れ項目は [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md) を参照してください
+- `ヒント` 1.0.0 は以下のインストール, アプリ管理, スクリプト機能を実装しています. GitHub Releases での正式公開とプラグインセンターへの登録は未完了です. ホスト連携には AutoJs6 >= 6.8.0 (5299), `installer` スクリプト API にはビルド 5300 以降が必要です. 端末の検証範囲と残りの受け入れ項目は [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md) に記録しています.
 - `機能` 3-Setup Installer は独立したホーム画面, AutoJs6 の入口とスクリプト, 外部アプリからのパッケージの開き方や共有を通じて Android アプリをインストール, 更新, 検査, アンインストールします. Android の確認と, Shizuku または Root による特権操作に対応します
-- `機能` 10 言語の README, プラグインセンター説明, 変更履歴
-- `機能` スクリプト API `installer` (別名 `$installer`) は同期, `...Async`, セッション形式を提供し, 単一 / 一括 / 分割パッケージのインストール, アンインストール, 調査, 認可方式とユーザーの照会, 既定インストーラーの設定に対応します. 失敗は安定した `code` を持つ `InstallerError` です (AutoJs6 >= 6.8.0 (5300) が必要)
+- `機能` パッケージ形式: `.apk`, `.apks`, `.xapk`, `.apkm`, `.apkz`, および APK を含む ZIP アーカイブ. 分割パッケージは端末に合わせて選択され, `.aab` ファイルは認識と説明のみでインストールされません
+- `機能` インストール成功後に元ファイルの削除を試行できます. ダウングレード, テストパッケージ, 低い targetSdk 制限の回避 (Android 14+), インストーラーの指定, 他のユーザーの選択には Shizuku または Root が必要で, Android の制限も適用されます
+- `機能` スクリプト API `installer` (別名 `$installer`) は同期, `...Async`, セッション形式を提供し, 単一 / 一括 / 分割パッケージのインストール, アンインストール, 調査, 認可方式とユーザーの照会, 既定インストーラーの設定に対応します. 失敗は安定した `code` を持つ `InstallerError` です (AutoJs6 >= 6.8.0 (5300) が必要). スクリプトの既定値は `interaction: 'auto'` で, 特権が利用できる場合はサイレントインストールします. ホストの UI からのインストールは `dialog` を使用します. Android が確認を要求すると, `auto` は確認を許可して `notes` に記録します. インストール前に確認するには `interaction: 'dialog'` を指定してください. 明示的な `silent` は特権がない場合やシステム確認が必要な場合に `AUTHORIZER_REQUIRED` で失敗します
 - `機能` 独立したホームに Shizuku/Root の利用可否と権限状態, 既定インストーラー, 進行中のタスクと最近のインストールを表示します. システムのファイル選択画面で複数のパッケージを選び, 順次インストールできます. 個別の失敗後の続行と, 残りの項目のキャンセルに対応します
-- `機能` 非公開のインストール履歴を最大 200 件保存します. パッケージ名, ラベル, 旧/新バージョン, 結果, 時刻, 起点 (ホスト/スクリプト/外部/ホーム), 権限方式と失敗情報を含みます. アプリやソースファイルを削除せずに 1 件ずつ削除, または履歴全体を消去できます. プロセス終了後の未完了項目はキャンセル済みとなり, 自動再開しません
+- `機能` 確認画面にアプリ情報, 新旧バージョン, 署名, 選択可能な APK コンポーネントを表示します. 進行中の処理はキャンセルでき, 結果には成功時の操作やコピー可能なエラー詳細を表示します. 一括インストールは項目ごとの状態を示します
+- `機能` フォアグラウンドのインストール進捗, キャンセル操作, 結果の通知に対応します. 通知権限がなくてもインストールは妨げられません
+- `機能` 単一または複数のパッケージを開いたり共有できます. MT Manager が共有する APKS ファイルにも対応します. 複数のパッケージは順次処理キューに入り, 外部ソースの失敗項目は URI とアクセス権が利用可能な間に再試行できます
 - `機能` インストール済みアプリを名前またはパッケージ名で検索し, 名前, インストール日時, 更新日時で並べ替えられます. システムアプリの表示も可能です. アプリやシステムのアプリ情報を開くか, 内容を確認してアンインストールできます. Shizuku または Root では確認後に追加のシステム確認なしで削除し, 任意でデータを保持できます. その他の場合は Android の確認を使用します
-- `機能` 設定で権限方式の順序と有効状態, インストールオプション, 進捗通知を保存します. ホームと外部からのインストールは既定で `dialog` を使用し, 明示的に保存した `auto` または `silent` が適用されます. ホスト/スクリプトの明示オプションは維持され, スクリプト API の既定は引き続き `auto` です. 選択内容は確認後にのみ保存します
 - `機能` ホームの状態カードと設定は同じ既定インストーラーページを開きます. 特権による設定と解除, 特権がない場合のシステム設定案内を提供します. OEM の方針により変更できない場合や, 以前の処理アプリの解除が必要な場合があります. スクリプトの `installer.isDefault`, `installer.setDefault`, `setDefaultAsync` も利用でき, 端末の応答をそのまま報告します
+- `機能` 設定で権限方式の順序と有効状態, インストールオプション, 進捗通知を保存します. ホームと外部からのインストールは既定で `dialog` を使用し, 明示的に保存した `auto` または `silent` が適用されます. ホスト/スクリプトの明示オプションは維持され, スクリプト API の既定は引き続き `auto` です. 選択内容は確認後にのみ保存します
+- `機能` 外観設定は言語, 夜間モード, テーマ色, ランチャーアイコンです. 最初の 3 項目は既定で AutoJs6 に従い, ローカルで変更できます. ホストが利用できない場合はシステムの言語と夜間モード, 既定色を使用します. アイコンは明色, 暗色, 自動, 透明の 4 モードで, 自動はシステムに従います. 表示はランチャーのキャッシュやマスクの影響を受けます
+- `機能` 非公開のインストール履歴を最大 200 件保存します. パッケージ名, ラベル, 旧/新バージョン, 結果, 時刻, 起点 (ホスト/スクリプト/外部/ホーム), 権限方式と失敗情報を含みます. アプリやソースファイルを削除せずに 1 件ずつ削除, または履歴全体を消去できます. プロセス終了後の未完了項目はキャンセル済みとなり, 自動再開しません
 - `機能` 設定からアプリ情報と 10 言語の内蔵リリース履歴を開けます. 手動更新確認は 12 時間間隔でプラグインの GitHub Releases API にアクセスし, 結果のキャッシュと無視するバージョンの管理に対応します. リリースページはブラウザーで開き, 更新の自動ダウンロードや自動インストールは行いません
-- `修正` 対応するシステム翻訳がない端末で, キャンセル操作の表示がプラグインの言語に従わない問題
-- `修正` base.apk などの必須分割 APK が無効状態でもチェックマークを表示するよう修正. ライト/ダークモードの両方に対応
-- `修正` Files by Google などが拡張子のない content URI と汎用 ZIP/バイナリ MIME タイプを使用する場合に, インストールパッケージを開く候補にプラグインが表示されない問題を修正
-- `修正` 読み取り専用ではないハンドルを返すパッケージ提供元を拒否し, 無効なソースハンドルを速やかに解放
-- `修正` 一時保存, 展開, 特権パイプへの書き込みで発生した容量不足を, 無効なパッケージや一般的なパイプエラーとして誤報する問題を修正
-- `修正` Shizuku または Root の接続が切断された場合, 認可手段が利用できないことを速やかに通知
-- `改善` プラグイン ID, engine, サービスの action / category, Binder descriptor と最低ホストバージョンをホストの installer-api 契約定数から取得するように変更; 能力宣言にインストーラ契約バージョン 1 を追加し, 最低ホストビルドを 5299 に更新
-- `改善` ランダムアクセス可能な入力元は全体のキャッシュコピーを省き, ストリームは必要に応じて一時保存します. ZIP 内の分割 APK に対応し, AAB は情報確認のみとし, 内容が変わった入力元は拒否します.
-- `改善` 明示的に選んだ認証方式から別方式へは切り替えません. 拒否, タイムアウト, 非互換を区別し, 同時リクエストで認証処理と特権接続を共有します.
-- `改善` インストールと更新のコア機能でシステム確認, Shizuku, Root に対応しました. キャンセルでき, 実際の確認方法とシステムの結果を返します.
-- `改善` アンインストールのコア機能でシステム確認, Shizuku, Root に対応し, 特権方式ではデータを残すこともできます.
-- `改善` 複数パッケージを順番にインストールし, 失敗後の続行や残りのキャンセルに対応しました. 特権方式では対象ユーザーの検証と選択ができます.
-- `改善` ホストサービスから情報確認, インストール, アンインストール, ユーザー照会を利用できます. 明示的な確認, 呼び出し元の終了時のキャンセル, 最大 4 セッションの同時実行と自動クリーンアップに対応しました.
-- `改善` 外観設定は言語, 夜間モード, テーマ色, ランチャーアイコンです. 最初の 3 項目は既定で AutoJs6 に従い, ローカルで変更できます. ホストが利用できない場合はシステムの言語と夜間モード, 既定色を使用します. アイコンは明色, 暗色, 自動, 透明の 4 モードで, 自動はシステムに従います. 表示はランチャーのキャッシュやマスクの影響を受けます
-- `改善` バックグラウンドのインストールにフォアグラウンド実行と進捗, キャンセル, 結果の通知を追加. 通知権限がなくてもインストールは継続.
-- `改善` アプリ情報, APK コンポーネント選択, オプション, エラーのコピー, 一括処理の項目別状態を備えた確認, 進捗, 結果画面を追加. プロセスの再起動後, 復元画面には保存済みの確定結果が表示され, 未完了の項目は中断として示されます. 復元画面は読み取り専用で, インストールや再試行を自動で実行しません.
-- `改善` システムのインストール確認に提供元の許可案内と中断処理を追加. 特権アンインストールではアプリ情報とデータ保持の選択を確認前に表示.
-- `改善` 単一または複数パッケージの表示と共有, アクセス可能な外部ソースの再試行, 成功後の任意の元ファイル削除に対応. 削除が拒否されてもインストール成功を維持.
-- `改善` MT Manager から共有された APKS パッケージを開く際に application/vnd.android.package-archives MIME 型に対応
+- `機能` 10 言語の README, プラグインセンター説明, 変更履歴
+- `改善` ランダムアクセス可能な入力元は全体のキャッシュコピーを省き, ストリームは必要に応じて一時保存します. ZIP 内の分割 APK に対応し, AAB は情報確認のみとし, 内容が変わった入力元は拒否します
+- `改善` 削除はインストール成功後だけ試みます. インストールの失敗, キャンセル, タイムアウトでは必ず元ファイルを保持します. 削除失敗でインストールの成功結果は変わらず, 外部の提供元が削除を拒否する場合があります. スクリプトの `deleteSource` はホストがパスや `file://` の元ファイルを削除し, `content://` は保持します. `sourceDeleted` と `notes` を確認してください. 一括処理では, 他の項目が失敗したり残りがキャンセルされた場合も, 成功が確定した項目には `deleteSource` が適用されます
 - `改善` 同一パッケージのインストールをユーザーと認証方式をまたいで直列化. 待機中もキャンセルとタイムアウトを維持し, 単独起動時にも 24 時間を超えた未使用の一時ディレクトリを安全に削除
 - `改善` 特権接続の確立中に接続が中断した場合は 1 回だけ自動で再接続; 開始済みのインストールやアンインストールは自動で繰り返さない
 - `依存関係` Shizuku 認可方式のために Shizuku API 13.1.5 (`dev.rikka.shizuku:api`, `dev.rikka.shizuku:provider`) を追加
 - `依存関係` Root 認可方式のために libsu 6.0.0 (`com.github.topjohnwu.libsu:core`, `service`) を追加
 - `依存関係` 特権サービスが非公開のパッケージインストーラー API へアクセスするために AndroidHiddenApiBypass 6.1 を追加
 - `依存関係` 共有プラグイン契約として `common-plugin-api.aar` (AutoJs6 モジュール `plugin-api/common-plugin-api`, ホストビルド 6.8.0 / 5298, MPL 2.0) を追加し, `locks/host-api-aars.lock` でハッシュを固定
-- `依存関係` `package-archive-parser.aar` と `installer-api.aar` (AutoJs6 モジュール `plugin-api/package-archive-parser` と `plugin-api/installer-api`, MPL 2.0) を追加し, `common-plugin-api.aar` とともに `locks/host-api-aars.lock` でハッシュを固定
-- `依存関係` 同梱のパッケージ解析器を更新し, 通常の ZIP 分割パッケージに対応
+- `依存関係` インストール契約用に `installer-api.aar` (AutoJs6, MPL 2.0) を追加. 出所と SHA-256 はサードパーティ通知に記載
+- `依存関係` APK とコンテナの検査および分割ファイルの選択用に `package-archive-parser.aar` (AutoJs6, MPL 2.0) を追加. 出所と SHA-256 はサードパーティ通知に記載
 
 ##### さらに詳しいリリース履歴
 
@@ -269,7 +274,7 @@ _2026/10/01_
 
 ******
 
-このセクションはソースからプラグインをビルドしたい開発者向けです. 通常のユーザーは Releases ページのビルド済み APK をインストールするだけで済みます.
+開発者は以下のコマンドでプラグインをビルドし検証できます. 正式公開前のテストには管理者提供のビルドまたはローカルビルドを使用してください. 正式 APK は Releases と, インデックス登録後のプラグインセンターで配布します.
 
 デバッグ APK をビルドする:
 
