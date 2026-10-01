@@ -74,7 +74,6 @@ internal object RequestDocuments {
 
     fun interactionOf(value: String?, what: String): String {
         val interaction = value ?: InstallerContract.INTERACTION_AUTO
-        if (interaction == InstallerContract.INTERACTION_NOTIFICATION) throw invalid("Notification installation is not available in this build")
         if (!InstallerContract.isInteraction(interaction)) throw invalid("$what: unknown interaction '$interaction'")
         return interaction
     }

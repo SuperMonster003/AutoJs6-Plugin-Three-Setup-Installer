@@ -7,7 +7,7 @@ import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
 
-/** One dataSync service protects all active writers. It never recreates or replays an install. */
+/** Protects active writers and notification-mode source grants. Never recreates or replays an install. */
 class InstallForegroundService : Service() {
     override fun onCreate() {
         super.onCreate()
@@ -15,8 +15,26 @@ class InstallForegroundService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        val ownsSourceGrants = intent?.clipData != null && intent.flags and
+            (Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION) != 0
+        if (ownsSourceGrants) {
+            val token = requireNotNull(intent).getStringExtra(InstallPresentation.EXTRA_TOKEN)
+            val owner = token?.let(InstallPresentation::find)
+            if (flags and START_FLAG_REDELIVERY != 0 || owner == null || !owner.notificationMode || owner.snapshot().terminal) {
+                // A framework redelivery is permission bookkeeping, never permission to recreate
+                // an installation. If idle, stop before NOT_STICKY could discard the StartItem
+                // owning the grant. Other live writers keep their starts until shared shutdown;
+                // stopSelf(startId) would also revoke earlier starts. Do not inspect source URIs.
+                val keptForOtherWriters = InstallNotifications.rejectSourceGrantStart(this)
+                android.util.Log.i("InstallNotification", "Discarding source-grant service start: redelivered=${flags and START_FLAG_REDELIVERY != 0} otherWriters=$keptForOtherWriters")
+                return if (keptForOtherWriters) START_REDELIVER_INTENT else START_NOT_STICKY
+            }
+        }
         InstallNotifications.refresh(this)
-        return START_NOT_STICKY
+        // On API 31/33, NOT_STICKY removes the delivered StartItem without removing its URI
+        // owner. Keep grant-bearing starts until stopSelf clears them. If the process dies, the
+        // guard above rejects the redelivery without opening a URI or starting an engine.
+        return if (ownsSourceGrants) START_REDELIVER_INTENT else START_NOT_STICKY
     }
 
     override fun onBind(intent: Intent?): IBinder? = null

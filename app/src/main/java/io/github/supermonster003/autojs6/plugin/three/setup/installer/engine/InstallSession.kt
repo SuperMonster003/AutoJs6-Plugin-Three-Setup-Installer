@@ -23,6 +23,8 @@ internal class InstallSession(
     data class SourceCleanup(val deleted: Boolean = false, val notes: List<String> = emptyList())
 
     interface Environment : Closeable {
+        /** A mandatory presentation may become unavailable while the worker is waiting/writing. */
+        fun checkAvailable() = Unit
         fun resolve(request: InstallRequest, deadlineMillis: Long, checkActive: () -> Unit): Target
         fun prepare(index: Int, sources: List<SourceEntry>, checkActive: () -> Unit): PreparedPackage
         fun installedVersion(packageName: String, target: Target): Version?
@@ -120,7 +122,7 @@ internal class InstallSession(
                 prepared = environment.prepare(index, sources, ::checkActive)
                 checkActive()
                 prepared.failure()?.let { throw it }
-                if (request.interaction == InstallerContract.INTERACTION_DIALOG) {
+                if (request.interaction == InstallerContract.INTERACTION_DIALOG || request.interaction == InstallerContract.INTERACTION_NOTIFICATION) {
                     stage(InstallerContract.STAGE_CONFIRMING, index, prepared.packageName)
                     val selection = environment.configure(index, prepared, target, request, deadline, ::checkActive)
                     prepared = selection.prepared
@@ -190,6 +192,7 @@ internal class InstallSession(
     private fun checkActive() {
         if (synchronized(lock) { cancelled } || Thread.currentThread().isInterrupted) throw cancellation()
         if (clock() >= deadline) throw InstallFailure(InstallerErrorCodes.TIMEOUT, "The installation session timed out")
+        environment.checkAvailable()
     }
 
     private fun stage(stage: String, index: Int, packageName: String?) {

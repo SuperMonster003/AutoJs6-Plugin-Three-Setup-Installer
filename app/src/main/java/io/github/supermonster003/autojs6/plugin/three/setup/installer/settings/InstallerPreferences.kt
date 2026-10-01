@@ -59,7 +59,7 @@ internal data class InstallerPreferences(
     val progressNotifications: Boolean = true,
 ) {
     fun save(context: Context): Boolean {
-        require(InstallerContract.isInteraction(interaction) && interaction != InstallerContract.INTERACTION_NOTIFICATION)
+        require(InstallerContract.isInteraction(interaction))
         val document = optionsDocument(options)
         InstallOptions.parse(document, "installation defaults")
         return file(context).edit()
@@ -82,7 +82,7 @@ internal data class InstallerPreferences(
                 } ?: InstallOptions()
             }.getOrDefault(InstallOptions())
             val interaction = runCatching { prefs.getString("default_interaction", null) }.getOrNull()
-                ?.takeIf { InstallerContract.isInteraction(it) && it != InstallerContract.INTERACTION_NOTIFICATION } ?: InstallerContract.INTERACTION_DIALOG
+                ?.takeIf(InstallerContract::isInteraction) ?: InstallerContract.INTERACTION_DIALOG
             val authorizers = AuthorizerPreferences.decode(
                 runCatching { prefs.getString("authorizer_order", null) }.getOrNull(),
                 runCatching { prefs.getString("authorizer_enabled", null) }.getOrNull(),

@@ -196,9 +196,11 @@
     <string name="notification_channel_installation">Installations</string>
     <string name="notification_install_complete">Installation terminée</string>
     <string name="notification_install_failed">Échec de l\'installation</string>
+    <string name="notification_install_prompt">Paquet: %1$s\nVersion: %2$s\nUtilisateur: %3$d\nChoisissez Installer pour appliquer les options sélectionnées, ou Annuler.</string>
     <string name="notification_installing">Installation en cours</string>
     <string name="notification_open_for_progress">Appuyez pour ouvrir l\'installateur et voir la progression.</string>
     <string name="notification_preparing">Préparation du paquet</string>
+    <string name="notification_unavailable">L\'installation par notification est indisponible. Autorisez les notifications et activez le canal Installations, puis réessayez.</string>
     <string name="notification_writing">Écriture du paquet</string>
     <string name="plugin_description">Installe, met à jour et désinstalle des applications Android, avec installation silencieuse via Shizuku, Root ou Dhizuku</string>
     <string name="release_history_error">Impossible de lire le document intégré.</string>
@@ -220,6 +222,7 @@
     <string name="settings_interaction">Interaction par défaut</string>
     <string name="settings_interaction_auto_note">Le mode automatique peut installer sans dialogue si Shizuku, Root ou Dhizuku est autorisé. Sinon, Android demande confirmation.</string>
     <string name="settings_interaction_dialog">Afficher le dialogue d\'installation</string>
+    <string name="settings_interaction_notification">Utiliser les notifications</string>
     <string name="settings_interaction_silent">Silencieux (autorisation requise)</string>
     <string name="settings_invalid_package">Saisissez un nom de paquet Android valide, ou laissez vide.</string>
     <string name="settings_license">Licence</string>

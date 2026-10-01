@@ -196,9 +196,11 @@
     <string name="notification_channel_installation">설치</string>
     <string name="notification_install_complete">설치 완료</string>
     <string name="notification_install_failed">설치 실패</string>
+    <string name="notification_install_prompt">패키지: %1$s\n버전: %2$s\n사용자: %3$d\n선택한 옵션으로 실행하려면 설치를, 중단하려면 취소를 선택하세요.</string>
     <string name="notification_installing">설치 중</string>
     <string name="notification_open_for_progress">탭하여 설치 프로그램을 열고 진행 상황을 확인하세요.</string>
     <string name="notification_preparing">패키지 준비 중</string>
+    <string name="notification_unavailable">알림 설치를 사용할 수 없습니다. 알림을 허용하고 설치 알림 채널을 켠 후 다시 시도하세요.</string>
     <string name="notification_writing">패키지 쓰는 중</string>
     <string name="plugin_description">Android 앱을 설치, 업데이트, 제거하며 Shizuku, Root 또는 Dhizuku를 통한 무음 설치를 지원</string>
     <string name="release_history_error">내장 문서를 읽을 수 없습니다.</string>
@@ -220,6 +222,7 @@
     <string name="settings_interaction">기본 상호 작용</string>
     <string name="settings_interaction_auto_note">자동 모드는 Shizuku, Root 또는 Dhizuku 권한이 있으면 확인 없이 설치할 수 있습니다. 그 외에는 Android가 확인을 요청합니다.</string>
     <string name="settings_interaction_dialog">설치 대화상자 표시</string>
+    <string name="settings_interaction_notification">알림 사용</string>
     <string name="settings_interaction_silent">무인 설치 (권한 필요)</string>
     <string name="settings_invalid_package">유효한 Android 패키지 이름을 입력하거나 비워 두세요.</string>
     <string name="settings_license">라이선스</string>

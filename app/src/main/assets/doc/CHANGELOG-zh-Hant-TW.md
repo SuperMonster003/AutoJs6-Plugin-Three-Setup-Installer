@@ -10,7 +10,9 @@
 
 * `新增` `dhizuku`: 需要 Android 8.0 (API 26)+, 已啟用的 Dhizuku 裝置/設定檔擁有者, 並向此外掛授權. 只操作目前擁有者使用者, 安裝者歸屬使用真實擁有者套件名稱. 不提供 shell/root 的降級, 測試套件, 略過低 targetSdk, 其他使用者, 任意安裝者歸屬或解除安裝保留資料選項. 外掛不自動設定擁有者.
 * `新增` 預設安裝器頁面區分一般偏好與持久化原則. 一般偏好透過 Shizuku 或 Root 設定, 仍受 ROM 限制. Dhizuku 的持久化原則支援 API 26-33; API 34+ 因無法驗證擁有者回呼, 在修改前拒絕. Root 僅在受支援裝置的使用者 0 中使用 system UID 輔助程序. 不覆寫衝突的持久原則. `persistentConfigured` 僅記錄此前成功設定的紀錄, 並非目前系統原則的證明; 被動查詢只回報 `preferred` 或 `none`.
+* `新增` `interaction: 'notification'` 僅用於安裝: 在通知中確認, 取消, 顯示進度和結果, 不彈出外掛安裝對話方塊. Android 系統確認仍需點擊對應通知. 必須允許通知並啟用應用程式通知及安裝管道, 否則以 `NOTIFICATION_UNAVAILABLE` 失敗. 其他互動模式不會因缺少通知權限而被阻止. 解除安裝不接受 `notification`.
 * `優化` `none` 使用 Android 確認. 新設定的 `auto` 按 `shizuku -> root -> dhizuku -> none` 選擇可用方式, 可調整順序和啟用狀態. 已儲存的舊三項設定保留原相對順序及啟用選擇, Dhizuku 插入 `none` 前但預設停用. 明確指定的授權方式不會改用其他方式.
+* `優化` 設定儲存授權順序與啟用狀態, 安裝選項及通知偏好. 首頁/外部安裝預設使用 `dialog`, 可明確選擇 `auto`, `silent` 或 `notification`. 宿主介面安裝入口使用 `dialog`; 指令碼保留明確選項且預設仍為 `auto`. 修改在確認後儲存.
 * `相依性` 附加 Dhizuku API 2.6.0 (MIT), 提供裝置/設定檔擁有者授權方式
 * `相依性` 升級 `installer-api.aar` 為契約 V2 (MPL 2.0), 保留 V1 協商並在末尾追加持久預設方法; 產物來源與 SHA-256 見第三方聲明; AutoJs6 >= 6.8.0 (5307).
 

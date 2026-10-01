@@ -7,6 +7,7 @@ import android.content.ComponentName
 import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.os.ParcelFileDescriptor
 import android.os.Process
@@ -74,7 +75,7 @@ class InstallProcessDeathProbeActivity : Activity() {
         val expectedPid = input.getIntExtra("expectedPid", -1)
         // An OEM may restore the just-killed control Activity in a fresh process. The old
         // self-death command is idempotent: never kill that new process or poison recovery.
-        if (mode == "die" && expectedPid > 0 && expectedPid != Process.myPid()) { finish(); return }
+        if (mode in setOf("die", "notification-die") && expectedPid > 0 && expectedPid != Process.myPid()) { finish(); return }
         Thread({
             val directory = File(filesDir.canonicalFile, "p6-process-death/$caseId")
             try {
@@ -85,6 +86,39 @@ class InstallProcessDeathProbeActivity : Activity() {
                     "cleanup" -> cleanup(directory)
                     "watch-host" -> watchHost(caseId, directory)
                     "cleanup-host" -> cleanupHost(directory)
+                    "notification-prepare", "notification-observe", "notification-cleanup", "notification-abort" -> {
+                        NotificationProcessDeathProbe.run(this, caseId, directory, mode)
+                        runOnUiThread { finish() }
+                    }
+                    "notification-die" -> {
+                        NotificationProcessDeathProbe.verifyDeathPoint(this, caseId, directory, expectedPid)
+                        runOnUiThread {
+                            check(isTaskRoot && input.flags and Intent.FLAG_ACTIVITY_MULTIPLE_TASK != 0)
+                            val ownedTask = taskId
+                            finishAndRemoveTask()
+                            val handler = android.os.Handler(mainLooper)
+                            val expires = SystemClock.elapsedRealtime() + 5_000
+                            handler.postDelayed(object : Runnable {
+                                override fun run() {
+                                    @Suppress("DEPRECATION")
+                                    val gone = isDestroyed && getSystemService(ActivityManager::class.java).appTasks.none { task ->
+                                        task.taskInfo?.let { info -> if (Build.VERSION.SDK_INT >= 29) info.taskId else info.persistentId } == ownedTask
+                                    }
+                                    if (!gone && SystemClock.elapsedRealtime() < expires) { handler.postDelayed(this, 50); return }
+                                    try {
+                                        check(gone) { "The death-control Activity/task has not disappeared" }
+                                        NotificationProcessDeathProbe.verifyDeathPoint(this@InstallProcessDeathProbeActivity, caseId, directory, expectedPid)
+                                        NotificationProcessDeathProbe.recordDeathControlRemoved(directory)
+                                        Process.killProcess(Process.myPid())
+                                    } catch (failure: Exception) {
+                                        atomicWrite(File(directory, "error.json"), JsonObject().apply {
+                                            addProperty("mode", mode); addProperty("error", failure.toString())
+                                        })
+                                    }
+                                }
+                            }, 100)
+                        }
+                    }
                     "die" -> die(directory, expectedPid)
                     else -> error("Unknown probe mode")
                 }

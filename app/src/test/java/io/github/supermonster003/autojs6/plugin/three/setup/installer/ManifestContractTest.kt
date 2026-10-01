@@ -126,7 +126,7 @@ class ManifestContractTest {
         }
         assertEquals(PLUGIN_PERMISSION, activities.getValue(".ui.InstallerSettingsActivity").androidAttribute("permission"))
         val receivers = manifest.child("application").children("receiver")
-        assertEquals(setOf(".engine.InstallStatusReceiver", ".ui.InstallNotifications\$CancelReceiver", ".ui.LauncherIconUpdateReceiver"), receivers.map { it.androidAttribute("name") }.toSet())
+        assertEquals(setOf(".engine.InstallStatusReceiver", ".ui.InstallNotifications\$CancelReceiver", ".ui.InstallNotificationActionReceiver", ".ui.LauncherIconUpdateReceiver"), receivers.map { it.androidAttribute("name") }.toSet())
         receivers.forEach {
             assertEquals("false", it.androidAttribute("exported"))
             if (it.androidAttribute("name") == ".ui.LauncherIconUpdateReceiver") {

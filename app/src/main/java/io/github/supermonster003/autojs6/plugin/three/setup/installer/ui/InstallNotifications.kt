@@ -15,29 +15,35 @@ import android.os.Handler
 import android.os.Looper
 import androidx.core.app.NotificationCompat
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.R
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.engine.InstallFailure
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.engine.InstallSession
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.ui.appearance.AppearancePreferences
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.ui.appearance.HostAppearanceReader
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.ui.appearance.wrap
 import org.autojs.plugin.installer.api.InstallerContract
+import org.autojs.plugin.installer.api.InstallerErrorCodes
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
 
 /** Bounded state, with tombstones so a late progress callback cannot resurrect a completed writer. */
 internal class InstallationNoticeRegistry<T>(private val maximum: Int = InstallerContract.MAX_CONCURRENT_SESSIONS) {
     data class Entry<T>(val token: String, val name: String, val stage: String, val progress: Float,
-        val payload: T, val writingStarted: Boolean, val cancellationRequested: Boolean = false)
-    data class Change(val accepted: Boolean, val beganWriting: Boolean)
+        val payload: T, val writingStarted: Boolean, val cancellationRequested: Boolean = false,
+        val mandatory: Boolean = false)
+    data class Change(val accepted: Boolean, val beganWriting: Boolean, val beganForeground: Boolean = beganWriting)
     private val entries = linkedMapOf<String, Entry<T>>()
     private val completed = linkedSetOf<String>()
 
     @Synchronized
-    fun update(token: String, name: String, stage: String, progress: Float, payload: T): Change {
+    fun update(token: String, name: String, stage: String, progress: Float, payload: T, mandatory: Boolean = false): Change {
         val previous = entries[token]
         if (token in completed || (previous == null && entries.size >= maximum)) return Change(false, false)
         val beganWriting = previous?.writingStarted != true && stage == InstallerContract.STAGE_WRITING
+        val required = mandatory || previous?.mandatory == true
+        val beganForeground = previous?.let { !it.writingStarted && !it.mandatory } != false && (beganWriting || required)
         entries[token] = Entry(token, name, stage, if (progress.isFinite()) progress.coerceIn(0f, 1f) else 0f,
-            payload, beganWriting || previous?.writingStarted == true, previous?.cancellationRequested == true)
-        return Change(true, beganWriting)
+            payload, beganWriting || previous?.writingStarted == true, previous?.cancellationRequested == true, required)
+        return Change(true, beganWriting, beganForeground)
     }
 
     @Synchronized
@@ -48,15 +54,18 @@ internal class InstallationNoticeRegistry<T>(private val maximum: Int = Installe
     }
 
     @Synchronized
-    fun writers(): List<Entry<T>> = entries.values.filter { it.writingStarted }
+    fun writers(): List<Entry<T>> = entries.values.filter { it.writingStarted || it.mandatory }
 
     @Synchronized
     fun isFinished(token: String): Boolean = token in completed
 
+    @Synchronized
+    fun contains(token: String): Boolean = token in entries
+
     /** Marks cancellation before handing callbacks to the caller; repeated taps are idempotent. */
     @Synchronized
     fun cancel(token: String?): List<T> {
-        val targets = entries.values.filter { it.writingStarted && !it.cancellationRequested && (token == null || it.token == token) }
+        val targets = entries.values.filter { (it.writingStarted || it.mandatory) && !it.cancellationRequested && (token == null || it.token == token) }
         targets.forEach { entries[it.token] = it.copy(cancellationRequested = true) }
         return targets.map { it.payload }
     }
@@ -87,7 +96,7 @@ internal class InstallationNoticePublications<T>(private val entries: Installati
     fun <R> serially(action: () -> R): R = synchronized(lock, action)
 }
 
-/** All entry points tolerate notification denial and may be called from an installation worker. */
+/** Optional notices tolerate denial; explicit notification interaction validates availability. */
 internal object InstallNotifications {
     const val CHANNEL_ID = "installation"
     const val FOREGROUND_ID = 301
@@ -112,9 +121,14 @@ internal object InstallNotifications {
     fun update(context: Context, token: String, displayName: String, stage: String, progress: Float,
         openIntent: Intent? = null, cancel: () -> Unit) {
         runCatching {
-            val change = entries.update(token, displayName.take(256), stage, progress, Payload(openIntent?.let(::Intent), cancel))
+            val record = InstallPresentation.find(token)
+            val mandatory = record?.notificationMode == true
+            val change = publications.serially {
+                entries.update(token, displayName.take(256), stage, progress,
+                    Payload(if (mandatory) null else openIntent?.let(::Intent), if (mandatory) requireNotNull(record)::cancel else cancel), mandatory)
+            }
             if (!change.accepted) return
-            if (change.beganWriting) startWanted.set(true)
+            if (change.beganForeground) startWanted.set(true)
             refresh(context)
         }
     }
@@ -128,7 +142,8 @@ internal object InstallNotifications {
                 cancelNotice(application, progressTag(token), PROGRESS_ID)
                 if (notificationsAllowed(application)) {
                     val localized = localized(application)
-                    val body = message?.take(512) ?: localized.getString(if (success) R.string.notification_install_complete else R.string.notification_install_failed)
+                    val body = (if (entry.mandatory) notificationResult(localized, token) else null)
+                        ?: message?.take(512) ?: localized.getString(if (success) R.string.notification_install_complete else R.string.notification_install_failed)
                     val builder = builder(localized)
                         .setSmallIcon(if (success) android.R.drawable.stat_sys_download_done else android.R.drawable.stat_notify_error)
                         .setContentTitle(entry.name.ifBlank { localized.getString(R.string.app_name) })
@@ -137,7 +152,7 @@ internal object InstallNotifications {
                         .setAutoCancel(true)
                         .setTimeoutAfter(600_000)
                         .setCategory(NotificationCompat.CATEGORY_STATUS)
-                    (openIntent ?: entry.payload.intent)?.let { builder.setContentIntent(activityPendingIntent(application, token, "result", it)) }
+                    if (!entry.mandatory) (openIntent ?: entry.payload.intent)?.let { builder.setContentIntent(activityPendingIntent(application, token, "result", it)) }
                     notify(application, resultTag(token), RESULT_ID, builder.build())
                 }
             }
@@ -158,24 +173,99 @@ internal object InstallNotifications {
     }
 
     /** A direct Activity PendingIntent avoids notification trampolines and grants only a user tap. */
-    fun notifyAction(context: Context, token: String, intent: Intent, title: String? = null, message: String? = null): Boolean = runCatching {
+    fun notifyAction(context: Context, token: String, intent: Intent, title: String? = null, message: String? = null,
+        cancelIntent: PendingIntent? = null): Boolean = runCatching {
         publications.action(token) {
             val application = context.applicationContext
             if (!notificationsAllowed(application)) return@action false
             val localized = localized(application)
             val body = message ?: localized.getString(R.string.notification_action_required_body)
-            val notification = builder(localized)
+            val builder = builder(localized)
                 .setSmallIcon(android.R.drawable.stat_sys_download)
                 .setContentTitle(title ?: localized.getString(R.string.notification_action_required))
                 .setContentText(body)
                 .setStyle(NotificationCompat.BigTextStyle().bigText(body))
                 .setContentIntent(activityPendingIntent(application, token, "action", intent))
-                .setAutoCancel(true)
+                .setAutoCancel(cancelIntent == null)
+                .setOngoing(cancelIntent != null)
                 .setCategory(NotificationCompat.CATEGORY_STATUS)
-                .build()
-            notify(application, actionTag(token), ACTION_ID, notification)
+            cancelIntent?.let { builder.addAction(0, localized.getString(R.string.action_cancel), it) }
+            notify(application, actionTag(token), ACTION_ID, builder.build())
         }
     }.getOrDefault(false)
+
+    /** No Activity is involved: the immutable approval action is tied to this exact item prompt. */
+    fun confirm(context: Context, token: String, prompt: InstallPresentation.Prompt, target: InstallSession.Target) {
+        requireAvailable(context)
+        val posted = publications.action(token) {
+            val localized = localized(context)
+            val metadata = prompt.metadata
+            val body = localized.getString(R.string.notification_install_prompt,
+                metadata.packageName ?: metadata.label, metadata.versionName ?: metadata.versionCode?.toString() ?: "?", target.userId)
+            val notice = builder(localized).setSmallIcon(android.R.drawable.stat_sys_download)
+                .setContentTitle(metadata.label)
+                .setContentText(body).setStyle(NotificationCompat.BigTextStyle().bigText(body))
+                .setOngoing(true).setCategory(NotificationCompat.CATEGORY_STATUS)
+                .addAction(0, localized.getString(R.string.action_install), InstallNotificationActionReceiver.approval(context, token, prompt.token))
+                .addAction(0, localized.getString(R.string.action_cancel), cancelPendingIntent(context, token))
+                .build()
+            notify(context, actionTag(token), ACTION_ID, notice)
+        }
+        if (!posted) throw InstallFailure(InstallerErrorCodes.NOTIFICATION_UNAVAILABLE, "The installation-confirmation notification could not be posted")
+    }
+
+    /** Transfer only validated source grants before the external NoDisplay Activity finishes. */
+    fun retainSourceGrants(context: Context, token: String, grants: Intent) {
+        requireAvailable(context)
+        val record = InstallPresentation.find(token)
+        check(record?.notificationMode == true && !record.snapshot().terminal) { "No live notification installation owns these grants" }
+        try {
+            val intent = Intent(context, InstallForegroundService::class.java)
+                .putExtra(InstallPresentation.EXTRA_TOKEN, token).apply {
+                    clipData = grants.clipData
+                    addFlags(grants.flags and (Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION))
+                }
+            val started = if (Build.VERSION.SDK_INT >= 26) context.startForegroundService(intent) else context.startService(intent)
+            if (started == null) throw IllegalStateException("The source-grant service was not started")
+        } catch (failure: Exception) {
+            throw InstallFailure(InstallerErrorCodes.NOTIFICATION_UNAVAILABLE,
+                "The notification service could not retain package-source access", systemMessage = failure.message, cause = failure)
+        }
+    }
+
+    fun requireAvailable(context: Context) {
+        if (!available(context)) throw InstallFailure(InstallerErrorCodes.NOTIFICATION_UNAVAILABLE,
+            localized(context).getString(R.string.notification_unavailable))
+    }
+
+    /** Read-only channel policy shared by installation and isolated channel acceptance checks. */
+    internal fun requireChannelAvailable(context: Context, channelId: String) {
+        if (!channelAvailable(context, channelId)) throw InstallFailure(InstallerErrorCodes.NOTIFICATION_UNAVAILABLE,
+            localized(context).getString(R.string.notification_unavailable))
+    }
+
+    internal fun available(context: Context): Boolean = runCatching {
+        if (Build.VERSION.SDK_INT >= 26 && manager(context).getNotificationChannel(CHANNEL_ID) == null) ensureChannel(context)
+        channelAvailable(context, CHANNEL_ID)
+    }.getOrDefault(false)
+
+    private fun channelAvailable(context: Context, channelId: String): Boolean = runCatching {
+        (Build.VERSION.SDK_INT < 26 || manager(context).getNotificationChannel(channelId) != null) && notificationsAllowed(context, channelId)
+    }.getOrDefault(false)
+
+    private fun notificationResult(context: Context, token: String): String? {
+        val snapshot = InstallPresentation.find(token)?.snapshot() ?: return null
+        return buildList {
+            snapshot.items.forEachIndexed { index, item ->
+                val result = item.result
+                val status = if (result?.get(InstallerContract.FIELD_OK)?.asBoolean == true) context.getString(R.string.install_success)
+                    else result?.getAsJsonObject(InstallerContract.FIELD_ERROR)?.get(InstallerContract.FIELD_ERROR_CODE)?.asString
+                        ?: context.getString(R.string.install_failed)
+                add(context.getString(R.string.install_item_status, index + 1, item.metadata?.label ?: item.displayName, status))
+            }
+            snapshot.failure?.let { add(context.getString(R.string.install_error_code, it.code)) }
+        }.joinToString("\n").take(4_096)
+    }
 
     fun dismissAction(context: Context, token: String) {
         publications.serially { cancelNotice(context, actionTag(token), ACTION_ID) }
@@ -199,7 +289,12 @@ internal object InstallNotifications {
 
     internal fun onServiceCreated(created: InstallForegroundService) = publications.serially {
         startPending = false
-        val notification = runCatching { foregroundNotification(created, entries.writers()) }.getOrNull()
+        val writers = entries.writers()
+        if (writers.isEmpty()) {
+            created.finishForeground()
+            return@serially
+        }
+        val notification = runCatching { foregroundNotification(created, writers) }.getOrNull()
         if (notification != null && created.publish(notification)) {
             service = created
             startWanted.set(false)
@@ -209,16 +304,32 @@ internal object InstallNotifications {
     }
 
     internal fun onServiceDestroyed(destroyed: InstallForegroundService) {
-        if (service === destroyed) service = null
-        startPending = false
+        if (service === destroyed) {
+            service = null
+            startPending = false
+            reportSourceServiceLoss()
+        }
         // Do not loop on FGS restrictions; the next user-visible resume explicitly permits a retry.
         refresh(destroyed)
+    }
+
+    /** Never revoke another live start's grants merely because a stale start was delivered. */
+    internal fun rejectSourceGrantStart(created: InstallForegroundService): Boolean = publications.serially {
+        if (entries.writers().isNotEmpty()) {
+            refresh(created)
+            true
+        } else {
+            if (service === created) service = null
+            created.finishForeground()
+            false
+        }
     }
 
     internal fun onPromotionRejected(rejected: InstallForegroundService) {
         if (service === rejected) service = null
         startPending = false
         startWanted.set(false)
+        reportSourceServiceLoss()
         refresh(rejected)
     }
 
@@ -230,6 +341,10 @@ internal object InstallNotifications {
         // install-result boundary still wins over a late cancellation.
         cancel(null)
         refresh(timedOut)
+    }
+
+    private fun reportSourceServiceLoss() {
+        entries.writers().forEach { InstallPresentation.find(it.token)?.onNotificationServiceLost() }
     }
 
     private fun render(context: Context) = publications.serially { renderLocked(context) }
@@ -262,10 +377,11 @@ internal object InstallNotifications {
             }
         }
         val showOptionalProgress = io.github.supermonster003.autojs6.plugin.three.setup.installer.settings.InstallerPreferences.read(context).progressNotifications
-        if (!startPending && notificationsAllowed(context) && showOptionalProgress) {
-            writers.forEach { entry -> notify(context, progressTag(entry.token), PROGRESS_ID, progressNotification(context, entry, fallback = true)) }
-        } else if (!showOptionalProgress) {
-            writers.forEach { entry -> cancelNotice(context, progressTag(entry.token), PROGRESS_ID) }
+        if (!startPending && notificationsAllowed(context)) {
+            writers.forEach { entry ->
+                if (showOptionalProgress || entry.mandatory) notify(context, progressTag(entry.token), PROGRESS_ID, progressNotification(context, entry, fallback = true))
+                else cancelNotice(context, progressTag(entry.token), PROGRESS_ID)
+            }
         }
     }
 
@@ -339,7 +455,7 @@ internal object InstallNotifications {
             if (intent.action != CANCEL_ACTION) return
             val token = intent.getStringExtra(EXTRA_TOKEN)
             if (token != null || intent.getBooleanExtra(EXTRA_CANCEL_ALL, false)) {
-                cancel(token)
+                if (token != null && !entries.contains(token)) remove(context, token) else cancel(token)
                 refresh(context)
             }
         }
@@ -351,9 +467,15 @@ internal object InstallNotifications {
         }
     }
 
-    private fun notificationsAllowed(context: Context): Boolean = runCatching {
+    private fun notificationsAllowed(context: Context, channelId: String = CHANNEL_ID): Boolean = runCatching {
         if (Build.VERSION.SDK_INT >= 33 && context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) false
-        else manager(context).areNotificationsEnabled() && (Build.VERSION.SDK_INT < 26 || manager(context).getNotificationChannel(CHANNEL_ID)?.importance != NotificationManager.IMPORTANCE_NONE)
+        else if (!manager(context).areNotificationsEnabled()) false
+        else if (Build.VERSION.SDK_INT < 26) true
+        else {
+            val channel = manager(context).getNotificationChannel(channelId)
+            channel?.importance != NotificationManager.IMPORTANCE_NONE &&
+                (Build.VERSION.SDK_INT < 28 || channel?.group == null || manager(context).getNotificationChannelGroup(channel.group)?.isBlocked != true)
+        }
     }.getOrDefault(false)
 
     @SuppressLint("MissingPermission") // The permission and channel are checked; denial never escapes.

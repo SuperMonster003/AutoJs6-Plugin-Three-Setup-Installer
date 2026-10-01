@@ -149,7 +149,7 @@ AutoJs6-Plugin-Three-Setup-Installer/
 | `REQUEST_INSTALL_PACKAGES` / `REQUEST_DELETE_PACKAGES` | `none` 授权方式的系统安装 / 卸载对话框 (D17 / D24) |
 | `QUERY_ALL_PACKAGES` | 已安装应用列表, 版本与签名比对, 默认安装器状态检测 (D23 / D36); 插件经 GitHub 分发, 不受商店政策限制, 在 Manifest 以 `tools:ignore` 标注 |
 | `FOREGROUND_SERVICE` / `FOREGROUND_SERVICE_DATA_SYNC` | 安装写入期间的 dataSync 前台服务与进度通知 (D26 / P3.4) |
-| `POST_NOTIFICATIONS` | 进度与结果通知, 缺失时静默降级 |
+| `POST_NOTIFICATIONS` | 进度与结果通知; 原有交互可降级, 显式 notification 安装必须可见, 缺失或 channel 关闭时返回 NOTIFICATION_UNAVAILABLE |
 | `INTERNET` | 仅用户手动检查更新时访问本插件固定的 GitHub Releases API, 12 小时间隔与缓存结果; 无后台检查或安装包上传, 安装及应用管理保持离线 (P5.3) |
 | `moe.shizuku.manager.permission.API_V23` | Shizuku 授权方式 (D2) |
 | `com.rosan.dhizuku.permission.API` | Dhizuku 设备/资料所有者授权及安装 (P8, API 26+) |
@@ -187,6 +187,7 @@ AutoJs6-Plugin-Three-Setup-Installer/
 - Dhizuku owner 创建的系统 session 可跨插件进程死亡存活. journal 只记录明确归属的 session 与随机来源标记, 不存原始包来源; 恢复只处理已知 id, 必须核对 owner, user, 包信息和标记, 不碰活跃进程的会话, 不重放安装. API 26/27 及创建响应丢失时无法证明归属的会话不得猜测清理.
 - 持久默认只在操作确认后记本地回执. persistentConfigured 只表示上次成功配置, 普通状态读取不得据此宣称当前策略. Dhizuku 暂限 API 26-33; API 34+ 缺少 owner PolicyUpdateReceiver 最终结果时预写入拒绝. 部分失败记录不确定性, 不通过清除未知旧策略补偿.
 - Root 持久默认使用独立的 system UID 1000 进程, 固定 user 0/本插件组件/四个 APK filter, 不改变共享 RootService 身份. 写入前必须核对握手与策略基线, 明确提交后才可修改; 不覆盖竞争策略, 不降级 SELinux. 取消或进程死亡不重放操作, 不确定结果保留审计.
+- notification 只用于安装. 确认, 取消与系统确认均对应当前会话/单次 token; none 的系统确认仍需用户点击通知打开, 不自动弹出插件安装对话框. 外部临时 URI 授权须在 NoDisplay Activity 结束前交给前台服务, 重启不得恢复 worker 或来源授权.
 
 ## 10. 字符串资源
 

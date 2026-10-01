@@ -18,6 +18,7 @@ internal object InstallationUi {
     private val main = Handler(Looper.getMainLooper())
     fun show(context: Context, record: InstallPresentation.Record, grants: Intent? = null) {
         record.show(grants)
+        if (record.notificationMode) return
         main.postDelayed({
             record.notifyIfWaitingForActivity {
                 InstallNotifications.notifyAction(context, record.token, record.activityIntent())
@@ -27,6 +28,7 @@ internal object InstallationUi {
     fun needsDialog(context: Context, request: InstallRequest): Boolean = when (request.interaction) {
         InstallerContract.INTERACTION_DIALOG -> true
         InstallerContract.INTERACTION_SILENT -> false
+        InstallerContract.INTERACTION_NOTIFICATION -> false
         else -> !io.github.supermonster003.autojs6.plugin.three.setup.installer.settings.InstallerPreferences.resolveAuthorizer(context, request.options.authorizer).privileged
     }
 

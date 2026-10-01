@@ -47,6 +47,8 @@
         android:theme="@style/Theme.ThreeSetupInstaller"
         tools:targetApi="33">
 
+        <receiver android:name=".ui.InstallNotificationActionReceiver" android:exported="false" />
+
         <activity android:name=".ui.HomeActivity" android:exported="false"
             android:configChanges="uiMode|locale|layoutDirection" />
         <activity-alias android:name=".launcher.AdaptiveLightIconAlias" android:targetActivity=".ui.HomeActivity"

@@ -81,7 +81,9 @@ internal abstract class SessionInstallEngine(
         try {
             val parameters = validate(request)
             val notes = parameters.notes.toMutableList()
-            var interaction = if (request.interaction == InstallerContract.INTERACTION_DIALOG || !authorizer.privileged) {
+            var interaction = if (request.interaction == InstallerContract.INTERACTION_NOTIFICATION) {
+                InstallerContract.INTERACTION_NOTIFICATION
+            } else if (request.interaction == InstallerContract.INTERACTION_DIALOG || !authorizer.privileged) {
                 InstallerContract.INTERACTION_DIALOG
             } else InstallerContract.INTERACTION_SILENT
             val deadline = minOf(request.deadlineMillis, clock() + request.options.timeoutMillis)
@@ -136,7 +138,7 @@ internal abstract class SessionInstallEngine(
                 if (request.interaction == InstallerContract.INTERACTION_AUTO && authorizer.privileged && interaction != InstallerContract.INTERACTION_DIALOG) {
                     notes += "The system required confirmation despite the privileged authorizer"
                 }
-                interaction = InstallerContract.INTERACTION_DIALOG
+                if (request.interaction != InstallerContract.INTERACTION_NOTIFICATION) interaction = InstallerContract.INTERACTION_DIALOG
                 listener.onStage(InstallerContract.STAGE_CONFIRMING)
                 listener.onUserAction(intent)
             }
