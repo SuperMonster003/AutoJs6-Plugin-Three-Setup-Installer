@@ -6,7 +6,7 @@
 
 # v1.0.0
 
-###### 2026/10/01
+###### 2026/10/02
 
 * `힌트` 1.0.0은 아래 설치, 앱 관리 및 스크립트 기능을 구현합니다. 공식 GitHub Release 게시와 플러그인 센터 등록은 아직 완료되지 않았습니다. 호스트 연동에는 AutoJs6 >= 6.8.0 (5299), `installer` 스크립트 API에는 빌드 5300 이상이 필요합니다. 기기 검증 범위와 남은 검증 항목은 [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md)에 기록되어 있습니다.
 * `기능` 3-Setup Installer는 독립 홈 화면, AutoJs6의 진입점과 스크립트, 외부 앱의 패키지 열기 및 공유 요청을 통해 Android 앱을 설치, 업데이트, 검사 및 제거합니다. Android 확인과 Shizuku 또는 Root를 통한 특권 작업을 지원합니다

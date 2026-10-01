@@ -6,7 +6,7 @@
   "changelog_label_dependency": "相依性",
   "$data": {
     "v1.0.0": {
-      "released_date": "2026/10/01",
+      "released_date": "2026/10/02",
       "hint": [
         "1.0.0 已實作下述安裝, 應用程式管理與指令碼功能. 官方 GitHub Release 和外掛中心索引收錄仍待完成. 宿主整合需要 AutoJs6 >= 6.8.0 (5299), `installer` 指令碼 API 需要組建 5300 或更高版本. 裝置涵蓋範圍與剩餘驗收記錄在 [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md) 中."
       ],

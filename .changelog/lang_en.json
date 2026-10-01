@@ -6,7 +6,7 @@
   "changelog_label_dependency": "Dependency",
   "$data": {
     "v1.0.0": {
-      "released_date": "2026/10/01",
+      "released_date": "2026/10/02",
       "hint": [
         "1.0.0 documents the implemented installation, app-management and script features below. The official GitHub Release and plugin-center listing are still pending. Host integration requires AutoJs6 >= 6.8.0 (5299), and the `installer` script API requires build 5300 or later. Device coverage and remaining acceptance work are recorded in [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md)."
       ],
