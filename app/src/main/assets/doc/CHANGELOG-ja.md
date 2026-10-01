@@ -8,9 +8,10 @@
 
 ###### 2026/10/01
 
-* `ヒント` P3 開発プレビュー. 確認, 進捗, 結果, 一括処理のダイアログ, 外部から開く操作と共有, 任意の元ファイル削除, システム確認, フォアグラウンド通知を実装しています. スクリプト API, 独立したホームと設定, インストール履歴, 既定インストーラーの設定は今後の予定です. 進捗と端末の確認範囲は [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md) を参照してください. AutoJs6 >= 6.8.0 (5299).
+* `ヒント` 開発プレビュー. 確認, 進捗, 結果, 一括処理のダイアログ, 外部から開く操作と共有, 任意の元ファイル削除, システム確認, フォアグラウンド通知を実装しています. `installer` スクリプト API には AutoJs6 >= 6.8.0 (5300) が必要です. 独立したホームと設定, インストール履歴, 既定インストーラーの設定画面は今後の予定です. 進捗と端末の確認範囲は [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md) を参照してください. プラグインの基本互換性: AutoJs6 >= 6.8.0 (5299).
 * `機能` プラグイン ID `three-setup-installer` (engine `installer`), INFO サービス, Wake Activity, およびホスト検出用の `org.autojs.plugin.INSTALLER` サービスの骨組み
 * `機能` 10 言語の README, プラグインセンター説明, 変更履歴
+* `機能` スクリプト API `installer` (別名 `$installer`) は同期, `...Async`, セッション形式を提供し, 単一 / 一括 / 分割パッケージのインストール, アンインストール, 調査, 認可方式とユーザーの照会, 既定インストーラーの設定に対応します. 失敗は安定した `code` を持つ `InstallerError` です (AutoJs6 >= 6.8.0 (5300) が必要)
 * `修正` 対応するシステム翻訳がない端末で, キャンセル操作の表示がプラグインの言語に従わない問題
 * `改善` プラグイン ID, engine, サービスの action / category, Binder descriptor と最低ホストバージョンをホストの installer-api 契約定数から取得するように変更; 能力宣言にインストーラ契約バージョン 1 を追加し, 最低ホストビルドを 5299 に更新
 * `改善` ランダムアクセス可能な入力元は全体のキャッシュコピーを省き, ストリームは必要に応じて一時保存します. ZIP 内の分割 APK に対応し, AAB は情報確認のみとし, 内容が変わった入力元は拒否します.
@@ -28,5 +29,5 @@
 * `依存関係` Root 認可方式のために libsu 6.0.0 (`com.github.topjohnwu.libsu:core`, `service`) を追加
 * `依存関係` 特権サービスが非公開のパッケージインストーラー API へアクセスするために AndroidHiddenApiBypass 6.1 を追加
 * `依存関係` 共有プラグイン契約として `common-plugin-api.aar` (AutoJs6 モジュール `plugin-api/common-plugin-api`, ホストビルド 6.8.0 / 5298, MPL 2.0) を追加し, `locks/host-api-aars.lock` でハッシュを固定
-* `依存関係` `package-archive-parser.aar` と `installer-api.aar` (AutoJs6 モジュール `plugin-api/package-archive-parser` と `plugin-api/installer-api`, ホスト P1 ビルド 6.8.0 / 5299, MPL 2.0) を追加し, `common-plugin-api.aar` とともに `locks/host-api-aars.lock` でハッシュを固定
+* `依存関係` `package-archive-parser.aar` と `installer-api.aar` (AutoJs6 モジュール `plugin-api/package-archive-parser` と `plugin-api/installer-api`, MPL 2.0) を追加し, `common-plugin-api.aar` とともに `locks/host-api-aars.lock` でハッシュを固定
 * `依存関係` 同梱のパッケージ解析器を更新し, 通常の ZIP 分割パッケージに対応

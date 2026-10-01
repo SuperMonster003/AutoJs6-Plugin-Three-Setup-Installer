@@ -8,11 +8,12 @@
     "v1.0.0": {
       "released_date": "2026/10/01",
       "hint": [
-        "P3 開發預覽. 已實作確認, 進度, 結果與批量對話框, 外部開啟與分享, 可選來源刪除, 系統確認及前景通知. 腳本 API, 獨立首頁與設定, 安裝歷史及預設安裝器設定仍屬後續規劃. 進度與裝置涵蓋範圍見 [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md). AutoJs6 >= 6.8.0 (5299)."
+        "開發預覽. 已實作確認, 進度, 結果與批量對話框, 外部開啟與分享, 可選來源刪除, 系統確認及前景通知. `installer` 腳本 API 需要 AutoJs6 >= 6.8.0 (5300). 獨立首頁與設定, 安裝歷史及預設安裝器設定介面仍屬後續規劃. 進度與裝置涵蓋範圍見 [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md). 插件基本相容性: AutoJs6 >= 6.8.0 (5299)."
       ],
       "feature": [
         "外掛程式標識 `three-setup-installer` (engine `installer`), 含 INFO 服務, Wake Activity 以及供宿主發現的 `org.autojs.plugin.INSTALLER` 服務骨架",
-        "10 種語言的 README, 外掛程式中心說明與更新日誌"
+        "10 種語言的 README, 外掛程式中心說明與更新日誌",
+        "腳本 API `installer` (別名 `$installer`) 提供同步, `...Async` 與工作階段形態, 支援單項 / 批量 / 分包安裝, 卸載, 檢查, 授權方式與使用者查詢及預設安裝器設定; 失敗為帶穩定 `code` 的 `InstallerError` (需要 AutoJs6 >= 6.8.0 (5300))"
       ],
       "fix": [
         "系統缺少對應翻譯時, 取消操作文字未跟隨外掛程式語言的問題"
@@ -36,7 +37,7 @@
         "附加 libsu 6.0.0 (`com.github.topjohnwu.libsu:core`, `service`) 用於 Root 授權方式",
         "附加 AndroidHiddenApiBypass 6.1 用於特權服務存取隱藏的套件安裝器 API",
         "附加 `common-plugin-api.aar` (AutoJs6 模組 `plugin-api/common-plugin-api`, 宿主建置 6.8.0 / 5298, MPL 2.0) 作為共用外掛程式契約, 並在 `locks/host-api-aars.lock` 中鎖定雜湊",
-        "附加 `package-archive-parser.aar` 與 `installer-api.aar` (AutoJs6 模組 `plugin-api/package-archive-parser` 與 `plugin-api/installer-api`, 宿主 P1 建置 6.8.0 / 5299, MPL 2.0), 與 `common-plugin-api.aar` 一同在 `locks/host-api-aars.lock` 中鎖定雜湊",
+        "附加 `package-archive-parser.aar` 與 `installer-api.aar` (AutoJs6 模組 `plugin-api/package-archive-parser` 與 `plugin-api/installer-api`, MPL 2.0), 與 `common-plugin-api.aar` 一同在 `locks/host-api-aars.lock` 中鎖定雜湊",
         "升級共用安裝包解析器, 支援普通 ZIP 分包容器"
       ]
     }

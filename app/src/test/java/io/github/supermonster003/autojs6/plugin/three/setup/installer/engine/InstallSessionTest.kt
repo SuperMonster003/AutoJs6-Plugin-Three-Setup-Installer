@@ -46,6 +46,52 @@ class InstallSessionTest {
         assertEquals(1, fixture.terminalCallbacks)
     }
 
+    @Test fun `one item batch preparation failure completes with one failed result`() {
+        val decoded = InstallRequest.parse("""{"id":"one","batch":true,"sources":[{"displayName":"bad.apk"}]}""", 1)
+        val fixture = Fixture(decoded)
+        fixture.afterPrepare = { throw InstallFailure(InstallerErrorCodes.INVALID_PACKAGE, "bad archive") }
+        fixture.run()
+        val result = fixture.results().single()
+        assertFalse(result["ok"].asBoolean)
+        assertEquals(InstallerErrorCodes.INVALID_PACKAGE, result.getAsJsonObject("error")["code"].asString)
+        assertNull(fixture.failure)
+        assertTrue(fixture.calls.isEmpty())
+        assertEquals(1, fixture.terminalCallbacks)
+        assertEquals(1, fixture.closes)
+    }
+
+    @Test fun `ordinary one item preparation failure still uses the failure callback`() {
+        for (batch in listOf("", ",\"batch\":false")) {
+            val decoded = InstallRequest.parse("""{"id":"one"$batch,"sources":[{"displayName":"bad.apk"}]}""", 1)
+            val fixture = Fixture(decoded)
+            fixture.afterPrepare = { throw InstallFailure(InstallerErrorCodes.INVALID_PACKAGE, "bad archive") }
+            fixture.run()
+            assertNull(fixture.completed)
+            assertEquals(InstallerErrorCodes.INVALID_PACKAGE, fixture.failure?.code)
+            assertEquals(1, fixture.terminalCallbacks)
+            assertEquals(1, fixture.closes)
+        }
+    }
+
+    @Test fun `one item batch success keeps the results envelope`() {
+        val decoded = InstallRequest.parse("""{"id":"one","batch":true,"sources":[{"displayName":"good.apk"}]}""", 1)
+        val fixture = Fixture(decoded)
+        fixture.run()
+        assertTrue(fixture.results().single()["ok"].asBoolean)
+        assertNull(fixture.failure)
+        assertEquals(1, fixture.terminalCallbacks)
+    }
+
+    @Test fun `one item batch still honours explicit fail fast`() {
+        val decoded = InstallRequest.parse("""{"id":"one","batch":true,"sources":[{"displayName":"bad.apk"}],"options":{"continueOnError":false}}""", 1)
+        val fixture = Fixture(decoded)
+        fixture.afterPrepare = { throw InstallFailure(InstallerErrorCodes.INVALID_PACKAGE, "bad archive") }
+        fixture.run()
+        assertNull(fixture.completed)
+        assertEquals(InstallerErrorCodes.INVALID_PACKAGE, fixture.failure?.code)
+        assertEquals(1, fixture.terminalCallbacks)
+    }
+
     @Test fun `fail fast does not prepare subsequent items and closes resources`() {
         val fixture = Fixture(request(continueOnError = false))
         fixture.install = { throw InstallFailure(InstallerErrorCodes.INSTALL_FAILED, "refused") }

@@ -5,10 +5,10 @@
   "h3_languages_with_ascii": "언어",
   "p_languages_all_supported_for_readme": "현재 README.md는 다음 언어를 지원합니다",
   "h3_introduction": "소개",
-  "p_introduction_what": "3-Setup Installer는 AutoJs6 설치 기능과 외부 패키지 열기 또는 공유 요청을 통해 Android 앱을 설치, 업데이트, 검사 및 제거합니다. 일반 Android 확인과 Shizuku 또는 Root를 통한 권한 설치를 지원합니다. 스크립트 API와 독립 홈 및 설정 페이지는 향후 계획입니다.",
+  "p_introduction_what": "3-Setup Installer는 AutoJs6 설치 기능과 외부 패키지 열기 또는 공유 요청을 통해 Android 앱을 설치, 업데이트, 검사 및 제거합니다. 일반 Android 확인과 Shizuku 또는 Root를 통한 권한 설치를 지원합니다. 호환되는 호스트 빌드에서 `installer` 스크립트 API를 제공합니다. 독립 홈 및 설정 페이지는 향후 계획입니다.",
   "p_introduction_how": "AutoJs6는 Binder 서비스를 통해 플러그인을 찾고 패키지 파일을 읽기 전용 파일 디스크립터로 전달합니다. 플러그인은 패키지를 분석하고 인증 방식을 선택하며 필요하면 자체 확인 및 진행률 대화 상자를 표시하고 단계, 진행률, 결과를 보고합니다. 특권 작업은 시스템 패키지 설치 프로그램과 직접 통신하는 Shizuku 사용자 서비스 또는 libsu Root 서비스에서 실행됩니다.",
   "h3_status": "현재 상태",
-  "p_status": "{{ version_name }}: P3 개발 미리보기. 확인, 진행률, 결과 및 일괄 대화상자, 외부 열기와 공유, 선택적 원본 삭제, 시스템 확인 및 포그라운드 알림이 구현되었습니다. 프로세스가 다시 시작되면 복원된 화면에 저장된 확정 결과가 표시되고 미완료 항목은 중단으로 표시됩니다. 복원된 화면은 읽기 전용이며 설치나 재시도를 자동으로 실행하지 않습니다. 스크립트 API, 독립 홈과 설정, 설치 기록 및 기본 설치 프로그램 설정은 향후 계획입니다. 진행 상황과 기기 검증 범위는 [ROADMAP.md]({{ roadmap_url }})를 참고하세요. AutoJs6 >= {{ required_host_version_name }} ({{ required_host_version_code }}).",
+  "p_status": "{{ version_name }}: 개발 미리보기. 확인, 진행률, 결과 및 일괄 대화상자, 외부 열기와 공유, 선택적 원본 삭제, 시스템 확인 및 포그라운드 알림이 구현되었습니다. 프로세스가 다시 시작되면 복원된 화면에 저장된 확정 결과가 표시되고 미완료 항목은 중단으로 표시됩니다. 복원된 화면은 읽기 전용이며 설치나 재시도를 자동으로 실행하지 않습니다. `installer` 스크립트 API에는 AutoJs6 >= {{ required_host_version_name }} ({{ script_host_version_code }})이 필요합니다. 독립 홈과 설정, 설치 기록 및 기본 설치 프로그램 설정 화면은 향후 계획입니다. 진행 상황과 기기 검증 범위는 [ROADMAP.md]({{ roadmap_url }})를 참고하세요. 플러그인 기본 호환성: AutoJs6 >= {{ required_host_version_name }} ({{ required_host_version_code }}).",
   "h3_features": "기능",
   "p_features_intro": "현재 개발 미리보기에서 사용 가능한 기능이며, 향후 기능은 별도로 표시합니다",
   "features": [
@@ -20,8 +20,8 @@
     "패키지를 플러그인으로 열거나 하나 또는 여러 패키지를 공유할 수 있습니다. 실패한 외부 원본은 URI와 접근 권한을 사용할 수 있는 동안 항목별로 다시 시도할 수 있습니다.",
     "포그라운드 설치 진행률, 취소 작업 및 결과 알림을 제공합니다. 알림 권한을 거부해도 설치를 차단하지 않습니다.",
     "대화상자는 기본적으로 AutoJs6의 언어, 야간 모드 및 테마 색상을 따릅니다. 호스트를 사용할 수 없으면 시스템 언어와 야간 모드 및 기본 색상을 사용합니다.",
-    "향후 계획: 특권을 통한 기본 설치 프로그램 선택과 필요한 경우 시스템 기본 설정 안내.",
-    "P4 계획: 동기, `...Async` 및 세션 방식의 스크립트 API `installer` (별칭 `$installer`)와 안정적인 `code`를 가진 `InstallerError`.",
+    "스크립트는 `installer.isDefault`로 기본 설치 프로그램을 조회하고 Shizuku 또는 Root를 사용하는 `installer.setDefault` / `setDefaultAsync`로 설정할 수 있습니다. 독립 설정 화면과 시스템 설정 안내는 향후 계획입니다.",
+    "스크립트 API `installer` (별칭 `$installer`)는 동기, `...Async` 및 세션 방식을 제공하며 단일 / 일괄 / 분할 설치, 제거, 검사, 권한 방식과 사용자 조회 및 기본 설치 프로그램 설정을 지원합니다. 실패는 안정적인 `code`를 가진 `InstallerError`입니다 (AutoJs6 >= {{ required_host_version_name }} ({{ script_host_version_code }}) 필요).",
     "P5 계획: 독립 홈 및 설정 페이지, 설치 기록과 설치된 앱 관리."
   ],
   "h3_usage": "사용 방법",
@@ -36,10 +36,10 @@
     "`none`: 표준 PackageInstaller 세션. Android가 매번 사용자 확인을 요구하며 분할 패키지를 지원하고 특권 옵션은 사용할 수 없습니다.",
     "`shizuku`: Shizuku가 실행 중이어야 하며 (무선 디버깅, ADB 또는 Root로 시작), 플러그인에 권한이 부여되어야 합니다. shell 권한으로 자동 설치, 자동 제거 및 다른 사용자에 대한 작업을 수행할 수 있습니다.",
     "`root`: Root 관리자가 플러그인에 `su`를 허용해야 합니다. libsu Root 서비스를 통해 Shizuku와 같은 작업을 제공합니다. 일반 (user) 펌웨어에서 다운그레이드는 debuggable 앱에만 성공하며 이는 프레임워크 규칙이지 플러그인의 제한이 아닙니다.",
-    "**참고:** 특권을 사용할 수 있을 때 `interaction: 'auto'` 호스트 요청은 확인 화면을 먼저 열지 않고 자동으로 설치합니다. Android가 확인을 요구하면 `auto`는 이를 허용하고 `notes`에 기록합니다. 설치 전 확인에는 `interaction: 'dialog'`를, 시스템 확인이 필요한 경우 실패하게 하려면 `interaction: 'silent'`를 사용하세요. 향후 스크립트 API에도 같은 기본 동작이 적용됩니다."
+    "**참고:** 특권을 사용할 수 있을 때 `interaction: 'auto'` 호스트 요청은 확인 화면을 먼저 열지 않고 자동으로 설치합니다. Android가 확인을 요구하면 `auto`는 이를 허용하고 `notes`에 기록합니다. 설치 전 확인에는 `interaction: 'dialog'`를, 시스템 확인이 필요한 경우 실패하게 하려면 `interaction: 'silent'`를 사용하세요. 스크립트 API에도 같은 기본 동작이 적용됩니다."
   ],
   "h3_quick_start": "빠른 시작",
-  "p_quick_start_intro": "무음 설치, 다운그레이드 허용 업데이트, 세션 감시, 제거를 수행하는 스크립트 (로드맵 P4부터 사용 가능)",
+  "p_quick_start_intro": "설치, 일괄 처리 및 세션용 템플릿 함수 (AutoJs6 >= {{ required_host_version_name }} ({{ script_host_version_code }}) 필요). 함수를 호출하기 전에 원본을 직접 선택하고 확인하세요. 이 예제는 자동으로 설치, 제거하거나 기본 설치 프로그램을 변경하지 않습니다.",
   "h3_compatibility": "호환성",
   "p_compatibility_intro": "플러그인의 능력을 결정하는 플랫폼 사실",
   "compatibility_points": [
@@ -51,7 +51,7 @@
   "faq_items": [
     "**왜 여전히 설치 확인이 필요한가요?** `none`은 항상 시스템 확인을 사용합니다. 권한을 준비한 후 설치 대화상자에서 Shizuku 또는 Root를 선택하세요. Android 또는 기기 정책에 따라 시스템 확인이 필요할 수 있습니다.",
     "**`.aab`를 설치할 수 있나요?** 아니요. Android App Bundle은 배포 형식이므로 먼저 bundletool로 `.apks` 세트로 변환하세요. 플러그인은 `.aab` 파일을 인식하고 패키지와 모듈 정보를 표시합니다.",
-    "**원본이 삭제되지 않은 이유는 무엇인가요?** 삭제는 설치 성공 후에만 시도하며 원본 제공자가 거부할 수 있습니다. 설치 성공 결과는 유지됩니다. AutoJs6 또는 다른 발신 앱이 원본을 소유한 경우 해당 앱이 삭제를 담당합니다.",
+    "**원본이 삭제되지 않은 이유는?** 설치 성공 후에만 삭제를 시도하며 삭제 실패는 설치 성공 결과를 바꾸지 않습니다. 외부 제공자가 삭제를 거부할 수 있습니다. 스크립트의 `deleteSource`는 호스트가 경로 또는 `file://` 원본을 삭제하고 `content://`와 실패한 항목은 유지합니다. `sourceDeleted`와 `notes`를 확인하세요.",
     "**다시 시도하거나 이어서 실행할 수 있나요?** 실패한 외부 URI는 원본과 접근 권한을 사용할 수 있는 동안 다시 시도할 수 있습니다. 원본 또는 접근 권한이 해제되면 패키지를 다시 여세요. 프로세스가 다시 시작되면 복원된 화면에 저장된 확정 결과가 표시되고 미완료 항목은 중단으로 표시됩니다. 복원된 화면은 읽기 전용이며 설치나 재시도를 자동으로 실행하지 않습니다. 다시 시작하기 전에 실제 설치 상태를 확인하세요."
   ],
   "h3_security": "권한과 보안",

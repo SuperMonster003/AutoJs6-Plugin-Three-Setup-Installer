@@ -8,11 +8,12 @@
     "v1.0.0": {
       "released_date": "2026/10/01",
       "hint": [
-        "Vista previa de desarrollo P3. Ya se han implementado los diálogos de confirmación, progreso, resultados y lotes, la apertura y el uso compartido externos, la eliminación opcional del origen, la confirmación del sistema y las notificaciones en primer plano. La API de scripts, el inicio y los ajustes independientes, el historial y la configuración del instalador predeterminado siguen previstos. Consulta [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md) para el progreso y la cobertura de dispositivos. AutoJs6 >= 6.8.0 (5299)."
+        "Vista previa de desarrollo. Ya se han implementado los diálogos de confirmación, progreso, resultados y lotes, la apertura y el uso compartido externos, la eliminación opcional del origen, la confirmación del sistema y las notificaciones en primer plano. La API de scripts `installer` requiere AutoJs6 >= 6.8.0 (5300). El inicio y los ajustes independientes, el historial y una pantalla de configuración del instalador predeterminado siguen previstos. Consulta [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md) para el progreso y la cobertura de dispositivos. Compatibilidad básica del plugin: AutoJs6 >= 6.8.0 (5299)."
       ],
       "feature": [
         "Identidad del plugin `three-setup-installer` (engine `installer`) con el servicio INFO, la Wake Activity y el esqueleto del servicio `org.autojs.plugin.INSTALLER` para el descubrimiento por el host",
-        "README, instrucciones del centro de plugins y registro de cambios en 10 idiomas"
+        "README, instrucciones del centro de plugins y registro de cambios en 10 idiomas",
+        "La API de scripts `installer` (alias `$installer`) ofrece formas síncrona, `...Async` y de sesión para instalar paquetes individuales, por lotes o divididos, desinstalar, inspeccionar, consultar autorizadores y usuarios, y configurar el instalador predeterminado. Los fallos son objetos `InstallerError` con un `code` estable (requiere AutoJs6 >= 6.8.0 (5300))"
       ],
       "fix": [
         "Las acciones de cancelar no seguían el idioma del complemento en dispositivos sin la traducción correspondiente del sistema"
@@ -36,7 +37,7 @@
         "Se añade libsu 6.0.0 (`com.github.topjohnwu.libsu:core`, `service`) para el modo de autorización Root",
         "Se añade AndroidHiddenApiBypass 6.1 para las API ocultas del instalador de paquetes que usa el servicio privilegiado",
         "Se añade `common-plugin-api.aar` (módulo de AutoJs6 `plugin-api/common-plugin-api`, build del host 6.8.0 / 5298, MPL 2.0) como contrato de plugin compartido, con hash bloqueado en `locks/host-api-aars.lock`",
-        "Se anaden `package-archive-parser.aar` e `installer-api.aar` (modulos de AutoJs6 `plugin-api/package-archive-parser` y `plugin-api/installer-api`, build P1 del host 6.8.0 / 5299, MPL 2.0), con hash bloqueado en `locks/host-api-aars.lock` junto a `common-plugin-api.aar`",
+        "Se anaden `package-archive-parser.aar` e `installer-api.aar` (modulos de AutoJs6 `plugin-api/package-archive-parser` y `plugin-api/installer-api`, MPL 2.0), con hash bloqueado en `locks/host-api-aars.lock` junto a `common-plugin-api.aar`",
         "Actualización del analizador de paquetes incluido para reconocer contenedores ZIP normales con APK divididos"
       ]
     }

@@ -5,10 +5,10 @@
   "h3_languages_with_ascii": "Languages",
   "p_languages_all_supported_for_readme": "The current README.md supports the following languages",
   "h3_introduction": "Introduction",
-  "p_introduction_what": "3-Setup Installer installs, updates, inspects and uninstalls Android apps through AutoJs6 installation entries and external package-opening or sharing requests. It supports ordinary Android confirmation and privileged installation through Shizuku or Root. The script API and standalone home and settings pages are still planned.",
+  "p_introduction_what": "3-Setup Installer installs, updates, inspects and uninstalls Android apps through AutoJs6 installation entries and external package-opening or sharing requests. It supports ordinary Android confirmation and privileged installation through Shizuku or Root. Compatible host builds provide the `installer` script API; standalone home and settings pages remain planned.",
   "p_introduction_how": "AutoJs6 discovers the plugin through its Binder service and hands over package files as read-only file descriptors; the plugin parses the package, picks the authorizer, shows its own confirmation and progress dialog when needed, and reports stages, progress and results back. Privileged operations run in a Shizuku user service or a libsu root service that talks to the system package installer directly.",
   "h3_status": "Status",
-  "p_status": "{{ version_name }}: P3 development preview. Confirmation, progress, results and batch dialogs, external opening and sharing, optional source deletion, system confirmation and foreground notifications are implemented. After a process restart, the restored view shows saved confirmed results and marks unfinished items as interrupted. It is read-only and never automatically installs or retries. The script API, standalone home and settings, installation history and default-installer configuration remain planned. See [ROADMAP.md]({{ roadmap_url }}) for progress and device coverage. AutoJs6 >= {{ required_host_version_name }} ({{ required_host_version_code }}).",
+  "p_status": "{{ version_name }}: Development preview. Confirmation, progress, results and batch dialogs, external opening and sharing, optional source deletion, system confirmation and foreground notifications are implemented. After a process restart, the restored view shows saved confirmed results and marks unfinished items as interrupted. It is read-only and never automatically installs or retries. The `installer` script API requires AutoJs6 >= {{ required_host_version_name }} ({{ script_host_version_code }}). Standalone home and settings, installation history and a default-installer settings screen remain planned. See [ROADMAP.md]({{ roadmap_url }}) for progress and device coverage. Base plugin compatibility: AutoJs6 >= {{ required_host_version_name }} ({{ required_host_version_code }}).",
   "h3_features": "Features",
   "p_features_intro": "Available in this development preview, with later features explicitly marked",
   "features": [
@@ -20,8 +20,8 @@
     "Open package files or share one or multiple packages with the plugin. Failed external sources can be retried while their URI and access remain available.",
     "Foreground installation progress, cancellation and result notifications. Denying notification permission does not prevent installation.",
     "Dialogs follow AutoJs6 language, night mode and theme color by default, with system language/night and a default color when the host is unavailable.",
-    "Planned: default-installer configuration, including privileged selection and guidance for system defaults where needed.",
-    "Planned for P4: script API `installer` (alias `$installer`) with synchronous, `...Async` and session forms, and `InstallerError` failures with stable `code` values.",
+    "Scripts can query the default installer with `installer.isDefault` and set it through Shizuku or Root with `installer.setDefault` / `setDefaultAsync`. A standalone configuration screen and system-settings guidance remain planned.",
+    "The `installer` script API (alias `$installer`) provides synchronous, `...Async` and session forms for single, batch and split installation, uninstallation, inspection, authorizer and user queries, and default-installer settings. Failures are `InstallerError` objects with stable `code` values (requires AutoJs6 >= {{ required_host_version_name }} ({{ script_host_version_code }})).",
     "Planned for P5: standalone home and settings pages, installation history and installed-app management."
   ],
   "h3_usage": "Usage",
@@ -36,10 +36,10 @@
     "`none`: the standard PackageInstaller session; Android asks the user to confirm every installation, split packages are supported, and privileged options are not available.",
     "`shizuku`: needs Shizuku running (started through wireless debugging, ADB or Root) and permission granted to the plugin. Its shell privileges support silent installation and uninstallation and operations for other users.",
     "`root`: needs a Root manager that grants `su` to the plugin; provides the same operations as Shizuku through a libsu root service. Downgrades on regular (user) firmware still succeed only for debuggable apps, which is a framework rule, not a plugin limit.",
-    "**Note:** With privileges available, host requests using `interaction: 'auto'` install silently without proactively opening confirmation. If Android still requires confirmation, `auto` permits it and records this in `notes`. Use `interaction: 'dialog'` to request confirmation before installation, or `interaction: 'silent'` to fail when system confirmation is required. The planned script API follows the same default."
+    "**Note:** With privileges available, host requests using `interaction: 'auto'` install silently without proactively opening confirmation. If Android still requires confirmation, `auto` permits it and records this in `notes`. Use `interaction: 'dialog'` to request confirmation before installation, or `interaction: 'silent'` to fail when system confirmation is required. The script API follows the same default."
   ],
   "h3_quick_start": "Quick Start",
-  "p_quick_start_intro": "A script that installs silently, updates with a downgrade allowance, watches a session and uninstalls (available from roadmap P4 on)",
+  "p_quick_start_intro": "Template functions for installation, batches and sessions (requires AutoJs6 >= {{ required_host_version_name }} ({{ script_host_version_code }})). Choose and verify your sources before calling a function. The example does not automatically install, uninstall or change the default installer.",
   "h3_compatibility": "Compatibility",
   "p_compatibility_intro": "Platform facts that shape what the plugin can do",
   "compatibility_points": [
@@ -51,7 +51,7 @@
   "faq_items": [
     "**Why does installation still require confirmation?** `none` always uses system confirmation. Choose Shizuku or Root in the installation dialog after preparing its authorization. Android or device policy may still require a system prompt.",
     "**Can an `.aab` be installed?** No. An Android App Bundle is a publishing format; convert it with bundletool into an `.apks` set first. The plugin recognizes `.aab` files and shows their package and module information.",
-    "**Why was the source not deleted?** Deletion runs only after installation succeeds and may be refused by the source provider. Installation remains successful. When AutoJs6 or another sending app owns the source, that app is responsible for deletion.",
+    "**Why was the source not deleted?** Deletion is attempted only after success; failure does not change the successful installation. An external source provider may refuse deletion. For scripts, the host handles `deleteSource` for paths and `file://` sources, retaining `content://` sources and failed items. Check `sourceDeleted` and `notes`.",
     "**Can I retry or resume?** A failed external URI can be retried while the source and access are available. Once the source or its access is released, reopen the package. After a process restart, the restored view shows saved confirmed results and marks unfinished items as interrupted. It is read-only and never automatically installs or retries. Check the installed app before starting again."
   ],
   "h3_security": "Permissions and Security",

@@ -8,9 +8,10 @@
 
 ###### 2026/10/01
 
-* `提示` P3 開發預覽. 已實作確認, 進度, 結果與批次對話框, 外部開啟與分享, 可選來源刪除, 系統確認及前景通知. 指令碼 API, 獨立首頁與設定, 安裝歷程及預設安裝器設定仍屬後續規劃. 進度與裝置涵蓋範圍見 [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md). AutoJs6 >= 6.8.0 (5299).
+* `提示` 開發預覽. 已實作確認, 進度, 結果與批次對話框, 外部開啟與分享, 可選來源刪除, 系統確認及前景通知. `installer` 指令碼 API 需要 AutoJs6 >= 6.8.0 (5300). 獨立首頁與設定, 安裝歷程及預設安裝器設定介面仍屬後續規劃. 進度與裝置涵蓋範圍見 [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md). 外掛程式基本相容性: AutoJs6 >= 6.8.0 (5299).
 * `新增` 外掛程式標識 `three-setup-installer` (engine `installer`), 含 INFO 服務, Wake Activity 以及供宿主發現的 `org.autojs.plugin.INSTALLER` 服務骨架
 * `新增` 10 種語言的 README, 外掛程式中心說明與更新日誌
+* `新增` 指令碼 API `installer` (別名 `$installer`) 提供同步, `...Async` 與工作階段形態, 支援單項 / 批次 / 分包安裝, 解除安裝, 檢查, 授權方式與使用者查詢及預設安裝器設定; 失敗為帶穩定 `code` 的 `InstallerError` (需要 AutoJs6 >= 6.8.0 (5300))
 * `修復` 系統缺少對應翻譯時, 取消操作文字未跟隨外掛程式語言的問題
 * `優化` 外掛程式 ID, engine, 服務 action / category, Binder descriptor 與最低宿主版本改由宿主 installer-api 契約常數提供; 能力宣告加入安裝器契約版本 1, 最低宿主建置回填為 5299
 * `優化` 可隨機存取的來源避免完整快取副本, 串流來源按需暫存. 支援一般 ZIP 分割套件, AAB 僅供檢查, 拒絕內容發生變化的來源.
@@ -28,5 +29,5 @@
 * `相依性` 附加 libsu 6.0.0 (`com.github.topjohnwu.libsu:core`, `service`) 用於 Root 授權方式
 * `相依性` 附加 AndroidHiddenApiBypass 6.1 用於特權服務存取隱藏的套件安裝器 API
 * `相依性` 附加 `common-plugin-api.aar` (AutoJs6 模組 `plugin-api/common-plugin-api`, 宿主建置 6.8.0 / 5298, MPL 2.0) 作為共用外掛程式契約, 並在 `locks/host-api-aars.lock` 中鎖定雜湊
-* `相依性` 附加 `package-archive-parser.aar` 與 `installer-api.aar` (AutoJs6 模組 `plugin-api/package-archive-parser` 與 `plugin-api/installer-api`, 宿主 P1 建置 6.8.0 / 5299, MPL 2.0), 與 `common-plugin-api.aar` 一同在 `locks/host-api-aars.lock` 中鎖定雜湊
+* `相依性` 附加 `package-archive-parser.aar` 與 `installer-api.aar` (AutoJs6 模組 `plugin-api/package-archive-parser` 與 `plugin-api/installer-api`, MPL 2.0), 與 `common-plugin-api.aar` 一同在 `locks/host-api-aars.lock` 中鎖定雜湊
 * `相依性` 升級共用安裝套件解析器, 支援一般 ZIP 分割套件容器

@@ -42,7 +42,7 @@ The current README.md supports the following languages:
 
 ******
 
-3-Setup Installer installs, updates, inspects and uninstalls Android apps through AutoJs6 installation entries and external package-opening or sharing requests. It supports ordinary Android confirmation and privileged installation through Shizuku or Root. The script API and standalone home and settings pages are still planned.
+3-Setup Installer installs, updates, inspects and uninstalls Android apps through AutoJs6 installation entries and external package-opening or sharing requests. It supports ordinary Android confirmation and privileged installation through Shizuku or Root. Compatible host builds provide the `installer` script API; standalone home and settings pages remain planned.
 
 AutoJs6 discovers the plugin through its Binder service and hands over package files as read-only file descriptors; the plugin parses the package, picks the authorizer, shows its own confirmation and progress dialog when needed, and reports stages, progress and results back. Privileged operations run in a Shizuku user service or a libsu root service that talks to the system package installer directly.
 
@@ -52,7 +52,7 @@ AutoJs6 discovers the plugin through its Binder service and hands over package f
 
 ******
 
-1.0.0: P3 development preview. Confirmation, progress, results and batch dialogs, external opening and sharing, optional source deletion, system confirmation and foreground notifications are implemented. After a process restart, the restored view shows saved confirmed results and marks unfinished items as interrupted. It is read-only and never automatically installs or retries. The script API, standalone home and settings, installation history and default-installer configuration remain planned. See [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md) for progress and device coverage. AutoJs6 >= 6.8.0 (5299).
+1.0.0: Development preview. Confirmation, progress, results and batch dialogs, external opening and sharing, optional source deletion, system confirmation and foreground notifications are implemented. After a process restart, the restored view shows saved confirmed results and marks unfinished items as interrupted. It is read-only and never automatically installs or retries. The `installer` script API requires AutoJs6 >= 6.8.0 (5300). Standalone home and settings, installation history and a default-installer settings screen remain planned. See [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md) for progress and device coverage. Base plugin compatibility: AutoJs6 >= 6.8.0 (5299).
 
 ******
 
@@ -70,8 +70,8 @@ Available in this development preview, with later features explicitly marked:
 - Open package files or share one or multiple packages with the plugin. Failed external sources can be retried while their URI and access remain available.
 - Foreground installation progress, cancellation and result notifications. Denying notification permission does not prevent installation.
 - Dialogs follow AutoJs6 language, night mode and theme color by default, with system language/night and a default color when the host is unavailable.
-- Planned: default-installer configuration, including privileged selection and guidance for system defaults where needed.
-- Planned for P4: script API `installer` (alias `$installer`) with synchronous, `...Async` and session forms, and `InstallerError` failures with stable `code` values.
+- Scripts can query the default installer with `installer.isDefault` and set it through Shizuku or Root with `installer.setDefault` / `setDefaultAsync`. A standalone configuration screen and system-settings guidance remain planned.
+- The `installer` script API (alias `$installer`) provides synchronous, `...Async` and session forms for single, batch and split installation, uninstallation, inspection, authorizer and user queries, and default-installer settings. Failures are `InstallerError` objects with stable `code` values (requires AutoJs6 >= 6.8.0 (5300)).
 - Planned for P5: standalone home and settings pages, installation history and installed-app management.
 
 ******
@@ -95,7 +95,7 @@ What each authorizer can do and what it needs:
 - `none`: the standard PackageInstaller session; Android asks the user to confirm every installation, split packages are supported, and privileged options are not available.
 - `shizuku`: needs Shizuku running (started through wireless debugging, ADB or Root) and permission granted to the plugin. Its shell privileges support silent installation and uninstallation and operations for other users.
 - `root`: needs a Root manager that grants `su` to the plugin; provides the same operations as Shizuku through a libsu root service. Downgrades on regular (user) firmware still succeed only for debuggable apps, which is a framework rule, not a plugin limit.
-- **Note:** With privileges available, host requests using `interaction: 'auto'` install silently without proactively opening confirmation. If Android still requires confirmation, `auto` permits it and records this in `notes`. Use `interaction: 'dialog'` to request confirmation before installation, or `interaction: 'silent'` to fail when system confirmation is required. The planned script API follows the same default.
+- **Note:** With privileges available, host requests using `interaction: 'auto'` install silently without proactively opening confirmation. If Android still requires confirmation, `auto` permits it and records this in `notes`. Use `interaction: 'dialog'` to request confirmation before installation, or `interaction: 'silent'` to fail when system confirmation is required. The script API follows the same default.
 
 ******
 
@@ -103,24 +103,31 @@ What each authorizer can do and what it needs:
 
 ******
 
-A script that installs silently, updates with a downgrade allowance, watches a session and uninstalls (available from roadmap P4 on):
+Template functions for installation, batches and sessions (requires AutoJs6 >= 6.8.0 (5300)). Choose and verify your sources before calling a function. The example does not automatically install, uninstall or change the default installer.:
 
 ```js
-// Silent installation through the first available authorizer (Shizuku, then Root); the plugin dialog otherwise.
-let result = installer.install('/sdcard/Download/app.apk');
-console.log(result.ok, result.packageName, result.authorizer);
+// Read-only probe. The functions below run only when explicitly called with chosen sources.
+console.log(installer.status);
 
-// Explicit authorizer and options; every failure is an InstallerError with a stable code.
-installer.installAsync('/sdcard/Download/old.apk', { authorizer: 'shizuku', allowDowngrade: true, deleteSource: true })
-    .then(r => console.log(r.ok ? 'done' : r.error.code))
-    .catch(e => console.error(e.code, e.systemMessage));
+// An already authorized Shizuku service is required; silent never falls back to a dialog.
+let installChosen = source => installer.install(source, {
+    authorizer: 'shizuku', interaction: 'silent', deleteSource: false,
+});
 
-// Session form with progress events, batch installation, uninstallation and the default installer.
-let session = installer.session({ splits: ['/sdcard/base.apk', '/sdcard/split_config.arm64_v8a.apk'] });
-session.on('progress', p => console.log(Math.round(p * 100) + '%')).on('complete', r => console.log(r.versionName));
-installer.install(['/sdcard/a.apk', '/sdcard/b.xapk']).forEach(r => console.log(r.packageName, r.ok));
-installer.uninstall('com.example.app', { keepData: true });
-if (!installer.isDefault()) installer.setDefault(true);
+// An array means independent applications, including an array containing one source.
+let installBatchChosen = sources => installer.installAsync(sources, {
+    interaction: 'dialog', continueOnError: true, deleteSource: false,
+}).then(results => results.forEach(result => console.log(result.ok, result.packageName, result.error)))
+    .catch(error => console.error(error.code, error.systemMessage));
+
+// A source may also be { splits: [...] } for one application's split files.
+let watchChosen = source => {
+    let session = installer.session(source, { interaction: 'dialog', deleteSource: false });
+    session.on('progress', progress => console.log(Math.round(progress * 100) + '%'))
+        .on('complete', result => console.log(result))
+        .on('error', error => console.error(error.code, error.systemMessage));
+    return session;
+};
 ```
 
 ******
@@ -143,7 +150,7 @@ Platform facts that shape what the plugin can do:
 
 - **Why does installation still require confirmation?** `none` always uses system confirmation. Choose Shizuku or Root in the installation dialog after preparing its authorization. Android or device policy may still require a system prompt.
 - **Can an `.aab` be installed?** No. An Android App Bundle is a publishing format; convert it with bundletool into an `.apks` set first. The plugin recognizes `.aab` files and shows their package and module information.
-- **Why was the source not deleted?** Deletion runs only after installation succeeds and may be refused by the source provider. Installation remains successful. When AutoJs6 or another sending app owns the source, that app is responsible for deletion.
+- **Why was the source not deleted?** Deletion is attempted only after success; failure does not change the successful installation. An external source provider may refuse deletion. For scripts, the host handles `deleteSource` for paths and `file://` sources, retaining `content://` sources and failed items. Check `sourceDeleted` and `notes`.
 - **Can I retry or resume?** A failed external URI can be retried while the source and access are available. Once the source or its access is released, reopen the package. After a process restart, the restored view shows saved confirmed results and marks unfinished items as interrupted. It is read-only and never automatically installs or retries. Check the installed app before starting again.
 
 ******
@@ -204,9 +211,10 @@ The plugin's plans and progress are maintained as a checkable list in ROADMAP.md
 
 _2026/10/01_
 
-- `Hint` P3 development preview. Confirmation, progress, results and batch dialogs, external opening and sharing, optional source deletion, system confirmation and foreground notifications are implemented. The script API, standalone home and settings, installation history and default-installer configuration remain planned. See [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md) for progress and device coverage. AutoJs6 >= 6.8.0 (5299).
+- `Hint` Development preview. Confirmation, progress, results and batch dialogs, external opening and sharing, optional source deletion, system confirmation and foreground notifications are implemented. The `installer` script API requires AutoJs6 >= 6.8.0 (5300). Standalone home and settings, installation history and a default-installer settings screen remain planned. See [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md) for progress and device coverage. Base plugin compatibility: AutoJs6 >= 6.8.0 (5299).
 - `Feature` Plugin identity `three-setup-installer` (engine `installer`) with the INFO service, the Wake Activity and the `org.autojs.plugin.INSTALLER` service skeleton for host discovery
 - `Feature` README, plugin-center instructions and changelog in 10 languages
+- `Feature` The `installer` script API (alias `$installer`) provides synchronous, `...Async` and session forms for single, batch and split installation, uninstallation, inspection, authorizer and user queries, and default-installer settings. Failures are `InstallerError` objects with stable `code` values (requires AutoJs6 >= 6.8.0 (5300))
 - `Fix` Cancel actions did not follow the plugin language on devices missing the corresponding system translation
 - `Improvement` The plugin id, engine, service action / category, Binder descriptor and minimum host version now come from the host installer-api contract constants; the capabilities declare installer contract version 1 and the minimum host build is back-filled to 5299
 - `Improvement` Seekable sources avoid a full cache copy, while streams are staged as needed. ZIP split packages are supported, AAB files support inspection only, and changed sources are rejected.
@@ -224,7 +232,7 @@ _2026/10/01_
 - `Dependency` libsu 6.0.0 (`com.github.topjohnwu.libsu:core`, `service`) for the Root authorizer
 - `Dependency` AndroidHiddenApiBypass 6.1 for the hidden package installer APIs used by the privileged service
 - `Dependency` `common-plugin-api.aar` (AutoJs6 module `plugin-api/common-plugin-api`, host build 6.8.0 / 5298, MPL 2.0) as the shared plugin contract, hash-locked in `locks/host-api-aars.lock`
-- `Dependency` `package-archive-parser.aar` and `installer-api.aar` (AutoJs6 modules `plugin-api/package-archive-parser` and `plugin-api/installer-api`, host P1 build 6.8.0 / 5299, MPL 2.0), hash-locked in `locks/host-api-aars.lock` together with `common-plugin-api.aar`
+- `Dependency` `package-archive-parser.aar` and `installer-api.aar` (AutoJs6 modules `plugin-api/package-archive-parser` and `plugin-api/installer-api`, MPL 2.0), hash-locked in `locks/host-api-aars.lock` together with `common-plugin-api.aar`
 - `Dependency` Refresh the bundled package archive parser to recognize ordinary ZIP split containers
 
 ##### For more release history

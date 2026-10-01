@@ -4,7 +4,7 @@ Date: 2026-10-01.
 
 Screenshot review of the real Arabic/font-2/night/IME case also exposed an English Cancel label on HyperOS, whose framework did not provide the requested translation. Cancellation text in installation, privileged uninstallation and notifications now uses the plugin's own action_cancel resource in all 11 resource directories. The geometry fixture consumes that same resource; this avoids depending on which framework languages an OEM includes.
 
-The appearance support layer has passed the JVM and API 24 contract/view tests described below. A later follow-up also passed real-window and real-IME checks on API 35 and API 28, including private RTL/large-text/night configurations and landscape. The complete device and host-integration matrix remains open; these geometry fixtures do not establish a successful live host Provider read.
+The appearance support layer has passed the JVM and API 24 contract/view tests described below. Follow-ups also passed real-window and real-IME checks on API 35, API 28 and a user-started API 24 AVD, including private RTL/large-text/night configurations and landscape. The complete device and host-integration matrix remains open; these geometry fixtures do not establish a successful live host Provider read.
 
 ## Implementation
 
@@ -65,11 +65,23 @@ Selected measured rectangles are in screen pixels. Portrait IME measurements wer
 
 The API 35 density was 2.5 and the 1400 px surface width therefore respected the 560 dp cap. The API 28 density was 2.0; its portrait surface retained 48 px / 24 dp on each side, and landscape excluded the 96 px right navigation bar. Real IME expansion reduced the available area once, while title/actions remained fully visible. Keyboard dismissal restored the pre-IME rectangle. Actual scrolling exposed the last row without moving the fixed title/actions, and measured-position taps reached the fixed button. These are actual-window observations, supplementing the earlier detached-view evidence.
 
+## Follow-up: real windows and IME on the user-started API 24 AVD
+
+On 2026-10-01, the user manually started the Android SDK built for x86 / API 24 AVD. `build/p4-api24-p3-followup.log` reports `OK (15 tests)` in 14.349 seconds: all 12 `InstallDialogDeviceTest` cases and all three `InstallerDialogWindowDeviceTest` cases passed, with no failures or skips. The three real-window cases cover portrait IME opening/restoration, private Arabic RTL/fontScale 2/night mode with the real IME, and landscape scrolling with fixed actions.
+
+| API 24 state | Physical window | Available screen rectangle | IME bottom inset | Dialog surface rectangle |
+| --- | --- | --- | ---: | --- |
+| Portrait, IME hidden/restored | 1440 x 2560 | `(0,84)-(1440,2392)` | 0 | `(84,257)-(1356,2218)` |
+| Portrait, real IME shown | 1440 x 2560 | `(0,84)-(1440,1499)` | 1061 | `(84,190)-(1356,1392)` |
+| Landscape, navigation bar at right | 2560 x 1440 | `(0,84)-(2392,1440)` | 0 | `(216,186)-(2176,1338)` |
+
+Portrait rectangles matched in the normal and private Arabic/fontScale-2/night configurations. Logs explicitly show `imeVisible=true`, a focused active editor, and fully visible title/actions while the keyboard is open. At density 3.5, the portrait margins are 84 px / 24 dp and the landscape surface width is 1960 px / 560 dp. Dismissing the keyboard restores the earlier rectangle; scrolling reveals the last row while fixed actions remain visible. These are actual-window results, separate from the older detached-view geometry measurements.
+
 ## Remaining evidence boundaries
 
 - A live, enabled, correctly signed host Provider read and an actual host appearance change during an installation still need their own integration evidence. The Bundle contract test does not establish that access path.
-- The real API 28/35 checks above cover the measured system-bar/IME boundaries and portrait/landscape configurations. They do not establish every physical cutout, floating keyboard or multi-window configuration, nor all OEM/system combinations.
-- The new actual-IME/API 24 follow-up was not rerun. Starting an additional emulator was rejected by automatic approval review with only the stated reason `blocked by policy`; no alternate launch was used to bypass that rejection. The prior API 24 detached-view/contract results remain valid, without a new real-IME claim.
+- The real API 24/28/35 checks above cover the measured system-bar/IME boundaries and portrait/landscape configurations. They do not establish every physical cutout, floating keyboard or multi-window configuration, nor all OEM/system combinations.
+- During the build-29 session, starting an additional emulator was rejected by automatic approval review with only the stated reason `blocked by policy`; no alternate launch bypassed that rejection. The later run used an AVD manually started by the user and supplies the previously missing API 24 real-IME evidence.
 - The complete device matrix, TalkBack/D-pad interaction, all long translations, actual multi-window resizing and repeated appearance changes remain separate checks. The private Arabic/fontScale-2/dark window is a verified combination, not the whole matrix.
 - Installation screen lifecycle, authoritative package results and host-UID routing are documented by the main P3 integration evidence, rather than inferred from this supporting layer.
 

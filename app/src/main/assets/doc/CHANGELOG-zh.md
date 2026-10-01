@@ -8,9 +8,10 @@
 
 ###### 2026/10/01
 
-* `提示` P3 开发预览. 已实现确认, 进度, 结果与批量对话框, 外部打开与分享, 可选来源删除, 系统确认及前台通知. 脚本 API, 独立首页与设置, 安装历史及默认安装器配置仍属于后续规划. 进度与设备覆盖见 [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md). AutoJs6 >= 6.8.0 (5299).
+* `提示` 开发预览. 已实现确认, 进度, 结果与批量对话框, 外部打开与分享, 可选来源删除, 系统确认及前台通知. `installer` 脚本 API 需要 AutoJs6 >= 6.8.0 (5300). 独立首页与设置, 安装历史及默认安装器设置界面仍属于后续规划. 进度与设备覆盖见 [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md). 插件基础兼容性: AutoJs6 >= 6.8.0 (5299).
 * `新增` 插件标识 `three-setup-installer` (engine `installer`), 含 INFO 服务, Wake Activity 以及供宿主发现的 `org.autojs.plugin.INSTALLER` 服务骨架
 * `新增` 10 种语言的 README, 插件中心说明与更新日志
+* `新增` 脚本 API `installer` (别名 `$installer`) 提供同步, `...Async` 与会话形态, 支持单项 / 批量 / 分包安装, 卸载, 检查, 授权方式与用户查询及默认安装器设置; 失败为带稳定 `code` 的 `InstallerError` (需要 AutoJs6 >= 6.8.0 (5300))
 * `修复` 系统缺少对应翻译时, 取消操作文案未跟随插件语言的问题
 * `优化` 插件 ID, engine, 服务 action / category, Binder descriptor 与最低宿主版本改由宿主 installer-api 契约常量提供; 能力声明加入安装器契约版本 1, 最低宿主构建回填为 5299
 * `优化` 可随机访问的来源避免完整缓存副本, 流来源按需暂存. 支持普通 ZIP 分包, AAB 仅供检查, 拒绝内容发生变化的来源.
@@ -28,5 +29,5 @@
 * `依赖` 附加 libsu 6.0.0 (`com.github.topjohnwu.libsu:core`, `service`) 用于 Root 授权方式
 * `依赖` 附加 AndroidHiddenApiBypass 6.1 用于特权服务访问隐藏的包安装器 API
 * `依赖` 附加 `common-plugin-api.aar` (AutoJs6 模块 `plugin-api/common-plugin-api`, 宿主构建 6.8.0 / 5298, MPL 2.0) 作为共享插件契约, 并在 `locks/host-api-aars.lock` 中锁定哈希
-* `依赖` 附加 `package-archive-parser.aar` 与 `installer-api.aar` (AutoJs6 模块 `plugin-api/package-archive-parser` 与 `plugin-api/installer-api`, 宿主 P1 构建 6.8.0 / 5299, MPL 2.0), 与 `common-plugin-api.aar` 一同在 `locks/host-api-aars.lock` 中锁定哈希
+* `依赖` 附加 `package-archive-parser.aar` 与 `installer-api.aar` (AutoJs6 模块 `plugin-api/package-archive-parser` 与 `plugin-api/installer-api`, MPL 2.0), 与 `common-plugin-api.aar` 一同在 `locks/host-api-aars.lock` 中锁定哈希
 * `依赖` 升级共享安装包解析器, 支持普通 ZIP 分包容器

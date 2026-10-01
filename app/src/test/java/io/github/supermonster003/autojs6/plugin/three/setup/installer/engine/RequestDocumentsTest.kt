@@ -35,6 +35,28 @@ class RequestDocumentsTest {
         assertTrue(request.options.continueOnError)
     }
 
+    @Test fun `explicit batch preserves a single application including a split set`() {
+        assertTrue(InstallRequest.parse("""{"id":"one","batch":true,"sources":[{"displayName":"one.apk"}]}""", 1).isBatch)
+        val splitSet = """{"id":"split","batch":true,"sources":[{"item":0,"displayName":"base.apk"},{"item":0,"displayName":"config.apk"}]}"""
+        val request = InstallRequest.parse(splitSet, 2)
+        assertTrue(request.isBatch)
+        assertEquals(1, request.items.size)
+        assertFalse(InstallRequest.parse("""{"id":"one","batch":false,"sources":[{"displayName":"one.apk"}]}""", 1).isBatch)
+    }
+
+    @Test fun `legacy requests without batch retain the grouped item inference`() {
+        assertFalse(InstallRequest.parse("""{"id":"one","sources":[{"displayName":"one.apk"}]}""", 1).isBatch)
+        assertFalse(InstallRequest.parse("""{"id":"split","sources":[{"item":7,"displayName":"base.apk"},{"item":7,"displayName":"config.apk"}]}""", 2).isBatch)
+        assertTrue(InstallRequest.parse("""{"id":"many","sources":[{"displayName":"one.apk"},{"displayName":"two.apk"}]}""", 2).isBatch)
+    }
+
+    @Test fun `batch rejects non boolean values and false with multiple applications`() {
+        for (value in listOf("\"true\"", "1", "null", "[]", "{}")) {
+            invalid("""{"id":"one","batch":$value,"sources":[{"displayName":"one.apk"}]}""", 1)
+        }
+        invalid("""{"id":"many","batch":false,"sources":[{"displayName":"one.apk"},{"displayName":"two.apk"}]}""", 2)
+    }
+
     private fun invalid(json: String, count: Int) {
         assertEquals(json.take(80), "INVALID_ARGUMENT", assertThrows(InstallFailure::class.java) { InstallRequest.parse(json, count) }.code)
     }

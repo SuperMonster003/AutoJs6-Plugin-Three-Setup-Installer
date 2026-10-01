@@ -35,3 +35,17 @@ HyperOS 的额外组件精确为 com.miui.securitycenter/com.miui.permcenter.pri
 4. HyperOS 控件资源名为 com.android.settings:id/switchWidget, 已按实际节点增加该精确项. 点击后的额外权限步骤单独识别并如实跳过, 不将其伪装成授权成功.
 
 P3.3 原测试 checkbox 继续保留未完成. 本轮证明了真实授权前段及安全退出边界, 不能替代最终成功安装的完整路径.
+
+## 后续用户手动启动 API 31 AVD 的真实授权复测
+
+2026-10-01, 用户自行启动 API 31 AVD 后执行同一 opt-in 用例. 原始 instrumentation 日志 build/p4-api31-p3-followup.log 记录:
+
+- 初始状态为 user=0, package=default, uid=default, allowed=false.
+- 实际 Settings 页面只针对本插件, bridge=0f61e8fe-0dd9-4e4a-b5d0-0749925442c3. 通过 Settings 开关得到授权后, 继续原 platformSession=1238106379, 没有另建平台安装会话.
+- 额外 Play Protect 扫描提示同时匹配固定夹具标签, App scan recommended 标题和唯一否定操作. 既有 guard 选择 Don't install app, 拒绝上传扫描, 未关闭全局扫描设置或操作肯定按钮.
+- createdSessions=[1238106379], confirmationSessions=[1238106379], finishedSessions=[(1238106379,false)]; 插件终态为 cancelled / USER_CANCELLED. 测试走到额外扫描的 AssumptionViolatedException 分支前已检查夹具未安装.
+- finally 恢复 REQUEST_INSTALL_PACKAGES 原模式时, 系统杀死了运行 instrumentation 的目标进程. Runner 最后为 `INSTRUMENTATION_RESULT: shortMsg=Process crashed.` 和 `INSTRUMENTATION_CODE: 0`, 没有正常的通过或跳过终结, 本次不能标为通过, 也不计作普通 assumption 跳过.
+
+补充现场日志 build/p4-api31-restoration.log 记录 `10-01 14:18:57.976 ActivityManager: Killing 6030 ... REQUEST_INSTALL_PACKAGES changed.` 和随后 `REQUEST_INSTALL_PACKAGES: default`. 收尾检查的包列表按本次 fixture / spike 名称筛选为空, 没有安装自建夹具; 权限已经恢复. 该补充记录用于说明系统终止原因和清理状态, 不能替代缺失的 instrumentation 成功结束.
+
+本次证明了实际授权, 同会话回跳及安全拒绝额外扫描, 没有完成授权后成功安装的完整验收. P3.3 对应原条目继续保留未完成.

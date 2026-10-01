@@ -152,11 +152,10 @@ internal data class InstallRequest(
     val sources: List<SourceEntry>,
     val interaction: String,
     val options: InstallOptions,
+    val isBatch: Boolean = sources.map { it.item }.distinct().size > 1,
 ) {
     /** The request items in first-appearance order; each holds the descriptors of one package. */
     val items: List<List<SourceEntry>> = sources.groupBy { it.item }.values.toList()
-
-    val isBatch: Boolean get() = items.size > 1
 
     companion object {
         private const val WHAT = "install request"
@@ -184,11 +183,17 @@ internal data class InstallRequest(
             items.values.firstOrNull { it.size > InstallerContract.MAX_SPLITS_PER_PACKAGE }?.let {
                 throw invalid("$WHAT: at most ${InstallerContract.MAX_SPLITS_PER_PACKAGE} descriptors per package")
             }
+            val isBatch = root.get(InstallerContract.FIELD_BATCH)?.let { value ->
+                if (!value.isJsonPrimitive || !value.asJsonPrimitive.isBoolean) throw invalid("$WHAT: batch must be a boolean")
+                value.asBoolean
+            } ?: (items.size > 1)
+            if (!isBatch && items.size != 1) throw invalid("$WHAT: a non-batch request must contain exactly one package")
             InstallRequest(
                 id = id,
                 sources = entries,
                 interaction = interactionOf(root.string(InstallerContract.FIELD_INTERACTION), WHAT),
                 options = InstallOptions.parse(root.obj(InstallerContract.FIELD_OPTIONS), WHAT),
+                isBatch = isBatch,
             )
         }
     }

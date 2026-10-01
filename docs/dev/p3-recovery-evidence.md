@@ -26,7 +26,13 @@ InstallRecoveryTest 新增 14 项 JVM 用例: 编解码与字段白名单, URI �
 
 InstallDialogDeviceTest 从 9 项增至 12 项, 新增部分成功只读恢复, 读取期间完成并旋转后拒绝迟到回调, 终态失败只恢复安全错误标识. API 28 / API 35 的 12 项均通过. 权限测试所在混合组的失败或跳过单独记录, 不计为界面恢复失败或整组通过.
 
-真实 IME / 大字号 / RTL / 夜间 / 横屏的三项窗口测量已分别在 Sony API 28 与 Xiaomi API 35 通过, 见 [外观证据](p3-appearance-evidence.md). 新 API 24 模拟器启动被自动审批拒绝, 只返回 blocked by policy; 本轮不声称完成 API 24 新增恢复与真实 IME 的复验.
+真实 IME / 大字号 / RTL / 夜间 / 横屏的三项窗口测量已分别在 Sony API 28 与 Xiaomi API 35 通过, 见 [外观证据](p3-appearance-evidence.md). build 29 会话中的新 API 24 模拟器启动被自动审批拒绝, 只返回 blocked by policy; 当时未执行 API 24 新增恢复与真实 IME 的复验. 后续在用户自行启动的 AVD 上完成了下述复验.
+
+## 后续 API 24 用户手动启动 AVD 复验
+
+2026-10-01, 用户自行启动 Android SDK built for x86 / API 24 AVD 后, 原始日志 build/p4-api24-p3-followup.log 报告 OK (15 tests), 14.349 秒, 15 项通过, 0 失败 / 0 跳过. 其中 InstallDialogDeviceTest 12 项包括部分成功只读恢复, 读取期间关闭和旋转后拒绝迟到恢复, 终态失败的安全错误恢复, 缺少进程记录时的中断展示, 以及确认 / 取消和已确认结果保留. InstallerDialogWindowDeviceTest 的 3 项真实窗口测试同组全部通过.
+
+这次复验补齐 API 24 的恢复界面和真实 IME 覆盖, 不改写之前被拒绝启动时的记录. 该组未运行跨进程 force-stop 探针, 不把 Activity 重建和合成快照用例计为 API 24 真实进程更替验证; 下节 API 28 / 35 的 PID 更替证据保持独立.
 
 ## 真实进程终止探针
 

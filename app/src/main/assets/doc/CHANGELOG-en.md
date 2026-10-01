@@ -8,9 +8,10 @@
 
 ###### 2026/10/01
 
-* `Hint` P3 development preview. Confirmation, progress, results and batch dialogs, external opening and sharing, optional source deletion, system confirmation and foreground notifications are implemented. The script API, standalone home and settings, installation history and default-installer configuration remain planned. See [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md) for progress and device coverage. AutoJs6 >= 6.8.0 (5299).
+* `Hint` Development preview. Confirmation, progress, results and batch dialogs, external opening and sharing, optional source deletion, system confirmation and foreground notifications are implemented. The `installer` script API requires AutoJs6 >= 6.8.0 (5300). Standalone home and settings, installation history and a default-installer settings screen remain planned. See [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md) for progress and device coverage. Base plugin compatibility: AutoJs6 >= 6.8.0 (5299).
 * `Feature` Plugin identity `three-setup-installer` (engine `installer`) with the INFO service, the Wake Activity and the `org.autojs.plugin.INSTALLER` service skeleton for host discovery
 * `Feature` README, plugin-center instructions and changelog in 10 languages
+* `Feature` The `installer` script API (alias `$installer`) provides synchronous, `...Async` and session forms for single, batch and split installation, uninstallation, inspection, authorizer and user queries, and default-installer settings. Failures are `InstallerError` objects with stable `code` values (requires AutoJs6 >= 6.8.0 (5300))
 * `Fix` Cancel actions did not follow the plugin language on devices missing the corresponding system translation
 * `Improvement` The plugin id, engine, service action / category, Binder descriptor and minimum host version now come from the host installer-api contract constants; the capabilities declare installer contract version 1 and the minimum host build is back-filled to 5299
 * `Improvement` Seekable sources avoid a full cache copy, while streams are staged as needed. ZIP split packages are supported, AAB files support inspection only, and changed sources are rejected.
@@ -28,5 +29,5 @@
 * `Dependency` libsu 6.0.0 (`com.github.topjohnwu.libsu:core`, `service`) for the Root authorizer
 * `Dependency` AndroidHiddenApiBypass 6.1 for the hidden package installer APIs used by the privileged service
 * `Dependency` `common-plugin-api.aar` (AutoJs6 module `plugin-api/common-plugin-api`, host build 6.8.0 / 5298, MPL 2.0) as the shared plugin contract, hash-locked in `locks/host-api-aars.lock`
-* `Dependency` `package-archive-parser.aar` and `installer-api.aar` (AutoJs6 modules `plugin-api/package-archive-parser` and `plugin-api/installer-api`, host P1 build 6.8.0 / 5299, MPL 2.0), hash-locked in `locks/host-api-aars.lock` together with `common-plugin-api.aar`
+* `Dependency` `package-archive-parser.aar` and `installer-api.aar` (AutoJs6 modules `plugin-api/package-archive-parser` and `plugin-api/installer-api`, MPL 2.0), hash-locked in `locks/host-api-aars.lock` together with `common-plugin-api.aar`
 * `Dependency` Refresh the bundled package archive parser to recognize ordinary ZIP split containers
