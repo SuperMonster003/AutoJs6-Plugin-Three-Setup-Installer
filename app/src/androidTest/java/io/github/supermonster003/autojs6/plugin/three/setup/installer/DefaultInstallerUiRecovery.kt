@@ -40,6 +40,7 @@ internal object DefaultInstallerUiRecovery {
     private const val APPROVED_INSTALLER_X_COMPONENT = "$APPROVED_INSTALLER_X/com.rosan.installer.ui.activity.InstallerActivity"
     private const val PARTIAL_CLEAR_AUDIT_ID = "9808cd47-4af6-4eca-a2ac-43f0a9a00d93"
     private const val PARTIAL_CLEAR_AUDIT_PATH = "p5-default-installer/approved-installerx-clear-$PARTIAL_CLEAR_AUDIT_ID.json"
+    private const val APPROVED_PLUGIN_HISTORY_KIND = "preserve-qv710af65f-plugin-history-2026-10-02"
 
     val probes: List<Intent> get() = PackageManagerHidden.INSTALL_ACTIONS.flatMap { action ->
         listOf("content", "file").map { PackageManagerHidden.intent(action, it) }
@@ -110,7 +111,9 @@ internal object DefaultInstallerUiRecovery {
 
     fun unsafeReason(context: Context, snapshot: Snapshot, preserved: PreservedLastChosen? = null): String? {
         val entries = snapshot.publicEntries + snapshot.shellEntries
-        if (entries.any { it.component.packageName == context.packageName }) {
+        if (snapshot.publicEntries.any { it.component.packageName == context.packageName && it.canonical !in preserved?.publicEntries.orEmpty() } ||
+            snapshot.shellEntries.any { it.component.packageName == context.packageName &&
+                (it.always != false || it.canonical !in preserved?.shellEntries.orEmpty()) }) {
             return "Existing plugin preferred/last-chosen activities must remain untouched; use a clean device"
         }
         val protectedEntries = if (preserved == null) entries else {
@@ -292,6 +295,58 @@ internal object DefaultInstallerUiRecovery {
         return PreservedLastChosen(proof, public.map { it.canonical }.toSet(), shell.map { it.canonical }.toSet())
     }
 
+    /** The maintainer approved this device's existing four plugin records on 2026-10-02. */
+    fun preserveApprovedPluginHistory(instrumentation: Instrumentation, current: Snapshot): PreservedLastChosen {
+        approvedPluginDevice(instrumentation)
+        val context = instrumentation.targetContext
+        val own = baselinePluginRecords(context, current.document(), allowApproved = true)
+        check(own.first.size == 4 && own.second.size == 4) { "The four approved plugin history records must still exist" }
+        val unrelated = preserveUnrelatedLastChosen(context, current.copy(
+            publicEntries = current.publicEntries.filterNot { it.component.packageName == context.packageName },
+            shellEntries = current.shellEntries.filterNot { it.component.packageName == context.packageName },
+        ))
+        val proof = JsonObject().apply {
+            addProperty("kind", APPROVED_PLUGIN_HISTORY_KIND)
+            addProperty("serial", "QV710AF65F")
+            addProperty("approvedPluginRecords", 4)
+            addProperty("preservedThirdPartyRecords", unrelated.shellEntries.size)
+            add("validatedState", current.document())
+        }
+        return PreservedLastChosen(proof, unrelated.publicEntries + own.first, unrelated.shellEntries + own.second)
+    }
+
+    private fun approvedPluginDevice(instrumentation: Instrumentation) {
+        check(Build.VERSION.SDK_INT == 31 && Process.myUid() / 100_000 == 0 &&
+            readShell(instrumentation, "getprop ro.serialno").trim() == "QV710AF65F") {
+            "The approved plugin history scope is only QV710AF65F / API 31 / owner user 0"
+        }
+    }
+
+    /** Exact canonical records, not a blanket exception for all preferences owned by the plugin. */
+    private fun baselinePluginRecords(context: Context, baseline: JsonObject, allowApproved: Boolean): Pair<Set<String>, Set<String>> {
+        val public = serializedPackageEntries(baseline, "publicPreferred", context.packageName)
+        val shell = serializedPackageEntries(baseline, "shellPreferred", context.packageName)
+        if (public.isEmpty() && shell.isEmpty()) return emptySet<String>() to emptySet()
+        check(allowApproved) { "The baseline has unapproved plugin preferred/last-chosen records" }
+        val component = ComponentName(context.packageName, context.packageName + COMPONENT_SUFFIX)
+        val expected = listOf(PackageManagerHidden.APK_MIME, "application/vnd.apkm", "application/xapk-package-archive", "application/octet-stream").map { type ->
+            Element("item", mapOf("name" to component.flattenToShortString(), "match" to "600000", "always" to "false", "set" to "0"),
+                listOf(Element("filter", emptyMap(), listOf(
+                    Element("action", mapOf("name" to Intent.ACTION_VIEW), emptyList()),
+                    Element("cat", mapOf("name" to Intent.CATEGORY_DEFAULT), emptyList()),
+                    Element("staticType", mapOf("name" to type), emptyList()),
+                ))))
+        }
+        val expectedPublic = expected.map { entry -> JsonObject().apply {
+            addProperty("component", component.flattenToString())
+            add("filter", filterDocument(entry.children.single().toFilter()))
+        }.toString() }.sorted()
+        check(public == expectedPublic && shell == expected.map { it.document().toString() }.sorted()) {
+            "Plugin history differs from the four approved VIEW/no-scheme/always=false records"
+        }
+        return public.toSet() to shell.toSet()
+    }
+
     private fun genericApkWildcard(filter: IntentFilter): Boolean {
         val types = (0 until filter.countDataTypes()).map(filter::getDataType)
         // IntentFilter internally shortens application/* and */* to application and *.
@@ -458,17 +513,18 @@ internal object DefaultInstallerUiRecovery {
         ParcelFileDescriptor.AutoCloseInputStream(instrumentation.uiAutomation.executeShellCommand(command))
             .use { boundedRead(it).toString(Charsets.UTF_8) }
 
-    fun assertUnrelatedUnchanged(context: Context, before: Snapshot, after: Snapshot) {
+    fun assertUnrelatedUnchanged(context: Context, before: Snapshot, after: Snapshot, preserved: PreservedLastChosen? = null) {
+        val own = baselinePluginRecords(context, before.document(), preserved?.proof?.get("kind")?.asString == APPROVED_PLUGIN_HISTORY_KIND)
         check(before.preferences == after.preferences) { "The default-installer UI changed plugin preferences" }
         check(before.publicEntries.map { it.canonical }.sorted() == after.publicEntries
-            .filterNot { it.component.packageName == context.packageName }.map { it.canonical }.sorted()) {
+            .filterNot { it.component.packageName == context.packageName && it.canonical !in own.first }.map { it.canonical }.sorted()) {
             "An unrelated public preferred activity changed"
         }
         check(before.shellEntries.map { it.canonical }.sorted() == after.shellEntries
-            .filterNot { it.component.packageName == context.packageName }.map { it.canonical }.sorted()) {
+            .filterNot { it.component.packageName == context.packageName && it.canonical !in own.second }.map { it.canonical }.sorted()) {
             "An unrelated preferred/last-chosen activity changed"
         }
-        assertOwnedEntries(context, after)
+        assertOwnedEntries(context, after, own)
     }
 
     /** Idempotent after success. A prior successful audit never rewrites a subsequent user's state. */
@@ -480,22 +536,30 @@ internal object DefaultInstallerUiRecovery {
         if (document.get("status").asString == "restored") return location(context, runId)
         check(document.get("status").asString == "pending")
         val before = document.getAsJsonObject("baseline")
+        var approvedPluginHistory = false
         document.getAsJsonObject("preservedLastChosen")?.let { proof ->
-            check(proof.get("kind").asString == "preserve-unrelated-no-scheme-apk-last-chosen" &&
+            approvedPluginHistory = proof.get("kind").asString == APPROVED_PLUGIN_HISTORY_KIND
+            if (approvedPluginHistory) {
+                approvedPluginDevice(instrumentation)
+                check(proof.get("serial").asString == "QV710AF65F" && proof.get("approvedPluginRecords").asInt == 4)
+            }
+            check((approvedPluginHistory || proof.get("kind").asString == "preserve-unrelated-no-scheme-apk-last-chosen") &&
                 proof.get("validatedState") == before) { "The preserved last-chosen proof no longer matches the recovery baseline" }
         }
-        // These baseline arrays come only from begin(), which rejects every existing plugin item.
-        // Validate again so a malformed recovery journal cannot authorize broad preference removal.
-        check(before.getAsJsonArray("publicPreferred").none {
-            ComponentName.unflattenFromString(JsonParser.parseString(it.asString).asJsonObject.get("component").asString)?.packageName == context.packageName
-        })
-        check(before.getAsJsonArray("shellPreferred").none {
-            val attributes = JsonParser.parseString(it.asString).asJsonObject.getAsJsonObject("attributes")
-            ComponentName.unflattenFromString(attributes.get("name").asString)?.packageName == context.packageName
-        })
+        // Validate exact approved records again before considering a clear, including recovery
+        // without the original test arguments. All other pre-existing plugin entries stay protected.
+        val own = baselinePluginRecords(context, before, approvedPluginHistory)
         val current = snapshot(instrumentation)
-        assertOwnedEntries(context, current)
-        if ((current.publicEntries + current.shellEntries).any { it.component.packageName == context.packageName }) {
+        assertOwnedEntries(context, current, own)
+        check(before.get("publicPreferred") == strings(current.publicEntries
+            .filterNot { it.component.packageName == context.packageName && it.canonical !in own.first }.map { it.canonical }.sorted()) &&
+            before.get("shellPreferred") == strings(current.shellEntries
+                .filterNot { it.component.packageName == context.packageName && it.canonical !in own.second }.map { it.canonical }.sorted()) &&
+            before.get("preferences") == current.preferences) {
+            "The original records or plugin preferences changed; refusing cleanup of an uncertain baseline"
+        }
+        if (current.publicEntries.any { it.component.packageName == context.packageName && it.canonical !in own.first } ||
+            current.shellEntries.any { it.component.packageName == context.packageName && it.canonical !in own.second }) {
             // Public clear of our own package requires no grant/service and leaves all other
             // packages untouched. Never clear somebody else's package or restore broad defaults.
             context.packageManager.clearPackagePreferredActivities(context.packageName)
@@ -519,18 +583,26 @@ internal object DefaultInstallerUiRecovery {
         return plan
     }
 
-    private fun assertOwnedEntries(context: Context, snapshot: Snapshot) {
+    internal fun assertOwnedEntries(context: Context, snapshot: Snapshot, preserved: Pair<Set<String>, Set<String>> = emptySet<String>() to emptySet()) {
         val target = ComponentName(context.packageName, context.packageName + COMPONENT_SUFFIX)
-        (snapshot.publicEntries + snapshot.shellEntries).filter { it.component.packageName == context.packageName }.forEach { entry ->
-            val filter = entry.filter
-            check(entry.component == target && entry.always != false && filter.countActions() == 1 &&
-                filter.getAction(0) in PackageManagerHidden.INSTALL_ACTIONS &&
-                filter.countCategories() == 1 && filter.hasCategory(Intent.CATEGORY_DEFAULT) &&
-                filter.countDataTypes() == 1 && filter.hasDataType(PackageManagerHidden.APK_MIME) &&
-                filter.countDataSchemes() == 1 && filter.getDataScheme(0) in listOf("content", "file") &&
-                filter.countDataAuthorities() == 0 && filter.countDataPaths() == 0 &&
-                filter.countDataSchemeSpecificParts() == 0 && filter.priority == 0) {
-                "An unowned plugin preferred/last-chosen item appeared; refusing to clear it"
+        listOf(snapshot.publicEntries.filterNot { it.canonical in preserved.first },
+            snapshot.shellEntries.filterNot { it.canonical in preserved.second }).forEach { records ->
+            val owned = records.filter { it.component.packageName == context.packageName }
+            check(owned.size <= 4) { "At most four new production filters may be cleared" }
+            owned.forEach { entry ->
+                val filter = entry.filter
+                check(entry.component == target && entry.always != false && filter.countActions() == 1 &&
+                    filter.getAction(0) in PackageManagerHidden.INSTALL_ACTIONS &&
+                    filter.countCategories() == 1 && filter.hasCategory(Intent.CATEGORY_DEFAULT) &&
+                    filter.countDataTypes() == 1 && filter.getDataType(0) == PackageManagerHidden.APK_MIME &&
+                    filter.countDataSchemes() == 1 && filter.getDataScheme(0) in listOf("content", "file") &&
+                    filter.countDataAuthorities() == 0 && filter.countDataPaths() == 0 &&
+                    filter.countDataSchemeSpecificParts() == 0 && filter.priority == 0) {
+                    "An unowned plugin preferred/last-chosen item appeared; refusing to clear it"
+                }
+            }
+            check(owned.map { it.filter.getAction(0) to it.filter.getDataScheme(0) }.distinct().size == owned.size) {
+                "Only one of each of the four new production filters may be cleared"
             }
         }
     }

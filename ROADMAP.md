@@ -235,7 +235,7 @@ runtime/api/augment/installer/          Installer.kt (AugmentableKey("installer"
 
 建议会话切分: P0 一次 (骨架 + spike); P1 两到三次 (共享 AAR 为一次; 契约 + 客户端 + 路由为一次; 删除旧安装器 + 调用方改造 + 文档为一次); P2 两到三次 (来源与授权; 安装引擎; 卸载 / 批量 / 路由); P3 一到两次; P4 两次 (install / session / errors; uninstall / inspect / authorizer / setDefault / 示例); P5 一到两次; P6 一到两次; P7 一次; P8 两次; P9 两到三次.
 
-当前进度 (2026-10-01): P0, P1, P3, P4 与 P5 原有条目已完成当前范围验收; P1 宿主三入口完整有/无插件六种实际 UI 组合通过, P2.6 联调条目随之完成. P2 核心来源/授权/安装/卸载/批量/Binder 已交付, 失败保留来源明确为固定策略, 其余原矩阵边界继续保留. P6.1 健壮性, P6.2 安全和 P6.4 性能/体积/混淆 Release 往返已完成所列范围验收. P6.3 的 API 37/16 KiB 插件安装与运行已验证, OEM 兼容性/FAQ 文案完成, 原完整 OEM 矩阵仍待收口. 特权恢复的 API/元数据边界及 API 24 大字号/系统多窗口独立显示边界见专项证据. 本轮进一步补齐G8441 Root默认页/Files和API 35 Shizuku/API 33 none, 完成P7.2十语言README/changelog定稿和P7.3本地构建检查; P2.3与P6.3剩余环境/原记录边界继续保留. 下一步先满足原矩阵剩余条件, P7远端发布仍受仅本地提交的指示限制.
+当前进度 (2026-10-02): P0-P6原条目已完成所列范围验收. 本轮补齐API 24应用Root与同一Sony API 33 Shizuku的安装选项六格矩阵, Samsung/API 36证明实际低targetSdk拒绝及标志解除拒绝; XQ-AT72默认页/实际Files/取消/解锁通过且保留四条原插件最近使用. P6.3原设备表完整, Redmi实际Files由系统安装器接管等ROM限制作为实测结果保留, 不记为插件确认成功. 既有特权恢复API/元数据, API 24大字号/系统多窗口及未专项ColorOS边界仍见证据. P7.1/P7.2和P7.3本地构建检查已完成; 下一步仅剩P7.3远端仓库/tag/Release/官方索引/宿主推送, 当前仍仅本地提交, 不提前进入P8/P9.
 
 ---
 
@@ -483,7 +483,7 @@ runtime/api/augment/installer/          Installer.kt (AugmentableKey("installer"
 
 ### P6.3 兼容矩阵
 
-- [ ] (测试) 设备池 (附录 E.1): AVD API 24 (Shizuku ADB / none), Sony G8441 API 28, Sony XQ-AT72 API 31, Redmi 22120RN86C API 33, Xiaomi 23046RP50C API 35 (HyperOS 安装者包名事实), AVD API 37 (16 KB 页, 仅验证插件本身安装与运行); 每台: none 新装 / 更新, 可用特权路径静默安装 / 卸载, 外部入口, 默认安装器锁定 (可用身份); 结果表写入 `docs/dev/p6-matrix-evidence.md`. (部分 DEVICE 2026-10-01: 原五台设备 none 新装/更新均通过, API 24/31/35 Shizuku 和 API 28 Root 静默新装/更新/卸载通过, 五台显式外部 Activity/取消各 1/1. API 24/35 默认页锁定/解锁各 1/1 且基线恢复; G8441/XQ-AT72 因原 APK preferred/last-chosen 保护性跳过. Redmi 没有可用特权身份, 不用额外 Root Sony 替代. HyperOS 三种请求安装者事实已记录. API 37 实际 PAGE_SIZE=16384 的 build 40 Release 安装/首页/跨进程契约限定行完成. 两台手机默认项及各 OEM 实际文件管理器/隐式入口仍有缺口, 原 checkbox 保留.) (补充 DEVICE 2026-10-01: G8441 Root默认页锁定/解锁及锁定期间真实Files直达确认后取消1/1, 原系统安装器最近使用完整保留. 新保留模式4项守卫在API 24/28/31各4/4. 未锁定G8441真实chooser有插件; Redmi真实Files则直接进入系统安装器, 退出且原状态不变. XQ-AT72原插件记录仍保护, 默认页未执行; 解析查询前后观察到stopapp旧首选降为最近使用, 未发出清除命令, 见 docs/dev/p6-default-history-evidence.md 和 docs/dev/p6-oem-external-completion-evidence.md.)
+- [x] (测试) 设备池 (附录 E.1): AVD API 24 (Shizuku ADB / none), Sony G8441 API 28, Sony XQ-AT72 API 31, Redmi 22120RN86C API 33, Xiaomi 23046RP50C API 35 (HyperOS 安装者包名事实), AVD API 37 (16 KB 页, 仅验证插件本身安装与运行); 每台: none 新装 / 更新, 可用特权路径静默安装 / 卸载, 外部入口, 默认安装器锁定 (可用身份); 结果表写入 `docs/dev/p6-matrix-evidence.md`. (部分 DEVICE 2026-10-01: 原五台设备 none 新装/更新均通过, API 24/31/35 Shizuku 和 API 28 Root 静默新装/更新/卸载通过, 五台显式外部 Activity/取消各 1/1. API 24/35 默认页锁定/解锁各 1/1 且基线恢复; G8441/XQ-AT72 因原 APK preferred/last-chosen 保护性跳过. Redmi 没有可用特权身份, 不用额外 Root Sony 替代. HyperOS 三种请求安装者事实已记录. API 37 实际 PAGE_SIZE=16384 的 build 40 Release 安装/首页/跨进程契约限定行完成. 两台手机默认项及各 OEM 实际文件管理器/隐式入口仍有缺口, 原 checkbox 保留.) (补充 DEVICE 2026-10-01: G8441 Root默认页锁定/解锁及锁定期间真实Files直达确认后取消1/1, 原系统安装器最近使用完整保留. 新保留模式4项守卫在API 24/28/31各4/4. 未锁定G8441真实chooser有插件; Redmi真实Files则直接进入系统安装器, 退出且原状态不变. XQ-AT72原插件记录仍保护, 默认页未执行; 解析查询前后观察到stopapp旧首选降为最近使用, 未发出清除命令, 见 docs/dev/p6-default-history-evidence.md 和 docs/dev/p6-oem-external-completion-evidence.md.) (完成 DEVICE 2026-10-02: 维护者批准后, XQ-AT72 Shizuku真默认页/Files/取消/解锁1/1, 四条原插件最近使用及其他记录/8条历史均保留. 新6项guard在API 24/31各6/6, API 24普通Root默认页另1/1. 原六台范围的完整结果映射见 docs/dev/p6-approved-default-completion-evidence.md; Redmi实际系统路由限制/N/A身份明确保留, 不声称所有OEM入口都成功. 本轮未在线设备使用已记录证据, 不冒充同包全池重跑.)
 - [x] (插件) OEM 差异按事实进入文案与 README 常见问题 (HyperOS 安装者包名, ColorOS 停止状态需激活, 部分 ROM 限制默认安装器). (DOCS / DEVICE 2026-10-01: 十语言 README/宿主插件说明同步兼容性和 FAQ. HyperOS 仅陈述实测 23046RP50C/API 35/Shizuku 的默认 shell 及两种显式安装者结果; ColorOS 激活提示按 Android 停止状态规则给出条件处理, 明确尚无 ColorOS 专项实机验证. 默认项文案保留旧 API/ROM 拒绝和先清原项限制, 1.0.0 不承诺持久锁定. 文档/图标生成校验通过, 不将通用规则或 protected skip 写成 OEM 实测.)
 
 ### P6.4 性能与体积
@@ -1094,3 +1094,11 @@ if (!installer.isDefault()) installer.setDefault(true);
 - API 24 libsu Root与Sony API 33 Shizuku Root分别授权/绑定1/1和完整Core8/8, 配合该两设备已有四组证据完成原六格. 两组均实际接受带双标志的非debuggable降级; Root Shizuku默认安装者是插件包名, 不套用ADB shell身份. 自有夹具/来源/权限/默认/历史/系统session/server恢复核验通过.
 - Samsung/API 36/16 KiB在未开bypass时由none与Shizuku真实返回INSTALL_FAILED_DEPRECATED_SDK_VERSION, 同一Shizuku身份开启标志后实际安装v1成功, 两个专项各1/1. 正常安装并授权Shizuku, 未改系统安全开关; 临时安装许可恢复, 本轮server按身份停止, 新管理器/插件授权保留. 细节见两份新P2证据.
 - 原P2.3矩阵现已勾选, 不增加/拆分/丢弃条目. 本次build 49按P2.3证据单独本地提交. P6.3的授权后默认页/Files收口另作逻辑提交, 不进行远端发布.
+
+### 2026-10-02 (P6.3 授权后默认页与原矩阵收口)
+
+- 按维护者第4项许可, 测试新增仅QV710AF65F/API31/user0生效的approved模式, 精确绑定原四条VIEW/no-scheme/always=false记录. 原普通/第三方模式保护保持, 不进入旧InstallerX维护分支. 锁定前持久保存、清理前原记录完整比对、恢复后全量一致校验; 新增可清理项严格精确APK MIME且四种组合唯一, 防止通配MIME误判.
+- XQ-AT72真默认页与实际系统Files直达确认后取消, 再解锁完整1/1, 21.674秒. 原四条插件最近使用/stopapp旧记录/全部其他默认和偏好保持; 精确token历史清理1/1后原8条历史完全一致, 自有来源已删除, 无安装. 未永久清除原记录.
+- 新6项守卫在API 24/31各6/6, 普通Root默认页在API24另1/1并恢复基线, 无失败/跳过. 268项JVM/Debug/androidTest及lint通过, 0错误/22警告. 审查发现的新增项MIME通配判断已收紧并有回归, 改动均为测试辅助.
+- 原P6.3设备表按既有证据与本次缺口验收收口, Redmi实际Files系统路由限制和无特权N/A保留, 不把限制写成成功. 原API37仍只按插件安装/运行范围, 其他未在线设备不冒充新包复验. 原条目已勾选, 详情见 docs/dev/p6-approved-default-completion-evidence.md.
+- 本次build50按P6.3测试/证据单独本地提交. 下一步刷新最终签名Release与本地gate, 远端发布仍受维护者仅本地提交指示限制.

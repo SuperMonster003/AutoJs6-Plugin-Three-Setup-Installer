@@ -52,6 +52,30 @@ class DefaultInstallerHistoryGuardDeviceTest {
         reject(baseline.copy(shellEntries = listOf(entry())))
     }
 
+    @Test fun approvedPluginModeCannotAcceptAnUnrelatedSyntheticBaseline() {
+        assertThrows(IllegalStateException::class.java) {
+            DefaultInstallerUiRecovery.preserveApprovedPluginHistory(InstrumentationRegistry.getInstrumentation(), snapshot())
+        }
+    }
+
+    @Test fun recoveryRejectsWildcardMimeAndDuplicateNewFilters() {
+        val component = ComponentName(context.packageName, "${context.packageName}.ui.ExternalInstallActivity")
+        fun candidate(type: String) = snapshot(component, filter(type).apply { addDataScheme("content") }).let {
+            it.copy(shellEntries = it.shellEntries.map { entry -> entry.copy(always = true) })
+        }
+        val valid = candidate(PackageManagerHidden.APK_MIME)
+        DefaultInstallerUiRecovery.assertOwnedEntries(context, valid)
+        for (type in listOf("application/*", "*/*")) assertThrows(IllegalStateException::class.java) {
+            DefaultInstallerUiRecovery.assertOwnedEntries(context, candidate(type))
+        }
+        assertThrows(IllegalStateException::class.java) {
+            DefaultInstallerUiRecovery.assertOwnedEntries(context, valid.copy(publicEntries = valid.publicEntries + valid.publicEntries))
+        }
+        assertThrows(IllegalStateException::class.java) {
+            DefaultInstallerUiRecovery.assertOwnedEntries(context, valid.copy(shellEntries = valid.shellEntries + valid.shellEntries))
+        }
+    }
+
     private fun reject(snapshot: DefaultInstallerUiRecovery.Snapshot) {
         assertThrows(IllegalStateException::class.java) {
             DefaultInstallerUiRecovery.preserveUnrelatedLastChosen(context, snapshot)
