@@ -12,6 +12,7 @@ import android.os.Process
 import android.system.Os
 import android.system.OsConstants
 import android.system.StructPollfd
+import android.util.Log
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.ThreeSetupInstallerPlugin
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.priv.hidden.PackageInstallerHidden
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.priv.hidden.PackageManagerHidden
@@ -21,6 +22,7 @@ import java.io.OutputStream
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 
 /** Shared by the Shizuku and libsu processes. Each client owns at most four live sessions. */
 internal open class PrivilegedInstallerImpl(expectedOwnerUid: Int? = null) : IPrivilegedInstaller.Stub(), Closeable {
@@ -47,6 +49,19 @@ internal open class PrivilegedInstallerImpl(expectedOwnerUid: Int? = null) : IPr
     override fun getUid(): Int {
         checkCaller()
         return Process.myUid()
+    }
+
+    override fun getInstalledVersion(packageName: String, userId: Int): Bundle = privileged {
+        PrivilegedOptions.validatePackage(packageName)
+        require(userId >= 0) { "Invalid user" }
+        val info = packages.packageInfo(packageName, userId)
+        Bundle().apply {
+            if (info != null) {
+                putString("versionName", info.versionName)
+                @Suppress("DEPRECATION")
+                putLong("versionCode", if (Build.VERSION.SDK_INT >= 28) info.longVersionCode else info.versionCode.toLong())
+            }
+        }
     }
 
     override fun createSession(params: Bundle, installerPackageName: String, userId: Int): Int = privileged {
@@ -121,6 +136,9 @@ internal open class PrivilegedInstallerImpl(expectedOwnerUid: Int? = null) : IPr
                         }
                     }
                 } catch (failure: Throwable) {
+                    if (!record.cancelled && record.writeFailureLogged.compareAndSet(false, true)) {
+                        Log.w("PrivilegedInstaller", "APK write failed (declaredBytes=$length)", failure)
+                    }
                     runCatching { pipe[0].close() }
                     throw failure
                 }
@@ -149,7 +167,9 @@ internal open class PrivilegedInstallerImpl(expectedOwnerUid: Int? = null) : IPr
             val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(30)
             pending.forEach { it.get((deadline - System.nanoTime()).coerceAtLeast(0), TimeUnit.NANOSECONDS) }
             record.session.commit(sender)
-            remove(sessionId, abandon = false)
+            // Keep ownership until the caller receives a terminal result and abandons/releases it.
+            // Pending user action must still be cancellable after commit has returned.
+            record.closeSession()
         } catch (failure: Exception) {
             remove(sessionId, abandon = true)
             throw IllegalStateException("Cannot commit APK stream", failure)
@@ -157,6 +177,8 @@ internal open class PrivilegedInstallerImpl(expectedOwnerUid: Int? = null) : IPr
     }
 
     override fun abandon(sessionId: Int) = privileged { remove(sessionId, abandon = true) }
+
+    override fun release(sessionId: Int) = privileged { remove(sessionId, abandon = false) }
 
     override fun uninstall(packageName: String, flags: Int, userId: Int, sender: IntentSender) = privileged {
         PrivilegedOptions.validatePackage(packageName)
@@ -231,7 +253,7 @@ internal open class PrivilegedInstallerImpl(expectedOwnerUid: Int? = null) : IPr
             if (abandon) runCatching { installer.abandonSession(id) }
             record.outputs.forEach { runCatching { it.close() } }
             record.writes.values.forEach { it.cancel(true) }
-            runCatching { record.session.close() }
+            runCatching { record.closeSession() }
         }
     }
 
@@ -243,7 +265,11 @@ internal open class PrivilegedInstallerImpl(expectedOwnerUid: Int? = null) : IPr
         checkCaller()
         checkActive()
         val identity = Binder.clearCallingIdentity()
-        return try { block() } finally { Binder.restoreCallingIdentity(identity) }
+        return try { block() } catch (failure: ReflectiveOperationException) {
+            // Binder cannot marshal checked reflection exceptions on older Android versions.
+            // Report an explicit supported exception instead of a successful reply with null data.
+            throw IllegalStateException("Privileged framework API is unavailable: ${failure.message}", failure)
+        } finally { Binder.restoreCallingIdentity(identity) }
     }
 
     private fun checkActive() = synchronized(this) {
@@ -254,9 +280,19 @@ internal open class PrivilegedInstallerImpl(expectedOwnerUid: Int? = null) : IPr
 
     private class Record(val session: PackageInstaller.Session) {
         var committing = false
+        private var sessionClosed = false
         @Volatile var cancelled = false
+        val writeFailureLogged = AtomicBoolean(false)
         val inputs = mutableListOf<ParcelFileDescriptor>()
         val outputs = mutableListOf<OutputStream>()
         val writes = linkedMapOf<String, Future<*>>()
+
+        @Synchronized
+        fun closeSession() {
+            if (sessionClosed) return
+            // A Binder failure may occur after the framework processed close; never retry it.
+            sessionClosed = true
+            session.close()
+        }
     }
 }

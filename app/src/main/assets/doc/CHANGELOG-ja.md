@@ -15,6 +15,7 @@
 * `改善` プラグイン ID, engine, サービスの action / category, Binder descriptor と最低ホストバージョンをホストの installer-api 契約定数から取得するように変更; 能力宣言にインストーラ契約バージョン 1 を追加し, 最低ホストビルドを 5299 に更新
 * `改善` ランダムアクセス可能な入力元は全体のキャッシュコピーを省き, ストリームは必要に応じて一時保存します. ZIP 内の分割 APK に対応し, AAB は情報確認のみとし, 内容が変わった入力元は拒否します.
 * `改善` 明示的に選んだ認証方式から別方式へは切り替えません. 拒否, タイムアウト, 非互換を区別し, 同時リクエストで認証処理と特権接続を共有します.
+* `改善` インストールと更新のコア機能でシステム確認, Shizuku, Root に対応しました. キャンセルでき, 実際の確認方法とシステムの結果を返します.
 * `依存関係` Shizuku 認可方式のために Shizuku API 13.1.5 (`dev.rikka.shizuku:api`, `dev.rikka.shizuku:provider`) を追加
 * `依存関係` Root 認可方式のために libsu 6.0.0 (`com.github.topjohnwu.libsu:core`, `service`) を追加
 * `依存関係` 特権サービスが非公開のパッケージインストーラー API へアクセスするために AndroidHiddenApiBypass 6.1 を追加

@@ -80,8 +80,7 @@
         </service>
 
         <!--
-            Host-facing installer service (roadmap D13). Until the host installer-api contract lands
-            (roadmap P1.2) it answers a placeholder Binder carrying the contract descriptor.
+            Host-facing installer service (roadmap D13 / P2.6), guarded by permission and caller identity.
         -->
         <service
             android:name=".ThreeSetupInstallerPluginService"
@@ -96,6 +95,11 @@
                 android:name="requiresHostVersion"
                 android:value="5299" />
         </service>
+
+        <!-- Explicit PendingIntent target for system package-installation results. -->
+        <receiver
+            android:name=".engine.InstallStatusReceiver"
+            android:exported="false" />
 
         <!-- libsu instantiates this ContextWrapper in its root process, never as an Android Service. -->
         <service

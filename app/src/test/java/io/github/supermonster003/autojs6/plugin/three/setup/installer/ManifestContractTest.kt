@@ -66,8 +66,10 @@ class ManifestContractTest {
     }
 
     @Test
-    fun `the wake activity is the only activity and follows the activation contract`() {
-        val wake = manifest.child("application").children("activity").single()
+    fun `the wake activity follows the activation contract and uninstall is internal`() {
+        val activities = manifest.child("application").children("activity").associateBy { it.androidAttribute("name") }
+        assertEquals(setOf(".WakeActivity"), activities.keys)
+        val wake = activities.getValue(".WakeActivity")
         assertEquals(".WakeActivity", wake.androidAttribute("name"))
         assertEquals("true", wake.androidAttribute("exported"))
         assertEquals("true", wake.androidAttribute("excludeFromRecents"))
@@ -78,7 +80,10 @@ class ManifestContractTest {
         assertEquals(listOf("org.autojs.plugin.action.WAKE"), wakeFilter.children("action").map { it.androidAttribute("name") })
         assertEquals(listOf("android.intent.category.DEFAULT"), wakeFilter.children("category").map { it.androidAttribute("name") })
         assertTrue(manifest.child("application").children("activity-alias").isEmpty())
-        assertTrue(manifest.child("application").children("receiver").isEmpty())
+        val receiver = manifest.child("application").children("receiver").single()
+        assertEquals(".engine.InstallStatusReceiver", receiver.androidAttribute("name"))
+        assertEquals("false", receiver.androidAttribute("exported"))
+        assertTrue(receiver.children("intent-filter").isEmpty())
     }
 
     @Test
