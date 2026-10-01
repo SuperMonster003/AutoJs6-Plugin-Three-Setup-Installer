@@ -31,7 +31,7 @@ not shipped in the APK.
 
 The hand-written adapters in `priv/hidden` use signatures of hidden Android framework interfaces
 (`android.content.pm.IPackageInstaller`, `IPackageInstallerSession`, `IPackageManager`, `ParceledListSlice`,
-`android.os.IUserManager`, `UserInfo` and related constants). Signature references are from the Android Open
+`android.os.IUserManager`, `android.app.IActivityManager`, `ActivityManagerNative`, `UserInfo` and related constants). Signature references are from the Android Open
 Source Project (https://android.googlesource.com/platform/frameworks/base, Apache License 2.0), Android 7 through
 15 release tags. No AOSP implementation is copied: reflection invokes the device's own Binder Stub and framework
 Session, preserving its transaction numbering and FileBridge protocol. No replacement `android.*` classes are
