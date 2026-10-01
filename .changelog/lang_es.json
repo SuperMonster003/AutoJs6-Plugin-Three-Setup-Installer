@@ -22,7 +22,8 @@
         "Los ajustes incluyen Acerca de y el historial de versiones integrado en diez idiomas. La búsqueda manual de actualizaciones utiliza la API GitHub Releases del plugin con un intervalo de 12 horas, resultados en caché y gestión de versiones ignoradas. Las páginas de publicación se abren en el navegador; las actualizaciones no se descargan ni instalan automáticamente"
       ],
       "fix": [
-        "Las acciones de cancelar no seguían el idioma del complemento en dispositivos sin la traducción correspondiente del sistema"
+        "Las acciones de cancelar no seguían el idioma del complemento en dispositivos sin la traducción correspondiente del sistema",
+        "Se corrigió la marca de selección invisible de los APK divididos obligatorios como base.apk cuando su casilla está deshabilitada, tanto en el tema claro como en el oscuro"
       ],
       "improvement": [
         "El id del plugin, el motor, la accion / categoria del servicio, el descriptor Binder y la version minima del host provienen ahora de las constantes del contrato installer-api del host; las capacidades declaran la version 1 del contrato del instalador y la build minima del host se fija en 5299",

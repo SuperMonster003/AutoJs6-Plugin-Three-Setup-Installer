@@ -104,6 +104,24 @@ class InstallerDialogGeometryDeviceTest {
         assertEquals(kit.palette.accent, kit.progressBar().indicatorColor.single())
     }
 
+    @Test fun disabledRequiredCheckboxKeepsItsCheckmarkVisibleInLightAndDarkThemes() = instrumentation.runOnMainSync {
+        for (dark in listOf(false, true)) {
+            val kit = kit("en", dark, 1f)
+            val choice = kit.checkBox("base.apk", true).apply { isEnabled = false }
+            assertTrue(choice.isChecked)
+            assertFalse(choice.isEnabled)
+            assertNotNull(choice.buttonIconDrawable)
+            val state = choice.drawableState
+            val fill = choice.buttonTintList!!.getColorForState(state, 0)
+            val mark = choice.buttonIconTintList!!.getColorForState(state, 0)
+            assertTrue("Required split checkmark disappears in dark=$dark",
+                InstallerColorPolicy.contrastRatio(fill, mark) >= 3.0)
+            choice.isEnabled = true
+            assertTrue(choice.isChecked)
+            assertEquals(kit.palette.onAccent, choice.buttonIconTintList!!.getColorForState(choice.drawableState, 0))
+        }
+    }
+
     private fun kit(language: String, dark: Boolean, scale: Float): InstallerUiKit {
         val target = instrumentation.targetContext
         val config = Configuration(target.resources.configuration).apply { fontScale = scale }
