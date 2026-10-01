@@ -52,7 +52,7 @@ AutoJs6 descubre el plugin a través de su servicio Binder y le entrega los arch
 
 ******
 
-1.0.0: Vista previa de desarrollo P3. Ya se han implementado los diálogos de confirmación, progreso, resultados y lotes, la apertura y el uso compartido externos, la eliminación opcional del origen, la confirmación del sistema y las notificaciones en primer plano. La API de scripts, el inicio y los ajustes independientes, el historial y la configuración del instalador predeterminado siguen previstos. Consulta [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md) para el progreso y la cobertura de dispositivos. AutoJs6 >= 6.8.0 (5299).
+1.0.0: Vista previa de desarrollo P3. Ya se han implementado los diálogos de confirmación, progreso, resultados y lotes, la apertura y el uso compartido externos, la eliminación opcional del origen, la confirmación del sistema y las notificaciones en primer plano. Tras reiniciar el proceso, la vista restaurada muestra los resultados confirmados guardados y marca los elementos pendientes como interrumpidos. Es de solo lectura y nunca instala ni reintenta automáticamente. La API de scripts, el inicio y los ajustes independientes, el historial y la configuración del instalador predeterminado siguen previstos. Consulta [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md) para el progreso y la cobertura de dispositivos. AutoJs6 >= 6.8.0 (5299).
 
 ******
 
@@ -144,7 +144,7 @@ Hechos de la plataforma que delimitan lo que el plugin puede hacer:
 - **Por qué se sigue pidiendo confirmación?** `none` siempre usa la confirmación del sistema. Prepara la autorización y elige Shizuku o Root en el diálogo de instalación. Android o las políticas del dispositivo aún pueden exigir una confirmación.
 - **Se puede instalar un `.aab`?** No. Un Android App Bundle es un formato de publicación; conviértelo primero con bundletool en un conjunto `.apks`. El plugin reconoce los archivos `.aab` y muestra la información de paquete y módulos.
 - **Por qué no se eliminó el origen?** La eliminación solo se intenta después de instalar correctamente y el proveedor puede rechazarla. La instalación sigue siendo correcta. Si AutoJs6 u otra aplicación remitente posee el origen, esa aplicación es responsable de eliminarlo.
-- **Puedo reintentar o reanudar?** Un URI externo fallido se puede reintentar mientras el origen y el acceso estén disponibles. Si se liberan el origen o su acceso, abre el paquete de nuevo. Si se pierde el proceso, la interfaz restaurada indica la interrupción y nunca reinstala automáticamente. Comprueba la aplicación instalada antes de empezar otra vez.
+- **Puedo reintentar o reanudar?** Un URI externo fallido se puede reintentar mientras el origen y el acceso estén disponibles. Si se liberan el origen o su acceso, abre el paquete de nuevo. Tras reiniciar el proceso, la vista restaurada muestra los resultados confirmados guardados y marca los elementos pendientes como interrumpidos. Es de solo lectura y nunca instala ni reintenta automáticamente. Comprueba la aplicación instalada antes de empezar otra vez.
 
 ******
 
@@ -216,7 +216,7 @@ _2026/10/01_
 - `Mejora` El servicio del anfitrión admite inspección, instalación, desinstalación y consulta de usuarios, con confirmación explícita, cancelación al salir el solicitante, hasta cuatro sesiones simultáneas y limpieza automática.
 - `Mejora` Los diálogos de instalación siguen el idioma, modo nocturno y color de AutoJs6, con una alternativa sin anfitrión y diseños compatibles con texto grande y RTL.
 - `Mejora` La instalación en segundo plano incluye servicio en primer plano y avisos de progreso, cancelación y resultados. Denegar notificaciones no bloquea la instalación.
-- `Mejora` Añadidos diálogos de confirmación, progreso y resultados con información de la aplicación, selección de componentes APK, opciones, copia de errores y estados por elemento. Perder el proceso indica interrupción sin reinstalar automáticamente.
+- `Mejora` Añadidos diálogos de confirmación, progreso y resultados con información de la aplicación, selección de componentes APK, opciones, copia de errores y estados por elemento. Tras reiniciar el proceso, la vista restaurada muestra los resultados confirmados guardados y marca los elementos pendientes como interrumpidos. Es de solo lectura y nunca instala ni reintenta automáticamente.
 - `Mejora` La confirmación del sistema incorpora orientación sobre fuentes desconocidas e interrupciones. La desinstalación con privilegios muestra información y la opción de conservar datos antes de confirmar.
 - `Mejora` Abre o comparte uno o varios paquetes, reintenta orígenes externos mientras haya acceso e intenta eliminarlos opcionalmente tras el éxito. El rechazo de la eliminación mantiene la instalación correcta.
 - `Dependencia` Se añade Shizuku API 13.1.5 (`dev.rikka.shizuku:api`, `dev.rikka.shizuku:provider`) para el modo de autorización Shizuku

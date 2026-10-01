@@ -52,7 +52,7 @@ AutoJs6 discovers the plugin through its Binder service and hands over package f
 
 ******
 
-1.0.0: P3 development preview. Confirmation, progress, results and batch dialogs, external opening and sharing, optional source deletion, system confirmation and foreground notifications are implemented. The script API, standalone home and settings, installation history and default-installer configuration remain planned. See [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md) for progress and device coverage. AutoJs6 >= 6.8.0 (5299).
+1.0.0: P3 development preview. Confirmation, progress, results and batch dialogs, external opening and sharing, optional source deletion, system confirmation and foreground notifications are implemented. After a process restart, the restored view shows saved confirmed results and marks unfinished items as interrupted. It is read-only and never automatically installs or retries. The script API, standalone home and settings, installation history and default-installer configuration remain planned. See [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md) for progress and device coverage. AutoJs6 >= 6.8.0 (5299).
 
 ******
 
@@ -144,7 +144,7 @@ Platform facts that shape what the plugin can do:
 - **Why does installation still require confirmation?** `none` always uses system confirmation. Choose Shizuku or Root in the installation dialog after preparing its authorization. Android or device policy may still require a system prompt.
 - **Can an `.aab` be installed?** No. An Android App Bundle is a publishing format; convert it with bundletool into an `.apks` set first. The plugin recognizes `.aab` files and shows their package and module information.
 - **Why was the source not deleted?** Deletion runs only after installation succeeds and may be refused by the source provider. Installation remains successful. When AutoJs6 or another sending app owns the source, that app is responsible for deletion.
-- **Can I retry or resume?** A failed external URI can be retried while the source and access are available. Once the source or its access is released, reopen the package. If the process is lost, the restored interface reports interruption and never automatically reinstalls. Check the installed app before starting again.
+- **Can I retry or resume?** A failed external URI can be retried while the source and access are available. Once the source or its access is released, reopen the package. After a process restart, the restored view shows saved confirmed results and marks unfinished items as interrupted. It is read-only and never automatically installs or retries. Check the installed app before starting again.
 
 ******
 
@@ -216,7 +216,7 @@ _2026/10/01_
 - `Improvement` Host service requests support inspection, installation, uninstallation and user queries, with explicit confirmation, cancellation when callers exit, up to four concurrent sessions and automatic cleanup.
 - `Improvement` Installation dialogs follow AutoJs6 language, night mode and theme color, with a fallback when the host is unavailable and layouts that support large text and RTL.
 - `Improvement` Background installation now has foreground progress, cancellation and result notifications. Denying notification permission does not block installation.
-- `Improvement` Added installation confirmation, progress and result dialogs with app details, APK component selection, options, error copying and per-item batch status. A lost process is reported as interrupted without automatic reinstallation.
+- `Improvement` Added installation confirmation, progress and result dialogs with app details, APK component selection, options, error copying and per-item batch status. After a process restart, the restored view shows saved confirmed results and marks unfinished items as interrupted. It is read-only and never automatically installs or retries.
 - `Improvement` System installation confirmation now handles unknown-source permission guidance and interruption. Privileged uninstallation shows app details and a keep-data choice before confirmation.
 - `Improvement` Open or share one or multiple packages, retry failed external sources while access remains available, and optionally attempt source deletion after success. Deletion refusal preserves the successful installation result.
 - `Dependency` Shizuku API 13.1.5 (`dev.rikka.shizuku:api`, `dev.rikka.shizuku:provider`) for the Shizuku authorizer

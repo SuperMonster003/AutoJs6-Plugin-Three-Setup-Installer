@@ -6,6 +6,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.SystemClock
 import android.view.View
+import android.view.ViewGroup
 import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.ProgressBar
@@ -30,6 +31,8 @@ import io.github.supermonster003.autojs6.plugin.three.setup.installer.source.Pla
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.source.PreparedPackage
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.ui.InstallDialogActivity
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.ui.InstallPresentation
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.ui.InstallRecoveryPersistence
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.ui.InstallRecoverySnapshot
 import org.autojs.plugin.installer.api.InstallerContract
 import org.autojs.plugin.installer.api.InstallerErrorCodes
 import org.junit.Assert.*
@@ -321,6 +324,109 @@ class InstallDialogDeviceTest {
                 waitUntil { scenario.state == Lifecycle.State.DESTROYED }
             }
         } finally { record.close(); worker?.interrupt(); worker?.join(5_000); file.delete() }
+    }
+
+    @Test fun persistedPartialResultRestoresReadOnlyWithoutAnInstallationWorker() {
+        unlocked()
+        val before = context.packageManager.packageInstaller.mySessions.map { it.sessionId }.toSet()
+        val value = recoveryFixture()
+        val writer = InstallRecoveryPersistence.writer(context)
+        val ticket = writer.begin(value.token)
+        assertTrue(ticket.save(value, true)!!.await())
+        try {
+            ActivityScenario.launch<InstallDialogActivity>(recoveryIntent(value.token)).use { scenario ->
+                waitForView(scenario, "install_recovery_explanation")
+                scenario.onActivity { activity ->
+                    val text = viewText(activity.window.decorView)
+                    assertTrue(text.contains("Confirmed recovery fixture"))
+                    assertTrue(text.contains("example.recovery.confirmed"))
+                    assertTrue(text.contains(activity.getString(R.string.install_success)))
+                    assertTrue(text.contains(activity.getString(R.string.install_cancelled)))
+                    assertNull(activity.window.decorView.findViewWithTag<View>(InstallDialogActivity.TAG_CONFIRM))
+                    assertNull(activity.window.decorView.findViewWithTag<View>(InstallDialogActivity.TAG_CANCEL))
+                    assertNull(activity.window.decorView.findViewWithTag<View>(InstallDialogActivity.TAG_OPEN))
+                    assertNull(activity.window.decorView.findViewWithTag<View>("install_retry_1"))
+                }
+                assertNull(InstallPresentation.find(value.token))
+                scenario.recreate()
+                waitForView(scenario, "install_recovery_explanation")
+                scenario.onActivity { it.window.decorView.findViewWithTag<View>(InstallDialogActivity.TAG_DONE).performClick() }
+                waitUntil { scenario.state == Lifecycle.State.DESTROYED }
+                assertFalse(ticket.save(value.copy(revision = 100), true)!!.await())
+                assertNull(readRecovery(value.token))
+                assertEquals(before, context.packageManager.packageInstaller.mySessions.map { it.sessionId }.toSet())
+            }
+        } finally { ticket.close() }
+    }
+
+    @Test fun finishingDuringDiskReadRejectsLateRestorationAcrossRecreation() {
+        unlocked()
+        val value = recoveryFixture()
+        val writer = InstallRecoveryPersistence.writer(context)
+        val ticket = writer.begin(value.token)
+        assertTrue(ticket.save(value, true)!!.await())
+        val entered = CountDownLatch(1)
+        val release = CountDownLatch(1)
+        writer.read(UUID.randomUUID().toString()) { entered.countDown(); release.await(8, TimeUnit.SECONDS) }
+        assertTrue(entered.await(5, TimeUnit.SECONDS))
+        try {
+            ActivityScenario.launch<InstallDialogActivity>(recoveryIntent(value.token)).use { scenario ->
+                scenario.onActivity { it.window.decorView.findViewWithTag<View>(InstallDialogActivity.TAG_DONE).performClick() }
+                scenario.recreate()
+                release.countDown()
+                waitUntil { scenario.state == Lifecycle.State.DESTROYED }
+                assertNull(InstallPresentation.find(value.token))
+                assertFalse(ticket.save(value.copy(revision = 50), true)!!.await())
+                assertNull(readRecovery(value.token))
+            }
+        } finally { release.countDown(); ticket.close() }
+    }
+
+    @Test fun durableFailureRestoresItsSafeErrorCodeWithoutRetryOrOpen() {
+        unlocked()
+        val initial = recoveryFixture()
+        val value = initial.copy(terminal = true, stage = InstallerContract.STAGE_FAILED, index = 0,
+            items = listOf(initial.items.first().copy(ok = false, failure = InstallRecoverySnapshot.Failure(
+                InstallerErrorCodes.SIGNATURE_MISMATCH, 5, "INSTALL_FAILED_UPDATE_INCOMPATIBLE"))))
+        val ticket = InstallRecoveryPersistence.writer(context).begin(value.token)
+        assertTrue(ticket.save(value, true)!!.await())
+        try {
+            ActivityScenario.launch<InstallDialogActivity>(recoveryIntent(value.token)).use { scenario ->
+                waitForView(scenario, InstallDialogActivity.TAG_ERROR)
+                scenario.onActivity { activity ->
+                    val message = activity.window.decorView.findViewWithTag<TextView>(InstallDialogActivity.TAG_ERROR).text.toString()
+                    assertTrue(message.contains(InstallerErrorCodes.SIGNATURE_MISMATCH))
+                    assertTrue(message.contains("INSTALL_FAILED_UPDATE_INCOMPATIBLE"))
+                    assertNull(activity.window.decorView.findViewWithTag<View>("install_retry_0"))
+                    assertNull(activity.window.decorView.findViewWithTag<View>(InstallDialogActivity.TAG_OPEN))
+                    activity.window.decorView.findViewWithTag<View>(InstallDialogActivity.TAG_DONE).performClick()
+                }
+                waitUntil { scenario.state == Lifecycle.State.DESTROYED }
+            }
+        } finally { ticket.close() }
+    }
+
+    private fun recoveryFixture(): InstallRecoverySnapshot {
+        val now = System.currentTimeMillis()
+        return InstallRecoverySnapshot(UUID.randomUUID().toString(), 4, now, now + InstallRecoverySnapshot.RETENTION_MILLIS,
+            false, InstallerContract.STAGE_COMMITTING, 1, listOf(
+                InstallRecoverySnapshot.Item("Confirmed recovery fixture", "example.recovery.confirmed", "2.0", 2, 1, "current", false, true, false, null),
+                InstallRecoverySnapshot.Item("Interrupted recovery fixture", "example.recovery.pending", "1.0", 1, null, "current", false, null, null, null)))
+    }
+    private fun recoveryIntent(token: String) = Intent(context, InstallDialogActivity::class.java)
+        .putExtra(InstallPresentation.EXTRA_TOKEN, token).setData(Uri.parse("three-setup-install://session/$token"))
+        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NEW_DOCUMENT)
+    private fun viewText(view: View): String = when (view) {
+        is TextView -> view.text.toString()
+        is ViewGroup -> (0 until view.childCount).joinToString("\n") { viewText(view.getChildAt(it)) }
+        else -> ""
+    }
+    private fun readRecovery(token: String): InstallRecoverySnapshot? {
+        val done = CountDownLatch(1)
+        val result = AtomicReference<InstallRecoverySnapshot>()
+        InstallRecoveryPersistence.writer(context).read(token) { result.set(it); done.countDown() }
+        assertTrue(done.await(5, TimeUnit.SECONDS))
+        return result.get()
     }
 
     private fun request(batch: Boolean = false): InstallRequest = InstallRequest("ui-${UUID.randomUUID()}",

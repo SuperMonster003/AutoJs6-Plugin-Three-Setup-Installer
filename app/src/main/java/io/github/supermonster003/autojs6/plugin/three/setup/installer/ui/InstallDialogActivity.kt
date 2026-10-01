@@ -34,6 +34,7 @@ import io.github.supermonster003.autojs6.plugin.three.setup.installer.ui.kit.Ins
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.ui.kit.InstallerColorPolicy
 import org.autojs.plugin.installer.api.InstallerContract
 import org.autojs.plugin.installer.api.InstallerErrorCodes
+import java.lang.ref.WeakReference
 
 /** Confirmation, progress and results all attach to the same process-local presentation token. */
 class InstallDialogActivity : HostAppearanceActivity() {
@@ -44,6 +45,9 @@ class InstallDialogActivity : HostAppearanceActivity() {
     private var progress: ProgressBar? = null
     private var progressText: TextView? = null
     private var information: AlertDialog? = null
+    private var recoveryState: InstallPresentation.Snapshot? = null
+    private var recoveryGeneration = 0
+    private var closing = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,16 +55,37 @@ class InstallDialogActivity : HostAppearanceActivity() {
         saved = ViewModelProvider(this)[InstallDialogSavedState::class.java]
         val supplied = intent.getStringExtra(InstallPresentation.EXTRA_TOKEN)
         val data = intent.data
-        val valid = supplied != null && data?.scheme == "three-setup-install" && data.host == "session" && data.lastPathSegment == supplied
+        val valid = supplied != null && InstallRecoverySnapshot.validToken(supplied) && data?.scheme == "three-setup-install" && data.host == "session" && data.lastPathSegment == supplied
         val restored = saved.token
         val token = if (valid && (restored == null || restored == supplied)) supplied else null
         saved.token = token
+        if (saved.closing) {
+            closing = true
+            val owner = WeakReference(this)
+            token?.let { InstallRecoveryPersistence.remove(applicationContext, it) { owner.get()?.takeUnless { it.isDestroyed }?.finish() } } ?: finish()
+            return
+        }
         record = token?.let(InstallPresentation::find)
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() { record?.dismiss(); finish() }
+            override fun handleOnBackPressed() = dismissPresentation()
         })
         val current = record
-        if (current == null) interrupted() else current.attach(this)
+        if (current == null) {
+            interrupted()
+            token?.let { id ->
+                // There is no executable owner for this token. Remove old process notifications
+                // instead of leaving an ongoing progress/action notice for a read-only result.
+                InstallNotifications.remove(applicationContext, id)
+                val expected = ++recoveryGeneration
+                val owner = WeakReference(this)
+                InstallRecoveryPersistence.load(applicationContext, id) { snapshot ->
+                    owner.get()?.takeIf { !it.closing && !it.isFinishing && !it.isDestroyed && it.recoveryGeneration == expected }?.let { activity ->
+                        activity.recoveryState = snapshot?.display()
+                        activity.recoveryState?.let(activity::present) ?: activity.interrupted()
+                    }
+                }
+            }
+        } else current.attach(this)
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -77,13 +102,14 @@ class InstallDialogActivity : HostAppearanceActivity() {
     }
 
     override fun onAppearanceChanged() {
+        if (closing) return
         information?.dismiss()
         val current = record
-        if (current == null) interrupted() else redraw()
+        if (current == null && recoveryState == null) interrupted() else redraw()
     }
 
     internal fun present(state: InstallPresentation.Snapshot) {
-        if (isFinishing || isDestroyed) return
+        if (closing || isFinishing || isDestroyed) return
         if (renderedRevision == state.revision) {
             updateProgress(state)
             return
@@ -92,6 +118,7 @@ class InstallDialogActivity : HostAppearanceActivity() {
         progress = null
         progressText = null
         val title = when {
+            state.interrupted -> R.string.install_interrupted
             state.terminal && state.stage == InstallerContract.STAGE_COMPLETED -> R.string.install_success
             state.terminal && state.stage == InstallerContract.STAGE_CANCELLED -> R.string.install_cancelled
             state.terminal -> R.string.install_failed
@@ -100,6 +127,7 @@ class InstallDialogActivity : HostAppearanceActivity() {
         }
         val dialog = kit.dialog(getString(title))
         layout = dialog
+        if (state.recovered && state.interrupted) dialog.content.addView(kit.text(getString(R.string.install_interrupted_explanation)).apply { tag = "install_recovery_explanation" })
         if (state.items.size > 1) batch(dialog.content, state)
         val item = state.items.getOrNull(state.index)
         if (state.prompt != null) confirmation(dialog, state, state.prompt)
@@ -270,11 +298,12 @@ class InstallDialogActivity : HostAppearanceActivity() {
         section(content, R.string.install_batch)
         state.items.forEachIndexed { index, item ->
             content.addView(kit.text(getString(R.string.install_item_status, index + 1, item.metadata?.label ?: item.displayName, stageText(item.stage)), 14f))
+            if (state.recovered) restoredIdentity(content, item)
             sourceDeletionNotice(content, state, item)
             if (state.terminal && item.result?.get(InstallerContract.FIELD_OK)?.asBoolean == false) {
                 errorDetails(content, item)
                 if (state.canRetry) content.addView(kit.textButton(getString(R.string.install_retry), "install_retry_$index") {
-                    if (record?.retry(index) == true) { record?.dismiss(); finish() }
+                    if (record?.retry(index) == true) dismissPresentation()
                     else Toast.makeText(this, R.string.install_retry_unavailable, Toast.LENGTH_LONG).show()
                 })
             }
@@ -292,6 +321,8 @@ class InstallDialogActivity : HostAppearanceActivity() {
         }
         val single = state.items.singleOrNull()
         single?.metadata?.let { header(dialog.content, it) }
+        if (single != null && single.metadata == null) dialog.content.addView(kit.text(single.displayName, 16f, medium = true))
+        if (single != null && state.recovered) restoredIdentity(dialog.content, single)
         if (single != null) {
             if (single.result?.get(InstallerContract.FIELD_OK)?.asBoolean == true) {
                 dialog.content.addView(kit.text(getString(R.string.install_success), 16f))
@@ -299,24 +330,24 @@ class InstallDialogActivity : HostAppearanceActivity() {
                 val packageName = single.result.get(InstallerContract.FIELD_PACKAGE_NAME)?.asString ?: single.metadata?.packageName
                 val user = single.options?.user ?: record?.request?.options?.user
                 val current = user == InstallerContract.USER_CURRENT || user == DeviceUsers(this).currentId.toString() || user == InstallerContract.USER_ALL
-                val launch = if (current && packageName != null) packageManager.getLaunchIntentForPackage(packageName) else null
-                dialog.actions.addView(kit.textButton(getString(R.string.install_open), TAG_OPEN) {
-                    try { startActivity(launch); record?.dismiss(); finish() }
+                val launch = if (!state.recovered && current && packageName != null) packageManager.getLaunchIntentForPackage(packageName) else null
+                if (!state.recovered) dialog.actions.addView(kit.textButton(getString(R.string.install_open), TAG_OPEN) {
+                    try { startActivity(launch); dismissPresentation() }
                     catch (_: Exception) { Toast.makeText(this, R.string.install_open_unavailable, Toast.LENGTH_LONG).show() }
                 }.apply { isEnabled = launch != null })
-                if (launch == null) dialog.content.addView(kit.text(if (current) getString(R.string.install_open_unavailable)
+                if (!state.recovered && launch == null) dialog.content.addView(kit.text(if (current) getString(R.string.install_open_unavailable)
                     else getString(R.string.install_open_in_profile, user ?: getString(R.string.install_unknown)), color = kit.palette.muted).apply {
                     if (!current) tag = TAG_OPEN_PROFILE
                 })
             } else {
                 errorDetails(dialog.content, single)
                 if (state.canRetry) dialog.actions.addView(kit.textButton(getString(R.string.install_retry), "install_retry_0") {
-                    if (record?.retry(0) == true) { record?.dismiss(); finish() }
+                    if (record?.retry(0) == true) dismissPresentation()
                     else Toast.makeText(this, R.string.install_retry_unavailable, Toast.LENGTH_LONG).show()
                 })
             }
         }
-        dialog.actions.addView(kit.textButton(getString(R.string.install_done), TAG_DONE) { record?.dismiss(); finish() })
+        dialog.actions.addView(kit.textButton(getString(R.string.install_done), TAG_DONE) { dismissPresentation() })
     }
 
     private fun sourceDeletionNotice(content: LinearLayout, state: InstallPresentation.Snapshot, item: InstallPresentation.Item) {
@@ -324,6 +355,20 @@ class InstallDialogActivity : HostAppearanceActivity() {
         if (state.canDeleteSource && item.options?.deleteSource == true && result?.get(InstallerContract.FIELD_OK)?.asBoolean == true &&
             result.get(InstallerContract.FIELD_SOURCE_DELETED)?.asBoolean != true) {
             content.addView(kit.text(getString(R.string.install_source_not_deleted), color = kit.palette.muted).apply { tag = TAG_SOURCE_NOT_DELETED })
+        }
+    }
+
+    private fun restoredIdentity(content: LinearLayout, item: InstallPresentation.Item) {
+        val result = item.result ?: return
+        result.get(InstallerContract.FIELD_PACKAGE_NAME)?.asString?.let { content.addView(kit.text(it, color = kit.palette.muted)) }
+        val name = result.get(InstallerContract.FIELD_VERSION_NAME)?.asString
+        val code = result.get(InstallerContract.FIELD_VERSION_CODE)?.asLong
+        val previous = result.get(InstallerContract.FIELD_PREVIOUS_VERSION_CODE)?.asLong
+        if (name != null || code != null) {
+            val text = if (result.get(InstallerContract.FIELD_OK)?.asBoolean == true && previous != null)
+                getString(R.string.install_version_change, version(null, previous), version(name, code))
+            else getString(R.string.install_package_version, version(name, code))
+            content.addView(kit.text(text, color = kit.palette.muted))
         }
     }
 
@@ -337,7 +382,7 @@ class InstallDialogActivity : HostAppearanceActivity() {
             content.addView(kit.textButton(getString(R.string.install_aab_information), "install_aab_information") { aabInformation(item.metadata) })
         }
         content.addView(kit.text(failureText, color = kit.palette.danger).apply { tag = TAG_ERROR; setTextIsSelectable(true) })
-        if (systemMessage == null) content.addView(kit.text(getString(R.string.install_no_system_message), color = kit.palette.muted))
+        if (systemMessage == null && recoveryState == null) content.addView(kit.text(getString(R.string.install_no_system_message), color = kit.palette.muted))
         content.addView(kit.textButton(getString(R.string.install_copy), TAG_COPY) {
             getSystemService(ClipboardManager::class.java).setPrimaryClip(ClipData.newPlainText(getString(R.string.install_failed), failureText))
             Toast.makeText(this, R.string.install_copied, Toast.LENGTH_SHORT).show()
@@ -369,7 +414,7 @@ class InstallDialogActivity : HostAppearanceActivity() {
         if (isFinishing || isDestroyed) return
         val dialog = kit.dialog(getString(R.string.install_interrupted))
         dialog.content.addView(kit.text(getString(R.string.install_interrupted_explanation)))
-        dialog.actions.addView(kit.textButton(getString(R.string.install_done), TAG_DONE) { finish() })
+        dialog.actions.addView(kit.textButton(getString(R.string.install_done), TAG_DONE) { dismissPresentation() })
         setContentView(dialog.root)
     }
 
@@ -422,15 +467,33 @@ class InstallDialogActivity : HostAppearanceActivity() {
     private fun redraw() {
         val scrollY = layout?.scroll?.scrollY ?: 0
         renderedRevision = Long.MIN_VALUE
-        record?.let { present(it.snapshot()) }
+        (record?.snapshot() ?: recoveryState)?.let(::present)
         layout?.scroll?.post { layout?.scroll?.scrollTo(0, scrollY) }
     }
 
     override fun onDestroy() {
+        recoveryGeneration++
         information?.dismiss()
         record?.detach(this)
-        if (isFinishing && !isChangingConfigurations) record?.dismiss()
+        if (isFinishing && !isChangingConfigurations) {
+            if (record != null) record?.dismiss()
+            else saved.token?.let { InstallNotifications.remove(applicationContext, it); InstallRecoveryPersistence.remove(applicationContext, it) }
+        }
         super.onDestroy()
+    }
+
+    private fun dismissPresentation() {
+        if (closing) return
+        closing = true
+        saved.closing = true
+        recoveryGeneration++
+        val current = record
+        if (current != null) current.dismiss()
+        else saved.token?.let { token ->
+            InstallNotifications.remove(applicationContext, token)
+            val owner = WeakReference(this)
+            InstallRecoveryPersistence.remove(applicationContext, token) { owner.get()?.takeUnless { it.isDestroyed }?.finish() }
+        } ?: finish()
     }
 
     companion object {
@@ -450,4 +513,7 @@ class InstallDialogSavedState(private val saved: SavedStateHandle) : ViewModel()
     var token: String?
         get() = saved[InstallPresentation.EXTRA_TOKEN]
         set(value) { saved[InstallPresentation.EXTRA_TOKEN] = value }
+    var closing: Boolean
+        get() = saved["presentationClosed"] ?: false
+        set(value) { saved["presentationClosed"] = value }
 }

@@ -20,7 +20,7 @@
 * `Improvement` Host service requests support inspection, installation, uninstallation and user queries, with explicit confirmation, cancellation when callers exit, up to four concurrent sessions and automatic cleanup.
 * `Improvement` Installation dialogs follow AutoJs6 language, night mode and theme color, with a fallback when the host is unavailable and layouts that support large text and RTL.
 * `Improvement` Background installation now has foreground progress, cancellation and result notifications. Denying notification permission does not block installation.
-* `Improvement` Added installation confirmation, progress and result dialogs with app details, APK component selection, options, error copying and per-item batch status. A lost process is reported as interrupted without automatic reinstallation.
+* `Improvement` Added installation confirmation, progress and result dialogs with app details, APK component selection, options, error copying and per-item batch status. After a process restart, the restored view shows saved confirmed results and marks unfinished items as interrupted. It is read-only and never automatically installs or retries.
 * `Improvement` System installation confirmation now handles unknown-source permission guidance and interruption. Privileged uninstallation shows app details and a keep-data choice before confirmation.
 * `Improvement` Open or share one or multiple packages, retry failed external sources while access remains available, and optionally attempt source deletion after success. Deletion refusal preserves the successful installation result.
 * `Dependency` Shizuku API 13.1.5 (`dev.rikka.shizuku:api`, `dev.rikka.shizuku:provider`) for the Shizuku authorizer
