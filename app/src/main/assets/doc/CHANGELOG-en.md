@@ -14,6 +14,7 @@
 * `Improvement` P0 validation completed for silent installation, updates, uninstallation and ordinary default-installer selection with Shizuku and Root. Host and script installation entry points are not available yet; persistent defaults remain outside this release.
 * `Improvement` The plugin id, engine, service action / category, Binder descriptor and minimum host version now come from the host installer-api contract constants; the capabilities declare installer contract version 1 and the minimum host build is back-filled to 5299
 * `Improvement` Seekable sources avoid a full cache copy, while streams are staged as needed. ZIP split packages are supported, AAB files support inspection only, and changed sources are rejected.
+* `Improvement` Explicit authorization choices never fall back. Refusal, timeouts and incompatibility are distinguished, and concurrent requests share authorization and privileged connections.
 * `Dependency` Shizuku API 13.1.5 (`dev.rikka.shizuku:api`, `dev.rikka.shizuku:provider`) for the Shizuku authorizer
 * `Dependency` libsu 6.0.0 (`com.github.topjohnwu.libsu:core`, `service`) for the Root authorizer
 * `Dependency` AndroidHiddenApiBypass 6.1 for the hidden package installer APIs used by the privileged service
