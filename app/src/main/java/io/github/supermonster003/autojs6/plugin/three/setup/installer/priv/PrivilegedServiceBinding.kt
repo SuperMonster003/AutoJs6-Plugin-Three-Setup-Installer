@@ -90,14 +90,20 @@ internal class PrivilegedServiceBinding(
         check(Looper.myLooper() == Looper.getMainLooper())
         if (!bound) return
         bound = false
-        serviceBinder?.let { runCatching { it.unlinkToDeath(deathRecipient, 0) } }
+        val attached = serviceBinder
+        attached?.let { runCatching { it.unlinkToDeath(deathRecipient, 0) } }
         serviceBinder = null
         rootLaunch?.cancel(true)
         rootLaunch = null
         // The authorization server may already be dead. Its cleanup failure must not suppress
         // the disconnection callback that wakes callers waiting for the privileged Binder.
-        runCatching {
+        val detached = runCatching {
             if (root) RootService.unbind(this) else Shizuku.unbindUserService(args, this, true)
+        }
+        if (!root && detached.isFailure && attached?.isBinderAlive == true) {
+            // Losing the server does not grant access to any other process. Only the service
+            // attached by this binding can receive its existing owner-checked shutdown method.
+            runCatching { IPrivilegedInstaller.Stub.asInterface(attached).destroy() }
         }
     }
 }

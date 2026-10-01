@@ -234,7 +234,8 @@ internal class NoneInstallEngine(context: Context) : SessionInstallEngine(Author
 
 internal class PrivilegedInstallEngine(
     context: Context,
-    authorizer: Authorizer,
+    private val authorizer: Authorizer,
+    private val acquireRecovery: (Long) -> IPrivilegedInstaller = { timeout -> PrivilegedClient.get(context).acquire(authorizer, timeout) },
     private val acquire: (Long) -> IPrivilegedInstaller = { timeout -> PrivilegedClient.get(context).acquire(authorizer, timeout) },
 ) : SessionInstallEngine(authorizer) {
     private val context = context.applicationContext
@@ -259,9 +260,11 @@ internal class PrivilegedInstallEngine(
         val params = Bundle().apply {
             putInt(PrivilegedOptions.FLAGS, parameters.flags)
             putLong(PrivilegedOptions.SIZE, parameters.totalBytes)
+            request.prepared.packageName?.let { putString(PrivilegedOptions.PACKAGE_NAME, it) }
         }
         val id = privilegedInstallerCall { service.createSession(params, installer, request.userId) }
         try {
+            val recovery = service.getSessionRecoveryInfo(id)
             val ticket = InstallStatusBridge.open(context)
             return object : StatusSession(ticket) {
                 override fun openWrite(apk: PlannedApk, checkActive: () -> Unit): OutputStream =
@@ -271,7 +274,23 @@ internal class PrivilegedInstallEngine(
                 // The privileged service drains, validates and fsyncs each pipe before commit returns.
                 override fun fsync(output: OutputStream) = Unit
                 override fun commit() = privilegedInstallerCall { service.commit(id, ticket.sender) }
-                override fun abandon() = service.abandon(id)
+                override fun await(deadlineMillis: Long, checkActive: () -> Unit, onUserAction: (Intent) -> Unit): InstallStatusBridge.Status =
+                    ticket.await(InstallerContract.DEFAULT_USER_ACTION_TIMEOUT_MILLIS, deadlineMillis, {
+                        checkActive()
+                        // A queued genuine terminal result still takes priority inside await.
+                        // Losing the service must not turn into a misleading result timeout.
+                        if (!service.asBinder().isBinderAlive) throw DeadObjectException()
+                    }, onUserAction)
+                override fun abandon() {
+                    try { service.abandon(id) } catch (death: DeadObjectException) {
+                        if (recovery == null || service.asBinder().isBinderAlive) throw death
+                        // A killed process cannot run its cleanup. Reconnect only to abandon the
+                        // already returned platform id; this never repeats an installation step.
+                        val replacement = acquireRecovery(RECOVERY_BIND_TIMEOUT_MILLIS)
+                        check(replacement.asBinder() !== service.asBinder()) { "The failed service was not replaced" }
+                        replacement.abandonRecoveredSession(id, recovery)
+                    }
+                }
                 override fun close() {
                     // Also release the privileged service's ownership record after a terminal result.
                     try { service.release(id) } finally { ticket.close() }
@@ -282,6 +301,8 @@ internal class PrivilegedInstallEngine(
             throw failure
         }
     }
+
+    private companion object { const val RECOVERY_BIND_TIMEOUT_MILLIS = 5_000L }
 }
 
 private abstract class StatusSession(private val ticket: InstallStatusBridge.Ticket) : SessionInstallEngine.Session {

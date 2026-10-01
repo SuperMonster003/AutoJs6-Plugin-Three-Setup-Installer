@@ -1,8 +1,10 @@
 package io.github.supermonster003.autojs6.plugin.three.setup.installer.auth
 
 import android.content.Context
+import android.os.DeadObjectException
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.engine.InstallFailure
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.priv.IPrivilegedInstaller
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.priv.PrivilegedServiceBinding
@@ -28,7 +30,13 @@ internal class PrivilegedClient(context: Context) {
         require(authorizer.privileged)
         check(Looper.myLooper() != Looper.getMainLooper()) { "Privileged binding must run on a worker" }
         try {
-            return bindings.acquire(authorizer, timeoutMillis)
+            return bindingHandshake(timeoutMillis, SystemClock::elapsedRealtime,
+                acquire = { remaining -> bindings.acquire(authorizer, remaining) },
+                // A genuine read-only Binder call closes the isBinderAlive/acquire race. No
+                // createSession, write, commit or uninstall is ever inside this retry boundary.
+                verify = { it.uid },
+                invalidate = { bindings.invalidate(authorizer, it) },
+                disconnected = { it is DeadObjectException || it is SharedBindingCache.ConnectionDied })
         } catch (failure: InterruptedException) {
             Thread.currentThread().interrupt()
             throw InstallFailure(InstallerErrorCodes.CANCELLED, "Privileged binding interrupted", cause = failure)

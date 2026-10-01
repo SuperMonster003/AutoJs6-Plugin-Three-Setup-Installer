@@ -3,6 +3,7 @@
     <application>
         <activity android:name=".spike.DialogGeometryActivity" android:exported="false" android:excludeFromRecents="true" android:theme="@style/Theme.ThreeSetupInstaller.Dialog" />
         <activity android:name=".spike.InstallRecoveryProbeActivity" android:exported="true" android:permission="android.permission.DUMP" android:excludeFromRecents="true" android:theme="@style/Theme.ThreeSetupInstaller" />
+        <activity android:name=".spike.InstallProcessDeathProbeActivity" android:exported="true" android:permission="android.permission.DUMP" android:excludeFromRecents="true" android:theme="@style/Theme.ThreeSetupInstaller" />
         <activity android:name=".spike.UserActionChildActivity" android:exported="false" android:excludeFromRecents="true" android:theme="@android:style/Theme.Material.Light.NoActionBar" />
         <provider android:name=".spike.SourceFixtureProvider"
             android:authorities="${applicationId}.source-fixtures"

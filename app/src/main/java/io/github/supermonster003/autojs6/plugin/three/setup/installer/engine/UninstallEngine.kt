@@ -2,6 +2,7 @@ package io.github.supermonster003.autojs6.plugin.three.setup.installer.engine
 
 import android.content.Context
 import android.content.Intent
+import android.os.DeadObjectException
 import android.os.Process
 import android.os.SystemClock
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.auth.Authorizer
@@ -90,7 +91,10 @@ internal class PrivilegedUninstallEngine(context: Context, private val authorize
         checkActive()
         return InstallStatusBridge.open(context).use { ticket ->
             remote.uninstall(request.packageName, flags, userId, ticket.sender)
-            ticket.await(InstallerContract.DEFAULT_USER_ACTION_TIMEOUT_MILLIS, deadline, checkActive, onUserAction)
+            ticket.await(InstallerContract.DEFAULT_USER_ACTION_TIMEOUT_MILLIS, deadline, {
+                checkActive()
+                if (!remote.asBinder().isBinderAlive) throw DeadObjectException()
+            }, onUserAction)
         }
     }
 }

@@ -21,6 +21,7 @@ import io.github.supermonster003.autojs6.plugin.three.setup.installer.priv.hidde
 import java.io.Closeable
 import java.io.OutputStream
 import java.util.concurrent.Executors
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
@@ -35,6 +36,7 @@ internal open class PrivilegedInstallerImpl(expectedOwnerUid: Int? = null) : IPr
     private val writers = Executors.newFixedThreadPool(PrivilegedOptions.MAX_SESSIONS)
     private var client: IBinder? = null
     private var closed = false
+    private val closeFinished = CountDownLatch(1)
     private val death = IBinder.DeathRecipient { close() }
 
     override fun attachClient(token: IBinder) = synchronized(this) {
@@ -52,6 +54,14 @@ internal open class PrivilegedInstallerImpl(expectedOwnerUid: Int? = null) : IPr
         return Process.myUid()
     }
 
+    override fun getProcessIdentity(): Bundle = privileged {
+        Bundle().apply {
+            putInt("pid", Process.myPid())
+            putInt("uid", Process.myUid())
+            putInt("ownerUid", ownerUid)
+        }
+    }
+
     override fun getInstalledVersion(packageName: String, userId: Int): Bundle = privileged {
         PrivilegedOptions.validatePackage(packageName)
         require(userId >= 0) { "Invalid user" }
@@ -66,15 +76,19 @@ internal open class PrivilegedInstallerImpl(expectedOwnerUid: Int? = null) : IPr
     }
 
     override fun createSession(params: Bundle, installerPackageName: String, userId: Int): Int = privileged {
-        require(params.keySet().all { it == PrivilegedOptions.FLAGS || it == PrivilegedOptions.SIZE }) { "Unknown session option" }
+        require(params.keySet().all { it in setOf(PrivilegedOptions.FLAGS, PrivilegedOptions.SIZE, PrivilegedOptions.PACKAGE_NAME) }) { "Unknown session option" }
         PrivilegedOptions.validatePackage(installerPackageName)
         require(userId >= 0) { "Invalid user" }
         val flags = params.getInt(PrivilegedOptions.FLAGS, PrivilegedOptions.INSTALL_REPLACE_EXISTING)
         PrivilegedOptions.validateFlags(flags, Build.VERSION.SDK_INT)
         val size = params.getLong(PrivilegedOptions.SIZE, -1)
         require(size >= -1) { "Invalid size" }
+        val packageName = params.getString(PrivilegedOptions.PACKAGE_NAME)?.also(PrivilegedOptions::validatePackage)
         val sessionParams = PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL).apply {
             if (size >= 0) setSize(size)
+            packageName?.let(::setAppPackageName)
+            // This is the actual app that requested its private service to install the package.
+            setOriginatingUid(ownerUid)
             if (Build.VERSION.SDK_INT >= 31) setRequireUserAction(PackageInstaller.SessionParams.USER_ACTION_NOT_REQUIRED)
             if (Build.VERSION.SDK_INT >= 33) setPackageSource(PackageInstaller.PACKAGE_SOURCE_LOCAL_FILE)
         }
@@ -84,7 +98,15 @@ internal open class PrivilegedInstallerImpl(expectedOwnerUid: Int? = null) : IPr
             check(sessions.size < PrivilegedOptions.MAX_SESSIONS) { "Too many sessions" }
             val id = installer.createSession(sessionParams, installerPackageName, userId)
             try {
-                sessions[id] = Record(installer.openSession(id))
+                sessions[id] = Record(installer.openSession(id)).apply {
+                    // Some old/OEM implementations do not expose the full metadata. Installation
+                    // remains possible, but cleanup must never weaken the identity guard.
+                    if (Build.VERSION.SDK_INT >= 30) recoveryIdentity = runCatching {
+                        installer.sessionInfo(id)?.let { SessionRecoveryIdentity.read(it, Process.myUid()) }
+                            ?.takeIf { it.ownerUid == ownerUid && it.userId == userId && it.packageName == packageName &&
+                                it.installer == installerPackageName && it.size == size }
+                    }.getOrNull()
+                }
             } catch (failure: Throwable) {
                 runCatching { installer.abandonSession(id) }
                 throw failure
@@ -178,6 +200,28 @@ internal open class PrivilegedInstallerImpl(expectedOwnerUid: Int? = null) : IPr
 
     override fun release(sessionId: Int) = privileged { remove(sessionId, abandon = false) }
 
+    override fun getSessionRecoveryInfo(sessionId: Int): Bundle? = privileged {
+        record(sessionId).recoveryIdentity?.toBundle()
+    }
+
+    override fun abandonRecoveredSession(sessionId: Int, expected: Bundle) = privileged {
+        if (Build.VERSION.SDK_INT < 30) {
+            throw IllegalStateException("Full session recovery identity is unavailable on this Android version")
+        }
+        val saved = SessionRecoveryIdentity.decode(expected)
+        if (saved.sessionId != sessionId || saved.ownerUid != ownerUid || saved.installerUid != Process.myUid()) {
+            throw SecurityException("Session recovery does not belong to this plugin and authorizer")
+        }
+        val info = installer.sessionInfo(sessionId) ?: return@privileged
+        if (SessionRecoveryIdentity.read(info, Process.myUid()) != saved) {
+            throw SecurityException("Platform session identity changed; refusing recovery cleanup")
+        }
+        // No scan, ownership adoption, write or commit. Only the one exact session handed back
+        // by a previous instance can be abandoned after every stable field still matches.
+        if (synchronized(this) { sessionId in sessions }) remove(sessionId, abandon = true)
+        else installer.abandonSession(sessionId)
+    }
+
     override fun checkWriteStatus(sessionId: Int) = privileged {
         val record = record(sessionId)
         synchronized(record) {
@@ -233,11 +277,20 @@ internal open class PrivilegedInstallerImpl(expectedOwnerUid: Int? = null) : IPr
 
     override fun close() {
         val ids = synchronized(this) {
-            if (closed) return
-            closed = true
-            client?.let { runCatching { it.unlinkToDeath(death, 0) } }
-            client = null
-            sessions.keys.toList()
+            if (closed) null else {
+                closed = true
+                client?.let { runCatching { it.unlinkToDeath(death, 0) } }
+                client = null
+                sessions.keys.toList()
+            }
+        }
+        if (ids == null) {
+            // An exit hook must not let the VM terminate while a concurrent client-death callback
+            // is still abandoning sessions. Keep shutdown bounded if the framework is unresponsive.
+            try { closeFinished.await(5, TimeUnit.SECONDS) } catch (_: InterruptedException) {
+                Thread.currentThread().interrupt()
+            }
+            return
         }
         val identity = Binder.clearCallingIdentity()
         try {
@@ -245,6 +298,7 @@ internal open class PrivilegedInstallerImpl(expectedOwnerUid: Int? = null) : IPr
             writers.shutdownNow()
         } finally {
             Binder.restoreCallingIdentity(identity)
+            closeFinished.countDown()
         }
     }
 
@@ -293,6 +347,7 @@ internal open class PrivilegedInstallerImpl(expectedOwnerUid: Int? = null) : IPr
     private fun callerPackage() = if (Process.myUid() == 2000) "com.android.shell" else ThreeSetupInstallerPlugin.PACKAGE_NAME
 
     private class Record(val session: PackageInstaller.Session) {
+        var recoveryIdentity: SessionRecoveryIdentity? = null
         var committing = false
         private var sessionClosed = false
         @Volatile var cancelled = false
