@@ -185,6 +185,8 @@ AutoJs6-Plugin-Three-Setup-Installer/
 - 特权写入用普通 pipe 转交框架 `Session.openWrite` / `fsync`, 不直接写入隐藏接口的 FileBridge PFD, 不使用跨 Magisk / app 的 reliable pipe socket. 默认项只精确替换 APK filter; 不清除其它包的所有首选项, 旧 API 返回 `DEFAULT_REQUIRES_CLEAR` 时由后续 UI 引导处理.
 - Dhizuku API 为 MIT, 其 GPL 管理器由用户独立安装, 不随插件打包. API 26 以下不初始化 API, 不因其 minSdk 声明提高本插件的最低版本. 核对实时系统 owner 与 provider 的包, UID, 当前用户和签名身份; 只包装新建框架对象, 不污染进程全局 PackageManager. 仅支持当前用户, 安装者归属实际 owner; 不冒充 shell/root 的安装 flags 或 keepData.
 - Dhizuku owner 创建的系统 session 可跨插件进程死亡存活. journal 只记录明确归属的 session 与随机来源标记, 不存原始包来源; 恢复只处理已知 id, 必须核对 owner, user, 包信息和标记, 不碰活跃进程的会话, 不重放安装. API 26/27 及创建响应丢失时无法证明归属的会话不得猜测清理.
+- 持久默认只在操作确认后记本地回执. persistentConfigured 只表示上次成功配置, 普通状态读取不得据此宣称当前策略. Dhizuku 暂限 API 26-33; API 34+ 缺少 owner PolicyUpdateReceiver 最终结果时预写入拒绝. 部分失败记录不确定性, 不通过清除未知旧策略补偿.
+- Root 持久默认使用独立的 system UID 1000 进程, 固定 user 0/本插件组件/四个 APK filter, 不改变共享 RootService 身份. 写入前必须核对握手与策略基线, 明确提交后才可修改; 不覆盖竞争策略, 不降级 SELinux. 取消或进程死亡不重放操作, 不确定结果保留审计.
 
 ## 10. 字符串资源
 

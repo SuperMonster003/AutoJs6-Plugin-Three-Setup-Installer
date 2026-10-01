@@ -66,9 +66,10 @@
     <string name="default_installer_authorize_note">この方法で権限を要求し, APK の既定の処理アプリを変更します.</string>
     <string name="default_installer_authorizer_unavailable">選択した認証方法を利用できません. 権限を再確認してお試しください.</string>
     <string name="default_installer_clear">既定の設定を解除</string>
+    <string name="default_installer_clear_persistent">永続的な既定を解除</string>
     <string name="default_installer_current">現在の処理アプリ</string>
     <string name="default_installer_denied">権限が拒否されました. 既定のインストーラーは変更されていません.</string>
-    <string name="default_installer_guide">Shizuku や Root がない場合は, システムのアプリ設定で既定の開き方を確認してください. APK を開く際に選択画面が表示されたら, このアプリと常にを選びます. 選択肢は端末によって異なります.</string>
+    <string name="default_installer_guide">通常の優先設定で Shizuku や Root がない場合は, システムのアプリ設定で既定の開き方を確認してください. APK を開く際に選択画面が表示されたら, このアプリと常にを選びます. 選択肢は端末によって異なります.</string>
     <string name="default_installer_loading" tools:ignore="TypographyEllipsis">リクエストを読み込み中...</string>
     <string name="default_installer_method">検出方法</string>
     <string name="default_installer_none">既定の処理アプリが未確定</string>
@@ -76,12 +77,15 @@
     <string name="default_installer_oem_note">メーカーによっては APK の既定設定が制限されます. 表示は Android の検出結果です. すべてのメーカー制限を回避できるわけではありません.</string>
     <string name="default_installer_open_settings">システム設定を開く</string>
     <string name="default_installer_other">このアプリは既定ではありません</string>
+    <string name="default_installer_persistent">前回の設定: 永続</string>
+    <string name="default_installer_persistent_note">これは前回完了した設定のローカル記録であり, 現在のシステムポリシーの証明ではありません. Dhizuku の永続設定は現在 Android 8-13 に対応し, 新しい版では所有者の結果通知が必要です. Root の永続設定は system UID への対応とプライマリユーザー 0 が必要で, 既存の競合ポリシーは保持されます.</string>
     <string name="default_installer_preferred">Android の優先 Activity</string>
     <string name="default_installer_read_failed">既定のインストーラーを読み取れません. この画面に戻って再試行してください.</string>
     <string name="default_installer_requires_clear">Android は現在の APK 既定設定の解除を要求しています. 現在の処理アプリの設定で既定値を解除してから, ここに戻ってお試しください.</string>
     <string name="default_installer_resolved">Android Intent の解決</string>
     <string name="default_installer_self">このアプリで APK を既定で開きます</string>
     <string name="default_installer_set">既定に設定</string>
+    <string name="default_installer_set_persistent">永続的な既定に設定</string>
     <string name="default_installer_settings_unavailable">システムのアプリ設定を開けませんでした.</string>
     <string name="default_installer_state">既定の状態</string>
     <string name="default_installer_summary">APK ファイルを開くアプリを選びます. APK の処理アプリのみ変更します.</string>

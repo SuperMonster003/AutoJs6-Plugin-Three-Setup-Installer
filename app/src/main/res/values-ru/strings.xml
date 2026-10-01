@@ -66,9 +66,10 @@
     <string name="default_installer_authorize_note">Запросить разрешение этим способом и изменить обработчик APK по умолчанию.</string>
     <string name="default_installer_authorizer_unavailable">Выбранный способ авторизации недоступен. Обновите разрешение и повторите попытку.</string>
     <string name="default_installer_clear">Сбросить по умолчанию</string>
+    <string name="default_installer_clear_persistent">Снять постоянное назначение</string>
     <string name="default_installer_current">Текущий обработчик</string>
     <string name="default_installer_denied">Доступ запрещен. Установщик по умолчанию не изменен.</string>
-    <string name="default_installer_guide">Без Shizuku или Root проверьте пункт Открывать по умолчанию в системных настройках приложения. Если Android предлагает выбор при открытии APK, выберите этот установщик и Всегда. Доступные варианты зависят от устройства.</string>
+    <string name="default_installer_guide">Для обычных предпочтений без Shizuku или Root проверьте пункт Открывать по умолчанию в системных настройках приложения. Если Android предлагает выбор при открытии APK, выберите этот установщик и Всегда. Доступные варианты зависят от устройства.</string>
     <string name="default_installer_loading" tools:ignore="TypographyEllipsis">Загрузка запроса...</string>
     <string name="default_installer_method">Способ определения</string>
     <string name="default_installer_none">Единый обработчик не выбран</string>
@@ -76,12 +77,15 @@
     <string name="default_installer_oem_note">Некоторые производители ограничивают выбор обработчика APK. Показано состояние, определенное Android. Изменение не обходит все ограничения производителя.</string>
     <string name="default_installer_open_settings">Открыть настройки системы</string>
     <string name="default_installer_other">Это приложение не выбрано по умолчанию</string>
+    <string name="default_installer_persistent">Последняя настройка: постоянная</string>
+    <string name="default_installer_persistent_note">Локальная запись последнего завершенного изменения не доказывает текущую системную политику. Постоянные изменения Dhizuku пока требуют Android 8-13; новые версии требуют результата от владельца. Для постоянных изменений через Root требуется поддержка системного UID и основной пользователь 0; конкурирующие политики сохраняются.</string>
     <string name="default_installer_preferred">Предпочтительная Activity Android</string>
     <string name="default_installer_read_failed">Не удалось определить установщик по умолчанию. Вернитесь на эту страницу и повторите попытку.</string>
     <string name="default_installer_requires_clear">Сначала нужно сбросить текущий обработчик APK в Android. Откройте настройки текущего обработчика, сбросьте значения по умолчанию и повторите попытку здесь.</string>
     <string name="default_installer_resolved">Разрешение Intent в Android</string>
     <string name="default_installer_self">Это приложение открывает APK по умолчанию</string>
     <string name="default_installer_set">Сделать по умолчанию</string>
+    <string name="default_installer_set_persistent">Задать постоянное приложение</string>
     <string name="default_installer_settings_unavailable">Не удалось открыть системные настройки приложения.</string>
     <string name="default_installer_state">Состояние по умолчанию</string>
     <string name="default_installer_summary">Выберите приложение для файлов APK. Меняется только обработчик APK.</string>

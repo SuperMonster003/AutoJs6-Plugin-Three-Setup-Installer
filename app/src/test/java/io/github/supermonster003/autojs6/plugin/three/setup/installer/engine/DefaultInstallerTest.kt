@@ -33,11 +33,40 @@ class DefaultInstallerTest {
         assertFalse(installer.set(false, Authorizer.ROOT)["requiresClear"].asBoolean)
         assertEquals(2, backend.writes)
     }
+    @Test fun `a local persistent receipt does not turn an ordinary preference into live policy evidence`() {
+        val backend = Fake().apply { state = state.copy(isSelf = true, entryAvailable = true, persistentConfigured = true) }
+        val state = DefaultInstaller(backend).state()
+        assertTrue(state["persistentConfigured"].asBoolean)
+        assertEquals("preferred", state["method"].asString)
+        assertEquals(0, backend.writes)
+    }
+    @Test fun `completed persistent write is acknowledged but a later read still uses observed state`() {
+        val backend = Fake().apply {
+            state = state.copy(isSelf = true, entryAvailable = true, persistentConfigured = true)
+            result = 4
+        }
+        val installer = DefaultInstaller(backend)
+        assertEquals("persistent", installer.setPersistent(true, Authorizer.DHIZUKU)["method"].asString)
+        assertEquals("preferred", installer.state()["method"].asString)
+        backend.state = backend.state.copy(persistentConfigured = false)
+        backend.result = 0
+        val cleared = installer.setPersistent(false, Authorizer.DHIZUKU)
+        assertFalse(cleared["persistentConfigured"].asBoolean)
+        assertTrue(cleared["isSelf"].asBoolean)
+        assertEquals("preferred", cleared["method"].asString)
+    }
+    @Test fun `partial persistent update is not acknowledged as success`() {
+        val backend = Fake().apply { state = state.copy(isSelf = true, entryAvailable = true); result = 3 }
+        assertEquals("INTERNAL", assertThrows(InstallFailure::class.java) {
+            DefaultInstaller(backend).setPersistent(true, Authorizer.DHIZUKU)
+        }.code)
+    }
     private class Fake : DefaultInstaller.Backend {
         var state = DefaultInstaller.State("other/Installer", false, "preferred", false, "other")
         var writes = 0
         var result = 0
         override fun read() = state
         override fun set(enable: Boolean, authorizer: Authorizer, checkActive: () -> Unit): Int { checkActive(); writes++; return result }
+        override fun setPersistent(enable: Boolean, authorizer: Authorizer, checkActive: () -> Unit): Int { checkActive(); writes++; return result }
     }
 }

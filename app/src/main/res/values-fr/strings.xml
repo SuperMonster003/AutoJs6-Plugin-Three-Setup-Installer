@@ -66,9 +66,10 @@
     <string name="default_installer_authorize_note">Utiliser cette méthode pour demander l\'autorisation et modifier le gestionnaire APK par défaut.</string>
     <string name="default_installer_authorizer_unavailable">La méthode d\'autorisation choisie n\'est plus disponible. Renouvelez l\'autorisation et réessayez.</string>
     <string name="default_installer_clear">Effacer le choix par défaut</string>
+    <string name="default_installer_clear_persistent">Effacer la selection persistante</string>
     <string name="default_installer_current">Gestionnaire actuel</string>
     <string name="default_installer_denied">Autorisation refusée. L\'installateur par défaut n\'a pas été modifié.</string>
-    <string name="default_installer_guide">Sans Shizuku ni Root, ouvrez les paramètres système de l\'application et consultez Ouvrir par défaut. Si Android le propose à l\'ouverture d\'un APK, choisissez cet installateur puis Toujours. Les choix dépendent de l\'appareil.</string>
+    <string name="default_installer_guide">Pour les préférences ordinaires sans Shizuku ni Root, ouvrez les paramètres système de l\'application et consultez Ouvrir par défaut. Si Android le propose à l\'ouverture d\'un APK, choisissez cet installateur puis Toujours. Les choix dépendent de l\'appareil.</string>
     <string name="default_installer_loading" tools:ignore="TypographyEllipsis">Chargement de la demande...</string>
     <string name="default_installer_method">Méthode de détection</string>
     <string name="default_installer_none">Aucun gestionnaire par défaut unique</string>
@@ -76,12 +77,15 @@
     <string name="default_installer_oem_note">Certains fabricants limitent les gestionnaires APK par défaut. Cet état provient d\'Android. Sa modification ne contourne pas toutes les règles du fabricant.</string>
     <string name="default_installer_open_settings">Ouvrir les paramètres système</string>
     <string name="default_installer_other">Cette application n\'est pas choisie par défaut</string>
+    <string name="default_installer_persistent">Dernière configuration: persistante</string>
+    <string name="default_installer_persistent_note">Ce registre local décrit la dernière modification terminée, sans prouver la politique actuelle du système. Les changements persistants Dhizuku exigent actuellement Android 8-13; les versions récentes nécessitent le résultat du propriétaire. Les changements persistants avec Root nécessitent un accès compatible avec le UID système et le compte principal 0; les politiques concurrentes sont conservées.</string>
     <string name="default_installer_preferred">Activité préférée Android</string>
     <string name="default_installer_read_failed">Impossible de lire l\'installateur par défaut. Revenez sur cette page pour réessayer.</string>
     <string name="default_installer_requires_clear">Android exige d\'abord l\'effacement du choix APK existant. Ouvrez les paramètres du gestionnaire actuel, effacez ses choix par défaut, puis réessayez ici.</string>
     <string name="default_installer_resolved">Résolution d\'intent Android</string>
     <string name="default_installer_self">Cette application ouvre les APK par défaut</string>
     <string name="default_installer_set">Définir par défaut</string>
+    <string name="default_installer_set_persistent">Definir la selection persistante</string>
     <string name="default_installer_settings_unavailable">Impossible d\'ouvrir les paramètres système de l\'application.</string>
     <string name="default_installer_state">État du choix par défaut</string>
     <string name="default_installer_summary">Choisissez l\'application qui ouvre les fichiers APK. Seul le gestionnaire APK est modifié.</string>

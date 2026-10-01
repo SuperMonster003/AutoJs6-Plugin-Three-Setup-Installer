@@ -14,3 +14,4 @@
 -keep class com.topjohnwu.superuser.** { *; }
 -keep class * extends com.topjohnwu.superuser.ipc.RootService { *; }
 -keep class io.github.supermonster003.autojs6.plugin.three.setup.installer.priv.ShizukuUserService { *; }
+-keep class io.github.supermonster003.autojs6.plugin.three.setup.installer.priv.RootSystemDefaultMain { public static void main(java.lang.String[]); }

@@ -10,6 +10,7 @@ import android.os.SystemClock
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.*
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.auth.*
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.engine.*
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.settings.InstallerPreferences
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.source.PackageStaging
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.ui.PluginConfirmation
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.ui.InstallPresentation
@@ -100,10 +101,17 @@ internal class InstallerBinder(context: Context, private val guard: CallerGuard 
         guard.enforceHost()
         withCallback(callback) { answer ->
             val json = InstallerBundles.request(request)
-            if (request?.getInt(InstallerContract.KEY_CONTRACT_VERSION) != 2) throw RequestDocuments.invalid("Default mode requires installer contract version 2")
+            if (request?.getInt(InstallerContract.KEY_CONTRACT_VERSION) != 2) throw RequestDocuments.invalid("Persistent defaults require installer contract version 2")
             val decoded = DefaultModeRequest.parse(json)
-            if (decoded.mode != InstallerContract.DEFAULT_MODE_PREFERRED) throw RequestDocuments.invalid("Persistent defaults are not available in this build")
-            queue.submit(answer) { _, check -> check(); defaults.set(enable, resolve(decoded.authorizer), check) }
+            queue.submit(answer) { _, check ->
+                check()
+                if (decoded.mode == InstallerContract.DEFAULT_MODE_PERSISTENT) {
+                    val preferences = InstallerPreferences.read(context).authorizers
+                    val selected = PersistentAuthorizer.resolve(decoded.authorizer, AuthorizerStates.states(context),
+                        preferences.order, preferences.enabled, android.os.Build.VERSION.SDK_INT, Process.myUid() / 100000)
+                    defaults.setPersistent(enable, selected, check)
+                } else defaults.set(enable, resolve(decoded.authorizer), check)
+            }
         }
     }
 

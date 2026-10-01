@@ -66,9 +66,10 @@
     <string name="default_installer_authorize_note">이 방법으로 권한을 요청하고 기본 APK 처리 앱을 변경합니다.</string>
     <string name="default_installer_authorizer_unavailable">선택한 권한 부여 방법을 더 이상 사용할 수 없습니다. 권한을 갱신하고 다시 시도하세요.</string>
     <string name="default_installer_clear">기본 설정 해제</string>
+    <string name="default_installer_clear_persistent">영구 기본값 해제</string>
     <string name="default_installer_current">현재 처리 앱</string>
     <string name="default_installer_denied">권한이 거부되었습니다. 기본 설치 앱은 변경되지 않았습니다.</string>
-    <string name="default_installer_guide">Shizuku 또는 Root가 없으면 시스템 앱 설정에서 기본으로 열기를 확인하세요. APK를 열 때 선택 화면이 나오면 이 설치 앱과 항상을 선택하세요. 선택 항목은 기기에 따라 다릅니다.</string>
+    <string name="default_installer_guide">일반 기본 설정에서 Shizuku 또는 Root가 없으면 시스템 앱 설정에서 기본으로 열기를 확인하세요. APK를 열 때 선택 화면이 나오면 이 설치 앱과 항상을 선택하세요. 선택 항목은 기기에 따라 다릅니다.</string>
     <string name="default_installer_loading" tools:ignore="TypographyEllipsis">요청 읽는 중...</string>
     <string name="default_installer_method">감지 방법</string>
     <string name="default_installer_none">단일 기본 처리 앱 없음</string>
@@ -76,12 +77,15 @@
     <string name="default_installer_oem_note">일부 제조사는 APK 기본 처리를 제한합니다. 표시된 상태는 Android에서 감지한 결과이며 모든 제조사 정책을 우회할 수는 없습니다.</string>
     <string name="default_installer_open_settings">시스템 설정 열기</string>
     <string name="default_installer_other">이 앱이 기본 설치 앱이 아님</string>
+    <string name="default_installer_persistent">마지막 설정: 영구</string>
+    <string name="default_installer_persistent_note">마지막으로 완료된 설정의 로컬 기록이며 현재 시스템 정책을 증명하지 않습니다. Dhizuku 영구 설정은 현재 Android 8-13에서 지원되며 이후 버전은 소유자 결과 알림이 필요합니다. Root 영구 설정은 system UID 지원과 기본 사용자 0이 필요하며 기존의 다른 정책은 보존됩니다.</string>
     <string name="default_installer_preferred">Android 기본 Activity</string>
     <string name="default_installer_read_failed">기본 설치 앱을 읽을 수 없습니다. 이 페이지로 돌아와 다시 시도하세요.</string>
     <string name="default_installer_requires_clear">Android에서 기존 APK 기본 설정을 먼저 해제해야 합니다. 현재 처리 앱의 설정에서 기본값을 지운 뒤 돌아와 다시 시도하세요.</string>
     <string name="default_installer_resolved">Android Intent 확인</string>
     <string name="default_installer_self">이 앱이 APK 파일을 기본으로 처리함</string>
     <string name="default_installer_set">기본값으로 설정</string>
+    <string name="default_installer_set_persistent">영구 기본값 설정</string>
     <string name="default_installer_settings_unavailable">시스템 앱 설정을 열 수 없습니다.</string>
     <string name="default_installer_state">기본 상태</string>
     <string name="default_installer_summary">APK 파일을 여는 앱을 선택합니다. APK 처리 앱만 변경됩니다.</string>

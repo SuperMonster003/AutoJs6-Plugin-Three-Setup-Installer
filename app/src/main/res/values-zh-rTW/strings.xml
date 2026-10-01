@@ -66,9 +66,10 @@
     <string name="default_installer_authorize_note">使用此方式請求授權並更改 APK 預設處理程式.</string>
     <string name="default_installer_authorizer_unavailable">所選授權方式已無法使用. 請重新授權後重試.</string>
     <string name="default_installer_clear">取消預設</string>
+    <string name="default_installer_clear_persistent">清除持久預設安裝程式</string>
     <string name="default_installer_current">目前處理程式</string>
     <string name="default_installer_denied">授權遭拒. 預設安裝器未更改.</string>
-    <string name="default_installer_guide">沒有 Shizuku 或 Root 時, 請開啟系統應用程式設定查看預設開啟方式. 開啟 APK 時若出現選擇框, 請選擇本安裝器並選擇一律. 可用選項取決於裝置.</string>
+    <string name="default_installer_guide">一般偏好缺少 Shizuku 或 Root 時, 請開啟系統應用程式設定查看預設開啟方式. 開啟 APK 時若出現選擇框, 請選擇本安裝器並選擇一律. 可用選項取決於裝置.</string>
     <string name="default_installer_loading" tools:ignore="TypographyEllipsis">正在讀取請求...</string>
     <string name="default_installer_method">偵測方式</string>
     <string name="default_installer_none">沒有唯一預設處理程式</string>
@@ -76,12 +77,15 @@
     <string name="default_installer_oem_note">部分廠商限制 APK 預設處理方式. 此處顯示 Android 偵測結果, 更改預設項無法繞過所有廠商策略.</string>
     <string name="default_installer_open_settings">開啟系統設定</string>
     <string name="default_installer_other">本應用程式不是預設安裝器</string>
+    <string name="default_installer_persistent">上次設定: 持久</string>
+    <string name="default_installer_persistent_note">此處記錄上次完整完成的原則設定, 不證明目前系統原則. Dhizuku 持久設定目前支援 Android 8-13; 較新版本需要擁有者原則結果回報. Root 持久設定需要裝置支援 system 身分呼叫及主要使用者 0; 不覆蓋既有競爭原則.</string>
     <string name="default_installer_preferred">Android 優先 Activity</string>
     <string name="default_installer_read_failed">無法讀取目前預設安裝器. 請返回此頁面重試.</string>
     <string name="default_installer_requires_clear">Android 要求先清除現有 APK 預設項. 請開啟目前處理程式的應用程式設定, 清除預設項後返回重試.</string>
     <string name="default_installer_resolved">Android Intent 解析</string>
     <string name="default_installer_self">本應用程式預設處理 APK 檔案</string>
     <string name="default_installer_set">設為預設</string>
+    <string name="default_installer_set_persistent">設為持久預設安裝程式</string>
     <string name="default_installer_settings_unavailable">無法開啟系統應用程式設定.</string>
     <string name="default_installer_state">預設狀態</string>
     <string name="default_installer_summary">選擇開啟 APK 檔案的應用程式. 此項僅更改 APK 處理程式.</string>

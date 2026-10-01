@@ -161,7 +161,7 @@ class InstallerBinderDeviceTest {
         for (version in listOf(1, 2)) {
             val reply = Reply()
             installer.setDefaultInstallerV2(true, envelope("""{"authorizer":"none","mode":"persistent"}""", version), reply)
-            assertEquals("INVALID_ARGUMENT", reply.error()["code"].asString)
+            assertEquals(if (version == 1) "INVALID_ARGUMENT" else "AUTHORIZER_REQUIRED", reply.error()["code"].asString)
             assertEquals(1, reply.count.get())
         }
     }
