@@ -8,14 +8,13 @@
     "v1.0.0": {
       "released_date": "2026/10/01",
       "hint": [
-        "Aperçu de développement P2: installation, inspection, requêtes utilisateur et désinstallation sont reliées au service hôte, avec confirmation explicite et nettoyage automatique des sessions. La validation complète des entrées hôtes, l'interface complète, l'ouverture externe, l'activation comme installateur par défaut, l'API de script et les paramètres restent en cours."
+        "Aperçu de développement P3. Les dialogues de confirmation, progression, résultats et lots, l'ouverture et le partage externes, la suppression facultative de la source, la confirmation système et les notifications de premier plan sont implémentés. L'API de scripts, l'accueil et les paramètres autonomes, l'historique et la configuration de l'installateur par défaut restent prévus. Consultez [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md) pour la progression et les appareils couverts. AutoJs6 >= 6.8.0 (5299)."
       ],
       "feature": [
         "Identité du plugin `three-setup-installer` (engine `installer`) avec le service INFO, la Wake Activity et le squelette du service `org.autojs.plugin.INSTALLER` pour la découverte par l'hôte",
         "README, instructions du centre de plugins et journal des modifications en 10 langues"
       ],
       "improvement": [
-        "P0 a validé l'installation silencieuse, les mises à jour, la désinstallation et le choix ordinaire de l'installateur par défaut avec Shizuku et Root. Les points d'installation depuis l'hôte et les scripts ne sont pas encore disponibles; les valeurs par défaut persistantes restent hors de cette version.",
         "L'identifiant du plugin, le moteur, l'action / la categorie du service, le descripteur Binder et la version minimale de l'hote proviennent desormais des constantes du contrat installer-api de l'hote; les capacites declarent la version 1 du contrat d'installation et la build minimale de l'hote est fixee a 5299",
         "Les sources à accès aléatoire évitent une copie complète en cache, tandis que les flux sont stockés temporairement si nécessaire. Les paquets fractionnés en ZIP sont pris en charge, les AAB restent limités à l'inspection et les sources modifiées sont refusées.",
         "Le mode d'autorisation choisi explicitement ne bascule jamais vers un autre. Le refus, le délai dépassé et l'incompatibilité sont distingués, et les requêtes simultanées partagent l'autorisation et les connexions privilégiées.",

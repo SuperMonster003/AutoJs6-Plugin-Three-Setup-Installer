@@ -8,7 +8,7 @@
     </picture>
   </p>
 
-  <p>AutoJs6와 스크립트를 위해 Android 앱을 설치, 업데이트, 제거하며 Shizuku 또는 Root를 통한 무음 설치를 지원</p>
+  <p>시스템 확인, Shizuku 또는 Root로 Android 앱 설치, 업데이트 및 제거</p>
 
   <p>
     <a href="https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/releases"><img alt="GitHub release (latest by date)" src="https://img.shields.io/github/v/release/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer?label=Release"/></a>
@@ -42,7 +42,7 @@
 
 ******
 
-3-Setup Installer는 AutoJs6의 패키지 설치 프로그램을 대신합니다: 파일 관리자, 플러그인 센터, 스크립트 패키징 화면의 설치 버튼, `.apk`, `.apks`, `.xapk`, `.apkm`, `.apkz` 파일의 외부 "연결 프로그램" 진입점, 그리고 앱을 설치, 업데이트, 검사, 제거하는 스크립트 측 전역 객체 `installer`입니다. 일반적인 시스템 확인 외에도 Shizuku 또는 Root를 통해 무음으로 설치하고 제거할 수 있습니다.
+3-Setup Installer는 AutoJs6 설치 기능과 외부 패키지 열기 또는 공유 요청을 통해 Android 앱을 설치, 업데이트, 검사 및 제거합니다. 일반 Android 확인과 Shizuku 또는 Root를 통한 권한 설치를 지원합니다. 스크립트 API와 독립 홈 및 설정 페이지는 향후 계획입니다.
 
 AutoJs6는 Binder 서비스를 통해 플러그인을 찾고 패키지 파일을 읽기 전용 파일 디스크립터로 전달합니다. 플러그인은 패키지를 분석하고 인증 방식을 선택하며 필요하면 자체 확인 및 진행률 대화 상자를 표시하고 단계, 진행률, 결과를 보고합니다. 특권 작업은 시스템 패키지 설치 프로그램과 직접 통신하는 Shizuku 사용자 서비스 또는 libsu Root 서비스에서 실행됩니다.
 
@@ -52,7 +52,7 @@ AutoJs6는 Binder 서비스를 통해 플러그인을 찾고 패키지 파일을
 
 ******
 
-1.0.0: P2 개발 미리 보기: 설치, 패키지 정보 및 사용자 조회, 제거 핵심 기능을 호스트 서비스에 연결하고 명시적 확인과 세션 자동 정리를 지원합니다. 전체 호스트 진입점 검증, 완전한 화면, 외부 열기, 기본 설치 관리자 활성화, 스크립트 API 및 설정은 개발 중입니다. [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md). AutoJs6 >= 6.8.0 (5299).
+1.0.0: P3 개발 미리보기. 확인, 진행률, 결과 및 일괄 대화상자, 외부 열기와 공유, 선택적 원본 삭제, 시스템 확인 및 포그라운드 알림이 구현되었습니다. 스크립트 API, 독립 홈과 설정, 설치 기록 및 기본 설치 프로그램 설정은 향후 계획입니다. 진행 상황과 기기 검증 범위는 [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md)를 참고하세요. AutoJs6 >= 6.8.0 (5299).
 
 ******
 
@@ -60,14 +60,19 @@ AutoJs6는 Binder 서비스를 통해 플러그인을 찾고 패키지 파일을
 
 ******
 
-로드맵 단계에 따라 제공할 목표 기능:
+현재 개발 미리보기에서 사용 가능한 기능이며, 향후 기능은 별도로 표시합니다:
 
 - 패키지 형식: `.apk`, `.apks`, `.xapk`, `.apkm`, `.apkz` 및 APK가 들어 있는 ZIP 아카이브. 분할 패키지는 기기에 맞게 선택되며 `.aab` 파일은 인식과 설명만 하고 설치하지 않습니다.
-- 인증 방식: `none` (사용자 확인이 있는 시스템 PackageInstaller 세션), `shizuku`, `root`. `auto`는 설정에서 구성한 순서대로 처음 사용 가능한 방식을 고르며 스크립트에서 명시적으로 지정할 수도 있습니다.
-- 설치 옵션: 일괄 설치, 성공 후 원본 파일 삭제, 다운그레이드 허용, 테스트 전용 패키지 허용, 낮은 targetSdk 차단 우회 (Android 14+), 설치자 패키지 이름과 대상 사용자 (특권 인증 방식만).
+- 권한 부여 방식: `none`은 Android 확인을 사용하며, `shizuku`와 `root`는 특권 작업을 제공합니다. `auto`는 사용 가능한 Shizuku, Root, 시스템 확인 순서로 선택합니다. 설치 대화상자에서 방식을 선택할 수 있습니다.
+- 설치 성공 후 원본 삭제를 선택적으로 시도합니다. 다운그레이드, 테스트 패키지, 낮은 targetSdk 제한 우회 (Android 14+), 설치 프로그램 지정 및 다른 대상 사용자에는 Shizuku 또는 Root가 필요하며 Android 제한도 적용됩니다.
 - Shizuku 또는 Root를 통한 무음 제거 (데이터 유지 옵션 포함). 그 외에는 일반 시스템 대화 상자를 사용합니다.
-- 기본 설치 프로그램으로 설정: Shizuku 또는 Root가 있으면 플러그인이 패키지 파일의 기본 처리기가 됩니다. 권한이 없으면 시스템의 "기본으로 열기" 페이지를 열어 줍니다.
-- 스크립트 API `installer` (별칭 `$installer`)는 동기, `...Async`, 세션 형태를 제공하며 모든 실패는 안정적인 `code`를 가진 `InstallerError`입니다.
+- 확인 화면에 앱 정보, 이전 및 새 버전, 서명과 선택 가능한 APK 구성요소를 표시합니다. 진행 중에 취소할 수 있으며, 결과에 성공 시 작업 또는 복사 가능한 오류 정보를 표시합니다. 일괄 설치는 항목별 상태를 표시합니다.
+- 패키지를 플러그인으로 열거나 하나 또는 여러 패키지를 공유할 수 있습니다. 실패한 외부 원본은 URI와 접근 권한을 사용할 수 있는 동안 항목별로 다시 시도할 수 있습니다.
+- 포그라운드 설치 진행률, 취소 작업 및 결과 알림을 제공합니다. 알림 권한을 거부해도 설치를 차단하지 않습니다.
+- 대화상자는 기본적으로 AutoJs6의 언어, 야간 모드 및 테마 색상을 따릅니다. 호스트를 사용할 수 없으면 시스템 언어와 야간 모드 및 기본 색상을 사용합니다.
+- 향후 계획: 특권을 통한 기본 설치 프로그램 선택과 필요한 경우 시스템 기본 설정 안내.
+- P4 계획: 동기, `...Async` 및 세션 방식의 스크립트 API `installer` (별칭 `$installer`)와 안정적인 `code`를 가진 `InstallerError`.
+- P5 계획: 독립 홈 및 설정 페이지, 설치 기록과 설치된 앱 관리.
 
 ******
 
@@ -77,7 +82,7 @@ AutoJs6는 Binder 서비스를 통해 플러그인을 찾고 패키지 파일을
 
 1. AutoJs6 build 5299 (6.8.0) 이상이 설치된 기기에 [Releases](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/releases)에서 플러그인 APK를 설치합니다.
 2. AutoJs6 플러그인 센터를 열어 `3-Setup Installer`가 인식되는지 확인하고 활성화합니다.
-3. AutoJs6 파일 관리자에서 패키지 파일을 탭하거나, 아무 파일 관리자에서 3-Setup Installer로 패키지를 열거나, 스크립트에서 `installer.install(...)`을 호출합니다. 무음 설치가 필요하면 플러그인 안내에 따라 Shizuku를 시작하거나 Root를 허용하거나 플러그인 설정에서 인증 방식을 선택합니다.
+3. AutoJs6의 설치 기능을 사용하거나 패키지를 열거나 공유할 때 3-Setup Installer를 선택하세요. 확인 대화상자가 나타나면 앱과 옵션을 검토한 후 설치하세요. 특권 방식을 선택할 때는 Shizuku 또는 Root 권한을 준비하세요.
 
 ******
 
@@ -88,9 +93,9 @@ AutoJs6는 Binder 서비스를 통해 플러그인을 찾고 패키지 파일을
 각 인증 방식이 할 수 있는 일과 필요한 것:
 
 - `none`: 표준 PackageInstaller 세션. Android가 매번 사용자 확인을 요구하며 분할 패키지를 지원하고 특권 옵션은 사용할 수 없습니다.
-- `shizuku`: Shizuku 앱이 실행 중이고 (무선 디버깅, ADB 또는 Root로 시작) 플러그인에 권한이 부여되어야 합니다. shell 권한으로 동작하여 무음 설치, 무음 제거, 다른 사용자에 설치, 기본 설치 프로그램 잠금이 가능합니다.
+- `shizuku`: Shizuku가 실행 중이어야 하며 (무선 디버깅, ADB 또는 Root로 시작), 플러그인에 권한이 부여되어야 합니다. shell 권한으로 자동 설치, 자동 제거 및 다른 사용자에 대한 작업을 수행할 수 있습니다.
 - `root`: Root 관리자가 플러그인에 `su`를 허용해야 합니다. libsu Root 서비스를 통해 Shizuku와 같은 작업을 제공합니다. 일반 (user) 펌웨어에서 다운그레이드는 debuggable 앱에만 성공하며 이는 프레임워크 규칙이지 플러그인의 제한이 아닙니다.
-- **주의:** 권한이 있으면 스크립트 API는 기본적으로 무인 설치를 수행하며 확인 대화 상자를 먼저 표시하지 않습니다. Android가 확인을 요구하면 `interaction: 'auto'`는 시스템 확인을 허용하고 `notes`에 기록합니다. 설치 전 확인이 필요하면 `interaction: 'dialog'`를 명시하세요. `interaction: 'silent'`는 시스템 확인을 표시하지 않으며, 확인이 필요하면 실패합니다.
+- **참고:** 특권을 사용할 수 있을 때 `interaction: 'auto'` 호스트 요청은 확인 화면을 먼저 열지 않고 자동으로 설치합니다. Android가 확인을 요구하면 `auto`는 이를 허용하고 `notes`에 기록합니다. 설치 전 확인에는 `interaction: 'dialog'`를, 시스템 확인이 필요한 경우 실패하게 하려면 `interaction: 'silent'`를 사용하세요. 향후 스크립트 API에도 같은 기본 동작이 적용됩니다.
 
 ******
 
@@ -126,7 +131,7 @@ if (!installer.isDefault()) installer.setDefault(true);
 
 플러그인의 능력을 결정하는 플랫폼 사실:
 
-- Android 7.0 (API 24) 이상. 호스트 빌드와 플러그인은 [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md)에 나열된 기기 매트릭스에서 함께 검증됩니다.
+- Android 7.0 (API 24) 이상. 기기 검증 현황과 남은 검증 범위는 [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md)에 기록되어 있습니다.
 - 낮은 targetSdk 차단 우회는 Android 14 (API 34)부터 존재합니다. 더 오래된 시스템에서는 이 옵션이 무시되고 결과에 표시됩니다.
 - 일부 OEM 시스템은 어떤 앱이 기본 설치 프로그램이 될 수 있는지 제한하거나 신뢰하는 설치자 패키지 이름을 요구합니다 (HyperOS는 `com.android.shell`을 허용). 플러그인은 시스템의 응답을 그대로 보고합니다.
 
@@ -136,8 +141,10 @@ if (!installer.isDefault()) installer.setDefault(true);
 
 ******
 
-- **왜 설치할 때 여전히 확인을 요구하나요?** `none` 인증 방식은 항상 시스템 확인을 거칩니다. Shizuku를 시작하거나 Root를 허용한 다음 설정에서 해당 인증 방식을 선택하거나 스크립트에서 `authorizer: 'shizuku'`를 전달하세요.
+- **왜 여전히 설치 확인이 필요한가요?** `none`은 항상 시스템 확인을 사용합니다. 권한을 준비한 후 설치 대화상자에서 Shizuku 또는 Root를 선택하세요. Android 또는 기기 정책에 따라 시스템 확인이 필요할 수 있습니다.
 - **`.aab`를 설치할 수 있나요?** 아니요. Android App Bundle은 배포 형식이므로 먼저 bundletool로 `.apks` 세트로 변환하세요. 플러그인은 `.aab` 파일을 인식하고 패키지와 모듈 정보를 표시합니다.
+- **원본이 삭제되지 않은 이유는 무엇인가요?** 삭제는 설치 성공 후에만 시도하며 원본 제공자가 거부할 수 있습니다. 설치 성공 결과는 유지됩니다. AutoJs6 또는 다른 발신 앱이 원본을 소유한 경우 해당 앱이 삭제를 담당합니다.
+- **다시 시도하거나 이어서 실행할 수 있나요?** 실패한 외부 URI는 원본과 접근 권한을 사용할 수 있는 동안 다시 시도할 수 있습니다. 원본 또는 접근 권한이 해제되면 패키지를 다시 여세요. 프로세스가 종료되면 복원된 화면은 중단을 표시하며 자동으로 재설치하지 않습니다. 다시 시작하기 전에 실제 설치 상태를 확인하세요.
 
 ******
 
@@ -149,6 +156,7 @@ if (!installer.isDefault()) installer.setDefault(true);
 
 - Binder 진입점은 `org.autojs.permission.PLUGIN` 서명 권한으로 보호되어 AutoJs6만 접근할 수 있습니다. 외부 "연결 프로그램" 진입점은 패키지 파일만 받아들이며 스크립트를 실행하지 않습니다.
 - REQUEST_INSTALL_PACKAGES와 REQUEST_DELETE_PACKAGES는 일반 설치 및 제거 대화 상자를 지원하고, QUERY_ALL_PACKAGES는 업데이트 전에 설치된 버전을 표시하고 서명을 비교하게 합니다.
+- FOREGROUND_SERVICE와 FOREGROUND_SERVICE_DATA_SYNC는 백그라운드 설치 작업을 지원하며 POST_NOTIFICATIONS는 진행률 및 결과 알림에 사용됩니다. 알림 권한이 없어도 설치를 차단하지 않습니다.
 - Shizuku와 Root는 사용자가 시작한 작업에만 사용됩니다. 특권 서비스는 상태를 보관하지 않고 작업 사이에 shell을 열어 두지 않으며 플러그인 외부에서 접근할 수 없습니다.
 - 패키지 파일은 읽기 전용으로 열립니다. 플러그인은 네트워크 요청을 하지 않고 데이터를 수집하지 않으며 개인 저장소를 백업에서 제외합니다.
 
@@ -196,10 +204,9 @@ minimum host build: 5299 (6.8.0)
 
 _2026/10/01_
 
-- `힌트` P2 개발 미리 보기: 설치, 패키지 정보 및 사용자 조회, 제거 핵심 기능을 호스트 서비스에 연결하고 명시적 확인과 세션 자동 정리를 지원합니다. 전체 호스트 진입점 검증, 완전한 화면, 외부 열기, 기본 설치 관리자 활성화, 스크립트 API 및 설정은 개발 중입니다.
+- `힌트` P3 개발 미리보기. 확인, 진행률, 결과 및 일괄 대화상자, 외부 열기와 공유, 선택적 원본 삭제, 시스템 확인 및 포그라운드 알림이 구현되었습니다. 스크립트 API, 독립 홈과 설정, 설치 기록 및 기본 설치 프로그램 설정은 향후 계획입니다. 진행 상황과 기기 검증 범위는 [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md)를 참고하세요. AutoJs6 >= 6.8.0 (5299).
 - `기능` 플러그인 식별자 `three-setup-installer` (engine `installer`), INFO 서비스, Wake Activity 및 호스트 검색용 `org.autojs.plugin.INSTALLER` 서비스 골격
 - `기능` 10개 언어의 README, 플러그인 센터 안내 및 변경 기록
-- `개선` P0에서 Shizuku와 Root를 통한 자동 설치, 업데이트, 제거 및 일반 기본 설치 프로그램 설정을 검증했습니다. 호스트와 스크립트의 설치 진입점은 아직 제공되지 않으며, 영구 기본 설정은 이번 버전에서 지원하지 않습니다.
 - `개선` 플러그인 ID, engine, 서비스 action / category, Binder descriptor 및 최소 호스트 버전을 호스트 installer-api 계약 상수에서 가져오도록 변경; 기능 선언에 설치기 계약 버전 1을 추가하고 최소 호스트 빌드를 5299로 갱신
 - `개선` 임의 접근이 가능한 원본은 전체 캐시 복사를 생략하고, 스트림은 필요할 때 임시 저장합니다. ZIP 분할 패키지를 지원하며, AAB는 정보 확인만 허용하고 내용이 변경된 원본은 거부합니다.
 - `개선` 명시적으로 선택한 권한 방식은 다른 방식으로 전환하지 않습니다. 거부, 시간 초과, 호환성 문제를 구분하며, 동시 요청은 권한 요청 처리와 특권 연결을 공유합니다.

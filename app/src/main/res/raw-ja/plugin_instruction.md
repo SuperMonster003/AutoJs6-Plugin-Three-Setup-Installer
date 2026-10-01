@@ -1,18 +1,18 @@
-3-Setup Installer は AutoJs6 のパッケージインストーラーを引き継ぎます: ファイルマネージャー, プラグインセンター, スクリプトパッケージ化画面のインストールボタン, `.apk`, `.apks`, `.xapk`, `.apkm`, `.apkz` ファイルの外部 "アプリで開く" エントリ, そしてアプリのインストール, 更新, 検査, アンインストールを行うスクリプト側のグローバルオブジェクト `installer` です. 通常のシステム確認に加えて, Shizuku または Root によりサイレントにインストールとアンインストールを行えます.
+3-Setup Installer は AutoJs6 のインストール機能や外部からのパッケージの表示と共有要求を通じて, Android アプリのインストール, 更新, 調査, アンインストールを行います. 通常の Android 確認と, Shizuku または Root による特権インストールに対応します. スクリプト API, 独立したホームと設定ページは今後の予定です.
 
-1.0.0: P2 開発プレビュー: インストール, パッケージ情報とユーザーの照会, アンインストールの基本機能をホストサービスに接続し, 明示的な確認とセッションの自動クリーンアップに対応. ホスト側の入口の総合検証, 完全な画面, 外部から開く機能, 既定のインストーラーの有効化, スクリプト API と設定は開発中です. [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md). AutoJs6 >= 6.8.0 (5299).
+1.0.0: P3 開発プレビュー. 確認, 進捗, 結果, 一括処理のダイアログ, 外部から開く操作と共有, 任意の元ファイル削除, システム確認, フォアグラウンド通知を実装しています. スクリプト API, 独立したホームと設定, インストール履歴, 既定インストーラーの設定は今後の予定です. 進捗と端末の確認範囲は [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md) を参照してください. AutoJs6 >= 6.8.0 (5299).
 
 ### 使い方
 
 1. AutoJs6 build 5299 (6.8.0) 以降がインストールされた端末に, [Releases](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/releases) からプラグイン APK をインストールします.
 2. AutoJs6 プラグインセンターを開き, `3-Setup Installer` が認識されていることを確認して有効にします.
-3. AutoJs6 ファイルマネージャーでパッケージファイルをタップするか, 任意のファイルマネージャーから 3-Setup Installer でパッケージを開くか, スクリプトから `installer.install(...)` を呼び出します. サイレントインストールには, プラグインの案内に従って Shizuku を起動するか Root を許可するか, プラグイン設定で認可方式を選びます.
+3. AutoJs6 のインストール操作を使用するか, パッケージを開くときや共有するときに 3-Setup Installer を選択します. 確認ダイアログが表示された場合は, アプリとオプションを確認してからインストールします. 特権方式を選ぶ場合は Shizuku または Root の認可を準備してください.
 
 ### 認可方式
 
 - `none`: 標準の PackageInstaller セッション. Android は毎回ユーザーに確認を求め, 分割パッケージに対応し, 特権オプションは利用できません.
-- `shizuku`: Shizuku アプリが起動中 (ワイヤレスデバッグ, ADB, または Root で開始) で, プラグインに権限が付与されている必要があります. shell 権限で動作し, サイレントインストール, サイレントアンインストール, 他ユーザーへのインストール, 既定インストーラーのロックが可能です.
+- `shizuku`: Shizuku が動作中であること (ワイヤレスデバッグ, ADB, Root で起動) と, プラグインへの許可が必要です. shell 権限によりサイレントインストール, アンインストール, 他のユーザーに対する操作を行えます.
 - `root`: Root マネージャーがプラグインに `su` を許可している必要があります. libsu Root サービスを通じて Shizuku と同じ操作を提供します. 通常 (user) ファームウェアでのダウングレードは debuggable なアプリにのみ成功しますが, これはフレームワークの規則でありプラグインの制限ではありません.
-- **注意:** 特権が利用可能な場合, スクリプト API はデフォルトでサイレントインストールを行い, 確認ダイアログを自発的に表示しません. Android が確認を要求する場合は, `interaction: 'auto'` がシステム確認を許可し, `notes` に記録します. インストール前の確認には `interaction: 'dialog'` を明示してください. `interaction: 'silent'` はシステム確認を表示せず, 確認が必要な場合は失敗します.
+- **注意:** 特権が利用できる場合, `interaction: 'auto'` のホスト要求は確認画面を自動で開かずにサイレントインストールします. Android が確認を要求した場合, `auto` はそれを許可し `notes` に記録します. インストール前の確認には `interaction: 'dialog'`, システム確認が必要な場合に失敗させるには `interaction: 'silent'` を指定します. 今後のスクリプト API も同じ既定動作に従います.
 
 インストール手順と現在の進捗は [プロジェクト README](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer) と [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md) を参照してください.
