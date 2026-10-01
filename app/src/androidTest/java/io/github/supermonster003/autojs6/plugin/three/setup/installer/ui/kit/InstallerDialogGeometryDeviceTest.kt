@@ -73,17 +73,16 @@ class InstallerDialogGeometryDeviceTest {
         }
     }
 
-    @Test fun systemBarsCutoutsAndKeyboardReduceTheAvailableViewport() = instrumentation.runOnMainSync {
+    @Test fun injectedSystemBarsReduceTheAvailableViewport() = instrumentation.runOnMainSync {
         val kit = kit("en", false, 1f)
         val dialog = populatedDialog(kit)
         val bars = Insets.of(kit.dp(12), kit.dp(30), kit.dp(8), kit.dp(24))
         val insets = WindowInsetsCompat.Builder()
             .setInsets(WindowInsetsCompat.Type.systemBars(), bars)
-            .setInsets(WindowInsetsCompat.Type.ime(), Insets.of(0, 0, 0, kit.dp(180)))
             .build()
         ViewCompat.dispatchApplyWindowInsets(dialog.root, insets)
         measure(dialog, kit.dp(400), kit.dp(800))
-        report(dialog, "400 x 800 dp, injected insets")
+        report(dialog, "400 x 800 dp, injected system bars; real IME is covered by InstallerDialogWindowDeviceTest")
         assertTrue(dialog.root.paddingTop >= bars.top)
         assertTrue(dialog.root.paddingBottom >= bars.bottom)
         assertTrue(dialog.surface.left >= dialog.root.paddingLeft)

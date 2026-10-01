@@ -2,7 +2,7 @@
 
 Date: 2026-10-01.
 
-The appearance support layer has passed the current JVM build and the API 24 contract/view tests described below. The complete visual and host-integration matrix remains open; injected settings and measured detached views are not evidence of a successful live host Provider read or complete system-window acceptance.
+The appearance support layer has passed the JVM and API 24 contract/view tests described below. A later follow-up also passed real-window and real-IME checks on API 35 and API 28, including private RTL/large-text/night configurations and landscape. The complete device and host-integration matrix remains open; these geometry fixtures do not establish a successful live host Provider read.
 
 ## Implementation
 
@@ -43,11 +43,32 @@ The injected-insets case measured a 1400 x 2800 px root with padding 126/105/112
 
 An earlier assertion assumed that 24 English rows must overflow every viewport. They can fit at the tablet width. The final test uses 80 rows to force actual long-content overflow while retaining the strict geometry assertions, and separately checks short-content wrapping.
 
+## Follow-up: real windows and IME on API 35 and API 28
+
+`InstallerDialogWindowDeviceTest` uses the debug-only `DialogGeometryActivity` with the production dialog theme and kit. It focuses a real `EditText`, opens the device's existing IME, waits for stable actual window/inset measurements, enters text, and taps fixed actions at their measured screen positions. It checks full visibility of the surface, title, focused editor and actions against the actual available screen region, then closes the IME and checks restored bounds and body scrolling. It also tests a real landscape window. The tests preserve global/Application language, font scale, night mode and selected IME; Arabic, fontScale 2 and dark mode are private Activity-context test overrides, not changes to device settings.
+
+- Xiaomi 23046RP50C / API 35: `build/p3-followup-api35-window.log` reports `OK (3 tests)` in 15.301 seconds. All three real-window cases passed.
+- Sony G8441 / API 28: the three real-window cases individually passed in `build/p3-followup-api28-grant-window.log`. This was a mixed four-case group with one failed unknown-source permission case, so the group as a whole failed (`Tests run: 4, Failures: 1`, 75.975 seconds). It is not recorded as a fully passing group.
+
+Selected measured rectangles are in screen pixels. Portrait IME measurements were the same for the current appearance and the private Arabic/fontScale-2/dark configuration:
+
+| Device and state | Physical window | Available screen rectangle | IME bottom inset | Dialog surface rectangle |
+|---|---|---|---:|---|
+| API 35 portrait, IME hidden/restored | 1800 x 2880 | `(0,60)-(1800,2840)` | 0 | `(200,268)-(1600,2631)` |
+| API 35 portrait, real IME shown | 1800 x 2880 | `(0,60)-(1800,1955)` | 925 | `(200,202)-(1600,1812)` |
+| API 35 landscape | 2880 x 1800 | `(0,60)-(2880,1760)` | 0 | `(740,187)-(2140,1632)` |
+| API 28 portrait, IME hidden/restored | 720 x 1280 | `(0,48)-(720,1184)` | 0 | `(48,133)-(672,1098)` |
+| API 28 portrait, real IME shown | 720 x 1280 | `(0,48)-(720,749)` | 531 | `(48,101)-(672,696)` |
+| API 28 landscape, navigation bar at right | 1280 x 720 | `(0,48)-(1184,720)` | 0 | `(48,98)-(1136,669)` |
+
+The API 35 density was 2.5 and the 1400 px surface width therefore respected the 560 dp cap. The API 28 density was 2.0; its portrait surface retained 48 px / 24 dp on each side, and landscape excluded the 96 px right navigation bar. Real IME expansion reduced the available area once, while title/actions remained fully visible. Keyboard dismissal restored the pre-IME rectangle. Actual scrolling exposed the last row without moving the fixed title/actions, and measured-position taps reached the fixed button. These are actual-window observations, supplementing the earlier detached-view evidence.
+
 ## Remaining evidence boundaries
 
 - A live, enabled, correctly signed host Provider read and an actual host appearance change during an installation still need their own integration evidence. The Bundle contract test does not establish that access path.
-- Real status/navigation-bar, display-cutout and keyboard behavior on edge-to-edge API 35+ windows still needs visual/interactive acceptance. Detached-view measurement and injected bars are supplementary evidence.
-- The complete device matrix, TalkBack/keyboard interaction, all long translations, actual multi-window resizing and repeated light/dark changes remain separate checks. The Arabic/fontScale-2 view case is one verified combination, not the whole matrix.
+- The real API 28/35 checks above cover the measured system-bar/IME boundaries and portrait/landscape configurations. They do not establish every physical cutout, floating keyboard or multi-window configuration, nor all OEM/system combinations.
+- The new actual-IME/API 24 follow-up was not rerun. Starting an additional emulator was rejected by automatic approval review with only the stated reason `blocked by policy`; no alternate launch was used to bypass that rejection. The prior API 24 detached-view/contract results remain valid, without a new real-IME claim.
+- The complete device matrix, TalkBack/D-pad interaction, all long translations, actual multi-window resizing and repeated appearance changes remain separate checks. The private Arabic/fontScale-2/dark window is a verified combination, not the whole matrix.
 - Installation screen lifecycle, authoritative package results and host-UID routing are documented by the main P3 integration evidence, rather than inferred from this supporting layer.
 
 No new dependency, permission or translated string was required by this appearance layer. Referenced build logs and generated test reports are local ignored artifacts; the concrete measurements and outcomes above are retained here.

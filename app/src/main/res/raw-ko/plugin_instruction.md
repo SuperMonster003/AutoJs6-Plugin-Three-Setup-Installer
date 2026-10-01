@@ -1,6 +1,6 @@
 3-Setup Installer는 AutoJs6 설치 기능과 외부 패키지 열기 또는 공유 요청을 통해 Android 앱을 설치, 업데이트, 검사 및 제거합니다. 일반 Android 확인과 Shizuku 또는 Root를 통한 권한 설치를 지원합니다. 스크립트 API와 독립 홈 및 설정 페이지는 향후 계획입니다.
 
-1.0.0: P3 개발 미리보기. 확인, 진행률, 결과 및 일괄 대화상자, 외부 열기와 공유, 선택적 원본 삭제, 시스템 확인 및 포그라운드 알림이 구현되었습니다. 스크립트 API, 독립 홈과 설정, 설치 기록 및 기본 설치 프로그램 설정은 향후 계획입니다. 진행 상황과 기기 검증 범위는 [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md)를 참고하세요. AutoJs6 >= 6.8.0 (5299).
+1.0.0: P3 개발 미리보기. 확인, 진행률, 결과 및 일괄 대화상자, 외부 열기와 공유, 선택적 원본 삭제, 시스템 확인 및 포그라운드 알림이 구현되었습니다. 프로세스가 다시 시작되면 복원된 화면에 저장된 확정 결과가 표시되고 미완료 항목은 중단으로 표시됩니다. 복원된 화면은 읽기 전용이며 설치나 재시도를 자동으로 실행하지 않습니다. 스크립트 API, 독립 홈과 설정, 설치 기록 및 기본 설치 프로그램 설정은 향후 계획입니다. 진행 상황과 기기 검증 범위는 [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md)를 참고하세요. AutoJs6 >= 6.8.0 (5299).
 
 ### 사용 방법
 

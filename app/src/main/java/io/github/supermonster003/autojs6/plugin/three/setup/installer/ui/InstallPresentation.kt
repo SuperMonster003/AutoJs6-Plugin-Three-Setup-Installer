@@ -77,6 +77,8 @@ internal object InstallPresentation {
         val failure: InstallFailure?,
         val canRetry: Boolean,
         val canDeleteSource: Boolean,
+        val recovered: Boolean = false,
+        val interrupted: Boolean = false,
     )
     class Prompt internal constructor(
         val index: Int,
@@ -97,6 +99,7 @@ internal object InstallPresentation {
             oldest
         }
         evicted?.close()
+        record.startPersistence()
         main.post {
             if (!reaperScheduled) {
                 reaperScheduled = true
@@ -129,6 +132,8 @@ internal object InstallPresentation {
         private var shown = false
         private var retrying = false
         private var cancellationRequested = false
+        private var recovery: InstallRecoveryWriter.Ticket? = null
+        private val recoveryDeadline = SystemClock.elapsedRealtime() + request.options.timeoutMillis
         private val queuedUpdate = AtomicBoolean()
         @Volatile internal var expiresAt = Long.MAX_VALUE
             private set
@@ -142,6 +147,23 @@ internal object InstallPresentation {
         fun snapshot(): Snapshot = synchronized(lock) {
             Snapshot(revision, stage, index, progress, items.toList(), prompt, terminal, failure,
                 terminal && !retrying && callbacks.retry != null, canDeleteSource)
+        }
+
+        internal fun startPersistence() {
+            recovery = InstallRecoveryPersistence.writer(context).begin(token)
+            persist()
+        }
+
+        private fun persist(durable: Boolean = false) {
+            runCatching {
+                val state = snapshot()
+                if (synchronized(lock) { closed }) return
+                val remaining = if (state.terminal) expiresAt - SystemClock.elapsedRealtime()
+                    else recoveryDeadline - SystemClock.elapsedRealtime() + InstallRecoverySnapshot.RETENTION_MILLIS
+                val saved = InstallRecoverySnapshot.capture(token, state, request.options, System.currentTimeMillis(), remaining)
+                val completion = recovery?.save(saved, durable)
+                if (durable && !InstallRecoveryPersistence.mainThread()) completion?.await()
+            }.onFailure { android.util.Log.w("InstallRecovery", "Installation display snapshot could not be saved") }
         }
 
         /** Serialize the final eligibility check with close, completion and Activity attachment. */
@@ -187,6 +209,7 @@ internal object InstallPresentation {
                 items = items.toMutableList().also { it[index] = it[index].copy(metadata = metadata) }
                 revision++
             }
+            persist()
             changed()
         }
 
@@ -211,6 +234,7 @@ internal object InstallPresentation {
             }
             val expires = SystemClock.elapsedRealtime() + InstallerContract.DEFAULT_USER_ACTION_TIMEOUT_MILLIS
             try {
+                persist()
                 show()
                 changed()
                 while (true) {
@@ -262,6 +286,7 @@ internal object InstallPresentation {
                 }
                 revision++
             }
+            persist()
             changed()
         }
 
@@ -284,6 +309,7 @@ internal object InstallPresentation {
                 }
                 revision++
             }
+            persist(durable = true)
             changed()
         }
 
@@ -304,6 +330,7 @@ internal object InstallPresentation {
                 expiresAt = SystemClock.elapsedRealtime() + RESULT_RETENTION_MILLIS
                 revision++
             }
+            persist(durable = true)
             changed()
         }
 
@@ -327,6 +354,7 @@ internal object InstallPresentation {
                 expiresAt = SystemClock.elapsedRealtime() + RESULT_RETENTION_MILLIS
                 revision++
             }
+            persist(durable = true)
             changed()
         }
 
@@ -373,9 +401,22 @@ internal object InstallPresentation {
                 prompt = null
             }
             records.remove(token, this)
+            val released = AtomicBoolean()
+            val removed = AtomicBoolean()
+            val finishQueued = AtomicBoolean()
+            val finish = {
+                if (released.get() && removed.get() && finishQueued.compareAndSet(false, true)) {
+                    main.post { activity.get()?.takeUnless { it.isDestroyed || it.isFinishing }?.finish() }
+                }
+                Unit
+            }
+            // Retire the writer ticket before releasing owners, which may perform IPC. A new
+            // Record may already reserve this registry slot while that cleanup is in progress.
+            recovery?.close { removed.set(true); finish() } ?: removed.set(true)
             runCatching { callbacks.close() }
             InstallNotifications.remove(context, token)
-            main.post { activity.get()?.finish() }
+            released.set(true)
+            finish()
         }
 
         private fun changed() {
