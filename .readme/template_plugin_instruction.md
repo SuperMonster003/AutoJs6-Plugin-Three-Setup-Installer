@@ -10,6 +10,14 @@
 
 {{ placeholder_authorizer_points }}
 
+### {{ h3_compatibility }}
+
+{{ placeholder_compatibility_points }}
+
+### {{ h3_faq }}
+
+{{ placeholder_faq_items }}
+
 ### {{ h3_security }}
 
 {{ placeholder_security_points }}

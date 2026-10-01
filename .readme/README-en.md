@@ -146,7 +146,7 @@ Platform facts that shape what the plugin can do:
 
 - Android 7.0 (API 24) and later. Device validation and remaining coverage are recorded in [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md).
 - The bypass of the low target SDK block exists from Android 14 (API 34); on older systems the option is ignored and noted in the result.
-- Some OEM systems restrict which app may be the default installer or require an installer package name that they trust (HyperOS accepts `com.android.shell`); the plugin reports the system's answer as it is.
+- ROM policies and existing defaults may restrict changes to the default installer. Version 1.0.0 does not promise a persistent lock; see the FAQ for installer package names and plugin activation.
 
 ******
 
@@ -156,6 +156,9 @@ Platform facts that shape what the plugin can do:
 
 - **Why does installation still require confirmation?** `none` always uses system confirmation. Choose Shizuku or Root in the installation dialog after preparing its authorization. Android or device policy may still require a system prompt.
 - **Can an `.aab` be installed?** No. An Android App Bundle is a publishing format; convert it with bundletool into an `.apks` set first. The plugin recognizes `.aab` files and shows their package and module information.
+- **What installer package name works on HyperOS?** With Shizuku started through ADB or wireless debugging, leaving the installer package name unset uses `com.android.shell`. On the tested Xiaomi 23046RP50C / HyperOS / API 35, silent new installations and updates recorded this value. Explicit `com.android.shell` and the plugin's own package name were also accepted and recorded as requested. Other package names or ROM versions still depend on the system's response.
+- **ColorOS or another ROM says the plugin needs activation. What should I do?** After installation or a force stop, Android can keep an app stopped until user interaction. In AutoJs6's plugin center, use Activate when offered, or open 3-Setup Installer from its launcher icon, then retry. This follows [Android's rules for stopped apps](https://developer.android.com/reference/android/content/pm/ApplicationInfo#FLAG_STOPPED). ColorOS-specific behavior has not yet been verified on a device.
+- **Why can setting the default installer fail?** A ROM can refuse the change. On older Android versions, an existing APK default can require clearing the previous handler in system settings first; follow the page's guidance. If the system offers no clear-default action, the plugin cannot guarantee replacement. Version 1.0.0 does not promise a persistent lock, even with Shizuku or Root.
 - **Why was the source not deleted?** Deletion is attempted only after a successful installation. Sources are always retained if installation fails, is cancelled or times out. A deletion failure does not change a successful installation, and an external source provider may refuse deletion. For scripts, the host handles `deleteSource` for paths and `file://` sources, retaining `content://` sources. Check `sourceDeleted` and `notes`.
 - **Can I retry or resume?** A failed external URI can be retried while the source and access are available. Once the source or its access is released, reopen the package. After a process restart, the restored view shows saved confirmed results and marks unfinished items as interrupted. It is read-only and never automatically installs or retries. Check the installed app before starting again.
 

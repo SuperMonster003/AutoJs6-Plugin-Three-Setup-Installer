@@ -135,4 +135,26 @@ API 24 原本没有运行 Shizuku server. 本轮临时启动 PID `19678`, UID `2
 - 本文不以统一 Core 的通过数推导每台设备每种身份的全部 P2 组合均完成. 缺少身份的设备不做虚构测试, 低 targetSdk 已被 ROM 接受也不作为绕过拦截成功.
 - 本轮已通过用例的自身夹具/历史清理与上述许可恢复均有对应断言或 journal. 最终 Debug 收尾另以 `build/p6-final-debug-audit/summary.json` 复核 8 台设备: 固定 Core/Spike 夹具及保留数据在所有枚举用户中均不存在, 没有本轮夹具平台 session 或安装前台服务. 原 Xiaomi 6 个/Sony Root 20 个系统活动 session ID 集合不变, 其余设备活动 session 为空; 四台原 server PID 保留, API 24 临时 server 已停止, 六份许可 journal 的设备当前值与原始值一致. 新的签名 Release 交付另由统一收尾记录, 不提前借用上节 build 40 的 Release 结论.
 
-本次只补事实与证据边界, 不据此将原 P6.3 整体勾选完成.
+## 本轮最终 Release 与清理
+
+本轮以 build 44 收尾, 没有复用 build 40 的 APK 冒充新产物:
+
+| 项目 | 最终值 |
+| --- | --- |
+| APK | `autojs6-plugin-three-setup-installer-v1.0.0-3e230912.apk` |
+| 版本 | `1.0.0`, versionCode `44` |
+| 大小 | `1,904,499` 字节, 约 `1.816 MiB` |
+| CRC32 | `3e230912` |
+| SHA-256 | `3ab3c7691da231a723b59988d6861f0091184d88f742942bf2b7b47225b63e9a` |
+| 签名 / 内容 | apksigner v2 通过, debuggable=false, 无原生库/Debug 探针 |
+| 公开 Installer AAR | SHA-256 `90a337b1cd645270e41368af0d6dc28a73509e505d4b049fdbeececa0997b441`, 未改变 |
+
+`build/p6-final44-debug-build.log` 和 `build/p6-final44-release-build.log` 均 `BUILD SUCCESSFUL in 56s`. 268 项 JVM 全部通过, 无失败/跳过; Debug lint 0 错误/22 警告, 带独立 Release 测试源集的 Release lint 0 错误/29 警告. Debug/androidTest/R8 Release/Release androidTest 和原生库校验通过. 文档生成校验为 10 语言/36 产物, 图标 15 项通过, 安装许可 journal 工具自测通过. 本轮只有测试/说明资源和宿主信息菜单修复, 100 MiB 性能不重复采样, 原 build 40 度量继续保留其版本范围.
+
+同一 build 44 在 `emulator-5554`/API 24, `968e9f18`/API 35, `emulator-5558`/API 37 各通过独立平台 runner 的 2/2 检查, `releaseFailures=0`, 无跳过. 日志为 `build/p6-release44-contract-<serial>.log`. 检查实际已安装 APK 摘要/签名/组件/无原生库, 并通过独立 UID/PID 服务完成 INFO/INSTALLER 元数据及 Parcelable 往返和非宿主拒绝. API 37 再次读取 `PAGE_SIZE=16384`; 此次新包往返不扩展上节首页或安装引擎的既有范围.
+
+最终向 8 台设备保留数据覆盖同一签名 Release: 原五台设备, 补充 Root Sony `QV770340J7`, API 31 AVD `emulator-5556`, API 37 AVD `emulator-5558`. `build/p6-final44-delivery/summary.json` 和 `build/p6-final44-release-audit/summary.json` 记录全部 `versionCode=44`, `debuggable=false`, 六份许可基线仍一致, 固定 Core/Spike 夹具和保留数据均不存在, 无安装前台服务. Xiaomi 原 6 个/Sony Root 原 20 个系统活动 session 保持; 其他设备无活动 session. 四台原 Shizuku server PID 保留, API 24 仍无 server, 用户 AVD 全部继续运行.
+
+旧 build 40 APK 按已记录 SHA-256 校验后移至本仓库忽略目录 `build/p6-release44-prior-artifact/`, `releases/` 仅留上述新签名包. 宿主本轮 37 个文件已在 `522335e864` 独立提交; 并行终端会话的 index 内容在限定路径提交前后相同, 未卷入本次修改. 所有仓库仅本地提交, 未推送或发布.
+
+原 P6.3 的 OEM 文案/FAQ 条目已完成, 整体设备矩阵仍不勾选, 剩余边界保留如上.

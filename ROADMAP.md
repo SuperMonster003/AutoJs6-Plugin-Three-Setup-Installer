@@ -235,7 +235,7 @@ runtime/api/augment/installer/          Installer.kt (AugmentableKey("installer"
 
 建议会话切分: P0 一次 (骨架 + spike); P1 两到三次 (共享 AAR 为一次; 契约 + 客户端 + 路由为一次; 删除旧安装器 + 调用方改造 + 文档为一次); P2 两到三次 (来源与授权; 安装引擎; 卸载 / 批量 / 路由); P3 一到两次; P4 两次 (install / session / errors; uninstall / inspect / authorizer / setDefault / 示例); P5 一到两次; P6 一到两次; P7 一次; P8 两次; P9 两到三次.
 
-当前进度 (2026-10-01): P0, P1, P3, P4 与 P5 原有条目已完成当前范围验收; P1 宿主三入口完整有/无插件六种实际 UI 组合通过, P2.6 联调条目随之完成. P2 核心来源/授权/安装/卸载/批量/Binder 已交付, 失败保留来源明确为固定策略, 其余原矩阵边界继续保留. P6.1 健壮性, P6.2 安全和 P6.4 性能/体积/混淆 Release 往返已完成所列范围验收. P6.3 的 API 37/16 KiB 插件安装与运行已验证, 原完整 OEM 矩阵仍待收口. 特权恢复的 API/元数据边界及 API 24 大字号/系统多窗口独立显示边界见专项证据. 下一步继续 P6.3 与 P2 剩余验收, 不进入 P7 发布.
+当前进度 (2026-10-01): P0, P1, P3, P4 与 P5 原有条目已完成当前范围验收; P1 宿主三入口完整有/无插件六种实际 UI 组合通过, P2.6 联调条目随之完成. P2 核心来源/授权/安装/卸载/批量/Binder 已交付, 失败保留来源明确为固定策略, 其余原矩阵边界继续保留. P6.1 健壮性, P6.2 安全和 P6.4 性能/体积/混淆 Release 往返已完成所列范围验收. P6.3 的 API 37/16 KiB 插件安装与运行已验证, OEM 兼容性/FAQ 文案完成, 原完整 OEM 矩阵仍待收口. 特权恢复的 API/元数据边界及 API 24 大字号/系统多窗口独立显示边界见专项证据. 下一步继续 P6.3 与 P2 剩余验收, 不进入 P7 发布.
 
 ---
 
@@ -484,7 +484,7 @@ runtime/api/augment/installer/          Installer.kt (AugmentableKey("installer"
 ### P6.3 兼容矩阵
 
 - [ ] (测试) 设备池 (附录 E.1): AVD API 24 (Shizuku ADB / none), Sony G8441 API 28, Sony XQ-AT72 API 31, Redmi 22120RN86C API 33, Xiaomi 23046RP50C API 35 (HyperOS 安装者包名事实), AVD API 37 (16 KB 页, 仅验证插件本身安装与运行); 每台: none 新装 / 更新, 可用特权路径静默安装 / 卸载, 外部入口, 默认安装器锁定 (可用身份); 结果表写入 `docs/dev/p6-matrix-evidence.md`. (部分 DEVICE 2026-10-01: 原五台设备 none 新装/更新均通过, API 24/31/35 Shizuku 和 API 28 Root 静默新装/更新/卸载通过, 五台显式外部 Activity/取消各 1/1. API 24/35 默认页锁定/解锁各 1/1 且基线恢复; G8441/XQ-AT72 因原 APK preferred/last-chosen 保护性跳过. Redmi 没有可用特权身份, 不用额外 Root Sony 替代. HyperOS 三种请求安装者事实已记录. API 37 实际 PAGE_SIZE=16384 的 build 40 Release 安装/首页/跨进程契约限定行完成. 两台手机默认项及各 OEM 实际文件管理器/隐式入口仍有缺口, 原 checkbox 保留.)
-- [ ] (插件) OEM 差异按事实进入文案与 README 常见问题 (HyperOS 安装者包名, ColorOS 停止状态需激活, 部分 ROM 限制默认安装器).
+- [x] (插件) OEM 差异按事实进入文案与 README 常见问题 (HyperOS 安装者包名, ColorOS 停止状态需激活, 部分 ROM 限制默认安装器). (DOCS / DEVICE 2026-10-01: 十语言 README/宿主插件说明同步兼容性和 FAQ. HyperOS 仅陈述实测 23046RP50C/API 35/Shizuku 的默认 shell 及两种显式安装者结果; ColorOS 激活提示按 Android 停止状态规则给出条件处理, 明确尚无 ColorOS 专项实机验证. 默认项文案保留旧 API/ROM 拒绝和先清原项限制, 1.0.0 不承诺持久锁定. 文档/图标生成校验通过, 不将通用规则或 protected skip 写成 OEM 实测.)
 
 ### P6.4 性能与体积
 
@@ -1052,3 +1052,11 @@ if (!installer.isDefault()) installer.setDefault(true);
 - build 43 汇总原五台设备 none 新装/更新, 可用特权路径实际静默安装/更新/卸载, 外部显式 Activity 各 1/1, API 24/35 默认页锁定/解锁. 三种授权方式的统一 Core 在本轮四组分别 5/5, 6/6, 5/5, 6/6; 额外 Sony API 33 Root 不替代原 Redmi, 两台原手机默认记录受保护而跳过.
 - HyperOS 默认安装者为 shell, 显式 shell 和插件自身两种请求均静默成功且实际归属相同. Sony API 33 user ROM 的 Root 接受非 debuggable 降级, 按设备事实记录, 不改写其他 ROM 的原拒绝结果. P2.3/P6.3 完整交叉矩阵仍保留未完成, 没有扩大低 targetSdk 或显式 Activity 的证据口径.
 - 固定夹具 Play Protect 扫描驱动与重复卸载收尾修正, 初轮失败保留且最终独立复测通过. 安装许可工具在写入前持久 journal, 核对 UID/原模式/外部变化, 同目标串行; 六份全部恢复. 最终 8 台只读清理复核通过, 用户系统 session/server 和默认记录保持, 详情见 docs/dev/p6-matrix-evidence.md.
+
+### 2026-10-01 (P6.3 OEM 文案与 build 44 Release 收尾)
+
+- 原 P6.3 文案/FAQ 条目完成, 十语言 README 和插件说明同步. HyperOS 使用实际 shell/显式安装者结果, ColorOS 仅给出停止状态下的条件处理并明示未实机验证, 默认安装器保留旧 API/ROM 限制. 本轮完成来源策略/P1.4/P2.6/兼容文案等原条目, P2.3 和 P6.3 的完整矩阵边界保持, 不新增, 分拆或丢弃路线图.
+- 逻辑提交为 f1e9916/build 41 (固定来源保留验证), 080b931/build 42 (宿主六入口验收), 7ead859/build 43 (原设备矩阵与安全测试驱动), 本次 build 44 (OEM 说明与最终 Release 证据). 宿主 522335e864/build 5304 独立提交, 其他会话终端改动和 index 均保留, 所有仓库仅本地提交.
+- 最终 268 项 JVM 全通过, Debug/Release lint 为 0 错误和 22/29 警告. Debug/androidTest/R8 Release/Release androidTest 均构建通过, 文档 10 语言/36 产物和图标 15 项生成一致. API 24/35/37 同一 Release 各 2/2 跨进程契约通过, API 37 实际 16,384 字节页. 未重复本轮无生产引擎变更的 100 MiB 性能采样, 原 build 40 性能证据保持其版本边界.
+- 最终包 autojs6-plugin-three-setup-installer-v1.0.0-3e230912.apk, 1,904,499 字节, SHA-256 3ab3c7691da231a723b59988d6861f0091184d88f742942bf2b7b47225b63e9a, v2 签名通过, 无原生库/Debug 入口. 八台设备均保留数据覆盖 build 44 Release, 最终清理/许可/原 server 和系统 session 复核通过; QV710AF65F/QV770340J7 不留 Debug 主包, 用户 AVD 继续运行.
+- 证据见 docs/dev/p6-matrix-evidence.md, docs/dev/p2-source-preservation-evidence.md 及宿主 docs/dev/installer-entry-evidence.md. 下一步继续原 P2.3 三授权跨 API 缺口和 P6.3 默认项/OEM 实际外部入口. G8441/XQ-AT72 的既有 APK 打开记录仍受保护, 此前仅针对 QV770340J7 的清除许可不扩展到它们; 后续需要清除时另行列明影响并取得维护者授权. 当前无需新增测试设备或产品决策, 不进入 P7 发布.
