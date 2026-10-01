@@ -8,6 +8,8 @@ internal object PrivilegedOptions {
     const val INSTALL_REQUEST_DOWNGRADE = 0x80
     const val INSTALL_ALLOW_DOWNGRADE = 0x100000
     const val INSTALL_BYPASS_LOW_TARGET_SDK_BLOCK = 0x1000000
+    const val DELETE_KEEP_DATA = 0x1
+    const val DELETE_ALL_USERS = 0x2
     const val MAX_SESSIONS = 4
     const val MAX_SPLITS = 64
     const val FLAGS = "flags"

@@ -17,6 +17,10 @@ interface IPrivilegedInstaller {
     Bundle getUsers() = 6;
     int getUid() = 7;
     void attachClient(IBinder token) = 8;
+    // Release local ownership after a terminal result, without aborting the platform session.
+    void release(int sessionId) = 9;
+    // Only version metadata for the explicitly selected user; never substitute the app's user.
+    Bundle getInstalledVersion(String packageName, int userId) = 10;
     // Reserved by Shizuku: transaction 16777115 (AIDL adds FIRST_CALL_TRANSACTION).
     void destroy() = 16777114;
 }

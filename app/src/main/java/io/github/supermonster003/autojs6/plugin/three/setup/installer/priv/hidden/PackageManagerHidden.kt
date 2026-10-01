@@ -4,6 +4,7 @@ import android.content.ComponentName
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.content.pm.PackageInfo
 import android.content.pm.ResolveInfo
 import android.net.Uri
 import android.os.IBinder
@@ -25,6 +26,9 @@ internal class PackageManagerHidden(wrap: (IBinder) -> IBinder = { it }) {
 
     fun packageUid(name: String, user: Int): Int = call("getPackageUid",
         arrayOf(String::class.java, HiddenApiAccess.flagsType, intType), name, HiddenApiAccess.flags(0), user) as Int
+
+    fun packageInfo(name: String, user: Int): PackageInfo? = call("getPackageInfo",
+        arrayOf(String::class.java, HiddenApiAccess.flagsType, intType), name, HiddenApiAccess.flags(0), user) as PackageInfo?
 
     fun query(intent: Intent, user: Int): List<ResolveInfo> {
         val slice = call("queryIntentActivities", arrayOf(Intent::class.java, String::class.java, HiddenApiAccess.flagsType, intType),

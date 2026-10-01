@@ -127,9 +127,11 @@ class PrivilegedInstallerDeviceTest {
         val bytes = instrumentation.context.assets.open("fixture-v$version.apk").use { it.readBytes() }
         val started = SystemClock.elapsedRealtime()
         val id = service.createSession(Bundle().apply { putLong(PrivilegedOptions.SIZE, bytes.size.toLong()) }, caller(service), 0)
+        var terminalReceived = false
         try {
             ParcelFileDescriptor.AutoCloseOutputStream(service.openWrite(id, "base.apk", bytes.size.toLong())).use { it.write(bytes) }
             val result = withResult { sender -> service.commit(id, sender) }!!
+            terminalReceived = result.getIntExtra(PackageInstaller.EXTRA_STATUS, -99) >= PackageInstaller.STATUS_SUCCESS
             evidence("install-v$version", "${SystemClock.elapsedRealtime() - started}ms status=${result.getIntExtra(PackageInstaller.EXTRA_STATUS, -99)} ${result.getStringExtra(PackageInstaller.EXTRA_STATUS_MESSAGE)}")
             if (requireSuccess) {
                 assertEquals(result.getStringExtra(PackageInstaller.EXTRA_STATUS_MESSAGE), PackageInstaller.STATUS_SUCCESS, result.getIntExtra(PackageInstaller.EXTRA_STATUS, -99))
@@ -138,7 +140,7 @@ class PrivilegedInstallerDeviceTest {
             }
             return result
         } finally {
-            service.abandon(id)
+            if (terminalReceived) service.release(id) else service.abandon(id)
         }
     }
 
