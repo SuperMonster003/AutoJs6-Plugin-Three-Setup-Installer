@@ -235,7 +235,7 @@ runtime/api/augment/installer/          Installer.kt (AugmentableKey("installer"
 
 建议会话切分: P0 一次 (骨架 + spike); P1 两到三次 (共享 AAR 为一次; 契约 + 客户端 + 路由为一次; 删除旧安装器 + 调用方改造 + 文档为一次); P2 两到三次 (来源与授权; 安装引擎; 卸载 / 批量 / 路由); P3 一到两次; P4 两次 (install / session / errors; uninstall / inspect / authorizer / setDefault / 示例); P5 一到两次; P6 一到两次; P7 一次; P8 两次; P9 两到三次.
 
-当前进度 (2026-10-01): P0, P1, P3, P4 与 P5 原有条目已完成当前范围验收; P1 宿主三入口完整有/无插件六种实际 UI 组合通过, P2.6 联调条目随之完成. P2 核心来源/授权/安装/卸载/批量/Binder 已交付, 失败保留来源明确为固定策略, 其余原矩阵边界继续保留. P6.1 健壮性, P6.2 安全和 P6.4 性能/体积/混淆 Release 往返已完成所列范围验收. P6.3 的 API 37/16 KiB 插件安装与运行已验证, OEM 兼容性/FAQ 文案完成, 原完整 OEM 矩阵仍待收口. 特权恢复的 API/元数据边界及 API 24 大字号/系统多窗口独立显示边界见专项证据. 下一步继续 P6.3 与 P2 剩余验收, 不进入 P7 发布.
+当前进度 (2026-10-01): P0, P1, P3, P4 与 P5 原有条目已完成当前范围验收; P1 宿主三入口完整有/无插件六种实际 UI 组合通过, P2.6 联调条目随之完成. P2 核心来源/授权/安装/卸载/批量/Binder 已交付, 失败保留来源明确为固定策略, 其余原矩阵边界继续保留. P6.1 健壮性, P6.2 安全和 P6.4 性能/体积/混淆 Release 往返已完成所列范围验收. P6.3 的 API 37/16 KiB 插件安装与运行已验证, OEM 兼容性/FAQ 文案完成, 原完整 OEM 矩阵仍待收口. 特权恢复的 API/元数据边界及 API 24 大字号/系统多窗口独立显示边界见专项证据. 本轮进一步补齐G8441 Root默认页/Files和API 35 Shizuku/API 33 none, 完成P7.2十语言README/changelog定稿; P2.3与P6.3剩余环境/原记录边界继续保留. 下一步先满足原矩阵剩余条件, P7远端发布仍受仅本地提交的指示限制.
 
 ---
 
@@ -506,8 +506,8 @@ runtime/api/augment/installer/          Installer.kt (AugmentableKey("installer"
 
 ### P7.2 插件 README 与 changelog
 
-- [ ] (插件) `.readme/lang_*.json` 10 语言: 简介, 功能 (安装 / 更新 / 卸载 / 批量 / 分包 / 静默 / 默认安装器), 安装 (插件中心向导或 Release), 授权方式说明 (Shizuku / Root 各自前提), 脚本示例 (`installer.install`, `installAsync`, `session`, `uninstall`, `setDefault`), 兼容性 (Android 7.0+, 特权能力的框架限制按事实), 常见问题 (HyperOS 安装者, 降级限制, 默认安装器被 ROM 限制, AAB), 发行历史, 许可证与第三方声明; 生成器 `--check` 通过.
-- [ ] (插件) `.changelog` 10 语言 `v1.0.0` 定稿 (`feature` / `improvement` / `dependency` 分类, 依赖用 `附加` 术语记录 Shizuku-API / libsu / HiddenApiBypass / common-plugin-api / installer-api / package-archive-parser).
+- [x] (插件) `.readme/lang_*.json` 10 语言: 简介, 功能 (安装 / 更新 / 卸载 / 批量 / 分包 / 静默 / 默认安装器), 安装 (插件中心向导或 Release), 授权方式说明 (Shizuku / Root 各自前提), 脚本示例 (`installer.install`, `installAsync`, `session`, `uninstall`, `setDefault`), 兼容性 (Android 7.0+, 特权能力的框架限制按事实), 常见问题 (HyperOS 安装者, 降级限制, 默认安装器被 ROM 限制, AAB), 发行历史, 许可证与第三方声明; 生成器 `--check` 通过. (DOCS / JVM 2026-10-01: 十语言补齐五类API与分包/会话/错误示例, 区分脚本auto和宿主界面dialog, 明确线程归属, 单独授权/逐项来源保留/ROM限制/未发布状态; 10语言36生成物一致. 已对照宿主源码并经独立审阅.)
+- [x] (插件) `.changelog` 10 语言 `v1.0.0` 定稿 (`feature` / `improvement` / `dependency` 分类, 依赖用 `附加` 术语记录 Shizuku-API / libsu / HiddenApiBypass / common-plugin-api / installer-api / package-archive-parser). (DOCS / JVM 2026-10-01: 合并为1条提示/15条功能/4条优化/6条依赖, 覆盖实际交付行为, 简中依赖均用附加; 发布/索引待完成状态与设备限制保持, 内置发行历史和README同步生成.)
 
 ### P7.3 发布 gate
 
@@ -1073,3 +1073,9 @@ if (!installer.isDefault()) installer.setDefault(true);
 - G8441 Root最终完整1/1: 真页面锁定, 系统Files从自有目录打开固定APK直达插件确认, 取消后解锁, 原系统安装器最近使用/所有默认项/偏好恢复. 精确取消token的历史清理1/1持久成功, 自有来源摘要核验后移除. 两次Files驱动失败和页面单独通过分别保留, 不混记为完整通过.
 - 原配置下G8441实际chooser含插件; Redmi实际Files直接进入系统安装器风险提示, 未确认风险或安装, 返回后原默认XML/许可/session不变. XQ-AT72仍保护本插件原记录, 未执行默认页测试. 该机只读解析查询前后stopapp旧首选变为最近使用, 无清除命令, 保留前后证据与归因边界.
 - 本次build 46按P6.3测试/证据单独本地提交, 原完整矩阵仍未勾选. 详情见 docs/dev/p6-default-history-evidence.md 与 docs/dev/p6-oem-external-completion-evidence.md. 不推送, 不改动P8/P9或路线图结构.
+
+### 2026-10-01 (P7.2 十语言说明与发行历史定稿)
+
+- 原P7.2两项完成, 不新增线路图条目. README补齐install/installAsync/session/uninstall/setDefault和分包/事件示例, 顶层仅只读状态查询; 明确同步查询/会话创建/wait不能在UI线程, 会话对象绑定创建线程. 依据实际宿主路由区分脚本auto默认特权静默与宿主界面dialog确认, 避免误导宿主按钮默认静默.
+- 十语言授权前提/失败来源保留/逐项批量删除/设备降级差异/默认安装器限制及未公开发布状态同步. v1.0.0发行历史收敛为用户可读行为和六项依赖, 内部迁移过程不再作为功能说明. 版本/最低宿主在历史中固定, 不随未来模板值漂移.
+- 文档10语言36产物与图标15项校验通过, 源码事实经独立子代理复核, 先前268项JVM/Debug装配/lint通过. 本次build 47仅本地文档提交. 下一步执行原P7.3的本地构建检查, 保留P2/P6缺口和远端发布禁令, 不提前进入P8.
