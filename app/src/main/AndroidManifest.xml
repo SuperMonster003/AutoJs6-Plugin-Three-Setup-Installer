@@ -97,6 +97,12 @@
         </service>
 
         <!-- Explicit PendingIntent target for system package-installation results. -->
+        <activity
+            android:name=".ui.UninstallDialogActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
         <receiver
             android:name=".engine.InstallStatusReceiver"
             android:exported="false" />
