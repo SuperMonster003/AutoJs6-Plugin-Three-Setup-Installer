@@ -66,7 +66,7 @@ API 35 实测 UID=10890, targetSdk=37, 前台 importance=100, 启动时有窗口
 
 宿主探针以每 case 唯一 data URI 和 NEW_DOCUMENT 创建自己的任务, 重复运行不会复用旧 case. 宿主 53faf617a7 让匹配的取消指令关闭该探针的 Activity, 仅当它是 task root 时移除自己的任务. 最终 case `p3-installer-1cb2ba15-9589-483d-9ed1-769b4c38b97f` 在 task 2931 / host PID 31045 再次安装成功, 开关恢复为 false.
 
-该设备宿主已有 overlayPermission=true, 因此此证据证明生产前台调用链成功, 不单独声称隔离证明 BIND_ALLOW_ACTIVITY_STARTS 是唯一放行因素. 测试尚未逐一点击文件管理器安装按钮, 插件中心 URL 安装与打包后安装的真实 UI, P2.6 / P1.4 三处入口矩阵仍未完成.
+该设备宿主已有 overlayPermission=true, 因此此证据证明生产前台调用链成功, 不单独声称隔离证明 BIND_ALLOW_ACTIVITY_STARTS 是唯一放行因素. 本节当时尚未逐一点击各处真实 UI. 后续于 2026-10-01 使用 Redmi API 33/正式宿主 UID 10778 完成 P1.4/P2.6 的 APK 信息框, XAPK 文件行安装和插件中心 URL 三入口, 有/无插件六种组合全部通过; 宿主提交 522335e864, 详见宿主 `docs/dev/installer-entry-evidence.md`. APK Inspector 启用时用 More > Information 访问宿主包信息, 没有把直接路由探针替代为真实 UI 证据, 也没有将 API 33 结果推导为 API 34+ 独立绑定授权证明.
 
 ## 2 GiB 后台安装
 

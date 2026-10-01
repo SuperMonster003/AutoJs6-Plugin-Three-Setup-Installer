@@ -235,7 +235,7 @@ runtime/api/augment/installer/          Installer.kt (AugmentableKey("installer"
 
 建议会话切分: P0 一次 (骨架 + spike); P1 两到三次 (共享 AAR 为一次; 契约 + 客户端 + 路由为一次; 删除旧安装器 + 调用方改造 + 文档为一次); P2 两到三次 (来源与授权; 安装引擎; 卸载 / 批量 / 路由); P3 一到两次; P4 两次 (install / session / errors; uninstall / inspect / authorizer / setDefault / 示例); P5 一到两次; P6 一到两次; P7 一次; P8 两次; P9 两到三次.
 
-当前进度 (2026-10-01): P0, P3, P4 与 P5 原有条目已完成当前范围验收; P1 契约/解析 AAR/宿主路由已交付, 宿主三入口完整有/无插件组合仍待完成. P2 核心来源/授权/安装/卸载/批量/Binder 已交付, 其余原矩阵边界继续保留. P6.1 健壮性, P6.2 安全和 P6.4 性能/体积/混淆 Release 往返已完成所列范围验收. P6.3 的 API 37/16 KiB 插件安装与运行已验证, 原完整 OEM 矩阵仍待收口. 特权恢复的 API/元数据边界及 API 24 大字号/系统多窗口独立显示边界见专项证据. 下一步继续 P6.3 与 P1/P2 剩余验收, 不进入 P7 发布.
+当前进度 (2026-10-01): P0, P1, P3, P4 与 P5 原有条目已完成当前范围验收; P1 宿主三入口完整有/无插件六种实际 UI 组合通过, P2.6 联调条目随之完成. P2 核心来源/授权/安装/卸载/批量/Binder 已交付, 失败保留来源明确为固定策略, 其余原矩阵边界继续保留. P6.1 健壮性, P6.2 安全和 P6.4 性能/体积/混淆 Release 往返已完成所列范围验收. P6.3 的 API 37/16 KiB 插件安装与运行已验证, 原完整 OEM 矩阵仍待收口. 特权恢复的 API/元数据边界及 API 24 大字号/系统多窗口独立显示边界见专项证据. 下一步继续 P6.3 与 P2 剩余验收, 不进入 P7 发布.
 
 ---
 
@@ -303,7 +303,7 @@ runtime/api/augment/installer/          Installer.kt (AugmentableKey("installer"
 - [x] (宿主) `ApkInfoDialogManager` 保留只读信息, "安装" 按钮改为 `PackageInstallRouter.install`; 文件管理器安装按钮 (`explorer_file.xml` `@+id/install`) 保留, 动作改走路由; `ExplorerItemActionPolicy.installVisible` 语义不变. (SOURCE 2026-09-30: 两处 `installAction` 改为 `PackageInstallRouter.install(context, file)`, `DisplayManifestActivity` 与只读信息不变, `ExplorerItemActionPolicy.installVisible` 不变)
 - [x] (宿主) 字符串清理: 删除仅被删除代码引用的 `error_package_installation_*`, `text_package_installation*`, 通知通道文案等 (10 语言目录逐一核对); 新增退化引导文案 (`text_installer_plugin_required`, `text_installer_plugin_unsupported_format` 等, 默认与 `values-en` 一致, 按 `name` 排序). (SOURCE 2026-09-30: 删除仅旧安装器使用的 14 个字符串 x 11 目录 (`error_android_package_*`, `error_package_installation_*`, `error_request_install_packages_permission_denied`, `text_activity_not_found_for_apk_installing`, `text_package_installation*`, `text_reading_android_package`); 新增 `error_installer_plugin_required_for_package_format` 与 `hint_installer_plugin_recommended` x 11 目录, 按 name 排序插入)
 - [x] (宿主) `REQUEST_INSTALL_PACKAGES` 保留 (系统安装器交接需要调用方声明), `REQUEST_DELETE_PACKAGES` 保留 (`app.uninstall`); ProGuard / R8 规则中与删除类相关的 keep 清理. (SOURCE 2026-09-30: 两个权限保留; ProGuard 规则中没有与删除类相关的 keep)
-- [ ] (测试) 宿主 `:app:assembleAppDebug` / `:app:assembleInrtDebug` / `testAppDebugUnitTest` / `lintAppDebug` 通过; 在一台真机上验证: 无插件时文件管理器点击 `.apk` -> 信息对话框 -> 安装 -> 系统安装器; 点击 `.xapk` -> 提示安装插件; 插件中心从 URL 安装 -> 系统安装器; 有插件时以上三处均进入插件对话框. (部分 2026-09-30: `:app:assembleAppDebug` 通过, `:app:compileInrtDebugKotlin` 通过, 安装器包 14 个 JVM 用例通过, `:app:lintAppDebug` 0 错误 / 2392 警告 (P1 前 2403, 新代码无警告; 默认 4 GB 守护进程堆在 lintAnalyzeAppDebug 阶段耗尽, 以 12 GB 堆单独重跑 8 分 41 秒通过); 真机三处退化路径 (无插件: 文件管理器 `.apk` -> 系统安装器, `.xapk` -> 插件引导, 插件中心 URL 安装 -> 系统安装器; 有插件: 三处进入插件对话框) 未执行, 留待 P2 插件 Binder 路由落地后与插件路径一并验收)
+- [x] (测试) 宿主 `:app:assembleAppDebug` / `:app:assembleInrtDebug` / `testAppDebugUnitTest` / `lintAppDebug` 通过; 在一台真机上验证: 无插件时文件管理器点击 `.apk` -> 信息对话框 -> 安装 -> 系统安装器; 点击 `.xapk` -> 提示安装插件; 插件中心从 URL 安装 -> 系统安装器; 有插件时以上三处均进入插件对话框. (BUILD / DEVICE 2026-10-01: Redmi 22120RN86C/API 33, 正式宿主 UID 10778/build 5304, 插件原本不存在, 后安装 build 41. 六个实际 UI case 各 1/1, 五次安装核验固定无代码 APK 的包名/v1/SHA-256, 无插件 XAPK 引导取消且包不存在. APK Inspector 保持启用时, APK 通过文件行 More > Information > Install 进入; 实测发现信息入口隐藏缺口, 宿主 522335e864 补充更多菜单且捕获文件身份. XAPK 使用真实行 Install, URL 经真实菜单/输入/下载/信息框, 无直接路由或假 UID. App/Inrt/全量 JVM/androidTest/lint 构建通过, 最终 lint 0 Error/Fatal, 2399 Warning, 3 Hint; 导航/启用/许可逐项恢复, 12 case 和 4 条自有历史已清理. 详见宿主 docs/dev/installer-entry-evidence.md.)
 
 ### P1.5 协议文档, changelog 与版本回填
 
@@ -363,7 +363,7 @@ runtime/api/augment/installer/          Installer.kt (AugmentableKey("installer"
 - [x] (插件) `ThreeSetupInstallerPluginService` (`IInstallerPlugin.Stub`): 按宿主协议用 `HostCallerGuard` 校验官方包名 / UID / 相同签名 / 实际宿主版本, 会话方法检查所有者; D31 输入与只读 PFD 校验; 四并发会话, 有界工作队列, `linkToDeath` 取消并清理, 终态十分钟回收. 能力声明 `CONTRACT_VERSION=1`, 三种 AUTHORIZERS, MAX_BATCH / MAX_SPLITS, `FEATURES=[batch,splits,silent-uninstall,users,inspect,delete-source,default-installer]`. (SOURCE / JVM / BINDER 2026-10-01, 见 `docs/dev/p2-binder-evidence.md`; `delete-source` / `default-installer` 已随 P3.2 正式入口交付并由 API 24 / 35 契约回归验证)
 - [x] (插件) 默认安装器协调层: 只读状态不拉起特权进程, 设置结果验证全部四个 APK filter, 保留 `DEFAULT_REQUIRES_CLEAR`, 只解除本插件默认项, 无正式 APK 入口时拒绝 enable 且不声明能力. (JVM: `DefaultInstallerTest` 3 项; BINDER: API 24 / 28 / 35 只读状态; 真实默认项操作已有 P0 证据, 正式入口启用仍在 P3 / P5) (P3.2 DEVICE 2026-10-01: 正式 ExternalInstallActivity 已接入; API 24 Shizuku 在无既有 APK 默认项的前提下设置并验证全部四个 filter, 再只清除本插件默认项. 专用设置页仍在 P5)
 - [x] (测试) instrumentation: 发现 / 绑定 / descriptor; 敌意输入 (超长数组, 非法 JSON, 未知枚举, 空 / 可写 / 关闭的 PFD) 返回 `INVALID_ARGUMENT`; 四并发与第五项拒绝; 客户端进程死亡取消会话. (BINDER 2026-10-01: `InstallerBinderDeviceTest` 于 API 24 / 28 / 35; 跨进程测试使用非导出 debug 入口和独立回调进程, 生产入口拒绝插件 UID 冒充宿主. 关闭的 PFD 在同进程入口测试, 因其无法被正常封送. 详见 `docs/dev/p2-binder-evidence.md`)
-- [ ] (宿主 / 插件) 完整宿主界面联调: API 34+ 前台宿主绑定的 `BIND_ALLOW_ACTIVITY_STARTS` 授权与 P3 通知回退, 三处宿主入口的实际安装 / 退化, 正式外部入口和默认项能力; 不能用测试身份或同进程真实包测试替代. (部分 DEVICE 2026-10-01: 宿主 1e6d8d09eb 仅对安装插件开启 API 34+ 绑定标志, API 35 用真实宿主 UID=10890 经正式 PackageInstallRouter 完成前台确认与安装, 无调用身份替换; 默认项与正式外部入口已验证. 三处实际 UI 的安装 / 退化尚未全部点击验收, 见 docs/dev/p3-ui-evidence.md)
+- [x] (宿主 / 插件) 完整宿主界面联调: API 34+ 前台宿主绑定的 `BIND_ALLOW_ACTIVITY_STARTS` 授权与 P3 通知回退, 三处宿主入口的实际安装 / 退化, 正式外部入口和默认项能力; 不能用测试身份或同进程真实包测试替代. (DEVICE 2026-10-01: 原 API 35 正式宿主 UID=10890/生产 PackageInstallRouter 前台确认与安装, P3 通知回退, 外部入口及默认项证据保留. 新增 Redmi API 33 正式宿主 UID=10778 的有/无插件三入口实际 UI 共六项全通过, 宿主 522335e864/build 5304, 见 P1.4 和宿主 docs/dev/installer-entry-evidence.md. API 35 设备原有 overlayPermission=true, 不将该路径或 API 33 六项宣称为隔离证明绑定标志是唯一放行因素; 见 docs/dev/p3-ui-evidence.md 与 docs/dev/p3-notification-evidence.md.)
 
 验收条件: P2 全部条目在 AVD API 24 与至少一台 API 33+ 真机上按授权方式矩阵通过; JVM 测试覆盖来源 / 格式 / 解析顺序 / 批量 / 上限; 证据写入 `docs/dev/p2-core-evidence.md`.
 
@@ -1039,3 +1039,10 @@ if (!installer.isDefault()) installer.setDefault(true);
 - 维护者确认 keepSourceOnFailure 为固定策略: 失败, 取消或超时的未成功项始终保留来源, 不增加可关闭开关或公开选项. 在原 D25 和原 P2.3 条目中澄清, 未新增, 分拆或丢弃条目. 十语言来源 FAQ 同步, 公共 AIDL/脚本签名和生产删除路径不变.
 - 新组合设备用例在 API 24/35 各 1/1, 无跳过; 显式 deleteSource=true 的坏包, 用户取消, 查询/打开两种超时均不发起删除, 原 SHA-256/长度保持. 独立拒删控制计数为 1, 实际四项计数为 0, 每项历史精确恢复且不创建平台 session. 结合 P3 成功删除/拒删和既有生命周期证据, 原 P2.3 来源策略条目完成; 三授权完整跨 API 矩阵仍单独保留.
 - 本逻辑提交使用 build 41. 当前继续 P6.3 OEM 验收与 P1/P2 宿主三入口联调, 所有仓库只作本地提交.
+
+### 2026-10-01 (P1.4/P2.6 宿主三入口收口)
+
+- 原 P1.4 宿主构建/三入口和 P2.6 完整联调两项完成, 不增删或分拆路线图. 正式宿主 build 5304 在 Redmi API 33/UID 10778 上完成有/无插件各三项, 五次真实安装均核验固定 APK 摘要和版本, 无插件 XAPK 只显示引导. URL 实际经过下载, 所有入口由生产 UI 发起.
+- 启用 APK Inspector 时信息图标隐藏且无更多菜单替代入口, 已在宿主 522335e864 修复. 同一提交包含捕获文件身份的菜单回调, 十语言 fix/生成文档, 六入口测试和证据. App/Inrt/全量 JVM/androidTest/lint 已通过, 最终 lint 0 Error/Fatal, 2399 Warning, 3 Hint.
+- 最终导航/启用/安装许可恢复, 自有来源和 12 case 归档清理, 4 条精确归属历史移除, HTTP 子进程/reverse 停止; 用户应用, Inspector 设置和默认记录保留. 宿主另一个终端会话的全部 Git index 条目在本轮限定路径提交前后相同, 没有纳入安装器提交.
+- 插件此文档提交为 build 42, 宿主证据见 AutoJs6/docs/dev/installer-entry-evidence.md. API 35 绑定/通知等原证据按原范围使用, P2.3 跨授权/API 的完整矩阵和 P6.3 OEM 完整矩阵继续保留未完成. 全部只作本地提交.
