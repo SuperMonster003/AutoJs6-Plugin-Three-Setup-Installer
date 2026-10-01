@@ -235,7 +235,7 @@ runtime/api/augment/installer/          Installer.kt (AugmentableKey("installer"
 
 建议会话切分: P0 一次 (骨架 + spike); P1 两到三次 (共享 AAR 为一次; 契约 + 客户端 + 路由为一次; 删除旧安装器 + 调用方改造 + 文档为一次); P2 两到三次 (来源与授权; 安装引擎; 卸载 / 批量 / 路由); P3 一到两次; P4 两次 (install / session / errors; uninstall / inspect / authorizer / setDefault / 示例); P5 一到两次; P6 一到两次; P7 一次; P8 两次; P9 两到三次.
 
-当前进度 (2026-10-01): P0 已完成, P1 已交付契约 / 解析 AAR / 宿主路由, 宿主入口完整真机验收仍待与插件界面联调. P2.1 来源与格式, P2.2 授权方式, P2.4 卸载, P2.5 批量与目标用户已完成现有条目验收; 安装引擎与 V1 Binder 路由已按逻辑提交, 显式 dialog 有十语言基础确认入口. 下一步从 P3.1 继续完整界面 / 外部入口 / 系统确认接管 / 前台通知与宿主前台启动授权, 收尾 P2 来源删除及完整设备矩阵. 默认安装器和删除来源的可选能力尚未声明, 见 `docs/dev/p2-core-evidence.md`.
+当前进度 (2026-10-01): P0 已完成; P1 契约 / 解析 AAR / 宿主路由已交付, 三入口有/无插件的完整设备验收仍待完成. P2 核心来源 / 授权 / 安装 / 卸载 / 批量 / Binder 路由和 P3 安装界面 / 展示恢复 / 系统确认 / 通知已交付; 本轮补齐 P3.3 未知来源授权后成功安装, P3.2 的系统文件管理器 / 浏览器 APK / XAPK 矩阵继续保留. P4 脚本 API 及四套关联文档已完成. P5.0-P5.4 独立首页 / 历史 / 应用管理 / 设置 / 默认安装器 / 关于 / 启动器主要实现及基础设备验收已完成, P5.2 跨设备特权锁定矩阵仍未勾选; API 24 大字号 GPU 故障和系统多窗口的未测边界见 docs/dev/p5-standalone-evidence.md. 下一步按原条目收尾剩余验收并推进 P6, 不进入 P7 发布.
 
 ---
 
@@ -432,34 +432,34 @@ runtime/api/augment/installer/          Installer.kt (AugmentableKey("installer"
 
 ### P5.0 首页, 安装历史与批量队列 (D33 / D34 / D36)
 
-- [ ] (插件) `ui/HomeActivity` 为 launcher 入口 (四个 alias 的 `targetActivity`): 顶部授权方式状态卡 (Shizuku / Root 的可用 / 运行 / 授权三态, 一键请求, 未安装 Shizuku 时给出下载引导) 与默认安装器状态卡 (当前处理者, 锁定 / 解锁, 无特权时跳系统 "默认打开" 引导), 下方任务列表 (进行中会话实时进度 + 最近历史), FAB 选择安装包 (SAF `OpenMultipleDocuments`, MIME 列表复用 P3.2, 多选进入批量队列), 顶栏溢出菜单: 已安装应用, 设置; 空状态文案, TalkBack, RTL, 大字号, 进程重建; 中性色与主题色遵循独立设置页规范.
-- [ ] (插件) `history/InstallHistoryStore`: JSON 文件 + 原子写, 上限 200 条 (超出丢弃最旧), 字段 包名 / 标签 / 版本 (旧 -> 新) / 结果 / 时间 / 来源 (host / script / external / home) / 授权方式 / 错误码与系统消息; 会话终态写入 (含批量逐项); 单条删除与清空确认; 不保存安装包内容或路径以外的信息.
-- [ ] (插件) `queue/InstallQueue`: 多选文件串行安装 (复用 P2.5 批量语义), 首页显示队列进度 (n / total, 当前项阶段), 取消剩余, 跳过失败项继续; 队列存活于进程内, 进程重建后未开始的项不自动续跑并在历史标记 `cancelled`.
-- [ ] (插件) `ui/InstalledAppsActivity`: 已安装应用列表 (图标 / 标签 / 包名 / 版本, 搜索, 按名称 / 安装时间 / 更新时间排序, 显示系统应用开关), 点击展开操作: 卸载 (特权静默 + 保留数据开关, 无特权时系统确认, 复用 P2.4), 打开, 应用信息; 列表异步加载并缓存图标.
-- [ ] (插件) `ACTION_SEND` / `ACTION_SEND_MULTIPLE` 接收安装包 (P3.2 的入口 Activity 增加 filter, MIME 同 `ACTION_VIEW`), 单项进入安装对话框, 多项进入批量队列.
-- [ ] (测试) JVM: 历史编解码, 上限裁剪, 来源与结果映射; instrumentation: 首页状态卡按授权状态渲染, 历史 200 条上限与清空, 队列取消与跳过, 已安装列表搜索与排序, `ACTION_SEND` 入口解析.
+- [x] (插件) `ui/HomeActivity` 为 launcher 入口 (四个 alias 的 `targetActivity`): 顶部授权方式状态卡 (Shizuku / Root 的可用 / 运行 / 授权三态, 一键请求, 未安装 Shizuku 时给出下载引导) 与默认安装器状态卡 (当前处理者, 锁定 / 解锁, 无特权时跳系统 "默认打开" 引导), 下方任务列表 (进行中会话实时进度 + 最近历史), FAB 选择安装包 (SAF `OpenMultipleDocuments`, MIME 列表复用 P3.2, 多选进入批量队列), 顶栏溢出菜单: 已安装应用, 设置; 空状态文案, TalkBack, RTL, 大字号, 进程重建; 中性色与主题色遵循独立设置页规范. (SOURCE / DEVICE 2026-10-01: 33f9341; 首页状态卡, 任务稳定复用, SAF 多选与菜单完成. API 24 / 35 最终 HomeActivityDeviceTest 各 3/3, 七种授权状态显示有断言; 真实窗口 / RTL / 字号 2 / IME 范围见 docs/dev/p5-standalone-evidence.md.)
+- [x] (插件) `history/InstallHistoryStore`: JSON 文件 + 原子写, 上限 200 条 (超出丢弃最旧), 字段 包名 / 标签 / 版本 (旧 -> 新) / 结果 / 时间 / 来源 (host / script / external / home) / 授权方式 / 错误码与系统消息; 会话终态写入 (含批量逐项); 单条删除与清空确认; 不保存安装包内容或路径以外的信息. (SOURCE / JVM / DEVICE 2026-10-01: 原子 JSON, 来源/结果映射, 删除墓碑与晚写隔离完成; API 24 隔离私有存储实际写 224 条并验证最新 200 条, 清空及冷加载后无复活, 1/1 通过. 见 docs/dev/p5-standalone-evidence.md.)
+- [x] (插件) `queue/InstallQueue`: 多选文件串行安装 (复用 P2.5 批量语义), 首页显示队列进度 (n / total, 当前项阶段), 取消剩余, 跳过失败项继续; 队列存活于进程内, 进程重建后未开始的项不自动续跑并在历史标记 `cancelled`. (SOURCE / JVM / DEVICE 2026-10-01: 复用 P2 批量执行, 全来源展示与历史接入; API 24 / 35 HistoryQueueDeviceTest 覆盖坏来源继续, 取消剩余, 晚到成功及来源身份保护. 新进程未完成记录 cancelled 且不自动续跑.)
+- [x] (插件) `ui/InstalledAppsActivity`: 已安装应用列表 (图标 / 标签 / 包名 / 版本, 搜索, 按名称 / 安装时间 / 更新时间排序, 显示系统应用开关), 点击展开操作: 卸载 (特权静默 + 保留数据开关, 无特权时系统确认, 复用 P2.4), 打开, 应用信息; 列表异步加载并缓存图标. (SOURCE / JVM / DEVICE 2026-10-01: 当前用户异步列表, 按需图标缓存和确认卸载完成; API 24 / 35 搜索/排序/系统开关/重建用例通过; API 35 Shizuku 经真实列表和确认卸载自建夹具, 1/1 通过并完整清理.)
+- [x] (插件) `ACTION_SEND` / `ACTION_SEND_MULTIPLE` 接收安装包 (P3.2 的入口 Activity 增加 filter, MIME 同 `ACTION_VIEW`), 单项进入安装对话框, 多项进入批量队列. (SOURCE / DEVICE 2026-10-01: 分享转 InstallQueue, 保留受限 grants 与单项 batch 身份, 不接受分享方覆盖本地选项; 补 MT APKS MIME application/vnd.android.package-archives. 设备分享解析用例通过, 用户 MT APK 确认页反馈单独记录, 不冒充 XAPK 安装验收.)
+- [x] (测试) JVM: 历史编解码, 上限裁剪, 来源与结果映射; instrumentation: 首页状态卡按授权状态渲染, 历史 200 条上限与清空, 队列取消与跳过, 已安装列表搜索与排序, `ACTION_SEND` 入口解析. (JVM / DEVICE 2026-10-01: 插件 243 JVM 无失败; P5 基础组合在 API 24 / 35 各 20/20, 无跳过; 后补历史 200 条/清空设备用例与真实卸载各 1/1, 最终 Home 状态各 3/3. 详细分组和运行边界见 docs/dev/p5-standalone-evidence.md.)
 
 ### P5.1 设置页
 
-- [ ] (插件) `SettingsActivity` (代码构建的分组平面列表, 复制 3-Stove Agent `ui/kit` 套件后裁剪): 外观组 (语言 / 夜间模式 / 主题色 / 启动器图标, 默认跟随 AutoJs6, 经官方 host settings 契约读取, 宿主不可用回退系统与 `#FFDEAD`); 安装组 (授权方式顺序与启用 (拖动或上下移动), 默认交互 (`auto` / `dialog` / `silent`), 允许降级, 允许测试包, 绕过低 targetSdk, 安装者包名 (空 = 本插件; HyperOS 提示 `com.android.shell`), 目标用户, 安装后删除源文件); 通知组 (进度通知开关); 关于组 (默认安装器状态卡入口, 关于, 发行历史, 检查更新).
-- [ ] (插件) 先选后确定的对话框语义, 中性色与主题色规则, 72 dp 行高与 24 dp 留白, TalkBack 与 RTL; 设置项持久化到 `SharedPreferences` (授权顺序为 JSON 数组), `AuthorizerResolver` 读取.
-- [ ] (插件) 宿主设置入口: `InstallerSettingsActivity` (action `org.autojs.plugin.INSTALLER_SETTINGS`, PLUGIN 权限, `Theme.NoDisplay` 转发).
-- [ ] (测试) JVM: 授权顺序序列化与非法值恢复, HEX / RGB 解析; instrumentation: 先选后确定 / 取消不保存 / 重建后值保持.
+- [x] (插件) `SettingsActivity` (代码构建的分组平面列表, 复制 3-Stove Agent `ui/kit` 套件后裁剪): 外观组 (语言 / 夜间模式 / 主题色 / 启动器图标, 默认跟随 AutoJs6, 经官方 host settings 契约读取, 宿主不可用回退系统与 `#FFDEAD`); 安装组 (授权方式顺序与启用 (拖动或上下移动), 默认交互 (`auto` / `dialog` / `silent`), 允许降级, 允许测试包, 绕过低 targetSdk, 安装者包名 (空 = 本插件; HyperOS 提示 `com.android.shell`), 目标用户, 安装后删除源文件); 通知组 (进度通知开关); 关于组 (默认安装器状态卡入口, 关于, 发行历史, 检查更新). (SOURCE / DEVICE 2026-10-01: 33f9341; 设置页及本地默认选项完成, 语言/夜间/主题色跟随宿主, 启动器 Auto 遵循系统资源. Home/外部默认 dialog, 脚本默认 auto 不变; API 24 / 35 设置与真实窗口验收通过, 细分限制见证据文档.)
+- [x] (插件) 先选后确定的对话框语义, 中性色与主题色规则, 72 dp 行高与 24 dp 留白, TalkBack 与 RTL; 设置项持久化到 `SharedPreferences` (授权顺序为 JSON 数组), `AuthorizerResolver` 读取. (SOURCE / JVM / DEVICE 2026-10-01: 确认后保存, 取消不写, 授权顺序/启用 JSON 与解析恢复, 中性色和既有 HCT 配色完成; API 24 / 35 选择/取消/重建用例通过, API 35 RTL / 字号 2 / 360 dp 窄内容与实际 HEX 键盘通过.)
+- [x] (插件) 宿主设置入口: `InstallerSettingsActivity` (action `org.autojs.plugin.INSTALLER_SETTINGS`, PLUGIN 权限, `Theme.NoDisplay` 转发). (SOURCE / DEVICE 2026-10-01: Manifest 声明 INSTALLER_SETTINGS 与 PLUGIN 权限, NoDisplay Activity 转发 SettingsActivity; 宿主已有约定发现入口, PluginContract 在 API 24 / 35 检查通过.)
+- [x] (测试) JVM: 授权顺序序列化与非法值恢复, HEX / RGB 解析; instrumentation: 先选后确定 / 取消不保存 / 重建后值保持. (JVM / DEVICE 2026-10-01: InstallerPreferencesTest, ThemeColorValue 与更新/历史策略测试通过; SettingsDeviceTest 在 API 24 / 35 覆盖确认/取消/非法输入/重建保持, 显示测试验证真实键盘取消草稿不保存.)
 
 ### P5.2 默认安装器页
 
-- [ ] (插件) `DefaultInstallerActivity` (从首页状态卡与设置页行进入, D35): 状态卡 (当前默认处理者组件名, 是否本插件, 检测方式 D23), "设为默认" / "取消默认" 按钮 (特权路径, 选择授权方式), 无特权时的引导 (打开系统应用详情 "默认打开" 并说明步骤), 结果与失败原因 (OEM 限制按事实展示, 不承诺); 从宿主 / 脚本 `setDefault` 复用同一 `DefaultInstallerLock`.
+- [x] (插件) `DefaultInstallerActivity` (从首页状态卡与设置页行进入, D35): 状态卡 (当前默认处理者组件名, 是否本插件, 检测方式 D23), "设为默认" / "取消默认" 按钮 (特权路径, 选择授权方式), 无特权时的引导 (打开系统应用详情 "默认打开" 并说明步骤), 结果与失败原因 (OEM 限制按事实展示, 不承诺); 从宿主 / 脚本 `setDefault` 复用同一 `DefaultInstallerLock`. (SOURCE / DEVICE 2026-10-01: 33f9341; 首页/设置/脚本复用同一 DefaultInstallerLock, 状态/特权确认/OEM 结果与无特权引导完成, 六页显示测试包含默认安装器页. 下项真实锁定矩阵仍未执行, 不以只读页面覆盖替代.)
 - [ ] (测试) 设备: Shizuku 与 Root 各锁定 / 解锁一次, 锁定后从系统文件管理器打开 `.apk` 直接进入插件; API 24 / 31 / 35 三台.
 
 ### P5.3 关于, 发行历史与更新检查
 
-- [ ] (插件) `AboutActivity` (圆角容器 + 透明图案, 版本 / 作者 / 仓库 / 许可证 / 第三方声明入口), `ReleaseHistoryActivity` (按 locale 读取 `doc/CHANGELOG-{tag}.md`, 回退英语), 更新检查 (固定 GitHub Releases API, 超时 / 取消 / 失败提示 / 忽略版本 / 12 小时频率限制, 对话框 Neutral 按钮打开内置发行历史, Positive 打开发布页).
-- [ ] (测试) instrumentation: 发行历史各语言加载; JVM: 版本比较与忽略逻辑.
+- [x] (插件) `AboutActivity` (圆角容器 + 透明图案, 版本 / 作者 / 仓库 / 许可证 / 第三方声明入口), `ReleaseHistoryActivity` (按 locale 读取 `doc/CHANGELOG-{tag}.md`, 回退英语), 更新检查 (固定 GitHub Releases API, 超时 / 取消 / 失败提示 / 忽略版本 / 12 小时频率限制, 对话框 Neutral 按钮打开内置发行历史, Positive 打开发布页). (SOURCE / JVM / DEVICE 2026-10-01: 33f9341; 十语言离线历史与法务文档, 固定端点手动检查, 12 小时间隔/忽略版本/取消/有界响应完成. HTTP 异常与取消使用 JVM 受控连接验证; 未发布或用真实新发行版做线上提示验收.)
+- [x] (测试) instrumentation: 发行历史各语言加载; JVM: 版本比较与忽略逻辑. (JVM / DEVICE 2026-10-01: AppUpdatePolicyTest 的版本/忽略/频控/未发布/重定向/响应上限/取消通过; SettingsDeviceTest 在 API 24 / 35 加载全部十语言历史和本地法务文档.)
 
 ### P5.4 启动器与图标
 
-- [ ] (插件) `LauncherActivity` (MAIN / LAUNCHER 移至四个 alias: `AdaptiveLightIconAlias` / `AdaptiveDarkIconAlias` / `AdaptiveAutoIconAlias` (默认启用) / `TransparentIconAlias`), `LauncherIcons` 切换 (`DONT_KILL_APP`, 先启用后禁用, 快捷方式归属迁移), `LauncherIconUpdateReceiver` (`MY_PACKAGE_REPLACED` 幂等修复); 图标资源由 P0.1 生成器产出, 用真机截图复核光学居中并按需设置 `OPTICAL_X` / `OPTICAL_Y` 后重新生成.
-- [ ] (测试) `LauncherIconResourceTest` (透明 BitmapDrawable, 固定亮暗不随主题, 自动随配置且 undefined 回退暗色, API 26+ 自适应类型); instrumentation 四模式切换唯一入口 / 进程不死 / 重建持久化.
+- [x] (插件) `LauncherActivity` (MAIN / LAUNCHER 移至四个 alias: `AdaptiveLightIconAlias` / `AdaptiveDarkIconAlias` / `AdaptiveAutoIconAlias` (默认启用) / `TransparentIconAlias`), `LauncherIcons` 切换 (`DONT_KILL_APP`, 先启用后禁用, 快捷方式归属迁移), `LauncherIconUpdateReceiver` (`MY_PACKAGE_REPLACED` 幂等修复); 图标资源由 P0.1 生成器产出, 用真机截图复核光学居中并按需设置 `OPTICAL_X` / `OPTICAL_Y` 后重新生成. (SOURCE / DEVICE 2026-10-01: 33f9341; 四 alias 指向 HomeActivity, Auto 默认, 幂等更新与可变快捷方式迁移/失败回滚完成. 使用既有生成器, API 35 关于页真实透明图案容器截图复核居中, 未调整源图或光学偏移.)
+- [x] (测试) `LauncherIconResourceTest` (透明 BitmapDrawable, 固定亮暗不随主题, 自动随配置且 undefined 回退暗色, API 26+ 自适应类型); instrumentation 四模式切换唯一入口 / 进程不死 / 重建持久化. (DEVICE 2026-10-01: API 24 / 35 LauncherIconResourceTest 与 LauncherIconSelectionDeviceTest 通过, 验证真实 APK 的 ActivityInfo 资源身份/亮暗/undefined, 四模式唯一入口, PID 不变, 持久化与可变快捷方式归属.)
 
 验收条件: 设置页, 默认安装器页, 关于 / 发行历史 / 更新检查, 四 alias 图标在 AVD API 24 与真机 API 33+ 验收; 证据写入 `docs/dev/p5-standalone-evidence.md`.
 
@@ -979,3 +979,14 @@ if (!installer.isDefault()) installer.setDefault(true);
 - 验证: 插件 194 JVM 用例, debug / androidTest / 混淆 release, 两种 lint, 十语言 Markdown 和图标检查通过. 最终版本构建与具体警告数见本轮综合证据. 宿主和其他仓库未修改.
 - 保留未完成: 实际文件管理器 / 浏览器下载列表 APK / XAPK 矩阵, 首次授予未知来源后完整安装成功, 宿主三入口与 P2 剩余矩阵. 本轮模拟器启动及 Chrome 启动均被自动审批拒绝, 仅返回 blocked by policy, 未绕过; 新 API 24 恢复 / 真实 IME 复验未执行.
 - 工作区与下一步: 继续仅本地提交, 不推送 GitHub. 插件按恢复界面, 授权验收, 大包通知与路线图证据及取消文案修复分成 5 笔提交, VERSION_BUILD=29 与可达提交数对齐. 下一轮继续原有验收边界, 再推进 P4 服务层与脚本 augment.
+
+
+### 2026-10-01 (P5 独立应用, P3 授权收尾与宿主信息菜单)
+
+- 在上一轮 P4 与四套关联文档已完成的基础上, 交付 P5.0-P5.4 的独立首页, 私有 200 条历史, 队列与分享, 已安装应用管理, 设置/默认安装器/关于/发行历史/手动更新及四 alias 图标. 新增勾选原 P5 15 项和 P3.3 测试 1 项, 不新增, 分拆或丢弃线路图小节.
+- P5 验证: 插件 243 JVM, API 24 / 35 基础组合各 20/20 无跳过, 历史上限与清空 1/1, Shizuku 真实列表卸载夹具 1/1, 最终首页七种状态显示各 3/3. 六页真实窗口在 API 35 的浅色/阿拉伯语/深色/字号 2/360 dp 窄内容/IME 2/2, API 24 浅色/IME 1/1. API 24 大字号曾触发模拟器 libhwui 原生崩溃, 未记成功; 维护者确认原偏好后已恢复默认跟随宿主, 后续测试改为先保存持久恢复计划. 未更改 AVD 图形配置或关闭用户启动的模拟器.
+- P3.3: 维护者允许 Play Protect 扫描后, API 31 实际 Settings 授权并在原 platformSession 安装成功, created=1 / confirmation=1. 由独立驱动在 runner 退出后恢复 AppOps, 原权限/夹具/历史清理核验通过. 首次扫描和后次缓存结论的边界如实保留, 见 docs/dev/p3-unknown-source-evidence.md.
+- 用户反馈: QV710AF65F 原为 build 5 实验包, 覆盖 P4 build 30 Release 后已确认 MT APK 出现安装信息/确认页. 最终已覆盖 build 33 Release 并在设备上查询确认 MT APKS MIME 的 VIEW/SEND 均匹配插件, 实际 MT APKS 确认页反馈待补; 既有 APK 反馈不等于安装完成, APKS 不替代原 XAPK 矩阵. 不自动安装用户目录中的 AutoJsPro / 微信等文件.
+- 宿主: 493b229f4c 将 APK Inspector 收入更多菜单并置于 More information 上方, 异步菜单快照避免索引错位, InfoDialogInstrumentationTest 6/6. bf102da416 增加可选 sourceOrigin 以区分 host/script 历史, V1 AIDL 不变; 自带 release AAR 与哈希锁已同步. 宿主最终 build 5302, 3273 JVM 中 6 个既有跳过, 无失败; 最终 appDebug/androidTest 构建通过.
+- 提交与边界: 插件独立界面依赖图为 33f9341, P3 授权验收为 67b296f, 显示恢复与证据另作提交; 最终 VERSION_BUILD=33 与提交数对齐. 本轮源码功能共用 Manifest/资源/导航, 为保持提交可构建一起提交, 原路线图仍逐项记录验收. 两仓库仅本地提交, 不推送 GitHub. 完整证据见 docs/dev/p5-standalone-evidence.md.
+- 下一步: 保留 P5.2 跨 API Shizuku/Root 默认锁定矩阵, P3.2 系统文件管理器/浏览器 APK/XAPK, P1.4 宿主三入口组合, API 24 大字号复验与系统多窗口未测边界, 按原线路图继续 P6. 暂无新的产品决策或设备采购要求.
