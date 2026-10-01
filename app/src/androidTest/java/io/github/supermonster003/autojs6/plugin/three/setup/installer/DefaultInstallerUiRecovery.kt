@@ -48,7 +48,7 @@ internal object DefaultInstallerUiRecovery {
     data class Plan(val runId: String, val internalPath: String, val readableCopy: String?, val continuePath: String)
     data class CompletedRun(val runId: String, val startedAt: Long, val restoredAt: Long)
     data class ApprovedClear(val internalPath: String, val readableCopy: String?)
-    class PreservedInstallerXHistory internal constructor(
+    class PreservedLastChosen internal constructor(
         val proof: JsonObject,
         internal val publicEntries: Set<String>,
         internal val shellEntries: Set<String>,
@@ -108,15 +108,14 @@ internal object DefaultInstallerUiRecovery {
         return Snapshot(publicEntries, shellEntries, preferenceSnapshot(context), resolved)
     }
 
-    fun unsafeReason(context: Context, snapshot: Snapshot, preserved: PreservedInstallerXHistory? = null): String? {
+    fun unsafeReason(context: Context, snapshot: Snapshot, preserved: PreservedLastChosen? = null): String? {
         val entries = snapshot.publicEntries + snapshot.shellEntries
         if (entries.any { it.component.packageName == context.packageName }) {
             return "Existing plugin preferred/last-chosen activities must remain untouched; use a clean device"
         }
         val protectedEntries = if (preserved == null) entries else {
-            // The device/audit-bound proof names two exact InstallerX records and may also retain
-            // original generic wildcard last-chosen records backed by shell always=false entries.
-            // Real always preferences, changed filters and all other APK-specific records stay protected.
+            // Only exact records proved to be last-chosen by the complete shell snapshot may
+            // survive this opt-in. Actual defaults and any unproved public entry stay protected.
             snapshot.publicEntries.filterNot { it.canonical in preserved.publicEntries } +
                 snapshot.shellEntries.filterNot { it.always == false && it.canonical in preserved.shellEntries }
         }
@@ -128,10 +127,15 @@ internal object DefaultInstallerUiRecovery {
         }
     }
 
-    fun begin(context: Context, authorizer: String, snapshot: Snapshot, preserved: PreservedInstallerXHistory? = null): Plan {
+    fun begin(context: Context, authorizer: String, snapshot: Snapshot, preserved: PreservedLastChosen? = null): Plan {
         check(unsafeReason(context, snapshot, preserved) == null) { "The default-installer audit may not replace existing preferences" }
-        if (preserved != null) check(authorizer == "root" && preserved.proof.get("validatedState") == snapshot.document()) {
-            "The preserved-history exception is only for the exact validated Root baseline"
+        if (preserved != null) {
+            check(preserved.proof.get("validatedState") == snapshot.document()) {
+                "The preserved-history proof must describe this exact baseline"
+            }
+            if (preserved.proof.has("sourceAuditId")) check(authorizer == "root") {
+                "The approved InstallerX exception is restricted to Root"
+            }
         }
         if (hasPlan(context)) check(read(context).get("status").asString == "restored") {
             "A pending default-installer audit exists; run with -e defaultUiRestoreOnly true before starting another audit"
@@ -148,7 +152,7 @@ internal object DefaultInstallerUiRecovery {
             addProperty("status", "pending")
             addProperty("createdAtMillis", System.currentTimeMillis())
             add("baseline", snapshot.document())
-            preserved?.let { add("preservedInstallerXHistory", it.proof.deepCopy()) }
+            preserved?.let { add(if (it.proof.has("sourceAuditId")) "preservedInstallerXHistory" else "preservedLastChosen", it.proof.deepCopy()) }
         }
         write(context, document)
         check(read(context) == document) { "The recovery plan was not persisted before changing defaults" }
@@ -172,7 +176,7 @@ internal object DefaultInstallerUiRecovery {
      * always=false filters have no scheme and are not equal to our four action/scheme filters.
      * They remain part of the baseline and must survive every lock/unlock and recovery check.
      */
-    fun preserveApprovedInstallerXHistory(instrumentation: Instrumentation, current: Snapshot): PreservedInstallerXHistory {
+    fun preserveApprovedInstallerXHistory(instrumentation: Instrumentation, current: Snapshot): PreservedLastChosen {
         val context = instrumentation.targetContext
         check(Build.VERSION.SDK_INT >= 33 && Process.myUid() / 100_000 == 0 &&
             readShell(instrumentation, "getprop ro.serialno").trim() == "QV770340J7") {
@@ -241,9 +245,51 @@ internal object DefaultInstallerUiRecovery {
             addProperty("appLinks", appLinks)
             add("validatedState", actual)
         }
-        return PreservedInstallerXHistory(proof,
+        return PreservedLastChosen(proof,
             (expectedPublic.take(2) + genericPublic.map { it.canonical }).toSet(),
             (expectedShell.take(2) + genericShell.map { it.canonical }).toSet())
+    }
+
+    /**
+     * An explicit opt-in for a chooser-only baseline. These third-party last-chosen filters have
+     * no scheme, so none equals the four action/scheme filters written by the production engine.
+     * No history is cleared or reconstructed. Every original entry still has to survive byte for
+     * byte in the canonical before/after snapshots, including during crash recovery.
+     */
+    fun preserveUnrelatedLastChosen(context: Context, current: Snapshot): PreservedLastChosen {
+        check(Process.myUid() / 100_000 == 0) { "Last-chosen preservation requires owner user 0" }
+        check((current.publicEntries + current.shellEntries).none { it.component.packageName == context.packageName }) {
+            "Existing plugin preferred/last-chosen activities remain protected"
+        }
+        val resolver = ComponentName("android", "com.android.internal.app.ResolverActivity").flattenToString()
+        check(current.resolved == List(4) { resolver }) { "All four APK probes must resolve to the system chooser" }
+        fun relevant(entry: Preferred) = entry.filter.hasDataType(PackageManagerHidden.APK_MIME) ||
+            probes.any { matches(entry.filter, it) }
+        val shell = current.shellEntries.filter(::relevant)
+        check(shell.isNotEmpty()) { "There are no APK last-chosen records to preserve" }
+        shell.forEach { entry ->
+            val filter = entry.filter
+            check(entry.always == false && filter.countActions() == 1 &&
+                filter.getAction(0) in PackageManagerHidden.INSTALL_ACTIONS &&
+                filter.countCategories() == 1 && filter.hasCategory(Intent.CATEGORY_DEFAULT) &&
+                filter.countDataTypes() == 1 && filter.hasDataType(PackageManagerHidden.APK_MIME) &&
+                filter.countDataSchemes() == 0 && filter.countDataAuthorities() == 0 &&
+                filter.countDataPaths() == 0 && filter.countDataSchemeSpecificParts() == 0 && filter.priority == 0) {
+                "Only third-party, no-scheme APK last-chosen records can be preserved"
+            }
+        }
+        val public = current.publicEntries.filter(::relevant)
+        public.forEach { entry ->
+            check(shell.count { it.component == entry.component && filterDocument(it.filter) == filterDocument(entry.filter) } == 1) {
+                "Each public record requires exactly one matching shell always=false proof"
+            }
+        }
+        val proof = JsonObject().apply {
+            addProperty("kind", "preserve-unrelated-no-scheme-apk-last-chosen")
+            addProperty("preservedRecordCount", shell.size)
+            add("validatedState", current.document())
+        }
+        return PreservedLastChosen(proof, public.map { it.canonical }.toSet(), shell.map { it.canonical }.toSet())
     }
 
     private fun genericApkWildcard(filter: IntentFilter): Boolean {
@@ -434,6 +480,10 @@ internal object DefaultInstallerUiRecovery {
         if (document.get("status").asString == "restored") return location(context, runId)
         check(document.get("status").asString == "pending")
         val before = document.getAsJsonObject("baseline")
+        document.getAsJsonObject("preservedLastChosen")?.let { proof ->
+            check(proof.get("kind").asString == "preserve-unrelated-no-scheme-apk-last-chosen" &&
+                proof.get("validatedState") == before) { "The preserved last-chosen proof no longer matches the recovery baseline" }
+        }
         // These baseline arrays come only from begin(), which rejects every existing plugin item.
         // Validate again so a malformed recovery journal cannot authorize broad preference removal.
         check(before.getAsJsonArray("publicPreferred").none {

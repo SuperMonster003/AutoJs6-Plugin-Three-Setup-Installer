@@ -73,6 +73,9 @@ import java.util.concurrent.atomic.AtomicBoolean
  * -e defaultUiVerifyInstallerXPartialClearOnly true only verifies the recorded partial-clear audit.
  * -e defaultUiPreserveApprovedInstallerXLastChosen true allows a Root UI audit on that same device
  * to preserve exactly its two remaining no-scheme last-chosen entries. Normal audits still skip.
+ * -e defaultUiPreserveUnrelatedLastChosen true separately allows a chooser-only baseline with
+ * proved third-party no-scheme APK last-chosen entries. It never clears them or permits existing
+ * plugin records, actual defaults, or unproved entries. Full baseline restoration is still required.
  */
 @RunWith(AndroidJUnit4::class)
 class DefaultInstallerUiDeviceTest {
@@ -125,13 +128,19 @@ class DefaultInstallerUiDeviceTest {
                 context.getSystemService(PowerManager::class.java).isInteractive)
 
         val baseline = DefaultInstallerUiRecovery.snapshot(instrumentation)
-        val preservedInstallerX = if (args.getString("defaultUiPreserveApprovedInstallerXLastChosen") == "true") {
+        check(listOf("defaultUiPreserveApprovedInstallerXLastChosen", "defaultUiPreserveUnrelatedLastChosen")
+            .count { args.getString(it) == "true" } <= 1) { "Select only one explicit last-chosen preservation mode" }
+        val preservedHistory = if (args.getString("defaultUiPreserveApprovedInstallerXLastChosen") == "true") {
             check(authorizer == Authorizer.ROOT) { "The audited InstallerX last-chosen exception is only for this explicit Root UI run" }
             DefaultInstallerUiRecovery.preserveApprovedInstallerXHistory(instrumentation, baseline).also {
                 evidence("PRESERVING_APPROVED_INSTALLER_X_HISTORY partialClearRecorded=true preservedLastChosen=2 preservedGenericWildcardLastChosen=${it.proof.get("preservedGenericWildcardRecordCount").asInt} actualDefault=false")
             }
+        } else if (args.getString("defaultUiPreserveUnrelatedLastChosen") == "true") {
+            DefaultInstallerUiRecovery.preserveUnrelatedLastChosen(context, baseline).also {
+                evidence("PRESERVING_UNRELATED_LAST_CHOSEN records=${it.proof.get("preservedRecordCount").asInt} actualDefault=false noHistoryCleared=true")
+            }
         } else null
-        DefaultInstallerUiRecovery.unsafeReason(context, baseline, preservedInstallerX)?.let { reason ->
+        DefaultInstallerUiRecovery.unsafeReason(context, baseline, preservedHistory)?.let { reason ->
             evidence("SKIPPED authorizer=$requested reason=$reason defaultsUnchanged=true")
             assumeTrue(reason, false)
         }
@@ -144,7 +153,7 @@ class DefaultInstallerUiDeviceTest {
             authorizer in preferences.authorizers.enabled)
         assumeTrue("Start the requested authorizer before this audit",
             waitUntil(15_000) { AuthorizerStates.state(context, authorizer).let { it.available && it.running } })
-        val plan = DefaultInstallerUiRecovery.begin(context, requested!!, baseline, preservedInstallerX)
+        val plan = DefaultInstallerUiRecovery.begin(context, requested!!, baseline, preservedHistory)
         evidence("PENDING runId=${plan.runId} authorizer=$requested plan=${plan.internalPath} readableCopy=${plan.readableCopy}")
 
         var scenario: ActivityScenario<DefaultInstallerActivity>? = null
