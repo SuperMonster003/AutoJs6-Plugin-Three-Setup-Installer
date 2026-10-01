@@ -260,6 +260,25 @@ internal object ArchiveOpener {
         )
     }
 
+    /** A confirmation may omit optional components, but never add unchecked bytes or break dependencies. */
+    fun select(prepared: PreparedPackage, names: Set<String>): PreparedPackage {
+        prepared.failure()?.let { throw it }
+        if (names.isEmpty() || !prepared.apks.map { it.name }.containsAll(names)) {
+            throw InstallFailure(InstallerErrorCodes.INVALID_ARGUMENT, "Invalid split selection")
+        }
+        val selected = prepared.apks.filter { it.name in names }
+        val base = selected.singleOrNull { it.splitName == null }
+            ?: throw InstallFailure(InstallerErrorCodes.INVALID_PACKAGE, "The base APK must remain selected")
+        val missing = missingDependencies(selected.mapNotNull { it.manifest })
+        if (missing.isNotEmpty() || (base.manifest?.splitRequired == true && selected.size == 1)) {
+            throw InstallFailure(InstallerErrorCodes.INVALID_PACKAGE, "Required split APKs cannot be deselected", packageName = prepared.packageName)
+        }
+        return PreparedPackage(prepared.format, prepared.displayName, prepared.sourceSize, prepared.packageName,
+            prepared.versionName, prepared.versionCode, prepared.label, prepared.minSdk, prepared.targetSdk,
+            selected, prepared.splits, prepared.signatureSchemes, prepared.problems, prepared.aabModules,
+            prepared.installable, prepared.displayApk)
+    }
+
     /** The PackageArchiveInfo document (protocol `inspect`); the caller adds the platform facts it can read. */
     fun toInspectJson(prepared: PreparedPackage, installed: JsonObject?, iconBase64: String?): JsonObject = JsonObject().apply {
         addProperty(InstallerContract.FIELD_FORMAT, prepared.format)

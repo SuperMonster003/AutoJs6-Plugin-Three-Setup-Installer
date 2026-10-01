@@ -229,6 +229,92 @@ class ArchiveOpenerTest {
         assertEquals(InstallerErrorCodes.INCOMPATIBLE_DEVICE, prepared.failure()!!.code)
     }
 
+    @Test fun `UI selection may drop optional splits without replacing inspected bytes`() {
+        val prepared = open(file("optional.apks", zip(
+            "base.apk" to apk(),
+            "feature.apk" to apk(split = "feature.extra", feature = true),
+        )))
+        assertTrue(prepared.installable)
+        val base = requireNotNull(prepared.baseApk)
+        val selected = ArchiveOpener.select(prepared, setOf(base.name))
+        assertSame(base, selected.apks.single())
+        assertEquals(prepared.packageName, selected.packageName)
+        assertEquals(prepared.versionCode, selected.versionCode)
+        assertEquals(prepared.sourceSize, selected.sourceSize)
+        assertEquals(base.size, selected.totalBytes)
+        assertEquals(prepared.displayApk, selected.displayApk)
+        assertEquals(2, prepared.apks.size)
+        assertTrue(prepared.apks.all { it.file.isFile })
+        assertNull(selected.failure())
+    }
+
+    @Test fun `UI selection rejects an empty set and cannot omit the base APK`() {
+        val prepared = open(file("must-keep-base.apks", zip(
+            "base.apk" to apk(), "feature.apk" to apk(split = "feature.extra", feature = true),
+        )))
+        assertCode(InstallerErrorCodes.INVALID_ARGUMENT) { ArchiveOpener.select(prepared, emptySet()) }
+        val feature = prepared.apks.single { it.splitName != null }
+        assertCode(InstallerErrorCodes.INVALID_PACKAGE) { ArchiveOpener.select(prepared, setOf(feature.name)) }
+    }
+
+    @Test fun `UI selection cannot add unknown paths or APKs excluded by device matching`() {
+        val prepared = open(file("device-selection.apks", zip(
+            "base.apk" to apk(),
+            "split_config.arm64_v8a.apk" to apk(split = "config.arm64_v8a"),
+            "split_config.x86.apk" to apk(split = "config.x86"),
+        )))
+        assertTrue(prepared.installable)
+        val base = requireNotNull(prepared.baseApk)
+        val excluded = prepared.splits.single { !it.selected }.name
+        for (added in listOf("uninspected.apk", "../replacement.apk", excluded)) {
+            assertCode(InstallerErrorCodes.INVALID_ARGUMENT) { ArchiveOpener.select(prepared, setOf(base.name, added)) }
+        }
+        assertEquals(setOf(null, "config.arm64_v8a"), prepared.apks.map { it.splitName }.toSet())
+    }
+
+    @Test fun `UI selection rechecks uses split and configuration parent dependencies`() {
+        val prepared = open(file("dependencies.apks", zip(
+            "base.apk" to apk(),
+            "parent.apk" to apk(split = "feature.parent", feature = true),
+            "child.apk" to apk(split = "feature.child", feature = true, usesSplit = "feature.parent"),
+            "config.en.apk" to apk(split = "config.en", configFor = "feature.child"),
+        )))
+        assertTrue("${prepared.problems}", prepared.installable)
+        val all = prepared.apks.map { it.name }.toSet()
+        fun name(split: String) = prepared.apks.single { it.splitName == split }.name
+        assertCode(InstallerErrorCodes.INVALID_PACKAGE) { ArchiveOpener.select(prepared, all - name("feature.parent")) }
+        assertCode(InstallerErrorCodes.INVALID_PACKAGE) { ArchiveOpener.select(prepared, all - name("feature.child")) }
+        val independent = ArchiveOpener.select(prepared, all - name("feature.child") - name("config.en"))
+        assertEquals(setOf(null, "feature.parent"), independent.apks.map { it.splitName }.toSet())
+        assertNull(independent.failure())
+    }
+
+    @Test fun `UI selection cannot drop a dependency explicitly required by the base`() {
+        val prepared = open(file("base-dependency.apks", zip(
+            "base.apk" to apk(usesSplit = "feature.required"),
+            "required.apk" to apk(split = "feature.required", feature = true),
+            "optional.apk" to apk(split = "feature.optional", feature = true),
+        )))
+        assertTrue(prepared.installable)
+        val selected = prepared.apks.filter { it.splitName != "feature.required" }.map { it.name }.toSet()
+        assertCode(InstallerErrorCodes.INVALID_PACKAGE) { ArchiveOpener.select(prepared, selected) }
+    }
+
+    @Test fun `a base declaring required splits cannot be made standalone by UI selection`() {
+        val prepared = open(file("split-required.apks", zip(
+            "base.apk" to apk(required = true),
+            "config.en.apk" to apk(split = "config.en"),
+        )))
+        assertTrue("${prepared.problems}", prepared.installable)
+        assertCode(InstallerErrorCodes.INVALID_PACKAGE) { ArchiveOpener.select(prepared, setOf(requireNotNull(prepared.baseApk).name)) }
+    }
+
+    @Test fun `UI selection cannot clear an existing package inspection failure`() {
+        val prepared = open(file("missing-dependency.apk", apk(usesSplit = "feature.missing")))
+        assertFalse(prepared.installable)
+        assertCode(InstallerErrorCodes.INVALID_PACKAGE) { ArchiveOpener.select(prepared, prepared.apks.map { it.name }.toSet()) }
+    }
+
     private fun open(file: File, prepare: Boolean = true) = ArchiveOpener.open(file, file.name, device, temporary.newFolder(), prepare)
     private fun file(name: String, bytes: ByteArray) = temporary.newFile(name).apply { writeBytes(bytes) }
     private fun assertCode(code: String, block: () -> Unit) = assertEquals(code, assertThrows(InstallFailure::class.java) { block() }.code)

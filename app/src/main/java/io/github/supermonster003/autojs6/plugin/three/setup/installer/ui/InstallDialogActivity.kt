@@ -1,0 +1,453 @@
+package io.github.supermonster003.autojs6.plugin.three.setup.installer.ui
+
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Intent
+import android.content.res.ColorStateList
+import android.os.Bundle
+import android.os.Build
+import android.text.Editable
+import android.text.InputType
+import android.text.TextWatcher
+import android.text.format.Formatter
+import android.view.View
+import android.view.ViewGroup
+import android.widget.EditText
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.ProgressBar
+import android.widget.RadioGroup
+import android.widget.TextView
+import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
+import androidx.appcompat.app.AlertDialog
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import com.google.gson.JsonObject
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.radiobutton.MaterialRadioButton
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.R
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.engine.DeviceUsers
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.ui.appearance.HostAppearanceActivity
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.ui.kit.InstallerDialogLayout
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.ui.kit.InstallerColorPolicy
+import org.autojs.plugin.installer.api.InstallerContract
+import org.autojs.plugin.installer.api.InstallerErrorCodes
+
+/** Confirmation, progress and results all attach to the same process-local presentation token. */
+class InstallDialogActivity : HostAppearanceActivity() {
+    private lateinit var saved: InstallDialogSavedState
+    private var record: InstallPresentation.Record? = null
+    private var layout: InstallerDialogLayout? = null
+    private var renderedRevision = Long.MIN_VALUE
+    private var progress: ProgressBar? = null
+    private var progressText: TextView? = null
+    private var information: AlertDialog? = null
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setFinishOnTouchOutside(false)
+        saved = ViewModelProvider(this)[InstallDialogSavedState::class.java]
+        val supplied = intent.getStringExtra(InstallPresentation.EXTRA_TOKEN)
+        val data = intent.data
+        val valid = supplied != null && data?.scheme == "three-setup-install" && data.host == "session" && data.lastPathSegment == supplied
+        val restored = saved.token
+        val token = if (valid && (restored == null || restored == supplied)) supplied else null
+        saved.token = token
+        record = token?.let(InstallPresentation::find)
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() { record?.dismiss(); finish() }
+        })
+        val current = record
+        if (current == null) interrupted() else current.attach(this)
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        // documentLaunchMode=intoExisting routes one token to one task. Never swap a live task's
+        // owner using an unexpected extra or replayed Intent.
+        val token = intent.getStringExtra(InstallPresentation.EXTRA_TOKEN)
+        if (token == saved.token && intent.data == this.intent.data) record?.let { present(it.snapshot()) }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        InstallNotifications.resumeForeground(this)
+    }
+
+    override fun onAppearanceChanged() {
+        information?.dismiss()
+        val current = record
+        if (current == null) interrupted() else redraw()
+    }
+
+    internal fun present(state: InstallPresentation.Snapshot) {
+        if (isFinishing || isDestroyed) return
+        if (renderedRevision == state.revision) {
+            updateProgress(state)
+            return
+        }
+        renderedRevision = state.revision
+        progress = null
+        progressText = null
+        val title = when {
+            state.terminal && state.stage == InstallerContract.STAGE_COMPLETED -> R.string.install_success
+            state.terminal && state.stage == InstallerContract.STAGE_CANCELLED -> R.string.install_cancelled
+            state.terminal -> R.string.install_failed
+            state.prompt != null -> R.string.confirm_install_title
+            else -> R.string.install_in_progress
+        }
+        val dialog = kit.dialog(getString(title))
+        layout = dialog
+        if (state.items.size > 1) batch(dialog.content, state)
+        val item = state.items.getOrNull(state.index)
+        if (state.prompt != null) confirmation(dialog, state, state.prompt)
+        else if (state.terminal) results(dialog, state)
+        else {
+            item?.metadata?.let { header(dialog.content, it) }
+                ?: item?.let { dialog.content.addView(kit.text(it.displayName, 16f)) }
+            progressText = kit.text(stageText(state.stage), color = kit.palette.muted).also { it.tag = "install_progress_text"; dialog.content.addView(it) }
+            progress = kit.progressBar().also {
+                dialog.content.addView(it, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, kit.dp(8)).apply {
+                    topMargin = kit.dp(16); bottomMargin = kit.dp(16)
+                })
+                it.tag = "install_progress_bar"
+            }
+            dialog.content.addView(kit.text(getString(R.string.install_commit_notice), color = kit.palette.muted))
+            dialog.actions.addView(kit.textButton(getString(if (state.items.size > 1) R.string.install_cancel_all else android.R.string.cancel), TAG_CANCEL) { record?.cancel() }.apply {
+                id = android.R.id.button2
+            })
+        }
+        setContentView(dialog.root)
+        updateProgress(state)
+    }
+
+    private fun confirmation(dialog: InstallerDialogLayout, state: InstallPresentation.Snapshot, prompt: InstallPresentation.Prompt) {
+        val metadata = prompt.metadata
+        val choices = prompt.choices
+        header(dialog.content, metadata)
+        metadata(dialog.content, metadata)
+        if (metadata.splits.size > 1) {
+            section(dialog.content, R.string.install_splits)
+            val selected = choices.snapshot().selectedApkNames
+            metadata.splits.forEach { split ->
+                val description = when {
+                    split.base -> getString(R.string.install_base_required)
+                    !split.selectable -> getString(R.string.install_split_unavailable)
+                    else -> Formatter.formatFileSize(this, split.size)
+                }
+                dialog.content.addView(kit.checkBox(split.name, split.name in selected, "install_split_${split.name}") { checked ->
+                    choices.select(split.name, checked)
+                }.apply { isEnabled = split.selectable && !split.base })
+                dialog.content.addView(kit.text(description, color = kit.palette.muted).apply { setPaddingRelative(kit.dp(40), 0, 0, kit.dp(8)) })
+            }
+        }
+        section(dialog.content, R.string.install_options)
+        section(dialog.content, R.string.install_authorizer)
+        val initial = choices.snapshot().options
+        radioChoices(dialog.content, listOf(
+            InstallerContract.AUTHORIZER_AUTO to getString(R.string.install_authorizer_auto),
+            InstallerContract.AUTHORIZER_NONE to getString(R.string.confirm_system),
+            InstallerContract.AUTHORIZER_SHIZUKU to "Shizuku",
+            InstallerContract.AUTHORIZER_ROOT to "Root",
+        ), initial.authorizer, "install_authorizer") { authorizer ->
+            val old = choices.snapshot().options
+            choices.updateOptions(if (authorizer == InstallerContract.AUTHORIZER_NONE) old.copy(authorizer = authorizer,
+                allowDowngrade = false, allowTestOnly = false, bypassLowTargetSdk = false, installer = null, user = InstallerContract.USER_CURRENT)
+                else old.copy(authorizer = authorizer))
+            if (authorizer == InstallerContract.AUTHORIZER_NONE) choices.setUser(InstallerContract.USER_CURRENT)
+            redraw()
+        }
+        val privileged = initial.authorizer != InstallerContract.AUTHORIZER_NONE
+        dialog.content.addView(kit.switch(getString(R.string.confirm_allow_downgrade), initial.allowDowngrade, "install_allow_downgrade") {
+            choices.updateOptions(choices.snapshot().options.copy(allowDowngrade = it))
+        }.apply { isEnabled = privileged })
+        dialog.content.addView(kit.switch(getString(R.string.confirm_allow_test), initial.allowTestOnly, "install_allow_test") {
+            choices.updateOptions(choices.snapshot().options.copy(allowTestOnly = it))
+        }.apply { isEnabled = privileged })
+        dialog.content.addView(kit.switch(getString(R.string.confirm_bypass_target), initial.bypassLowTargetSdk, "install_bypass_target") {
+            choices.updateOptions(choices.snapshot().options.copy(bypassLowTargetSdk = it))
+        }.apply { isEnabled = privileged })
+        dialog.content.addView(kit.switch(getString(R.string.install_delete_source), state.canDeleteSource && initial.deleteSource, "install_delete_source") {
+            choices.updateOptions(choices.snapshot().options.copy(deleteSource = it))
+        }.apply { isEnabled = state.canDeleteSource })
+        if (!state.canDeleteSource) dialog.content.addView(kit.text(getString(R.string.install_source_owned_by_sender), color = kit.palette.muted))
+        initial.installer?.let { dialog.content.addView(kit.text(getString(R.string.confirm_installer, it), color = kit.palette.muted)) }
+        val installButton = kit.textButton(getString(R.string.action_install), TAG_CONFIRM) { record?.accept() }.apply {
+            id = android.R.id.button1
+            isEnabled = choices.valid()
+        }
+        section(dialog.content, R.string.install_target_user)
+        val current = choices.userInput()
+        val knownUsers = prompt.users.filter { it.id != DeviceUsers(this).currentId }
+        val values = buildList {
+            add(InstallerContract.USER_CURRENT to getString(R.string.install_current_user))
+            add(InstallerContract.USER_ALL to getString(R.string.confirm_all_users))
+            knownUsers.forEach { add(it.id.toString() to getString(R.string.install_user_named, it.id, it.name.orEmpty())) }
+            add(CUSTOM_USER to getString(R.string.install_user_id))
+        }
+        val custom = values.none { it.first == current }
+        val targetInput = EditText(this).apply {
+            tag = "install_user_input"
+            inputType = InputType.TYPE_CLASS_NUMBER
+            hint = getString(R.string.install_user_id)
+            setText(if (custom) current else "")
+            setTextColor(kit.palette.text)
+            setHintTextColor(kit.palette.muted)
+            backgroundTintList = ColorStateList(arrayOf(intArrayOf(-android.R.attr.state_enabled), intArrayOf(android.R.attr.state_focused), intArrayOf()),
+                intArrayOf(kit.palette.disabledText, kit.palette.accent, kit.palette.outline))
+            textSize = 16f
+            minHeight = kit.dp(48)
+            isEnabled = custom && privileged
+            isSingleLine = true
+            highlightColor = InstallerColorPolicy.withAlpha(kit.palette.accent, 0x55)
+            if (Build.VERSION.SDK_INT >= 29) textCursorDrawable = textCursorDrawable?.mutate()?.apply { setTint(kit.palette.accent) }
+        }
+        radioChoices(dialog.content, values, if (custom) CUSTOM_USER else current, "install_target_user", privileged) { user ->
+            targetInput.isEnabled = user == CUSTOM_USER
+            choices.setUser(if (user == CUSTOM_USER) targetInput.text.toString() else user)
+            installButton.isEnabled = choices.valid()
+            targetInput.error = if (choices.valid()) null else getString(R.string.install_invalid_user)
+        }
+        targetInput.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                if (!targetInput.isEnabled) return
+                choices.setUser(s.toString())
+                installButton.isEnabled = choices.valid()
+                targetInput.error = if (choices.valid()) null else getString(R.string.install_invalid_user)
+            }
+            override fun afterTextChanged(s: Editable?) = Unit
+        })
+        dialog.content.addView(targetInput)
+        dialog.content.addView(kit.text(getString(R.string.install_privileged_notice), color = kit.palette.muted))
+        dialog.actions.addView(kit.textButton(getString(if (state.items.size > 1) R.string.install_cancel_all else android.R.string.cancel), TAG_CANCEL) {
+            record?.cancel()
+        }.apply { id = android.R.id.button2 })
+        dialog.actions.addView(installButton)
+    }
+
+    private fun header(content: LinearLayout, metadata: InstallPresentation.Metadata) {
+        val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = android.view.Gravity.CENTER_VERTICAL }
+        metadata.icon?.let { icon ->
+            row.addView(ImageView(this).apply {
+                setImageBitmap(icon)
+                importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+            }, LinearLayout.LayoutParams(kit.dp(48), kit.dp(48)).apply { marginEnd = kit.dp(16) })
+        }
+        row.addView(LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            addView(kit.text(metadata.label, 16f, medium = true))
+            metadata.packageName?.let { addView(kit.text(it, color = kit.palette.muted).apply { setTextIsSelectable(true) }) }
+        }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+        content.addView(row)
+    }
+
+    private fun metadata(content: LinearLayout, data: InstallPresentation.Metadata) {
+        val new = version(data.versionName, data.versionCode)
+        val versionText = when {
+            !data.installedKnown -> getString(R.string.install_package_version, new)
+            data.previousVersion == null -> getString(R.string.install_new_version, new)
+            else -> getString(R.string.install_version_change, version(data.previousVersion.name, data.previousVersion.code), new)
+        }
+        content.addView(kit.text(versionText, color = kit.palette.muted))
+        content.addView(kit.text(getString(R.string.install_package_size, Formatter.formatFileSize(this, data.size)), color = kit.palette.muted))
+        content.addView(kit.text(getString(R.string.install_sdk_versions, data.minSdk?.toString() ?: getString(R.string.install_unknown),
+            data.targetSdk?.toString() ?: getString(R.string.install_unknown)), color = kit.palette.muted))
+        val signer = when (data.signature) {
+            InstallerContract.SIGNER_MATCH -> R.string.install_signature_match
+            InstallerContract.SIGNER_MISMATCH -> R.string.install_signature_mismatch
+            InstallMetadata.NOT_INSTALLED -> R.string.install_signature_not_installed
+            InstallMetadata.OTHER_USER -> R.string.install_signature_other_user
+            else -> R.string.install_signature_unknown
+        }
+        content.addView(kit.text(getString(signer), color = if (signer == R.string.install_signature_mismatch) kit.palette.danger else kit.palette.muted))
+        content.addView(kit.text(getString(R.string.install_metadata_user, data.installedUserId), color = kit.palette.muted))
+    }
+
+    private fun batch(content: LinearLayout, state: InstallPresentation.Snapshot) {
+        section(content, R.string.install_batch)
+        state.items.forEachIndexed { index, item ->
+            content.addView(kit.text(getString(R.string.install_item_status, index + 1, item.metadata?.label ?: item.displayName, stageText(item.stage)), 14f))
+            sourceDeletionNotice(content, state, item)
+            if (state.terminal && item.result?.get(InstallerContract.FIELD_OK)?.asBoolean == false) {
+                errorDetails(content, item)
+                if (state.canRetry) content.addView(kit.textButton(getString(R.string.install_retry), "install_retry_$index") {
+                    if (record?.retry(index) == true) { record?.dismiss(); finish() }
+                    else Toast.makeText(this, R.string.install_retry_unavailable, Toast.LENGTH_LONG).show()
+                })
+            }
+        }
+    }
+
+    private fun results(dialog: InstallerDialogLayout, state: InstallPresentation.Snapshot) {
+        state.failure?.takeIf { failure -> state.items.none {
+            it.result?.getAsJsonObject(InstallerContract.FIELD_ERROR)?.get(InstallerContract.FIELD_ERROR_CODE)?.asString == failure.code
+        } }?.let { failure ->
+            errorDetails(dialog.content, InstallPresentation.Item("", result = JsonObject().apply {
+                addProperty(InstallerContract.FIELD_OK, false)
+                add(InstallerContract.FIELD_ERROR, failure.toJson())
+            }))
+        }
+        val single = state.items.singleOrNull()
+        single?.metadata?.let { header(dialog.content, it) }
+        if (single != null) {
+            if (single.result?.get(InstallerContract.FIELD_OK)?.asBoolean == true) {
+                dialog.content.addView(kit.text(getString(R.string.install_success), 16f))
+                sourceDeletionNotice(dialog.content, state, single)
+                val packageName = single.result.get(InstallerContract.FIELD_PACKAGE_NAME)?.asString ?: single.metadata?.packageName
+                val user = single.options?.user ?: record?.request?.options?.user
+                val current = user == InstallerContract.USER_CURRENT || user == DeviceUsers(this).currentId.toString() || user == InstallerContract.USER_ALL
+                val launch = if (current && packageName != null) packageManager.getLaunchIntentForPackage(packageName) else null
+                dialog.actions.addView(kit.textButton(getString(R.string.install_open), TAG_OPEN) {
+                    try { startActivity(launch); record?.dismiss(); finish() }
+                    catch (_: Exception) { Toast.makeText(this, R.string.install_open_unavailable, Toast.LENGTH_LONG).show() }
+                }.apply { isEnabled = launch != null })
+                if (launch == null) dialog.content.addView(kit.text(if (current) getString(R.string.install_open_unavailable)
+                    else getString(R.string.install_open_in_profile, user ?: getString(R.string.install_unknown)), color = kit.palette.muted).apply {
+                    if (!current) tag = TAG_OPEN_PROFILE
+                })
+            } else {
+                errorDetails(dialog.content, single)
+                if (state.canRetry) dialog.actions.addView(kit.textButton(getString(R.string.install_retry), "install_retry_0") {
+                    if (record?.retry(0) == true) { record?.dismiss(); finish() }
+                    else Toast.makeText(this, R.string.install_retry_unavailable, Toast.LENGTH_LONG).show()
+                })
+            }
+        }
+        dialog.actions.addView(kit.textButton(getString(R.string.install_done), TAG_DONE) { record?.dismiss(); finish() })
+    }
+
+    private fun sourceDeletionNotice(content: LinearLayout, state: InstallPresentation.Snapshot, item: InstallPresentation.Item) {
+        val result = item.result
+        if (state.canDeleteSource && item.options?.deleteSource == true && result?.get(InstallerContract.FIELD_OK)?.asBoolean == true &&
+            result.get(InstallerContract.FIELD_SOURCE_DELETED)?.asBoolean != true) {
+            content.addView(kit.text(getString(R.string.install_source_not_deleted), color = kit.palette.muted).apply { tag = TAG_SOURCE_NOT_DELETED })
+        }
+    }
+
+    private fun errorDetails(content: LinearLayout, item: InstallPresentation.Item) {
+        val error = item.result?.getAsJsonObject(InstallerContract.FIELD_ERROR)
+        val code = error?.get(InstallerContract.FIELD_ERROR_CODE)?.asString ?: InstallerErrorCodes.INTERNAL
+        val systemMessage = error?.get(InstallerContract.FIELD_ERROR_SYSTEM_MESSAGE)?.asString?.takeIf { it.isNotBlank() }
+        val failureText = getString(R.string.install_error_code, code) + (systemMessage?.let { "\n$it" } ?: "")
+        if (item.metadata?.format == InstallerContract.FORMAT_AAB) {
+            content.addView(kit.text(getString(R.string.install_aab_unsupported), 16f, kit.palette.danger))
+            content.addView(kit.textButton(getString(R.string.install_aab_information), "install_aab_information") { aabInformation(item.metadata) })
+        }
+        content.addView(kit.text(failureText, color = kit.palette.danger).apply { tag = TAG_ERROR; setTextIsSelectable(true) })
+        if (systemMessage == null) content.addView(kit.text(getString(R.string.install_no_system_message), color = kit.palette.muted))
+        content.addView(kit.textButton(getString(R.string.install_copy), TAG_COPY) {
+            getSystemService(ClipboardManager::class.java).setPrimaryClip(ClipData.newPlainText(getString(R.string.install_failed), failureText))
+            Toast.makeText(this, R.string.install_copied, Toast.LENGTH_SHORT).show()
+        })
+    }
+
+    private fun aabInformation(data: InstallPresentation.Metadata) {
+        information?.dismiss()
+        val message = getString(R.string.install_aab_explanation) + if (data.aabModules.isEmpty()) "" else "\n\n" +
+            getString(R.string.install_aab_modules, data.aabModules.joinToString(", "))
+        information = MaterialAlertDialogBuilder(this).setTitle(R.string.install_aab_information).setMessage(message)
+            .setBackground(kit.roundedFill(kit.palette.surface, 24))
+            .setPositiveButton(R.string.install_done, null).create().also { alert ->
+                alert.setOnShowListener {
+                    alert.getButton(AlertDialog.BUTTON_POSITIVE).apply { isAllCaps = false; setTextColor(kit.palette.primary) }
+                    alert.window?.setLayout(minOf(kit.dp(560), resources.displayMetrics.widthPixels - kit.dp(48)), ViewGroup.LayoutParams.WRAP_CONTENT)
+                }
+                alert.show()
+            }
+    }
+
+    private fun updateProgress(state: InstallPresentation.Snapshot) {
+        val writing = state.stage == InstallerContract.STAGE_WRITING
+        progress?.apply { isIndeterminate = !writing; max = 100; progress = (state.progress * 100).toInt() }
+        progressText?.text = if (writing) getString(R.string.install_progress_percent, stageText(state.stage), (state.progress * 100).toInt()) else stageText(state.stage)
+    }
+
+    private fun interrupted() {
+        if (isFinishing || isDestroyed) return
+        val dialog = kit.dialog(getString(R.string.install_interrupted))
+        dialog.content.addView(kit.text(getString(R.string.install_interrupted_explanation)))
+        dialog.actions.addView(kit.textButton(getString(R.string.install_done), TAG_DONE) { finish() })
+        setContentView(dialog.root)
+    }
+
+    private fun radioChoices(content: LinearLayout, choices: List<Pair<String, String>>, selected: String, prefix: String,
+        enabled: Boolean = true, changed: (String) -> Unit) {
+        val group = RadioGroup(this).apply { orientation = RadioGroup.VERTICAL }
+        choices.forEach { (value, label) ->
+            group.addView(MaterialRadioButton(this).apply {
+                id = View.generateViewId()
+                tag = "${prefix}_$value"
+                text = label
+                textSize = 16f
+                setTextColor(ColorStateList(arrayOf(intArrayOf(-android.R.attr.state_enabled), intArrayOf()),
+                    intArrayOf(kit.palette.disabledText, kit.palette.text)))
+                buttonTintList = kit.choiceTint()
+                minimumHeight = kit.dp(56)
+                isEnabled = enabled
+                isChecked = value == selected
+                setOnClickListener { changed(value) }
+            }, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
+        }
+        content.addView(group)
+    }
+
+    private fun section(content: LinearLayout, title: Int) {
+        content.addView(kit.text(getString(title), 14f, kit.palette.muted, true).apply {
+            setPaddingRelative(0, kit.dp(24), 0, kit.dp(8))
+            androidx.core.view.ViewCompat.setAccessibilityHeading(this, true)
+        })
+    }
+
+    private fun stageText(stage: String): String = getString(when (stage) {
+        InstallerContract.STAGE_PREPARING -> R.string.install_preparing
+        InstallerContract.STAGE_CONFIRMING -> R.string.install_waiting_system
+        InstallerContract.STAGE_WRITING -> R.string.install_writing
+        InstallerContract.STAGE_COMMITTING -> R.string.install_committing
+        InstallerContract.STAGE_COMPLETED -> R.string.install_success
+        InstallerContract.STAGE_FAILED -> R.string.install_failed
+        InstallerContract.STAGE_CANCELLED -> R.string.install_cancelled
+        else -> R.string.install_pending
+    })
+
+    private fun version(name: String?, code: Long?): String = when {
+        !name.isNullOrBlank() && code != null -> getString(R.string.install_version, name, code)
+        !name.isNullOrBlank() -> name
+        code != null -> code.toString()
+        else -> getString(R.string.install_unknown)
+    }
+
+    private fun redraw() {
+        val scrollY = layout?.scroll?.scrollY ?: 0
+        renderedRevision = Long.MIN_VALUE
+        record?.let { present(it.snapshot()) }
+        layout?.scroll?.post { layout?.scroll?.scrollTo(0, scrollY) }
+    }
+
+    override fun onDestroy() {
+        information?.dismiss()
+        record?.detach(this)
+        if (isFinishing && !isChangingConfigurations) record?.dismiss()
+        super.onDestroy()
+    }
+
+    companion object {
+        const val TAG_CONFIRM = "install_confirm"
+        const val TAG_CANCEL = "install_cancel"
+        const val TAG_DONE = "install_done"
+        const val TAG_OPEN = "install_open"
+        const val TAG_ERROR = "install_error"
+        const val TAG_COPY = "install_copy"
+        const val TAG_SOURCE_NOT_DELETED = "install_source_not_deleted"
+        const val TAG_OPEN_PROFILE = "install_open_profile"
+        private const val CUSTOM_USER = "custom"
+    }
+}
+
+class InstallDialogSavedState(private val saved: SavedStateHandle) : ViewModel() {
+    var token: String?
+        get() = saved[InstallPresentation.EXTRA_TOKEN]
+        set(value) { saved[InstallPresentation.EXTRA_TOKEN] = value }
+}

@@ -12,6 +12,9 @@ import io.github.supermonster003.autojs6.plugin.three.setup.installer.auth.*
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.engine.*
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.source.PackageStaging
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.ui.PluginConfirmation
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.ui.InstallPresentation
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.ui.InstallationUi
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.ui.InstallNotifications
 import org.autojs.plugin.installer.api.*
 import java.io.Closeable
 import java.util.concurrent.Executors
@@ -122,6 +125,8 @@ internal class InstallerBinder(context: Context, private val guard: CallerGuard 
             requireNotNull(callback) { "Session callback is required" }
             var lease: SessionRegistry.Lease? = null
             var environment: DescriptorInstallEnvironment? = null
+            var slot: Closeable? = null
+            var presentation: InstallPresentation.Record? = null
             var id = InstallerBundles.hostId(request)
             try {
                 val decoded = InstallRequest.parse(InstallerBundles.request(request), sources?.size ?: 0)
@@ -129,23 +134,56 @@ internal class InstallerBinder(context: Context, private val guard: CallerGuard 
                 id = decoded.id
                 lease = sessions.reserve(owner, id)
                 val descriptors = requireNotNull(sources).map { SourceDescriptors.validate(it); requireNotNull(it) }
-                environment = DescriptorInstallEnvironment.acquire(context, descriptors) { prepared, target, deadline, check ->
-                    PluginConfirmation.install(context, decoded, prepared, target, deadline, check)
-                }
+                slot = InstallSlots.acquire()
+                val capacity = slot
                 val reserved = lease
                 lateinit var core: InstallSession
+                val interactive = InstallationUi.needsDialog(context, decoded)
+                val actual = if (interactive) decoded.copy(interaction = InstallerContract.INTERACTION_DIALOG) else decoded
+                // Silent requests have a passive record for notification taps, never an automatic popup.
+                val record = InstallPresentation.create(context, actual,
+                    InstallPresentation.Callbacks(cancel = { core.cancel() }, close = { reserved.close() }))
+                presentation = record
+                lateinit var owned: DescriptorInstallEnvironment
+                owned = DescriptorInstallEnvironment.acquire(context, descriptors,
+                    configuration = if (!interactive) null else { index, prepared, target, selectedRequest, deadline, check ->
+                        InstallationUi.configure(context, record, owned, index, prepared, target, selectedRequest, deadline, check)
+                    },
+                    preparedListener = { index, prepared -> record?.onPrepared(index, prepared) },
+                )
+                environment = owned
+                val notificationToken = record?.token ?: java.util.UUID.randomUUID().toString()
                 val death = CallbackDeath(callback.asBinder()) { reserved.close() }
-                core = InstallSession(decoded, environment, object : InstallSession.Listener {
-                    override fun onStage(stage: String, detail: com.google.gson.JsonObject) =
+                core = InstallSession(actual, owned, object : InstallSession.Listener {
+                    override fun onStage(stage: String, detail: com.google.gson.JsonObject) {
+                        record?.onStage(stage, detail)
+                        InstallNotifications.update(context, notificationToken, actual.sources.first().displayName, stage,
+                            core.status().progress, record?.activityIntent()) { core.cancel() }
                         callback.onStage(id, stage, InstallerBundles.document(InstallerContract.KEY_DETAIL_JSON, detail))
-                    override fun onProgress(progress: Float, detail: com.google.gson.JsonObject) =
+                    }
+                    override fun onProgress(progress: Float, detail: com.google.gson.JsonObject) {
+                        record?.onProgress(progress, detail)
+                        InstallNotifications.update(context, notificationToken, actual.sources.first().displayName,
+                            InstallerContract.STAGE_WRITING, progress, record?.activityIntent()) { core.cancel() }
                         callback.onProgress(id, progress, InstallerBundles.document(InstallerContract.KEY_DETAIL_JSON, detail))
+                    }
+                    override fun onItemResult(index: Int, result: com.google.gson.JsonObject) { record?.onItemResult(index, result) }
                     override fun onCompleted(result: com.google.gson.JsonObject) {
+                        capacity.close()
+                        record?.onCompleted(result)
+                        val results = result.getAsJsonArray(InstallerContract.FIELD_RESULTS)?.map { it.asJsonObject } ?: listOf(result)
+                        InstallNotifications.complete(context, notificationToken, results.all { it[InstallerContract.FIELD_OK]?.asBoolean == true }, openIntent = record?.activityIntent())
                         reserved.finished()
                         try { callback.onCompleted(id, InstallerBundles.document(InstallerContract.KEY_RESULT_JSON, result)) }
                         catch (failure: InstallFailure) { callback.onFailed(id, InstallerBundles.error(failure)) }
                     }
-                    override fun onFailed(failure: InstallFailure) { reserved.finished(); callback.onFailed(id, InstallerBundles.error(failure)) }
+                    override fun onFailed(failure: InstallFailure) {
+                        capacity.close()
+                        record?.onFailed(failure)
+                        InstallNotifications.complete(context, notificationToken, false, openIntent = record?.activityIntent())
+                        reserved.finished()
+                        callback.onFailed(id, InstallerBundles.error(failure))
+                    }
                 }, SystemClock::elapsedRealtime)
                 val handle = object : IInstallerSession.Stub() {
                     override fun getId(): String { guard.enforceOwner(owner); return id }
@@ -159,10 +197,13 @@ internal class InstallerBinder(context: Context, private val guard: CallerGuard 
                 }
                 reserved.attach { core.cancel(); death.close() }
                 death.link()
+                if (interactive) InstallationUi.show(context, record)
                 core.start(queue.executor)
                 return handle
             } catch (failure: Exception) {
                 environment?.close()
+                slot?.close()
+                presentation?.onFailed(InstallFailure.from(failure))
                 lease?.close()
                 lease?.finished()
                 runCatching { callback.onFailed(id, InstallerBundles.error(InstallFailure.from(failure))) }

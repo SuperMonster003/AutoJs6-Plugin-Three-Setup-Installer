@@ -19,6 +19,8 @@ internal class InstallSession(
     data class Target(val authorizer: Authorizer, val userId: Int, val engine: InstallEngine)
     data class Version(val name: String?, val code: Long)
     data class Status(val stage: String, val index: Int, val progress: Float)
+    data class Selection(val prepared: PreparedPackage, val target: Target, val options: InstallOptions)
+    data class SourceCleanup(val deleted: Boolean = false, val notes: List<String> = emptyList())
 
     interface Environment : Closeable {
         fun resolve(request: InstallRequest, deadlineMillis: Long, checkActive: () -> Unit): Target
@@ -26,6 +28,12 @@ internal class InstallSession(
         fun installedVersion(packageName: String, target: Target): Version?
         /** P3 supplies the plugin confirmation. Explicit dialog must never silently bypass it. */
         fun confirm(prepared: PreparedPackage, target: Target, deadlineMillis: Long, checkActive: () -> Unit)
+        fun configure(index: Int, prepared: PreparedPackage, target: Target, request: InstallRequest,
+            deadlineMillis: Long, checkActive: () -> Unit): Selection {
+            confirm(prepared, target, deadlineMillis, checkActive)
+            return Selection(prepared, target, request.options)
+        }
+        fun onInstalled(index: Int, options: InstallOptions): SourceCleanup = SourceCleanup()
         fun onUserAction(intent: Intent)
         fun discardItem(index: Int)
     }
@@ -33,6 +41,7 @@ internal class InstallSession(
     interface Listener {
         fun onStage(stage: String, detail: JsonObject) = Unit
         fun onProgress(progress: Float, detail: JsonObject) = Unit
+        fun onItemResult(index: Int, result: JsonObject) = Unit
         fun onCompleted(result: JsonObject)
         fun onFailed(failure: InstallFailure)
     }
@@ -95,13 +104,15 @@ internal class InstallSession(
 
     private fun executeItems() {
         checkActive()
-        val target = environment.resolve(request, deadline, ::checkActive)
+        val initialTarget = environment.resolve(request, deadline, ::checkActive)
         checkActive()
         val results = mutableListOf<JsonObject>()
         for ((index, sources) in request.items.withIndex()) {
             synchronized(lock) { status = status.copy(index = index) }
             val startedAt = clock()
             var prepared: PreparedPackage? = null
+            var target = initialTarget
+            var options = request.options
             try {
                 checkActive()
                 stage(InstallerContract.STAGE_PREPARING, index, null)
@@ -110,15 +121,20 @@ internal class InstallSession(
                 prepared.failure()?.let { throw it }
                 if (request.interaction == InstallerContract.INTERACTION_DIALOG) {
                     stage(InstallerContract.STAGE_CONFIRMING, index, prepared.packageName)
-                    environment.confirm(prepared, target, deadline, ::checkActive)
+                    val selection = environment.configure(index, prepared, target, request, deadline, ::checkActive)
+                    prepared = selection.prepared
+                    target = selection.target
+                    options = selection.options
+                    prepared.failure()?.let { throw it }
                     checkActive()
                 }
+                val current = prepared
                 val previous = prepared.packageName?.let { environment.installedVersion(it, target) }
                 checkActive()
                 val installed = target.engine.install(
-                    InstallEngine.Request(prepared, request.options, target.userId, request.interaction, deadline),
+                    InstallEngine.Request(current, options, target.userId, request.interaction, deadline),
                     object : InstallEngine.Listener {
-                        override fun onStage(stage: String) = stage(stage, index, prepared.packageName)
+                        override fun onStage(stage: String) = stage(stage, index, current.packageName)
                         override fun onProgress(bytesWritten: Long, totalBytes: Long) {
                             checkActive()
                             val progress = if (totalBytes <= 0) 0f else (bytesWritten.toDouble() / totalBytes).toFloat().coerceIn(0f, 1f)
@@ -133,20 +149,28 @@ internal class InstallSession(
                 // must never convert an installed package into a failed result.
                 val packageName = installed.packageName ?: prepared.packageName
                 val notes = installed.notes.toMutableList()
+                val cleanup = try { environment.onInstalled(index, options) } catch (_: Exception) {
+                    SourceCleanup(notes = listOf("Installation succeeded, but source cleanup could not be completed"))
+                }
+                notes += cleanup.notes
                 val version = try {
                     packageName?.let { environment.installedVersion(it, target) }
                 } catch (_: Exception) {
                     notes += "Installed version could not be read; archive version is reported"
                     null
                 }
-                results += InstallDocuments.installResult(packageName, version?.name ?: prepared.versionName,
+                val result = InstallDocuments.installResult(packageName, version?.name ?: prepared.versionName,
                     version?.code ?: prepared.versionCode, previous?.code, target.authorizer.id, installed.interaction,
-                    (clock() - startedAt).coerceAtLeast(0), false, notes)
+                    (clock() - startedAt).coerceAtLeast(0), cleanup.deleted, notes)
+                results += result
+                runCatching { listener.onItemResult(index, result.deepCopy()) }
             } catch (failure: Exception) {
                 val error = InstallFailure.from(failure, prepared?.packageName)
-                if (!request.isBatch || !request.options.continueOnError) throw error
-                results += InstallDocuments.failedItem(error, prepared?.packageName, target.authorizer.id, null,
+                val result = InstallDocuments.failedItem(error, prepared?.packageName, target.authorizer.id, null,
                     (clock() - startedAt).coerceAtLeast(0))
+                runCatching { listener.onItemResult(index, result.deepCopy()) }
+                if (!request.isBatch || !options.continueOnError) throw error
+                results += result
                 if (error.code == InstallerErrorCodes.CANCELLED) cancel()
             } finally {
                 runCatching { environment.discardItem(index) }
