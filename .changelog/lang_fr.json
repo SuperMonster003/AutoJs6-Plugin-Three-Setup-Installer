@@ -24,7 +24,8 @@
       "fix": [
         "Les actions d'annulation ne suivaient pas la langue du plugin sur les appareils dépourvus de la traduction système correspondante",
         "Correction de la coche invisible des APK fractionnés obligatoires tels que base.apk lorsque leur case est désactivée, dans les thèmes clair et sombre",
-        "Correction de l'absence du plugin dans le sélecteur pour les conteneurs de paquets ouverts depuis Files by Google ou un fournisseur utilisant une URI opaque et un type MIME ZIP ou binaire générique"
+        "Correction de l'absence du plugin dans le sélecteur pour les conteneurs de paquets ouverts depuis Files by Google ou un fournisseur utilisant une URI opaque et un type MIME ZIP ou binaire générique",
+        "Refus des fournisseurs de paquets renvoyant des descripteurs modifiables et fermeture immédiate des descripteurs rejetés"
       ],
       "improvement": [
         "L'identifiant du plugin, le moteur, l'action / la categorie du service, le descripteur Binder et la version minimale de l'hote proviennent desormais des constantes du contrat installer-api de l'hote; les capacites declarent la version 1 du contrat d'installation et la build minimale de l'hote est fixee a 5299",

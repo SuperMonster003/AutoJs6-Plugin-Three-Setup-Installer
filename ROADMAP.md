@@ -477,9 +477,9 @@ runtime/api/augment/installer/          Installer.kt (AugmentableKey("installer"
 
 ### P6.2 安全
 
-- [ ] (插件) `HostCallerGuard` 校验 (签名 / 包名), 外部入口不信任文件名与 MIME, PFD 只读, 特权 Binder 只对本进程暴露 (UserService / RootService 的 Binder 不导出), 日志不记录路径以外的文件内容, `allowBackup=false`, 导出组件最小化审查表写入 `docs/dev/security-checklist.md`.
-- [ ] (插件) 附录 E.2 回退路径 (`pm install-*` 命令) 若在 P0 启用, 命令参数全部白名单化, 不拼接用户字符串.
-- [ ] (测试) instrumentation: 非宿主调用方被拒绝; 静态检查导出组件与权限.
+- [x] (插件) `HostCallerGuard` 校验 (签名 / 包名), 外部入口不信任文件名与 MIME, PFD 只读, 特权 Binder 只对本进程暴露 (UserService / RootService 的 Binder 不导出), 日志不记录路径以外的文件内容, `allowBackup=false`, 导出组件最小化审查表写入 `docs/dev/security-checklist.md`. (SOURCE / JVM / DEVICE 2026-10-01: HostCallerGuard 与私有 UID/session 守卫审阅, 合并导出组件和备份排除表见 docs/dev/security-checklist.md; 修复外部 provider 只请求 r 却未校验实际 FD 的缺口. 新安全四项在 API 24 / 35 / 33 均通过, 验证正式服务非宿主拒绝, 可写 FD 拒绝与关闭, 正常文件/content/pipe 只读兼容.)
+- [x] (插件) 附录 E.2 回退路径 (`pm install-*` 命令) 若在 P0 启用, 命令参数全部白名单化, 不拼接用户字符串. (N/A / SOURCE 2026-10-01: P0.2 已决定不启用 pm install-* 回退, 本轮亦未增加; 因而没有待实现的命令拼接或白名单路径, 不把不适用记作已运行命令测试. 见 docs/dev/security-checklist.md.)
+- [x] (测试) instrumentation: 非宿主调用方被拒绝; 静态检查导出组件与权限. (JVM / DEVICE 2026-10-01: 261 JVM 全量无失败, 含 ManifestContractTest/CallerPolicyTest/新增 SecurityConfigurationTest. SecurityBoundaryDeviceTest 四项在 API 24 / 35 的 9项组合与 API 33 的11项组合中均无跳过通过; 使用实际插件UID调用正式安装服务的八项操作, 逐项同步拒绝且无回调. 未冒充安装了未签名攻击APK.)
 
 ### P6.3 兼容矩阵
 

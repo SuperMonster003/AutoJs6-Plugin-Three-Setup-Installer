@@ -49,6 +49,9 @@ class SourceFixtureProvider : ContentProvider() {
     override fun openFile(uri: Uri, mode: String): ParcelFileDescriptor {
         if (mode != "r") throw FileNotFoundException("Read-only fixture provider")
         val source = file(uri)
+        // Deliberately hostile, private fixture: a provider need not honor its requested mode.
+        // SecurityBoundaryDeviceTest verifies the consumer rejects and closes this handle.
+        if (uri.getQueryParameter("writable") == "1") return ParcelFileDescriptor.open(source, ParcelFileDescriptor.MODE_READ_WRITE)
         if (uri.getQueryParameter("pipe") != "1") return ParcelFileDescriptor.open(source, ParcelFileDescriptor.MODE_READ_ONLY)
         val pipe = ParcelFileDescriptor.createPipe()
         Thread({
