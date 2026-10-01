@@ -14,6 +14,7 @@
 * `優化` P0 已驗證 Shizuku 和 Root 靜默安裝, 更新, 解除安裝及一般預設安裝器設定. 宿主與腳本安裝入口尚未開放, 本版本仍不支援持久預設項.
 * `優化` 外掛程式 ID, engine, 服務 action / category, Binder descriptor 與最低宿主版本改由宿主 installer-api 契約常數提供; 能力宣告加入安裝器契約版本 1, 最低宿主建置回填為 5299
 * `優化` 可隨機存取的來源避免完整快取副本, 串流來源按需暫存. 支援一般 ZIP 分割套件, AAB 僅供檢查, 拒絕內容發生變化的來源.
+* `優化` 明確選擇的授權方式不回退, 區分拒絕, 逾時與不相容, 並行請求共用授權過程與特權連線.
 * `相依性` 附加 Shizuku API 13.1.5 (`dev.rikka.shizuku:api`, `dev.rikka.shizuku:provider`) 用於 Shizuku 授權方式
 * `相依性` 附加 libsu 6.0.0 (`com.github.topjohnwu.libsu:core`, `service`) 用於 Root 授權方式
 * `相依性` 附加 AndroidHiddenApiBypass 6.1 用於特權服務存取隱藏的套件安裝器 API
