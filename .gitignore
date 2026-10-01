@@ -46,6 +46,7 @@ __pycache__/
 !/tools/build-core-fixtures.ps1
 !/tools/build-large-install-fixture.ps1
 !/tools/build-performance-install-fixture.ps1
+!/tools/run-release-performance.ps1
 !/tools/run-process-death-acceptance.py
 !/tools/run-privileged-spike.ps1
 !/tools/run-unknown-source-acceptance.ps1

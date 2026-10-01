@@ -235,7 +235,7 @@ runtime/api/augment/installer/          Installer.kt (AugmentableKey("installer"
 
 建议会话切分: P0 一次 (骨架 + spike); P1 两到三次 (共享 AAR 为一次; 契约 + 客户端 + 路由为一次; 删除旧安装器 + 调用方改造 + 文档为一次); P2 两到三次 (来源与授权; 安装引擎; 卸载 / 批量 / 路由); P3 一到两次; P4 两次 (install / session / errors; uninstall / inspect / authorizer / setDefault / 示例); P5 一到两次; P6 一到两次; P7 一次; P8 两次; P9 两到三次.
 
-当前进度 (2026-10-01): P0, P3, P4 与 P5 原有条目已完成当前范围验收; P1 契约/解析 AAR/宿主路由已交付, 宿主三入口完整有/无插件组合仍待完成. P2 核心来源/授权/安装/卸载/批量/Binder 已交付, 其余原矩阵边界继续保留. P6.1 进程死亡/存储/并发与 P6.2 安全原条目已完成所列设备和故障范围验收; 特权会话自动恢复的 API/元数据边界见专项证据. 完整 OEM 设备与性能/Release 往返继续推进; API 24 大字号图形故障与系统多窗口的独立显示边界见 P5 证据. 下一步继续 P6 与 P1 剩余验收, 不进入 P7 发布.
+当前进度 (2026-10-01): P0, P3, P4 与 P5 原有条目已完成当前范围验收; P1 契约/解析 AAR/宿主路由已交付, 宿主三入口完整有/无插件组合仍待完成. P2 核心来源/授权/安装/卸载/批量/Binder 已交付, 其余原矩阵边界继续保留. P6.1 健壮性, P6.2 安全和 P6.4 性能/体积/混淆 Release 往返已完成所列范围验收. P6.3 的 API 37/16 KiB 插件安装与运行已验证, 原完整 OEM 矩阵仍待收口. 特权恢复的 API/元数据边界及 API 24 大字号/系统多窗口独立显示边界见专项证据. 下一步继续 P6.3 与 P1/P2 剩余验收, 不进入 P7 发布.
 
 ---
 
@@ -483,12 +483,12 @@ runtime/api/augment/installer/          Installer.kt (AugmentableKey("installer"
 
 ### P6.3 兼容矩阵
 
-- [ ] (测试) 设备池 (附录 E.1): AVD API 24 (Shizuku ADB / none), Sony G8441 API 28, Sony XQ-AT72 API 31, Redmi 22120RN86C API 33, Xiaomi 23046RP50C API 35 (HyperOS 安装者包名事实), AVD API 37 (16 KB 页, 仅验证插件本身安装与运行); 每台: none 新装 / 更新, 可用特权路径静默安装 / 卸载, 外部入口, 默认安装器锁定 (可用身份); 结果表写入 `docs/dev/p6-matrix-evidence.md`.
+- [ ] (测试) 设备池 (附录 E.1): AVD API 24 (Shizuku ADB / none), Sony G8441 API 28, Sony XQ-AT72 API 31, Redmi 22120RN86C API 33, Xiaomi 23046RP50C API 35 (HyperOS 安装者包名事实), AVD API 37 (16 KB 页, 仅验证插件本身安装与运行); 每台: none 新装 / 更新, 可用特权路径静默安装 / 卸载, 外部入口, 默认安装器锁定 (可用身份); 结果表写入 `docs/dev/p6-matrix-evidence.md`. (部分 DEVICE 2026-10-01: 维护者启动的 API 37 x86_64 AVD 实际 PAGE_SIZE=16384, 同一 build 40 Release 安装/独立首页运行及两项跨进程契约通过, 此限定行完成. 原 OEM 全组合尚未完成, 补充 Sony Root API 33 不替代 Redmi API 33; 原 checkbox 保留.)
 - [ ] (插件) OEM 差异按事实进入文案与 README 常见问题 (HyperOS 安装者包名, ColorOS 停止状态需激活, 部分 ROM 限制默认安装器).
 
 ### P6.4 性能与体积
 
-- [ ] (测试) 记录: release APK 体积 (预期 < 3 MiB, libsu + Shizuku + HiddenApiBypass 无原生库), 100 MiB APK 在 Shizuku / Root / none 三路径的安装耗时, 特权进程冷启动耗时, 空闲 PSS; R8 规则 (隐藏 API 存根 `-keep`, libsu `RootService` 类名保留, AIDL Stub 保留) 与 release 构建的 `-PandroidTestRelease` 设备往返.
+- [x] (测试) 记录: release APK 体积 (预期 < 3 MiB, libsu + Shizuku + HiddenApiBypass 无原生库), 100 MiB APK 在 Shizuku / Root / none 三路径的安装耗时, 特权进程冷启动耗时, 空闲 PSS; R8 规则 (隐藏 API 存根 `-keep`, libsu `RootService` 类名保留, AIDL Stub 保留) 与 release 构建的 `-PandroidTestRelease` 设备往返. (RELEASE / DEVICE 2026-10-01: 同一 build 40 签名 R8 APK 为 1,890,319 字节/约 1.803 MiB, 无原生库, CRC32 96bfec75. API 24/31/33/35/37 各两项实际跨 UID/PID 元数据/Parcelable/权限往返通过; 官方宿主 UID 正向写入 104,866,213 字节, Shizuku 35/Root 33/none 24 安装总时间分别 1,176/924/9,694 ms, none 含两次确认等待, 不作跨设备性能归因. 特权服务首次 getUsers 含冷启动/握手/查询为 320/363 ms, Root 授权另 23 ms; 各设备两次无安装 FGS 的空闲 PSS 和初轮失败见 docs/dev/p6-release-performance-evidence.md. 生产 R8 未增加测试 keep, 隐藏接口直接反射系统 Stub 而无打包存根; 测试使用独立平台 Java runner, 与正式用户/包操作分开核验.)
 
 验收条件: 矩阵表完整, 未覆盖项明确列出; 安全检查表完成; 体积与耗时记录; 全部 JVM / instrumentation / lint 通过.
 
@@ -1024,3 +1024,12 @@ if (!installer.isDefault()) installer.setDefault(true);
 - 官方宿主 UID 10890 的独立调用进程死亡, 实际 262,144 字节暂存立即删除; API 35 Shizuku/API 33 Root 插件主进程死亡后本次平台 session 消失, 历史恢复为中断, 空 FGS 重建后退出且不重放. 原 6/20 条 OEM/系统 session 保留, 所有自有来源/历史/case 清理, 宿主单个临时启用 key 精确恢复. 24 小时过期暂存使用仅归属本次的时间加速验收, 不声称重启即删除全部暂存.
 - 宿主 9545a7f4aa/build 5303 仅增加 Debug 正式 UID 探针和持久恢复工具, 不变更公开 JS/AIDL, 不需要文档/d.ts/Ace/离线文档契约同步. 插件本逻辑提交为 build 39, 十语言使用者日志同步. 268 JVM 无失败或跳过, API 24/35 生命周期/安全各 11/11, Debug/androidTest/Release 编译及两种 lint 通过; 详细失败与复测证据见 docs/dev/p6-process-death-evidence.md.
 - 未增删或拆分路线图. 当前继续 P6.4 签名 Release 正式往返/100 MiB 性能与维护者手动启动的 API 37/16 KB 模拟器验收, 不进入 P7 发布, 所有仓库仅本地提交.
+
+### 2026-10-01 (P6.4 Release, 性能与 API 37 / 16 KiB)
+
+- 完成原 P6.4 一项, API 37 的限定安装/运行行也有实测证据, 原 P6.3 整体继续保留未完成. 没有新增, 分拆或丢弃路线图条目. P6.1 行为提交为 65ee559/build 39, 本次测试和性能工具另作 build 40 逻辑提交.
+- Release 专用源集和纯 Java/Android runner 在 API 24/31/33/35/37 各 2/2 通过, 校验同一非 Debug APK 和跨 UID 的元数据/Parcelable/五操作拒绝. 初始非法进程名, 被 R8 裁掉的 AndroidX 测试依赖, API 31 AVD 缺宿主权限定义均定位并复测; 不通过放宽权限或生产 test keep 来通过检查. 正向安装来自宿主 9545a7f4aa/build 5303 的真实 UID.
+- 100 MiB STORED 无代码单 APK 在 Shizuku API 35, KernelSU Root API 33 与 none API 24 的最终安装时间为 1.176/0.924/9.694 秒, 每次实际写入 104,866,213 字节且系统确认安装版本. none 包含插件和系统两次确认等待. 设备不同, 不把差异归因于授权方式. 首次特权 getUsers 含服务冷启动为 320/363 ms, Root 授权独立 23 ms; 三台两次实际空闲 PSS 已记录.
+- API 24 首轮摘要命令缺失与第二轮 PowerShell 返回值形状问题未计为最终 driver 验收, 改成 PC 侧 64 KiB 有界二进制摘要流后完整复跑. 五次实际成功安装生成的五条测试历史按新增 ID/包/版本/来源/授权/结果耗时逐条归属移除, API 24/35/33 原 2/2/0 条历史逐对象保留. 全部本轮夹具/来源和单 key 启用偏好恢复完成, 原设备默认项未改, 原真机 Shizuku server 保持, 临时 AVD server 恢复停止.
+- 签名本地发行包为 autojs6-plugin-three-setup-installer-v1.0.0-96bfec75.apk, 1,890,319 字节, SHA-256 50b06cec175bd0a715179a4e09707ebf205154552d3370af48a8f37375ca976d, v2 签名验证通过, 无原生库/Debug 探针. QV710AF65F/QV770340J7 和验收设备已覆盖最终 build 40 Release; API 37 AVD 保持运行. 工作区按逻辑本地提交, 不推送或发布 GitHub.
+- 详情见 docs/dev/p6-release-performance-evidence.md 和 docs/dev/p6-matrix-evidence.md. 下一轮从原 P6.3 完整 OEM 矩阵与 P1.4 宿主三入口组合继续, 同时保留 P2 尚未完成的原边界. 当前不需要新的产品决策或设备采购; G8441/Redmi/XQ-AT72 的后续逐项测试若涉及现有用户偏好, 继续按既有归属与恢复约定处理.
