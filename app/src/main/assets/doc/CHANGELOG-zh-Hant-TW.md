@@ -16,6 +16,7 @@
 * `優化` 可隨機存取的來源避免完整快取副本, 串流來源按需暫存. 支援一般 ZIP 分割套件, AAB 僅供檢查, 拒絕內容發生變化的來源.
 * `優化` 明確選擇的授權方式不回退, 區分拒絕, 逾時與不相容, 並行請求共用授權過程與特權連線.
 * `優化` 安裝與更新核心支援系統確認, Shizuku 和 Root, 可取消操作並傳回實際確認方式與系統處理結果.
+* `優化` 解除安裝核心支援系統確認, Shizuku 和 Root, 特權解除安裝可選擇保留應用程式資料.
 * `相依性` 附加 Shizuku API 13.1.5 (`dev.rikka.shizuku:api`, `dev.rikka.shizuku:provider`) 用於 Shizuku 授權方式
 * `相依性` 附加 libsu 6.0.0 (`com.github.topjohnwu.libsu:core`, `service`) 用於 Root 授權方式
 * `相依性` 附加 AndroidHiddenApiBypass 6.1 用於特權服務存取隱藏的套件安裝器 API
