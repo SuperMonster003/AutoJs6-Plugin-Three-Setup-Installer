@@ -56,11 +56,11 @@ internal class DescriptorInstallEnvironment private constructor(
     override fun prepare(index: Int, sources: List<SourceEntry>, checkActive: () -> Unit): PreparedPackage {
         checkActive()
         val root = directory ?: PackageStaging.newDirectory(context).also { directory = it }
-        val item = File(root, "item-$index").apply { check(mkdir()) { "Cannot create item staging" } }
+        val item = PackageStaging.newChildDirectory(root, "item-$index")
         val device = PackageDeviceSpec.from(context)
         val parts = sources.map { source ->
             checkActive()
-            val folder = File(item, "source-${source.descriptor}").apply { check(mkdir()) { "Cannot create source staging" } }
+            val folder = PackageStaging.newChildDirectory(item, "source-${source.descriptor}")
             val loaded = sourceLoader?.invoke(source, checkActive)
                 ?: SourceDescriptor(descriptors[source.descriptor], source.displayName, source.size)
             val opened = loaded.descriptor.use {

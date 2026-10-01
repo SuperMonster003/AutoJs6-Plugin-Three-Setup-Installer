@@ -23,4 +23,6 @@ interface IPrivilegedInstaller {
     Bundle getInstalledVersion(String packageName, int userId) = 10;
     // Reserved by Shizuku: transaction 16777115 (AIDL adds FIRST_CALL_TRANSACTION).
     void destroy() = 16777114;
+    // Nonblocking lookup of a pipe writer's original failure after the client observes EPIPE.
+    void checkWriteStatus(int sessionId) = 11;
 }

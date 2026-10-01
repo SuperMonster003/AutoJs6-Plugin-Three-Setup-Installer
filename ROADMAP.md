@@ -472,7 +472,7 @@ runtime/api/augment/installer/          Installer.kt (AugmentableKey("installer"
 ### P6.1 健壮性
 
 - [ ] (插件) 进程死亡矩阵: 宿主死亡 (会话取消 + 暂存清理), 插件主进程死亡 (特权进程会话 `abandon`, 前台服务重建后不重复安装), 特权进程死亡 (`DeadObjectException` -> `AUTHORIZER_UNAVAILABLE`, 重绑一次后再失败), Shizuku 服务停止.
-- [ ] (插件) 存储不足 (`INSTALL_FAILED_INSUFFICIENT_STORAGE` -> `INSUFFICIENT_STORAGE`), 暂存目录清理策略 (启动时清理超过 24 小时的残留), 超大包 (>= 2 GiB xapk 流式写入不占用等量堆), 同一包名并发会话串行化.
+- [x] (插件) 存储不足 (`INSTALL_FAILED_INSUFFICIENT_STORAGE` -> `INSUFFICIENT_STORAGE`), 暂存目录清理策略 (启动时清理超过 24 小时的残留), 超大包 (>= 2 GiB xapk 流式写入不占用等量堆), 同一包名并发会话串行化. (SOURCE / JVM / DEVICE 2026-10-01: 同包安装跨用户/授权方式公平串行, 等待取消/超时与每项清理完成后释放; 独立入口首用回收24小时残留并保护活跃目录/不跟随symlink; 真实errno及私有Binder写失败原因映射空间不足. 新增17项JVM, 261项全量通过; API24/35/33空间故障注入均5/5, Root33/Shizuku35真实v1/v2并发及等待取消各2/2, 核验第二项previousVersionCode=1和夹具/源/历史清理. 既有2GiB流式设备证据保留, 本轮未重测堆峰值, 不将故障注入冒充整盘耗尽; 见 docs/dev/p6-robustness-evidence.md.)
 - [ ] (测试) instrumentation 覆盖上述矩阵; 用 `am kill` / `Shizuku` 停止模拟.
 
 ### P6.2 安全

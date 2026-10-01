@@ -3,6 +3,7 @@ package io.github.supermonster003.autojs6.plugin.three.setup.installer.source
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.engine.InstallFailure
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.engine.StorageErrors
 import org.autojs.plugin.installer.api.InstallerContract
 import org.autojs.plugin.installer.api.InstallerErrorCodes
 import org.autojs.plugin.packagearchive.AndroidPackageArchive
@@ -159,7 +160,7 @@ internal object ArchiveOpener {
                     PlannedApk(staged.file.name, staged.file, staged.file.length(), staged.manifest.splitName?.takeIf { it.isNotBlank() }, manifest = staged.manifest)
                 }
             } catch (failure: IOException) {
-                throw InstallFailure(InstallerErrorCodes.INVALID_PACKAGE, "Cannot extract the package: ${failure.message}", packageName = manifest?.packageName, cause = failure)
+                throw extractionFailure(failure, manifest?.packageName)
             }
         }
         val selectedPaths = archive.selectedApks.map { it.archivePath }.toSet()
@@ -344,6 +345,14 @@ internal object ArchiveOpener {
     private fun String.toSchemeList(): List<String> = split(',', ' ', '/').map { it.trim().lowercase(Locale.ROOT) }.filter { it.startsWith("v") }
 
     fun isKnownExtension(displayName: String): Boolean = displayName.substringAfterLast('.', "").lowercase(Locale.ROOT) in KNOWN_EXTENSIONS
+
+    /** The pinned parser AAR's free-space preflight predates a typed storage exception. */
+    internal fun extractionFailure(failure: IOException, packageName: String?): InstallFailure =
+        if (StorageErrors.isInsufficientStorage(failure) || failure.message == "Insufficient storage space to stage the package") {
+            StorageErrors.failure(failure, packageName)
+        } else {
+            InstallFailure(InstallerErrorCodes.INVALID_PACKAGE, "Cannot extract the package: ${failure.message}", packageName = packageName, cause = failure)
+        }
 
     private fun sourceDigest(file: File, checkActive: () -> Unit): String {
         val digest = MessageDigest.getInstance("SHA-256")

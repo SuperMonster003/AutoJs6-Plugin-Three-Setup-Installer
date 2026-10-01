@@ -26,7 +26,10 @@ internal object InstallStatusMapper {
     private val SIGNATURE_CONFLICTS = listOf("INSTALL_FAILED_UPDATE_INCOMPATIBLE", "INSTALL_FAILED_SHARED_USER_INCOMPATIBLE")
 
     fun toFailure(status: Int, message: String?, packageName: String?, uninstall: Boolean = false): InstallFailure {
-        val code = when (status) {
+        // Some OEM installers report the legacy PackageManager reason under generic FAILURE.
+        val legacyStorageFailure = !uninstall && status == STATUS_FAILURE &&
+            message?.substringBefore(':')?.trim() == "INSTALL_FAILED_INSUFFICIENT_STORAGE"
+        val code = if (legacyStorageFailure) InstallerErrorCodes.INSUFFICIENT_STORAGE else when (status) {
             STATUS_FAILURE_ABORTED -> InstallerErrorCodes.USER_CANCELLED
             STATUS_FAILURE_BLOCKED -> InstallerErrorCodes.BLOCKED_BY_POLICY
             STATUS_FAILURE_CONFLICT -> if (SIGNATURE_CONFLICTS.any { message?.contains(it) == true }) InstallerErrorCodes.SIGNATURE_MISMATCH else fallback(uninstall)

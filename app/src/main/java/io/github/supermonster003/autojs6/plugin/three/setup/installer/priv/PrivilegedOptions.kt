@@ -15,6 +15,8 @@ internal object PrivilegedOptions {
     const val FLAGS = "flags"
     const val SIZE = "size"
     const val DEFAULT_REQUIRES_CLEAR = -1
+    // Exact private Binder marker. Only a verified ENOSPC/EDQUOT cause may produce it.
+    const val ERROR_INSUFFICIENT_STORAGE = "THREE_SETUP_INSTALLER:INSUFFICIENT_STORAGE"
 
     fun validateFlags(flags: Int, sdk: Int) {
         val allowed = INSTALL_REPLACE_EXISTING or INSTALL_ALLOW_TEST or INSTALL_ALL_USERS or
