@@ -70,8 +70,8 @@ class ManifestContractTest {
     fun `the wake activity follows the activation contract and uninstall is internal`() {
         val activities = manifest.child("application").children("activity").associateBy { it.androidAttribute("name") }
         assertEquals(setOf(".WakeActivity", ".ui.UninstallDialogActivity", ".ui.ConfirmationActivity",
-            ".ui.InstallDialogActivity"), activities.keys)
-        listOf(".ui.InstallDialogActivity").forEach { name ->
+            ".ui.InstallDialogActivity", ".ui.UserActionActivity"), activities.keys)
+        listOf(".ui.InstallDialogActivity", ".ui.UserActionActivity").forEach { name ->
             assertEquals("false", activities.getValue(name).androidAttribute("exported"))
             assertEquals("true", activities.getValue(name).androidAttribute("excludeFromRecents"))
         }

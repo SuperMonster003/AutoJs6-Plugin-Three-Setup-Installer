@@ -83,4 +83,7 @@
     <string name="notification_preparing">جار تجهيز الحزمة</string>
     <string name="notification_writing">جار كتابة الحزمة</string>
     <string name="plugin_description">يثبت تطبيقات Android ويحدثها ويزيلها مع دعم التثبيت الصامت عبر Shizuku أو Root</string>
+    <string name="uninstall_authorization">التفويض: %1$s</string>
+    <string name="uninstall_keep_data_explanation">الاحتفاظ ببيانات التطبيق لإعادة تثبيته لاحقا.</string>
+    <string name="uninstall_target_user">المستخدم المستهدف: %1$s</string>
 </resources>

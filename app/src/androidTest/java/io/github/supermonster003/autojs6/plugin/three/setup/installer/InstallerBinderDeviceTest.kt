@@ -12,6 +12,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.ui.InstallDialogActivity
 import org.autojs.plugin.installer.api.*
 import org.junit.Assert.*
 import org.junit.Test
@@ -38,37 +39,30 @@ class InstallerBinderDeviceTest {
             context.packageManager.getPackageInfo(FIXTURE, if (includeData) android.content.pm.PackageManager.MATCH_UNINSTALLED_PACKAGES else 0); true
         } catch (_: android.content.pm.PackageManager.NameNotFoundException) { false }
         check(!installed(true)) { "Fixture or retained data already exists; refusing to modify it" }
+        val ownership = FixturePackageOwnership(setOf(FIXTURE))
         val router = localRouter()
         val files = mutableListOf<File>()
         val descriptors = mutableListOf<ParcelFileDescriptor>()
         var handle: IInstallerSession? = null
         val stopUi = java.util.concurrent.atomic.AtomicBoolean()
+        val presentation = java.util.concurrent.atomic.AtomicReference<io.github.supermonster003.autojs6.plugin.three.setup.installer.ui.InstallPresentation.Record>()
         var uiDriver: Thread? = null
+        var operationReply: SessionReply? = null
         try {
             val grant = Reply()
             router.requestAuthorizer(authorizer.id, grant)
             assertTrue(grant.result()["granted"].asBoolean)
             val interaction = InstrumentationRegistry.getArguments().getString("binderInteraction") ?: "auto"
+            val id = "real-${UUID.randomUUID()}"
             if ((interaction == "dialog" || !authorizer.privileged) && InstrumentationRegistry.getArguments().getString("confirmFixture") == "true") {
                 // Explicitly opted-in instrumentation driver, restricted to the fresh test fixture.
                 // Use the runner's accessibility connection: an external uiautomator can steal it.
                 uiDriver = Thread {
                     while (!stopUi.get()) {
-                        val root = instrumentation.uiAutomation.rootInActiveWindow
-                        if (root?.packageName?.toString() == context.packageName && root.findAccessibilityNodeInfosByText(FIXTURE).isNotEmpty()) {
-                            root.findAccessibilityNodeInfosByViewId("android:id/button1").singleOrNull()
-                                ?.performAction(android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK)
-                        }
-                        val owner = root?.packageName?.toString()
-                        if (owner in setOf("com.android.packageinstaller", "com.google.android.packageinstaller") &&
-                            root?.findAccessibilityNodeInfosByText("3-Setup Spike Fixture")?.isNotEmpty() == true) {
-                            val button = (root.findAccessibilityNodeInfosByViewId("android:id/button1") +
-                                root.findAccessibilityNodeInfosByViewId("$owner:id/ok_button") +
-                                root.findAccessibilityNodeInfosByText("INSTALL").filter { it.text?.toString().equals("INSTALL", true) } +
-                                root.findAccessibilityNodeInfosByText("OK").filter { it.text?.toString().equals("OK", true) })
-                                .firstOrNull { it.isEnabled && it.isClickable }
-                            button?.performAction(android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK)
-                        }
+                        FixtureInstallUi.resumedRecord { it.request.id == id }?.let { presentation.compareAndSet(null, it) }
+                        FixtureInstallUi.clickInstall(InstallDialogActivity.TAG_CONFIRM, sessionId = id, packageName = FIXTURE)
+                        FixtureInstallUi.clickFixtureUninstall(FIXTURE)
+                        FixtureInstallUi.acceptSystemFixture(FixtureInstallUi.LABEL)
                         SystemClock.sleep(100)
                     }
                 }.apply { start() }
@@ -80,8 +74,9 @@ class InstallerBinderDeviceTest {
                 descriptors += ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
                 """{"item":$i,"displayName":"fixture.apk","size":${file.length()}}"""
             }
-            val id = "real-${UUID.randomUUID()}"
             val reply = SessionReply()
+            operationReply = reply
+            ownership.installationStarted()
             handle = router.openSession(descriptors.toTypedArray(), request("""{"id":"$id","sources":[${sources.joinToString()}],"interaction":"$interaction","options":{"authorizer":"${authorizer.id}","timeoutMillis":120000}}""", id), reply)
             assertNotNull(handle)
             val results = reply.result().getAsJsonArray("results").map { it.asJsonObject }
@@ -106,12 +101,11 @@ class InstallerBinderDeviceTest {
             uiDriver?.join(2_000)
             handle?.close()
             router.close()
+            operationReply?.let { assertTrue("Installation worker did not release its sources", it.done.await(10, TimeUnit.SECONDS)) }
             descriptors.forEach { it.close() }
             files.forEach { it.delete() }
-            if (installed(true)) instrumentation.uiAutomation.executeShellCommand("pm uninstall $FIXTURE").use { descriptor ->
-                val response = ParcelFileDescriptor.AutoCloseInputStream(descriptor).bufferedReader().use { it.readText() }
-                assertTrue(response, response.contains("Success"))
-            }
+            presentation.get()?.close()
+            ownership.close()
             val client = io.github.supermonster003.autojs6.plugin.three.setup.installer.auth.PrivilegedClient.get(context)
             val binder = if (authorizer.privileged) runCatching { client.acquire(authorizer).asBinder() }.getOrNull() else null
             val stopped = CountDownLatch(1)

@@ -212,7 +212,7 @@ internal class NoneInstallEngine(context: Context) : SessionInstallEngine(Author
         var session: PackageInstaller.Session? = null
         try {
             val opened = nonePlatformCall { platformIo { installer.openSession(id) } }.also { session = it }
-            val ticket = InstallStatusBridge.open(context)
+            val ticket = InstallStatusBridge.open(context, requiresUnknownSourcesPermission = true)
             return object : StatusSession(ticket) {
                 override fun openWrite(apk: PlannedApk, checkActive: () -> Unit): OutputStream =
                     nonePlatformCall { opened.openWrite(apk.name, 0, apk.size) }

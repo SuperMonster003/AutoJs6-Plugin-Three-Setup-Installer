@@ -83,4 +83,7 @@
     <string name="notification_preparing">正在準備安裝套件</string>
     <string name="notification_writing">正在寫入安裝套件</string>
     <string name="plugin_description">安裝, 更新和解除安裝 Android 應用程式, 支援透過 Shizuku 或 Root 靜默安裝</string>
+    <string name="uninstall_authorization">授權方式: %1$s</string>
+    <string name="uninstall_keep_data_explanation">保留應用程式資料, 以供日後重新安裝時使用.</string>
+    <string name="uninstall_target_user">目標使用者: %1$s</string>
 </resources>
