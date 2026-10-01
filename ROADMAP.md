@@ -230,7 +230,7 @@ runtime/api/augment/installer/          Installer.kt (AugmentableKey("installer"
 | P5 | 独立应用形态: 设置页, 默认安装器页, 关于 / 发行历史 / 更新检查, 启动器图标 | 插件 | P2, P3 |
 | P6 | 健壮性, 安全, 兼容矩阵, 性能, 体积 | 全部 | P3, P4, P5 |
 | P7 | 文档, d.ts, Ace, 离线文档, README, changelog, GitHub 仓库, 官方索引, 1.0.0 发布 gate | 文档 + 发布 | P6 |
-| P8 | 1.1.0: Dhizuku 授权, 持久化默认安装器, 通知栏安装模式, APK Inspector 迁移到共享 AAR | 插件 + 宿主 + 兄弟 | P7 |
+| P8 | 1.1.0: Dhizuku 授权, 持久化默认安装器, 通知栏安装模式, APK Inspector 迁移到共享 AAR | 插件 + 宿主 + 兄弟 | P7 本地 gate; 2026-10-02 维护者允许远端发布延迟时先行 |
 | P9 | 1.2.0: 授予全部权限 / 更新所有权 / DexOpt / 签名门禁 / 黑名单 / 权限预览 / 按来源配置 | 插件 (+ 宿主小) | P8 |
 
 建议会话切分: P0 一次 (骨架 + spike); P1 两到三次 (共享 AAR 为一次; 契约 + 客户端 + 路由为一次; 删除旧安装器 + 调用方改造 + 文档为一次); P2 两到三次 (来源与授权; 安装引擎; 卸载 / 批量 / 路由); P3 一到两次; P4 两次 (install / session / errors; uninstall / inspect / authorizer / setDefault / 示例); P5 一到两次; P6 一到两次; P7 一次; P8 两次; P9 两到三次.
@@ -527,7 +527,7 @@ runtime/api/augment/installer/          Installer.kt (AugmentableKey("installer"
 - [ ] (插件) Dhizuku 授权方式: 依赖 `io.github.iamr0s:Dhizuku-API` (核实许可证后记录), `DhizukuAuthorizer` (`Dhizuku.init` / `requestPermission`), `DhizukuInstallEngine` (`DevicePolicyManager` 所有者上下文的 `PackageInstaller`), 能力上报 `AUTHORIZERS` 增加 `dhizuku`; 脚本 `authorizer: 'dhizuku'`; 契约版本 2 (末尾追加方法, 旧顺序不变).
 - [ ] (插件) 持久化默认安装器: Dhizuku 路径 `DevicePolicyManager.addPersistentPreferredActivity` / `clearPackagePersistentPreferredActivities`; Root 以 system 身份的 spike (libsu 自定义 `su 1000` 或 `app_process` uid 切换) 若成立则也提供; 状态卡区分 "偏好" 与 "持久化".
 - [ ] (插件) 通知栏安装模式 (`interaction: 'notification'`): 无对话框, 通知承载确认 (none 路径仍需系统确认) 与结果; 设置页默认交互增加该项.
-- [ ] (兄弟) APK Inspector 改为消费 `package-archive-parser.aar`, 删除其分叉副本中与 AAR 重合的文件, 专有解析保留; 其 `ROADMAP.md` 与 changelog 记录; 宿主 `docs/dev/package-inspection-roadmap.md` 同步.
+- [x] (兄弟) APK Inspector 改为消费 `package-archive-parser.aar`, 删除其分叉副本中与 AAR 重合的文件, 专有解析保留; 其 `ROADMAP.md` 与 changelog 记录; 宿主 `docs/dev/package-inspection-roadmap.md` 同步. (2026-10-02, Inspector 17fe20d / 1.2.2 / build 42, 231 JVM, Debug 3/3, 独立 Release 2/2; 证据见该仓库 docs/development/shared-parser-migration-evidence.md; 宿主文档 8c3045d24e.)
 - [ ] (文档) 文档 / d.ts / Ace / 离线文档同步 `dhizuku` 与 `notification`; 宿主与插件 changelog.
 
 ---
@@ -851,6 +851,7 @@ if (!installer.isDefault()) installer.setDefault(true);
 - 推荐: 插件仓库在 P0.1 初始提交后即创建远端并推送 (便于 CI 运行); 宿主提交按既有惯例本地保留, 由维护者决定推送.
 - 拍板 (2026-09-30): 插件仓库可随时推送 (远端 `SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer` 于 2026-09-30 创建并推送); 宿主仓库只本地提交, 不推送.
 - 最新指示 (2026-10-01): 插件仓库当前亦仅作本地提交, 暂时避免推送到 GitHub 远端. 此指示取代此前插件可随时推送的授权, 直至维护者明确恢复推送; 宿主仍只本地提交.
+- 最新指示 (2026-10-02): P7 继续延迟, 可以开始 P8 及后续项实施. 仅解除 P8 对远端发布的等待, P7 原发布/索引/推送条目继续保留未完成; 不新增, 分拆或丢弃阶段条目.
 
 ### Q9 (P8 前): Root 以 system 身份 (uid 1000) 调用 `addPersistentPreferredActivity` 是否纳入
 
@@ -1109,3 +1110,10 @@ if (!installer.isDefault()) installer.setDefault(true);
 - 当前四台在线设备保留数据覆盖Release51, 实际版本/摘要/UID/无Debug核验通过, 交付前后默认/许可/用户包集合/原系统session/server保持. API24/31/33真实跨UID/PID契约各2/2; Samsung无宿主不计该项, 但实际Release首页/16KiB运行已核验, 临时alias判定脚本问题修正并保留记录. 其他离线设备保持既有版本/证据, 不重启或关闭用户AVD.
 - APK autojs6-plugin-three-setup-installer-v1.0.0-cf864c74.apk, 1,902,783字节, SHA-256=547334493ecd76f9815167c2159e5730de5ac14cf310674d5cbd7dfa30ae29d0, v2签名通过. releases仅此包, 旧包摘要核验后归档于忽略目录. 详见 docs/dev/p7-matrix-complete-release-evidence.md.
 - 本轮build49-51三笔逻辑提交, VERSION_BUILD=51与可达提交数一致, 工作树干净; 本插件以外仓库未修改. 用户提供的四项条件已验收完成, 不再重复请求. 下一步为原P7.3远端发布/索引/宿主推送, 现有仅本地提交指示未解除, 因而本轮不推送或发布, 不跳过P7进入P8/P9.
+
+### 2026-10-02 (P8 先行授权与 APK Inspector 共享解析迁移)
+
+- 维护者本轮明确允许 P7 延迟时继续 P8 及后续项. 原 P7 远端条目保持未完成, 所有仓库只本地提交, 不推送, 创建标签或发布. 原条目结构保持.
+- 原 P8 的 APK Inspector 迁移项完成. 兄弟仓库 17fe20d / 1.2.2 / build 42 消费同一 SHA-256 为 1441bbcee8468362b0ee41f7b3d5ab47eb87b4df78a1388bb1134223055f46e7 的共享 release AAR, 删除重复解码器/预算/TOC及容器副本; 签名, 显式 sidecar 所有权, 图标, DEX, 原生库与 16 KiB 等专有分析保留. 宿主文档提交 8c3045d24e 单独同步.
+- Inspector 231 JVM, Python 4项, 25文档校验, Sony API33 Debug 3/3及独立 Release 2/2通过; Debug/Release lint各0错误/37警告, 签名R8构建通过. 产物 autojs6-plugin-apk-inspector-v1.2.2-c81f2584.apk, 4,393,049字节, SHA-256 d0bd86f9c1bc29fdcab95504a2a0ca84f171818437eaca8f52d85dc4fa8d94b1. 设备原UID/用户数据/默认/20个OEM session/原Shizuku server保持; instrumentation显式NO_ISOLATED_STORAGE审计项与API33默认deny有效权限相同, 不假称全部app-op原始行相同.
+- 插件本次仅将这项跨仓库证据作为 build52 文档提交. P8 其余代码与设备验收正在进行, 不将中间 Debug 包描述为最终1.1.0交付; 对应完成状态和最终包另行记录.
