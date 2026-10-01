@@ -17,6 +17,7 @@
 * `Improvement` Explicit authorization choices never fall back. Refusal, timeouts and incompatibility are distinguished, and concurrent requests share authorization and privileged connections.
 * `Improvement` Core installation and updates use system confirmation, Shizuku or Root, with cancellation and results that reflect the actual confirmation and system response.
 * `Improvement` Core uninstallation supports system confirmation, Shizuku and Root, with optional data retention when using a privileged authorizer.
+* `Improvement` Serial batch installation can continue after failures or cancel remaining items, and supports validating and selecting target users with privileges.
 * `Dependency` Shizuku API 13.1.5 (`dev.rikka.shizuku:api`, `dev.rikka.shizuku:provider`) for the Shizuku authorizer
 * `Dependency` libsu 6.0.0 (`com.github.topjohnwu.libsu:core`, `service`) for the Root authorizer
 * `Dependency` AndroidHiddenApiBypass 6.1 for the hidden package installer APIs used by the privileged service
