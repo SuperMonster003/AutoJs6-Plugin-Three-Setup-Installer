@@ -61,7 +61,12 @@ internal class InstalledAppsUninstaller(context: Context) : Closeable {
                     PluginConfirmation.uninstall(context, request, selected, userId, deadline, checkActive)
                 } else request
                 checkActive()
-                val engine = if (selected.privileged) PrivilegedUninstallEngine(context, selected) else NoneUninstallEngine(context)
+                val engine = when {
+                    selected == io.github.supermonster003.autojs6.plugin.three.setup.installer.auth.Authorizer.DHIZUKU ->
+                        io.github.supermonster003.autojs6.plugin.three.setup.installer.engine.DhizukuUninstallEngine(context)
+                    selected.privileged -> PrivilegedUninstallEngine(context, selected)
+                    else -> NoneUninstallEngine(context)
+                }
                 engine.uninstall(approved, userId, object : InstallEngine.Listener {
                     override fun onUserAction(intent: Intent) = UserActionLauncher.launch(context, intent)
                 }, checkActive, deadline)

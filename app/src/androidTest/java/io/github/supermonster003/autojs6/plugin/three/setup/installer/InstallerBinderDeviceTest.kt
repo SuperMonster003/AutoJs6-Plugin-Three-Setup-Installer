@@ -141,6 +141,31 @@ class InstallerBinderDeviceTest {
         assertEquals(0, callback.count.get())
     }
 
+    @Test fun versionTwoIsNegotiatedWithoutBreakingTheVersionOneEnvelope() = bind(endpoint).use { service ->
+        val installer = IInstallerPlugin.Stub.asInterface(service.binder)
+        val capabilities = installer.capabilities
+        assertEquals(1, capabilities.getInt(InstallerCapabilityKeys.CONTRACT_VERSION))
+        assertEquals(2, capabilities.getInt(InstallerCapabilityKeys.MAX_CONTRACT_VERSION))
+        fun envelope(json: String, version: Int) = request(json).apply { putInt(InstallerContract.KEY_CONTRACT_VERSION, version) }
+        for (version in listOf(1, 2)) {
+            val reply = Reply()
+            installer.getUsers(envelope("""{"authorizer":"none"}""", version), reply)
+            assertEquals(1, reply.result().getAsJsonArray("users").size())
+            assertEquals(1, reply.result!!.getInt(InstallerContract.KEY_CONTRACT_VERSION))
+            assertEquals(1, reply.count.get())
+        }
+        val legacy = Reply()
+        installer.getUsers(envelope("""{"authorizer":"dhizuku"}""", 1), legacy)
+        assertEquals("INVALID_ARGUMENT", legacy.error()["code"].asString)
+        assertEquals(1, legacy.count.get())
+        for (version in listOf(1, 2)) {
+            val reply = Reply()
+            installer.setDefaultInstallerV2(true, envelope("""{"authorizer":"none","mode":"persistent"}""", version), reply)
+            assertEquals("INVALID_ARGUMENT", reply.error()["code"].asString)
+            assertEquals(1, reply.count.get())
+        }
+    }
+
     @Test fun inspectAndUsersRoundTripThroughTheRemoteRouter() = bind(endpoint).use { service ->
         assertNull(service.binder.queryLocalInterface(IInstallerPlugin.DESCRIPTOR))
         val installer = IInstallerPlugin.Stub.asInterface(service.binder)

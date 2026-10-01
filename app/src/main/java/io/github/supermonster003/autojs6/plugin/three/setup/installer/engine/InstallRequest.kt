@@ -74,6 +74,7 @@ internal object RequestDocuments {
 
     fun interactionOf(value: String?, what: String): String {
         val interaction = value ?: InstallerContract.INTERACTION_AUTO
+        if (interaction == InstallerContract.INTERACTION_NOTIFICATION) throw invalid("Notification installation is not available in this build")
         if (!InstallerContract.isInteraction(interaction)) throw invalid("$what: unknown interaction '$interaction'")
         return interaction
     }
@@ -223,6 +224,7 @@ internal data class UninstallRequest(
 
         fun parse(json: String?): UninstallRequest = with(RequestDocuments) {
             val root = parseObject(json, WHAT)
+            if (root.string(InstallerContract.FIELD_INTERACTION) == InstallerContract.INTERACTION_NOTIFICATION) throw invalid("Notification mode is only supported for installation")
             UninstallRequest(
                 packageName = packageNameOf(root.string(InstallerContract.FIELD_PACKAGE_NAME), WHAT, required = true)!!,
                 keepData = root.boolean(InstallerContract.FIELD_KEEP_DATA) ?: false,

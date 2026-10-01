@@ -85,7 +85,7 @@
     <string name="default_installer_settings_unavailable">System app settings could not be opened.</string>
     <string name="default_installer_state">Default status</string>
     <string name="default_installer_summary">Choose which app opens APK files. This only changes the APK handler.</string>
-    <string name="default_installer_timeout">Authorization timed out. Check Shizuku or Root and try again.</string>
+    <string name="default_installer_timeout">Authorization timed out. Check the selected authorizer and try again.</string>
     <string name="default_installer_title">Default installer</string>
     <string name="home_active">In progress</string>
     <string name="home_authorize">Authorize</string>
@@ -196,7 +196,7 @@
     <string name="notification_open_for_progress">Tap to open the installer and view progress.</string>
     <string name="notification_preparing">Preparing package</string>
     <string name="notification_writing">Writing package</string>
-    <string name="plugin_description">Installs, updates and uninstalls Android apps, with silent installation through Shizuku or Root</string>
+    <string name="plugin_description">Installs, updates and uninstalls Android apps, with silent installation through Shizuku, Root or Dhizuku</string>
     <string name="release_history_error">Unable to read the bundled document.</string>
     <string name="release_history_title">Version history</string>
     <string name="settings_appearance">Appearance</string>
@@ -205,15 +205,16 @@
     <string name="settings_back">Back</string>
     <string name="settings_confirm">OK</string>
     <string name="settings_defaults_note">New local installations show a confirmation dialog by default. Defaults apply to new installations opened from this app, shared files and file managers. Host and script requests keep their explicit options. Advanced options require Shizuku or Root.</string>
+    <string name="settings_dhizuku">Dhizuku</string>
     <string name="settings_disabled">Off</string>
     <string name="settings_enabled">On</string>
     <string name="settings_error">Unable to read or save settings. Check the limits and try again. Stop active tasks before clearing data.</string>
     <string name="settings_installation">Installation</string>
-    <string name="settings_installer_note">Leave empty to attribute installation to this plugin. On HyperOS, com.android.shell may be needed. Changing installer attribution requires Shizuku or Root.</string>
+    <string name="settings_installer_note">Leave empty to use the selected authorizer\'s default installer identity. Specifying installer attribution requires Shizuku or Root and remains subject to ROM restrictions.</string>
     <string name="settings_installer_package">Installer package name</string>
     <string name="settings_installer_self">This plugin</string>
     <string name="settings_interaction">Default interaction</string>
-    <string name="settings_interaction_auto_note">Automatic may install silently when Shizuku or Root is authorized. Otherwise Android asks for confirmation.</string>
+    <string name="settings_interaction_auto_note">Automatic may install silently when Shizuku, Root or Dhizuku is authorized. Otherwise Android asks for confirmation.</string>
     <string name="settings_interaction_dialog">Show installation dialog</string>
     <string name="settings_interaction_silent">Silent (requires authorization)</string>
     <string name="settings_invalid_package">Enter a valid Android package name, or leave empty.</string>

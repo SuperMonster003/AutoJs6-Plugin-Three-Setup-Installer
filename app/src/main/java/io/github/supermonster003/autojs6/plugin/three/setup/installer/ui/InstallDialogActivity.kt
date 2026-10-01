@@ -179,15 +179,16 @@ class InstallDialogActivity : HostAppearanceActivity() {
             InstallerContract.AUTHORIZER_NONE to getString(R.string.confirm_system),
             InstallerContract.AUTHORIZER_SHIZUKU to "Shizuku",
             InstallerContract.AUTHORIZER_ROOT to "Root",
+            InstallerContract.AUTHORIZER_DHIZUKU to "Dhizuku",
         ), initial.authorizer, "install_authorizer") { authorizer ->
             val old = choices.snapshot().options
-            choices.updateOptions(if (authorizer == InstallerContract.AUTHORIZER_NONE) old.copy(authorizer = authorizer,
+            choices.updateOptions(if (authorizer in listOf(InstallerContract.AUTHORIZER_NONE, InstallerContract.AUTHORIZER_DHIZUKU)) old.copy(authorizer = authorizer,
                 allowDowngrade = false, allowTestOnly = false, bypassLowTargetSdk = false, installer = null, user = InstallerContract.USER_CURRENT)
                 else old.copy(authorizer = authorizer))
-            if (authorizer == InstallerContract.AUTHORIZER_NONE) choices.setUser(InstallerContract.USER_CURRENT)
+            if (authorizer in listOf(InstallerContract.AUTHORIZER_NONE, InstallerContract.AUTHORIZER_DHIZUKU)) choices.setUser(InstallerContract.USER_CURRENT)
             redraw()
         }
-        val privileged = initial.authorizer != InstallerContract.AUTHORIZER_NONE
+        val privileged = initial.authorizer !in listOf(InstallerContract.AUTHORIZER_NONE, InstallerContract.AUTHORIZER_DHIZUKU)
         dialog.content.addView(kit.switch(getString(R.string.confirm_allow_downgrade), initial.allowDowngrade, "install_allow_downgrade") {
             choices.updateOptions(choices.snapshot().options.copy(allowDowngrade = it))
         }.apply { isEnabled = privileged })

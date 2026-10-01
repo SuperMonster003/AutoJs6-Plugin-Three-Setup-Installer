@@ -145,7 +145,10 @@ class ThreeSetupInstallerPluginContractTest {
 
     private fun assertCapabilities(capabilities: Bundle) {
         assertEquals(ThreeSetupInstallerPlugin.REQUIRED_HOST_VERSION, capabilities.getLong(PluginCapabilityKeys.REQUIRES_HOST_VERSION))
-        assertEquals(InstallerContract.CONTRACT_VERSION, capabilities.getInt(InstallerCapabilityKeys.CONTRACT_VERSION))
+        // The old key remains 1 so installed V1 hosts can still discover the plugin. New hosts
+        // negotiate the separate maximum instead of unconditionally sending the newest version.
+        assertEquals(1, capabilities.getInt(InstallerCapabilityKeys.CONTRACT_VERSION))
+        assertEquals(2, capabilities.getInt(InstallerCapabilityKeys.MAX_CONTRACT_VERSION))
         assertEquals(InstallerContract.AUTHORIZERS, capabilities.getStringArray(InstallerCapabilityKeys.AUTHORIZERS)?.toList())
         assertEquals(InstallerContract.MAX_BATCH_SOURCES, capabilities.getInt(InstallerCapabilityKeys.MAX_BATCH))
         assertEquals(InstallerContract.MAX_SPLITS_PER_PACKAGE, capabilities.getInt(InstallerCapabilityKeys.MAX_SPLITS))

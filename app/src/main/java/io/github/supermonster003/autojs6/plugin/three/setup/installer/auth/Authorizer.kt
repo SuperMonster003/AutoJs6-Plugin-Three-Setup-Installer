@@ -7,11 +7,12 @@ internal enum class Authorizer(val id: String, val privileged: Boolean) {
     NONE(InstallerContract.AUTHORIZER_NONE, privileged = false),
     SHIZUKU(InstallerContract.AUTHORIZER_SHIZUKU, privileged = true),
     ROOT(InstallerContract.AUTHORIZER_ROOT, privileged = true),
+    DHIZUKU(InstallerContract.AUTHORIZER_DHIZUKU, privileged = true),
     ;
 
     companion object {
         /** The order `auto` tries authorizers in (roadmap D14); the settings page may reorder it in P5. */
-        val DEFAULT_ORDER: List<Authorizer> = listOf(SHIZUKU, ROOT, NONE)
+        val DEFAULT_ORDER: List<Authorizer> = listOf(SHIZUKU, ROOT, DHIZUKU, NONE)
 
         fun fromId(id: String?): Authorizer? = entries.firstOrNull { it.id == id }
 

@@ -85,7 +85,7 @@
     <string name="default_installer_settings_unavailable">Не удалось открыть системные настройки приложения.</string>
     <string name="default_installer_state">Состояние по умолчанию</string>
     <string name="default_installer_summary">Выберите приложение для файлов APK. Меняется только обработчик APK.</string>
-    <string name="default_installer_timeout">Время ожидания авторизации истекло. Проверьте Shizuku или Root и повторите попытку.</string>
+    <string name="default_installer_timeout">Время ожидания авторизации истекло. Проверьте выбранный способ авторизации и повторите попытку.</string>
     <string name="default_installer_title">Установщик по умолчанию</string>
     <string name="home_active">В процессе</string>
     <string name="home_authorize">Авторизовать</string>
@@ -196,7 +196,7 @@
     <string name="notification_open_for_progress">Нажмите, чтобы открыть установщик и увидеть ход установки.</string>
     <string name="notification_preparing">Подготовка пакета</string>
     <string name="notification_writing">Запись пакета</string>
-    <string name="plugin_description">Устанавливает, обновляет и удаляет приложения Android, включая тихую установку через Shizuku или Root</string>
+    <string name="plugin_description">Устанавливает, обновляет и удаляет приложения Android, включая тихую установку через Shizuku, Root или Dhizuku</string>
     <string name="release_history_error">Не удалось прочитать встроенный документ.</string>
     <string name="release_history_title">История версий</string>
     <string name="settings_appearance">Оформление</string>
@@ -205,15 +205,16 @@
     <string name="settings_back">Назад</string>
     <string name="settings_confirm">OK</string>
     <string name="settings_defaults_note">Новые локальные установки по умолчанию показывают диалог подтверждения. Настройки применяются к новым установкам из приложения, общих файлов и файловых менеджеров. Хост и скрипты сохраняют явные параметры. Для расширенных параметров нужен Shizuku или Root.</string>
+    <string name="settings_dhizuku">Dhizuku</string>
     <string name="settings_disabled">Выключено</string>
     <string name="settings_enabled">Включено</string>
     <string name="settings_error">Не удалось прочитать или сохранить настройки. Проверьте ограничения и повторите. Перед очисткой данных остановите активные задачи.</string>
     <string name="settings_installation">Установка</string>
-    <string name="settings_installer_note">Пустое поле указывает этот плагин как установщик. В HyperOS может понадобиться com.android.shell. Для изменения нужен Shizuku или Root.</string>
+    <string name="settings_installer_note">Пустое поле использует установщика по умолчанию для выбранного способа авторизации. Явное указание установщика требует Shizuku или Root и зависит от ограничений прошивки.</string>
     <string name="settings_installer_package">Имя пакета установщика</string>
     <string name="settings_installer_self">Этот плагин</string>
     <string name="settings_interaction">Взаимодействие по умолчанию</string>
-    <string name="settings_interaction_auto_note">В автоматическом режиме установка может идти без диалога при разрешенном Shizuku или Root. Иначе Android запрашивает подтверждение.</string>
+    <string name="settings_interaction_auto_note">В автоматическом режиме установка может идти без диалога при разрешенном Shizuku, Root или Dhizuku. Иначе Android запрашивает подтверждение.</string>
     <string name="settings_interaction_dialog">Показывать диалог установки</string>
     <string name="settings_interaction_silent">Без диалога (нужно разрешение)</string>
     <string name="settings_invalid_package">Введите корректное имя пакета Android или оставьте поле пустым.</string>

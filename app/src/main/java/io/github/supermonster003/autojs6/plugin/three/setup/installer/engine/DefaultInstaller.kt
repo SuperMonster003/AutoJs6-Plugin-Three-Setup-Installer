@@ -27,7 +27,7 @@ internal class DefaultInstaller(private val backend: Backend) {
 
     @Synchronized fun set(enable: Boolean, authorizer: Authorizer, checkActive: () -> Unit = {}): com.google.gson.JsonObject {
         checkActive()
-        if (!authorizer.privileged) throw InstallFailure(InstallerErrorCodes.AUTHORIZER_REQUIRED, "Selecting a default installer requires Shizuku or Root")
+        if (authorizer !in setOf(Authorizer.SHIZUKU, Authorizer.ROOT)) throw InstallFailure(InstallerErrorCodes.AUTHORIZER_REQUIRED, "Selecting a default installer requires Shizuku or Root")
         if (enable && !backend.read().entryAvailable) throw RequestDocuments.invalid("The default-installer capability is unavailable until the APK entry is installed")
         val changed = backend.set(enable, authorizer, checkActive)
         val after = backend.read()

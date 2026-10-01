@@ -3,7 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <!-- AndroidHiddenApiBypass declares a higher minSdk than the plugin; it is only invoked on Android 9+. -->
-    <uses-sdk tools:overrideLibrary="org.lsposed.hiddenapibypass" />
+    <!-- Dhizuku is gated to API 26+, leaving the other authorizers available on API 24/25. -->
+    <uses-sdk tools:overrideLibrary="org.lsposed.hiddenapibypass,com.rosan.dhizuku.api" />
 
     <uses-permission android:name="org.autojs.permission.PLUGIN" />
     <!-- Regular (none authorizer) installation and uninstallation through the system dialogs. -->
@@ -19,12 +20,14 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- Shizuku authorizer (roadmap D2 / D11). -->
     <uses-permission android:name="moe.shizuku.manager.permission.API_V23" />
+    <uses-permission android:name="com.rosan.dhizuku.permission.API" />
     <!-- Used only by the user's manual GitHub release check. Installation remains offline. -->
     <uses-permission android:name="android.permission.INTERNET" />
 
     <queries>
         <package android:name="org.autojs.autojs6" />
         <package android:name="moe.shizuku.privileged.api" />
+        <package android:name="com.rosan.dhizuku" />
         <!-- Which app currently handles package files: the default-installer state (roadmap D23). -->
         <intent>
             <action android:name="android.intent.action.VIEW" />

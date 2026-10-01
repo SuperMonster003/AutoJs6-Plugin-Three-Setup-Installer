@@ -20,6 +20,7 @@ internal object AuthorizerStates {
             PrivilegedClient.invalidate(Authorizer.SHIZUKU)
         }
         val root = RootAuthorizer(AndroidRootAccess(context))
+        val dhizuku = DhizukuAuthorizer(AndroidDhizukuAccess(context))
     }
 
     @Volatile private var shared: Authorizers? = null
@@ -33,6 +34,7 @@ internal object AuthorizerStates {
         Authorizer.NONE -> AuthorizerState(authorizer, available = true, running = true, granted = true)
         Authorizer.SHIZUKU -> get(context).shizuku.state()
         Authorizer.ROOT -> get(context).root.state()
+        Authorizer.DHIZUKU -> get(context).dhizuku.state()
     }
 
     /** Only a worker may wait for authorization; timeouts and interruption preserve their error codes. */
@@ -45,6 +47,7 @@ internal object AuthorizerStates {
                 Authorizer.NONE -> true
                 Authorizer.SHIZUKU -> get(context).shizuku.request(timeoutMillis)
                 Authorizer.ROOT -> get(context).root.request(timeoutMillis)
+                Authorizer.DHIZUKU -> get(context).dhizuku.request(timeoutMillis)
             }
         } catch (failure: InterruptedException) {
             Thread.currentThread().interrupt()

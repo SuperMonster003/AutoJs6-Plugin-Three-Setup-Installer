@@ -71,6 +71,7 @@ class SecurityBoundaryDeviceTest {
                 "inspect" to { installer.inspect(null, null, callback) },
                 "getUsers" to { installer.getUsers(null, callback) },
                 "setDefaultInstaller" to { installer.setDefaultInstaller(false, null, callback) },
+                "setDefaultInstallerV2" to { installer.setDefaultInstallerV2(false, null, callback) },
                 "uninstall" to { installer.uninstall(null, callback) },
                 "openSession" to { installer.openSession(emptyArray(), null, sessionCallback); Unit },
             )

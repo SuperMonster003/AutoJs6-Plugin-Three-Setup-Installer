@@ -2,6 +2,7 @@
 
 appcompat = "1.7.1"
 commons-compress = "1.28.0"
+dhizuku = "2.6.0"
 foojay-resolver-convention = "1.0.0"
 gson = "2.13.2"
 hiddenapibypass = "6.1"
@@ -18,6 +19,7 @@ xz = "1.10"
 
 androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
 apache-commons-compress = { module = "org.apache.commons:commons-compress", version.ref = "commons-compress" }
+dhizuku-api = { module = "io.github.iamr0s:Dhizuku-API", version.ref = "dhizuku" }
 # LSPosed AndroidHiddenApiBypass: lifts the hidden API restriction for the package installer interfaces (Apache-2.0).
 hiddenapibypass = { module = "org.lsposed.hiddenapibypass:hiddenapibypass", version.ref = "hiddenapibypass" }
 junit = { module = "junit:junit", version.ref = "junit" }

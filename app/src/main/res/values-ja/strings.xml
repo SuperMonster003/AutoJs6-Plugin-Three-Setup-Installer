@@ -85,7 +85,7 @@
     <string name="default_installer_settings_unavailable">システムのアプリ設定を開けませんでした.</string>
     <string name="default_installer_state">既定の状態</string>
     <string name="default_installer_summary">APK ファイルを開くアプリを選びます. APK の処理アプリのみ変更します.</string>
-    <string name="default_installer_timeout">認証がタイムアウトしました. Shizuku または Root を確認してお試しください.</string>
+    <string name="default_installer_timeout">認可がタイムアウトしました. 選択した認可方式を確認して再試行してください.</string>
     <string name="default_installer_title">既定のインストーラー</string>
     <string name="home_active">進行中</string>
     <string name="home_authorize">権限を付与</string>
@@ -196,7 +196,7 @@
     <string name="notification_open_for_progress">タップしてインストーラーを開き, 進捗を確認してください.</string>
     <string name="notification_preparing">パッケージを準備中</string>
     <string name="notification_writing">パッケージを書き込み中</string>
-    <string name="plugin_description">Android アプリのインストール, 更新, アンインストールを行い, Shizuku または Root によるサイレントインストールに対応</string>
+    <string name="plugin_description">Android アプリのインストール, 更新, アンインストールを行い, Shizuku, Root または Dhizuku によるサイレントインストールに対応</string>
     <string name="release_history_error">内蔵ドキュメントを読み込めません.</string>
     <string name="release_history_title">バージョン履歴</string>
     <string name="settings_appearance">外観</string>
@@ -205,15 +205,16 @@
     <string name="settings_back">戻る</string>
     <string name="settings_confirm">OK</string>
     <string name="settings_defaults_note">ローカルの新規インストールは既定で確認画面を表示します. 既定値はこのアプリ, 共有ファイル, ファイル管理アプリからの新規インストールに適用します. ホストやスクリプトの明示的な設定は維持されます. 高度な設定には Shizuku または Root が必要です.</string>
+    <string name="settings_dhizuku">Dhizuku</string>
     <string name="settings_disabled">オフ</string>
     <string name="settings_enabled">オン</string>
     <string name="settings_error">設定を読み込みまたは保存できません. 制限を確認して再試行してください. データ消去前に実行中のタスクを停止してください.</string>
     <string name="settings_installation">インストール</string>
-    <string name="settings_installer_note">空欄の場合はこのプラグインをインストーラーにします. HyperOS では com.android.shell が必要な場合があります. 変更には Shizuku または Root が必要です.</string>
+    <string name="settings_installer_note">空欄の場合は選択した認可方式の既定のインストーラー ID を使用します. 帰属の指定には Shizuku または Root が必要で, ROM の制限を受けます.</string>
     <string name="settings_installer_package">インストーラーのパッケージ名</string>
     <string name="settings_installer_self">このプラグイン</string>
     <string name="settings_interaction">既定の操作方法</string>
-    <string name="settings_interaction_auto_note">自動モードは Shizuku または Root が許可されている場合に無操作でインストールします. それ以外は Android が確認を求めます.</string>
+    <string name="settings_interaction_auto_note">自動モードは Shizuku, Root または Dhizuku が許可されている場合に無操作でインストールできます. それ以外は Android が確認を求めます.</string>
     <string name="settings_interaction_dialog">インストール画面を表示</string>
     <string name="settings_interaction_silent">サイレント (権限が必要)</string>
     <string name="settings_invalid_package">有効な Android パッケージ名を入力するか, 空欄にしてください.</string>

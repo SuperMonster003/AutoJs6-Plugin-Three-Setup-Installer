@@ -130,14 +130,14 @@ public final class ReleaseContractDeviceTest {
                 assertCapabilities((Bundle) property(info, "getCapabilities"));
             }
             assertCapabilities(result.getBundle("capabilities"));
-            for (String name : new String[]{"authorizer", "users", "default", "inspect", "session"}) {
+            for (String name : new String[]{"authorizer", "users", "default", "persistent", "inspect", "session"}) {
                 check(result.getBoolean("rejected:" + name), "The caller guard accepted " + name);
             }
             Bundle evidence = new Bundle();
             evidence.putString("releaseRoundTrip", "api=" + Build.VERSION.SDK_INT + " pluginUid=" + Process.myUid() +
                     " probeUid=" + result.getInt("probeUid") + " pluginPid=" + Process.myPid() + " probePid=" + result.getInt("probePid") +
                     " infoMillis=" + result.getLong("infoRoundTripMillis") + " totalMillis=" + result.getLong("totalRoundTripMillis") +
-                    " guardedOperations=5 nativeLibraries=0");
+                    " guardedOperations=6 nativeLibraries=0");
             instrumentation.sendStatus(0, evidence);
         } finally { context.unbindService(connection); }
     }
@@ -161,7 +161,8 @@ public final class ReleaseContractDeviceTest {
         Objects.requireNonNull(capabilities, "Capabilities are missing");
         equal(5299L, capabilities.getLong("requiresHostVersion"), "Minimum host build");
         equal(1, capabilities.getInt("installerContractVersion"), "Installer contract version");
-        check(Arrays.equals(new String[]{"none", "shizuku", "root"}, capabilities.getStringArray("installerAuthorizers")), "Authorizers differ from contract V1");
+        equal(2, capabilities.getInt("installerMaxContractVersion"), "Maximum installer contract version");
+        check(Arrays.equals(new String[]{"none", "shizuku", "root", "dhizuku"}, capabilities.getStringArray("installerAuthorizers")), "Authorizers differ from contract V2");
         equal(32, capabilities.getInt("installerMaxBatch"), "Maximum batch size");
         equal(64, capabilities.getInt("installerMaxSplits"), "Maximum split count");
         equal(new HashSet<>(Arrays.asList("batch", "splits", "inspect", "users", "silent-uninstall", "delete-source", "default-installer")),

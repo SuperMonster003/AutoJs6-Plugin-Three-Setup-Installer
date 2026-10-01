@@ -85,7 +85,7 @@
     <string name="default_installer_settings_unavailable">無法開啟系統應用程式設定.</string>
     <string name="default_installer_state">預設狀態</string>
     <string name="default_installer_summary">選擇開啟 APK 檔案的應用程式. 此項僅更改 APK 處理程式.</string>
-    <string name="default_installer_timeout">授權逾時. 請檢查 Shizuku 或 Root 後重試.</string>
+    <string name="default_installer_timeout">授權逾時. 請檢查所選授權方式後重試.</string>
     <string name="default_installer_title">預設安裝器</string>
     <string name="home_active">進行中</string>
     <string name="home_authorize">授權</string>
@@ -196,7 +196,7 @@
     <string name="notification_open_for_progress">點擊開啟安裝器並查看進度.</string>
     <string name="notification_preparing">正在準備安裝套件</string>
     <string name="notification_writing">正在寫入安裝套件</string>
-    <string name="plugin_description">安裝, 更新和卸載 Android 應用程式, 支援透過 Shizuku 或 Root 靜默安裝</string>
+    <string name="plugin_description">安裝, 更新和卸載 Android 應用程式, 支援透過 Shizuku, Root 或 Dhizuku 靜默安裝</string>
     <string name="release_history_error">無法讀取內置文件.</string>
     <string name="release_history_title">版本歷史</string>
     <string name="settings_appearance">外觀</string>
@@ -205,15 +205,16 @@
     <string name="settings_back">返回</string>
     <string name="settings_confirm">確定</string>
     <string name="settings_defaults_note">本機新安裝預設顯示確認對話框. 預設選項用於從本應用程式, 分享檔案和檔案管理員發起的新安裝. 宿主和腳本請求保留其明確選項. 進階選項需要 Shizuku 或 Root.</string>
+    <string name="settings_dhizuku">Dhizuku</string>
     <string name="settings_disabled">關閉</string>
     <string name="settings_enabled">開啟</string>
     <string name="settings_error">無法讀取或儲存設定. 請檢查限制後重試. 清除資料前請先停止執行中的任務.</string>
     <string name="settings_installation">安裝</string>
-    <string name="settings_installer_note">留空表示由本插件作為安裝者. HyperOS 可能需要 com.android.shell. 更改安裝者歸屬需要 Shizuku 或 Root.</string>
+    <string name="settings_installer_note">留空使用所選授權方式的預設安裝者身分. 指定安裝者歸屬仍需要 Shizuku 或 Root, 並受 ROM 限制.</string>
     <string name="settings_installer_package">安裝者套件名稱</string>
     <string name="settings_installer_self">本插件</string>
     <string name="settings_interaction">預設互動方式</string>
-    <string name="settings_interaction_auto_note">自動模式在 Shizuku 或 Root 已授權時可能靜默安裝. 否則由 Android 請求確認.</string>
+    <string name="settings_interaction_auto_note">自動模式在 Shizuku, Root 或 Dhizuku 已授權時可能靜默安裝. 否則由 Android 請求確認.</string>
     <string name="settings_interaction_dialog">顯示安裝對話框</string>
     <string name="settings_interaction_silent">靜默 (需要授權)</string>
     <string name="settings_invalid_package">請輸入有效的 Android 套件名稱, 或留空.</string>

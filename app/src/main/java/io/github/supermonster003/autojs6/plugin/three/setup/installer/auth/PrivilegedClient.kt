@@ -27,7 +27,7 @@ internal class PrivilegedClient(context: Context) {
     )
 
     fun acquire(authorizer: Authorizer, timeoutMillis: Long = BIND_TIMEOUT_MILLIS): IPrivilegedInstaller {
-        require(authorizer.privileged)
+        require(authorizer in setOf(Authorizer.SHIZUKU, Authorizer.ROOT))
         check(Looper.myLooper() != Looper.getMainLooper()) { "Privileged binding must run on a worker" }
         try {
             return bindingHandshake(timeoutMillis, SystemClock::elapsedRealtime,

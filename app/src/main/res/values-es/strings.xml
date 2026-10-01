@@ -85,7 +85,7 @@
     <string name="default_installer_settings_unavailable">No se pudieron abrir los ajustes de la app en el sistema.</string>
     <string name="default_installer_state">Estado predeterminado</string>
     <string name="default_installer_summary">Elige la app que abre archivos APK. Solo se cambia el gestor APK.</string>
-    <string name="default_installer_timeout">La autorización agotó el tiempo. Comprueba Shizuku o Root y reinténtalo.</string>
+    <string name="default_installer_timeout">La autorización agotó el tiempo. Comprueba el método seleccionado y reinténtalo.</string>
     <string name="default_installer_title">Instalador predeterminado</string>
     <string name="home_active">En curso</string>
     <string name="home_authorize">Autorizar</string>
@@ -196,7 +196,7 @@
     <string name="notification_open_for_progress">Toca para abrir el instalador y ver el progreso.</string>
     <string name="notification_preparing">Preparando el paquete</string>
     <string name="notification_writing">Escribiendo el paquete</string>
-    <string name="plugin_description">Instala, actualiza y desinstala aplicaciones Android, con instalación silenciosa mediante Shizuku o Root</string>
+    <string name="plugin_description">Instala, actualiza y desinstala aplicaciones Android, con instalación silenciosa mediante Shizuku, Root o Dhizuku</string>
     <string name="release_history_error">No se puede leer el documento integrado.</string>
     <string name="release_history_title">Historial de versiones</string>
     <string name="settings_appearance">Apariencia</string>
@@ -205,15 +205,16 @@
     <string name="settings_back">Volver</string>
     <string name="settings_confirm">Aceptar</string>
     <string name="settings_defaults_note">Las nuevas instalaciones locales muestran confirmación de forma predeterminada. Los valores se aplican a nuevas instalaciones desde esta app, archivos compartidos y gestores de archivos. El anfitrión y los scripts conservan sus opciones explícitas. Las opciones avanzadas requieren Shizuku o Root.</string>
+    <string name="settings_dhizuku">Dhizuku</string>
     <string name="settings_disabled">Desactivado</string>
     <string name="settings_enabled">Activado</string>
     <string name="settings_error">No se pueden leer o guardar los ajustes. Revise los límites y reintente. Detenga las tareas activas antes de borrar datos.</string>
     <string name="settings_installation">Instalación</string>
-    <string name="settings_installer_note">Déjalo vacío para atribuir la instalación a este complemento. HyperOS puede requerir com.android.shell. Cambiar la atribución requiere Shizuku o Root.</string>
+    <string name="settings_installer_note">Déjalo vacío para usar la identidad de instalador predeterminada del método de autorización seleccionado. Especificar la atribución requiere Shizuku o Root y está sujeto a las restricciones de la ROM.</string>
     <string name="settings_installer_package">Paquete del instalador</string>
     <string name="settings_installer_self">Este complemento</string>
     <string name="settings_interaction">Interacción predeterminada</string>
-    <string name="settings_interaction_auto_note">El modo automático puede instalar sin diálogo si Shizuku o Root tienen permiso. En otro caso, Android pide confirmación.</string>
+    <string name="settings_interaction_auto_note">El modo automático puede instalar sin diálogo si Shizuku, Root o Dhizuku tienen permiso. En otro caso, Android pide confirmación.</string>
     <string name="settings_interaction_dialog">Mostrar diálogo de instalación</string>
     <string name="settings_interaction_silent">Silenciosa (requiere autorización)</string>
     <string name="settings_invalid_package">Introduce un paquete Android válido o déjalo vacío.</string>
