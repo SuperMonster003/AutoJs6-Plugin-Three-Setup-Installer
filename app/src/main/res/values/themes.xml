@@ -3,6 +3,13 @@
     <!-- Material 3 base theme. Roadmap P3 / P5 add the dialog variants and the neutral palette of the
          standalone settings specification; P0 only needs a valid application theme. -->
     <style name="Theme.ThreeSetupInstaller" parent="Theme.Material3.DayNight.NoActionBar" />
+    <style name="Theme.ThreeSetupInstaller.Dialog" parent="Theme.ThreeSetupInstaller">
+        <item name="android:windowIsFloating">false</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:backgroundDimEnabled">true</item>
+        <item name="android:windowNoTitle">true</item>
+    </style>
     <style name="Theme.ThreeSetupInstaller.Confirmation" parent="Theme.ThreeSetupInstaller">
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:windowBackground">@android:color/transparent</item>

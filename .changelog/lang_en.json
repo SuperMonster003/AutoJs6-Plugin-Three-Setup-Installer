@@ -22,7 +22,8 @@
         "Core installation and updates use system confirmation, Shizuku or Root, with cancellation and results that reflect the actual confirmation and system response.",
         "Core uninstallation supports system confirmation, Shizuku and Root, with optional data retention when using a privileged authorizer.",
         "Serial batch installation can continue after failures or cancel remaining items, and supports validating and selecting target users with privileges.",
-        "Host service requests support inspection, installation, uninstallation and user queries, with explicit confirmation, cancellation when callers exit, up to four concurrent sessions and automatic cleanup."
+        "Host service requests support inspection, installation, uninstallation and user queries, with explicit confirmation, cancellation when callers exit, up to four concurrent sessions and automatic cleanup.",
+        "Installation dialogs follow AutoJs6 language, night mode and theme color, with a fallback when the host is unavailable and layouts that support large text and RTL."
       ],
       "dependency": [
         "Shizuku API 13.1.5 (`dev.rikka.shizuku:api`, `dev.rikka.shizuku:provider`) for the Shizuku authorizer",
