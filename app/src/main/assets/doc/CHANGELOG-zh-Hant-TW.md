@@ -20,6 +20,7 @@
 * `優化` 支援依序批次安裝, 失敗後繼續或取消剩餘項目, 並可透過特權方式驗證和選擇目標使用者.
 * `優化` 主程式服務接入套件資訊查詢, 安裝, 解除安裝和使用者查詢, 支援明確確認, 呼叫方退出時取消, 最多四個並行工作階段及自動清理.
 * `優化` 安裝對話框預設跟隨 AutoJs6 的語言, 夜間模式與主題色, 支援宿主無法使用時退回, 大字體和 RTL 版面.
+* `優化` 背景安裝支援前景服務, 進度, 取消和結果通知; 未授予通知權限不會阻止安裝.
 * `相依性` 附加 Shizuku API 13.1.5 (`dev.rikka.shizuku:api`, `dev.rikka.shizuku:provider`) 用於 Shizuku 授權方式
 * `相依性` 附加 libsu 6.0.0 (`com.github.topjohnwu.libsu:core`, `service`) 用於 Root 授權方式
 * `相依性` 附加 AndroidHiddenApiBypass 6.1 用於特權服務存取隱藏的套件安裝器 API

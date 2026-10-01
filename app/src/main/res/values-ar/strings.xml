@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="action_install">تثبيت</string>
     <string name="action_uninstall">إلغاء التثبيت</string>
     <string name="confirm_all_users">جميع المستخدمين</string>
@@ -13,5 +13,16 @@
     <string name="confirm_system">تأكيد النظام</string>
     <string name="confirm_uninstall_body">%1$s\nالتفويض: %2$s\nالمستخدم: %3$s</string>
     <string name="confirm_uninstall_title">تأكيد إلغاء التثبيت</string>
+    <string name="notification_action_required">يلزم التأكيد</string>
+    <string name="notification_action_required_body">اضغط لمتابعة التأكيد المطلوب.</string>
+    <string name="notification_active_count">عمليات التثبيت النشطة: %1$d</string>
+    <string name="notification_cancel_all">إلغاء الكل</string>
+    <string name="notification_channel_installation">عمليات التثبيت</string>
+    <string name="notification_install_complete">اكتمل التثبيت</string>
+    <string name="notification_install_failed">فشل التثبيت</string>
+    <string name="notification_installing">جار التثبيت</string>
+    <string name="notification_open_for_progress">اضغط لفتح المثبت وعرض التقدم.</string>
+    <string name="notification_preparing">جار تجهيز الحزمة</string>
+    <string name="notification_writing">جار كتابة الحزمة</string>
     <string name="plugin_description">يثبت تطبيقات Android ويحدثها ويزيلها مع دعم التثبيت الصامت عبر Shizuku أو Root</string>
 </resources>

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="action_install">Installer</string>
     <string name="action_uninstall">Désinstaller</string>
     <string name="confirm_all_users">Tous les utilisateurs</string>
@@ -13,5 +13,16 @@
     <string name="confirm_system">Confirmation système</string>
     <string name="confirm_uninstall_body">%1$s\nAutorisation: %2$s\nUtilisateur: %3$s</string>
     <string name="confirm_uninstall_title">Confirmer la désinstallation</string>
+    <string name="notification_action_required">Confirmation requise</string>
+    <string name="notification_action_required_body">Appuyez pour poursuivre la confirmation demandée.</string>
+    <string name="notification_active_count">Installations en cours: %1$d</string>
+    <string name="notification_cancel_all">Tout annuler</string>
+    <string name="notification_channel_installation">Installations</string>
+    <string name="notification_install_complete">Installation terminée</string>
+    <string name="notification_install_failed">Échec de l\'installation</string>
+    <string name="notification_installing">Installation en cours</string>
+    <string name="notification_open_for_progress">Appuyez pour ouvrir l\'installateur et voir la progression.</string>
+    <string name="notification_preparing">Préparation du paquet</string>
+    <string name="notification_writing">Écriture du paquet</string>
     <string name="plugin_description">Installe, met à jour et désinstalle des applications Android, avec installation silencieuse via Shizuku ou Root</string>
 </resources>

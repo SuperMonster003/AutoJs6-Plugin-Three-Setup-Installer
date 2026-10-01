@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="action_install">インストール</string>
     <string name="action_uninstall">アンインストール</string>
     <string name="confirm_all_users">すべてのユーザー</string>
@@ -13,5 +13,16 @@
     <string name="confirm_system">システム確認</string>
     <string name="confirm_uninstall_body">%1$s\n認証方式: %2$s\nユーザー: %3$s</string>
     <string name="confirm_uninstall_title">アンインストールの確認</string>
+    <string name="notification_action_required">確認が必要です</string>
+    <string name="notification_action_required_body">タップして要求された確認を続けてください.</string>
+    <string name="notification_active_count">実行中のインストール: %1$d</string>
+    <string name="notification_cancel_all">すべてキャンセル</string>
+    <string name="notification_channel_installation">インストール</string>
+    <string name="notification_install_complete">インストール完了</string>
+    <string name="notification_install_failed">インストール失敗</string>
+    <string name="notification_installing">インストール中</string>
+    <string name="notification_open_for_progress">タップしてインストーラーを開き, 進捗を確認してください.</string>
+    <string name="notification_preparing">パッケージを準備中</string>
+    <string name="notification_writing">パッケージを書き込み中</string>
     <string name="plugin_description">Android アプリのインストール, 更新, アンインストールを行い, Shizuku または Root によるサイレントインストールに対応</string>
 </resources>

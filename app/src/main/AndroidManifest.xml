@@ -15,6 +15,7 @@
         tools:ignore="QueryAllPackagesPermission" />
     <!-- Progress of background installations (roadmap P3.4); the service type is declared with it. -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- Shizuku authorizer (roadmap D2 / D11). -->
     <uses-permission android:name="moe.shizuku.manager.permission.API_V23" />
@@ -101,6 +102,10 @@
             android:exported="false"
             android:excludeFromRecents="true"
             android:theme="@style/Theme.ThreeSetupInstaller.Confirmation" />
+
+        <service android:name=".ui.InstallForegroundService" android:exported="false"
+            android:foregroundServiceType="dataSync" />
+        <receiver android:name=".ui.InstallNotifications$CancelReceiver" android:exported="false" />
 
         <activity
             android:name=".ui.UninstallDialogActivity"

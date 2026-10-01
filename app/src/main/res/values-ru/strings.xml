@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="action_install">Установить</string>
     <string name="action_uninstall">Удалить</string>
     <string name="confirm_all_users">Все пользователи</string>
@@ -13,5 +13,16 @@
     <string name="confirm_system">Системное подтверждение</string>
     <string name="confirm_uninstall_body">%1$s\nАвторизация: %2$s\nПользователь: %3$s</string>
     <string name="confirm_uninstall_title">Подтвердить удаление</string>
+    <string name="notification_action_required">Требуется подтверждение</string>
+    <string name="notification_action_required_body">Нажмите, чтобы продолжить запрошенное подтверждение.</string>
+    <string name="notification_active_count">Активные установки: %1$d</string>
+    <string name="notification_cancel_all">Отменить все</string>
+    <string name="notification_channel_installation">Установки</string>
+    <string name="notification_install_complete">Установка завершена</string>
+    <string name="notification_install_failed">Ошибка установки</string>
+    <string name="notification_installing">Установка</string>
+    <string name="notification_open_for_progress">Нажмите, чтобы открыть установщик и увидеть ход установки.</string>
+    <string name="notification_preparing">Подготовка пакета</string>
+    <string name="notification_writing">Запись пакета</string>
     <string name="plugin_description">Устанавливает, обновляет и удаляет приложения Android, включая тихую установку через Shizuku или Root</string>
 </resources>
