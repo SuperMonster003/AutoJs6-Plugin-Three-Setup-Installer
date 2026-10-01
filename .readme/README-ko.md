@@ -8,7 +8,7 @@
     </picture>
   </p>
 
-  <p>시스템 확인, Shizuku 또는 Root로 Android 앱 설치, 업데이트 및 제거</p>
+  <p>Android 확인, Shizuku, Root 또는 Dhizuku로 앱 설치, 업데이트 및 제거</p>
 
   <p>
     <a href="https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/releases"><img alt="GitHub release (latest by date)" src="https://img.shields.io/github/v/release/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer?label=Release"/></a>
@@ -42,9 +42,9 @@
 
 ******
 
-3-Setup Installer는 독립 홈 화면, AutoJs6의 진입점과 스크립트, 외부 앱의 패키지 열기 및 공유 요청을 통해 Android 앱을 설치, 업데이트, 검사 및 제거합니다. Android 확인과 Shizuku 또는 Root를 통한 특권 작업을 지원합니다.
+3-Setup Installer는 독립 홈 화면, AutoJs6의 진입점과 스크립트, 외부 앱의 패키지 열기 및 공유 요청을 통해 Android 앱을 설치, 업데이트, 검사 및 제거합니다. Android 확인과 Shizuku, Root 또는 Dhizuku를 통한 특권 작업을 지원합니다.
 
-AutoJs6는 Binder 서비스를 통해 플러그인을 찾고 패키지 파일을 읽기 전용 파일 디스크립터로 전달합니다. 플러그인은 패키지를 분석하고 인증 방식을 선택하며 필요하면 자체 확인 및 진행률 대화 상자를 표시하고 단계, 진행률, 결과를 보고합니다. 특권 작업은 시스템 패키지 설치 프로그램과 직접 통신하는 Shizuku 사용자 서비스 또는 libsu Root 서비스에서 실행됩니다.
+플러그인이 호스트와 독립적으로 패키지 검사, 설치 및 결과를 처리합니다. 대화상자, 무음 또는 알림 모드를 선택할 수 있습니다. 알림 모드는 확인, 취소 및 결과를 알림으로 표시하며 필요한 Android 확인은 해당 알림을 눌러야 열립니다.
 
 ******
 
@@ -52,7 +52,7 @@ AutoJs6는 Binder 서비스를 통해 플러그인을 찾고 패키지 파일을
 
 ******
 
-1.1.0은 아래 설치, 앱 관리 및 스크립트 기능을 구현합니다. 공식 GitHub Release 게시와 플러그인 센터 등록은 아직 완료되지 않았습니다. 호스트 연동에는 AutoJs6 >= 6.8.0 (5299), `installer` 스크립트 API에는 빌드 5300 이상이 필요합니다. 기기 검증 범위와 남은 검증 항목은 [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md)에 기록되어 있습니다.
+1.1.0은 아래 설치, 앱 관리 및 스크립트 기능을 구현합니다. 공식 GitHub Release 게시와 플러그인 센터 등록은 아직 완료되지 않았습니다. 호스트 연동에는 AutoJs6 >= 6.8.0 (5299), `installer` 스크립트 API에는 빌드 5300 이상이 필요합니다. 기기 검증 범위와 남은 검증 항목은 [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md)에 기록되어 있습니다. Dhizuku, 알림 설치 및 영구 기본 설치 프로그램의 스크립트 옵션에는 installer V2와 AutoJs6 6.8.0 빌드 5307 이상이 필요합니다. 기본 호스트 연동은 빌드 5299, V1 스크립트 메서드는 5300 이상을 계속 지원합니다.
 
 ******
 
@@ -63,19 +63,20 @@ AutoJs6는 Binder 서비스를 통해 플러그인을 찾고 패키지 파일을
 1.1.0에 구현된 기능:
 
 - 패키지 형식: `.apk`, `.apks`, `.xapk`, `.apkm`, `.apkz` 및 APK가 들어 있는 ZIP 아카이브. 분할 패키지는 기기에 맞게 선택되며 `.aab` 파일은 인식과 설명만 하고 설치하지 않습니다.
-- 권한 방식: `none`은 Android 확인을 사용하고, `shizuku`와 `root`는 특권 작업을 제공합니다. `auto`는 기본적으로 사용 가능한 Shizuku, Root, 시스템 확인 순서로 선택합니다. 설정에서 순서와 사용 여부를 바꿀 수 있으며, 명시적으로 선택한 방식이 다른 방식으로 자동 변경되지는 않습니다.
+- `none`은 Android 확인을 사용합니다. 새 설정의 `auto`는 사용 가능한 `shizuku -> root -> dhizuku -> none` 순서로 선택하며 순서와 사용 여부를 바꿀 수 있습니다. 저장된 기존 세 방식의 설정은 상대 순서와 사용 여부를 유지하고 Dhizuku를 `none` 앞에 비활성 상태로 추가합니다. 명시적으로 지정한 방식은 다른 방식으로 바뀌지 않습니다.
 - 설치 성공 후 원본 삭제를 선택적으로 시도합니다. 다운그레이드, 테스트 패키지, 낮은 targetSdk 제한 우회 (Android 14+), 설치 프로그램 지정 및 다른 대상 사용자에는 Shizuku 또는 Root가 필요하며 Android 제한도 적용됩니다.
-- 설치된 앱을 이름 또는 패키지 이름으로 검색하고, 이름, 설치 시간 또는 업데이트 시간으로 정렬하며 시스템 앱을 표시할 수 있습니다. 앱이나 시스템 앱 정보를 열거나, 내용을 검토하고 제거를 확인할 수 있습니다. Shizuku 또는 Root는 확인 후 추가 시스템 확인 없이 제거하고 선택적으로 데이터를 보존할 수 있으며, 그 외에는 Android 확인을 사용합니다.
+- 설치된 앱을 이름이나 패키지로 검색하고 이름, 설치 시간 또는 업데이트 시간으로 정렬하며 시스템 앱을 표시할 수 있습니다. 앱이나 시스템 정보를 열고 제거를 확인할 수 있습니다. Shizuku와 Root는 무음 제거와 선택적 데이터 보존을 지원합니다. Dhizuku는 현재 소유자 사용자에서만 특권 제거를 지원하고 `keepData`는 지원하지 않습니다.
 - 확인 화면에 앱 정보, 이전 및 새 버전, 서명과 선택 가능한 APK 구성요소를 표시합니다. 진행 중에 취소할 수 있으며, 결과에 성공 시 작업 또는 복사 가능한 오류 정보를 표시합니다. 일괄 설치는 항목별 상태를 표시합니다.
 - 하나 또는 여러 설치 패키지를 열거나 공유할 수 있으며 MT Manager에서 공유한 APKS 파일도 지원합니다. 여러 패키지는 순차 대기열에 들어갑니다. 실패한 외부 항목은 URI와 접근 권한이 유효한 동안 재시도할 수 있습니다.
-- 포그라운드 설치 진행률, 취소 작업 및 결과 알림을 제공합니다. 알림 권한을 거부해도 설치를 차단하지 않습니다.
+- `interaction: 'notification'`은 설치 전용입니다. 초기 확인, 취소, 진행 및 결과를 알림으로 표시하며 플러그인 설치 대화상자는 열지 않습니다. Android 확인에는 알림을 눌러야 합니다. 알림 권한, 앱 알림 및 설치 채널이 활성화되어야 하며 그렇지 않으면 `NOTIFICATION_UNAVAILABLE`로 실패합니다. 다른 모드는 알림 권한이 없어도 실행됩니다. 제거에는 `notification`을 사용할 수 없습니다.
 - 외관 설정에는 언어, 야간 모드, 테마 색상 및 런처 아이콘이 있습니다. 처음 세 항목은 기본적으로 AutoJs6를 따르며 로컬 설정으로 변경할 수 있습니다. 호스트를 사용할 수 없으면 시스템 언어와 야간 모드 및 기본 색상을 사용합니다. 아이콘은 밝게, 어둡게, 자동, 투명 모드를 제공하며 자동 모드는 시스템을 따릅니다. 실제 표시는 런처 캐시와 마스크의 영향을 받습니다.
-- 홈 상태 카드와 설정은 같은 기본 설치 프로그램 페이지를 엽니다. 특권으로 기본값을 설정하거나 해제하고, 특권이 없으면 시스템 설정 안내를 제공합니다. OEM 정책에 따라 변경이 차단되거나 이전 처리 앱의 기본값 해제가 필요할 수 있습니다. 스크립트의 `installer.isDefault`, `installer.setDefault`, `setDefaultAsync`도 유지되며 기기의 응답을 그대로 보고합니다.
+- 기본 설치 프로그램 페이지는 일반 기본값과 영구 정책을 구분합니다. 일반 기본값은 Shizuku 또는 Root를 사용하며 ROM 제한이 적용됩니다. Dhizuku 영구 정책은 API 26-33을 지원하며 API 34+는 소유자 콜백을 검증할 수 없어 변경 전에 거부합니다. Root는 지원 기기의 사용자 0에서만 system UID 보조 프로세스를 사용합니다. 경쟁하는 영구 정책을 덮어쓰지 않습니다. `persistentConfigured`는 이전 설정 성공 기록이며 현재 시스템 정책의 증거가 아닙니다. 수동 상태 조회는 `preferred` 또는 `none`만 보고합니다.
 - 스크립트 API `installer` (별칭 `$installer`)는 동기, `...Async` 및 세션 방식을 제공하며 단일 / 일괄 / 분할 설치, 제거, 검사, 권한 방식과 사용자 조회 및 기본 설치 프로그램 설정을 지원합니다. 실패는 안정적인 `code`를 가진 `InstallerError`입니다 (AutoJs6 >= 6.8.0 (5300) 필요).
-- 독립 홈에는 Shizuku/Root의 사용 가능 여부와 권한 상태, 현재 기본 설치 프로그램, 진행 중인 작업 및 최근 설치가 표시됩니다. 시스템 파일 선택기에서 여러 패키지를 선택해 순차 설치하고, 개별 실패 후 계속하거나 남은 항목을 취소할 수 있습니다.
+- 독립 홈에는 Shizuku/Root/Dhizuku의 사용 가능 여부와 권한 상태, 현재 기본 설치 프로그램, 진행 중인 작업 및 최근 설치가 표시됩니다. 시스템 파일 선택기에서 여러 패키지를 선택해 순차 설치하고, 개별 실패 후 계속하거나 남은 항목을 취소할 수 있습니다.
 - 비공개 설치 기록은 최대 200개 항목을 보관하며 패키지, 이름, 이전/새 버전, 결과, 시간, 출처 (호스트/스크립트/외부/홈), 권한 방식 및 실패 정보를 포함합니다. 앱이나 원본 파일을 삭제하지 않고 개별 기록을 삭제하거나 모두 지울 수 있습니다. 프로세스 종료 후 미완료 항목은 취소됨으로 표시되며 자동 재개되지 않습니다.
-- 설정은 권한 방식의 순서와 사용 여부, 설치 옵션 및 진행 알림 환경설정을 저장합니다. 홈 및 외부 설치는 기본적으로 `dialog`를 사용하며 명시적으로 저장한 `auto` 또는 `silent` 선택이 적용됩니다. 호스트/스크립트 요청은 명시적 옵션을 유지하고 스크립트 API의 기본값은 계속 `auto`입니다. 선택 내용은 확인한 뒤에만 저장됩니다.
+- 설정에 권한 방식 순서와 사용 여부, 설치 옵션 및 알림 환경설정을 저장합니다. 홈/외부 설치의 기본값은 `dialog`이며 `auto`, `silent`, `notification`을 명시할 수 있습니다. 호스트 UI는 `dialog`를 사용하고 스크립트는 명시한 옵션과 기본 `auto`를 유지합니다. 변경은 확인 후 저장됩니다.
 - 설정에서 정보 페이지와 10개 언어로 제공되는 내장 버전 기록을 열 수 있습니다. 수동 업데이트 확인은 12시간 간격으로 플러그인의 GitHub Releases API를 사용하며 결과 캐시와 무시한 버전 관리를 지원합니다. 릴리스 페이지는 브라우저에서 열리고 업데이트가 자동 다운로드되거나 설치되지는 않습니다.
+- `dhizuku`: Android 8.0 (API 26)+, 활성 Dhizuku 기기/프로필 소유자 및 이 플러그인에 부여한 권한이 필요합니다. 현재 소유자 사용자에서만 작동하고 실제 소유자 패키지를 설치자로 기록합니다. shell/root용 다운그레이드, 테스트 패키지, 낮은 targetSdk 제한 우회, 다른 사용자, 임의 설치자 지정 및 제거 시 데이터 보존 옵션은 지원하지 않습니다. 플러그인은 소유자를 설정하지 않습니다.
 
 ******
 
@@ -84,9 +85,9 @@ AutoJs6는 Binder 서비스를 통해 플러그인을 찾고 패키지 파일을
 ******
 
 1. Android 7.0 이상에서 공식 게시 후 [Releases](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/releases)의 APK를 설치하거나 공식 색인 등록 후 AutoJs6 플러그인 센터의 설치 마법사를 사용하세요. 게시 전 테스트에는 관리자가 제공한 빌드 또는 소스에서 직접 만든 빌드를 사용하세요. 런처 아이콘으로 독립 홈 화면을 열 수 있습니다.
-2. 홈에서 권한과 기본 설치 프로그램을 확인하고 추가 버튼으로 하나 또는 여러 패키지를 선택하세요. 설치 대화상자를 검토한 후 확인하고 홈에서 진행 상황과 최근 기록을 확인하세요.
-3. AutoJs6 연동에는 빌드 5299 (6.8.0) 이상을 사용하고 플러그인 센터에서 `3-Setup Installer`를 활성화하세요. 스크립트 API에는 빌드 5300 이상이 필요합니다.
-4. AutoJs6의 설치 기능을 사용하거나 패키지를 열거나 공유할 때 3-Setup Installer를 선택하세요. 확인 대화상자가 나타나면 앱과 옵션을 검토한 후 설치하세요. 특권 방식을 선택할 때는 Shizuku 또는 Root 권한을 준비하세요.
+2. 홈에서 권한과 기본 설치 프로그램 상태를 확인하고 하나 또는 여러 패키지를 선택하세요. 선택한 대화상자 또는 알림에서 확인하고 작업과 최근 기록을 볼 수 있습니다.
+3. AutoJs6 연동에는 빌드 5299 (6.8.0) 이상을 사용하고 플러그인 센터에서 `3-Setup Installer`를 활성화하세요. 스크립트 API에는 빌드 5300 이상이 필요합니다. Dhizuku, 알림 설치 및 영구 기본 설치 프로그램의 스크립트 옵션에는 installer V2와 AutoJs6 6.8.0 빌드 5307 이상이 필요합니다. 기본 호스트 연동은 빌드 5299, V1 스크립트 메서드는 5300 이상을 계속 지원합니다.
+4. AutoJs6의 설치 기능을 사용하거나 패키지를 열거나 공유할 때 3-Setup Installer를 선택하세요. 확인 대화상자가 나타나면 앱과 옵션을 검토한 후 설치하세요. 특권 방식을 선택할 때는 Shizuku, Root 또는 Dhizuku 권한을 준비하세요.
 5. 홈 메뉴에서 설치된 앱과 설정으로 이동하세요. 로컬 설치 기본값, 외관, 아이콘 및 알림을 확인할 수 있으며 정보, 버전 기록 및 수동 업데이트 확인은 설정에 있습니다.
 
 ******
@@ -100,8 +101,9 @@ AutoJs6는 Binder 서비스를 통해 플러그인을 찾고 패키지 파일을
 - `none`: 표준 PackageInstaller 세션. Android가 매번 사용자 확인을 요구하며 분할 패키지를 지원하고 특권 옵션은 사용할 수 없습니다.
 - `shizuku`: Shizuku가 실행 중이어야 하며 (무선 디버깅, ADB 또는 Root로 시작), 3-Setup Installer에 별도로 권한을 부여해야 합니다. AutoJs6에 부여한 권한은 이 플러그인에 적용되지 않습니다. 설치, 제거 및 다른 사용자에 대한 작업은 실행 중인 Shizuku 서비스의 권한을 사용합니다.
 - `root`: Root 권한을 얻은 기기와 3-Setup Installer에 `su`를 허용하는 Root 관리자가 필요합니다. libsu로 특권 설치, 제거, 사용자 및 기본 설치 프로그램 작업을 제공합니다. 각 작업의 허용 여부는 Android와 ROM 정책이 결정합니다.
+- `dhizuku`: Android 8.0 (API 26)+, 활성 Dhizuku 기기/프로필 소유자 및 이 플러그인에 부여한 권한이 필요합니다. 현재 소유자 사용자에서만 작동하고 실제 소유자 패키지를 설치자로 기록합니다. shell/root용 다운그레이드, 테스트 패키지, 낮은 targetSdk 제한 우회, 다른 사용자, 임의 설치자 지정 및 제거 시 데이터 보존 옵션은 지원하지 않습니다. 플러그인은 소유자를 설정하지 않습니다.
 - **참고:** 스크립트는 기본적으로 `interaction: 'auto'`를 사용하며 특권이 있으면 확인 창 없이 설치합니다. 호스트 UI의 설치 기능은 `dialog`를 사용합니다. Android가 확인을 요구하면 `auto`는 이를 허용하고 `notes`에 기록합니다. 설치 전에 확인하려면 `interaction: 'dialog'`를 지정하세요. 명시적 `silent`는 특권이 없거나 시스템 확인이 필요하면 `AUTHORIZER_REQUIRED`로 실패합니다.
-- 설정은 권한 방식의 순서와 사용 여부, 설치 옵션 및 진행 알림 환경설정을 저장합니다. 홈 및 외부 설치는 기본적으로 `dialog`를 사용하며 명시적으로 저장한 `auto` 또는 `silent` 선택이 적용됩니다. 호스트/스크립트 요청은 명시적 옵션을 유지하고 스크립트 API의 기본값은 계속 `auto`입니다. 선택 내용은 확인한 뒤에만 저장됩니다.
+- 설정에 권한 방식 순서와 사용 여부, 설치 옵션 및 알림 환경설정을 저장합니다. 홈/외부 설치의 기본값은 `dialog`이며 `auto`, `silent`, `notification`을 명시할 수 있습니다. 호스트 UI는 `dialog`를 사용하고 스크립트는 명시한 옵션과 기본 `auto`를 유지합니다. 변경은 확인 후 저장됩니다.
 
 ******
 
@@ -147,9 +149,21 @@ let uninstallChosen = packageName => installer.uninstall(packageName, {
 
 // true는 이 플러그인을 기본값으로 설정, false는 해제합니다. ROM 제한 적용.
 let setDefaultChosen = enabled => installer.setDefault(enabled, { authorizer: 'shizuku' });
+
+// V2 예제에는 호스트 빌드 5307이 필요합니다. Dhizuku는 활성 소유자, 알림 모드는 알림 권한이 필요합니다.
+let installViaDhizuku = source => installer.install(source, {
+    authorizer: 'dhizuku', interaction: 'notification', deleteSource: false,
+});
+
+// Root 영구 모드는 사용자 0의 system UID 접근을 지원하는 기기가 필요합니다. 경쟁 정책은 유지합니다.
+let setPersistentDefaultChosen = enabled => installer.setDefault(enabled, {
+    authorizer: 'root', mode: 'persistent',
+});
 ```
 
 원본에는 경로, `file://` 또는 읽을 수 있는 `content://` URI를 사용할 수 있습니다. 배열은 독립적인 일괄 항목이며 `{ splits: [...] }`는 한 앱을 설치합니다. `session(...)`은 생성 즉시 시작하고 반환된 객체는 `cancel()`과 `wait()`를 지원합니다. 동기 호출은 `InstallerError`를 발생시킬 수 있고 UI 스레드에서는 사용할 수 없습니다. `installer.status` 읽기, `installer.session(...)` 생성 및 `session.wait()` 호출도 이 제한을 따릅니다. UI 스레드에서는 Async 메서드를 사용하거나 스크립트 작업 스레드에서 동기 작업을 실행하세요. 세션 객체는 이를 만든 스크립트 스레드에서만 사용해야 합니다. Promise 거부를 처리하고 각 일괄 결과의 `ok`와 `error`를 확인하세요. 플러그인이 없거나 호환되지 않으면 `PLUGIN_UNAVAILABLE`을 보고합니다. `setDefault`는 기본값 해제를 포함하여 요청한 상태에 도달했는지 반환합니다. `app.uninstall`은 기존 시스템 제거 바로가기로 유지됩니다. 특권 옵션에는 `installer.uninstall`을 사용하세요. 전체 옵션과 이벤트는 [installer API 문서](https://docs.autojs6.com/#/installer)를 확인하세요.
+
+Dhizuku, 알림 설치 및 영구 기본 설치 프로그램의 스크립트 옵션에는 installer V2와 AutoJs6 6.8.0 빌드 5307 이상이 필요합니다. 기본 호스트 연동은 빌드 5299, V1 스크립트 메서드는 5300 이상을 계속 지원합니다.
 
 ******
 
@@ -161,7 +175,8 @@ let setDefaultChosen = enabled => installer.setDefault(enabled, { authorizer: 's
 
 - Android 7.0 (API 24) 이상. 기기 검증 현황과 남은 검증 범위는 [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md)에 기록되어 있습니다.
 - 낮은 targetSdk 차단 우회는 Android 14 (API 34)부터 존재합니다. 더 오래된 시스템에서는 이 옵션이 무시되고 결과에 표시됩니다.
-- ROM 정책과 기존 기본 설정으로 인해 기본 설치 프로그램 변경이 제한될 수 있습니다. 1.0.0은 영구 고정을 보장하지 않습니다. 설치자 패키지 이름과 플러그인 활성화에 관한 FAQ를 확인하세요.
+- 기본 설치 프로그램 페이지는 일반 기본값과 영구 정책을 구분합니다. 일반 기본값은 Shizuku 또는 Root를 사용하며 ROM 제한이 적용됩니다. Dhizuku 영구 정책은 API 26-33을 지원하며 API 34+는 소유자 콜백을 검증할 수 없어 변경 전에 거부합니다. Root는 지원 기기의 사용자 0에서만 system UID 보조 프로세스를 사용합니다. 경쟁하는 영구 정책을 덮어쓰지 않습니다. `persistentConfigured`는 이전 설정 성공 기록이며 현재 시스템 정책의 증거가 아닙니다. 수동 상태 조회는 `preferred` 또는 `none`만 보고합니다.
+- `dhizuku`: Android 8.0 (API 26)+, 활성 Dhizuku 기기/프로필 소유자 및 이 플러그인에 부여한 권한이 필요합니다. 현재 소유자 사용자에서만 작동하고 실제 소유자 패키지를 설치자로 기록합니다. shell/root용 다운그레이드, 테스트 패키지, 낮은 targetSdk 제한 우회, 다른 사용자, 임의 설치자 지정 및 제거 시 데이터 보존 옵션은 지원하지 않습니다. 플러그인은 소유자를 설정하지 않습니다.
 
 ******
 
@@ -169,12 +184,12 @@ let setDefaultChosen = enabled => installer.setDefault(enabled, { authorizer: 's
 
 ******
 
-- **왜 여전히 설치 확인이 필요한가요?** `none`은 항상 시스템 확인을 사용합니다. 권한을 준비한 후 설치 대화상자에서 Shizuku 또는 Root를 선택하세요. Android 또는 기기 정책에 따라 시스템 확인이 필요할 수 있습니다.
+- **왜 여전히 확인이 필요한가요?** `none`은 항상 Android 확인이 필요하고 특권 방식도 Android 정책의 영향을 받습니다. `notification`은 알림 동작으로만 시스템 확인을 열며 Android 확인을 우회하지 않습니다.
 - **`.aab`를 설치할 수 있나요?** 아니요. Android App Bundle은 배포 형식이므로 먼저 bundletool로 `.apks` 세트로 변환하세요. 플러그인은 `.aab` 파일을 인식하고 패키지와 모듈 정보를 표시합니다.
 - **`allowDowngrade: true`인데 다운그레이드가 실패하는 이유는?** 이 옵션은 다운그레이드를 요청할 뿐이며 Android가 펌웨어, 권한을 실행하는 주체 및 debuggable 여부에 따라 결정합니다. 검증한 user 펌웨어에서 Sony G8441 / API 28과 Xiaomi 23046RP50C / API 35는 debuggable이 아닌 패키지의 다운그레이드를 거부했지만 Sony XQ-DQ72 / API 33의 Root 경로는 허용했습니다. 이는 각 기기의 결과입니다. 오류와 `systemMessage`를 확인하세요. Root도 모든 ROM에서 성공을 보장하지 않습니다.
 - **HyperOS에서 어떤 설치자 패키지 이름을 사용할 수 있나요?** ADB 또는 무선 디버깅으로 시작한 Shizuku에서는 설치자 패키지 이름을 지정하지 않으면 `com.android.shell`을 사용합니다. 검증한 Xiaomi 23046RP50C / HyperOS / API 35에서는 확인 창 없는 새 설치와 업데이트 모두 이 값이 기록되었습니다. `com.android.shell` 또는 플러그인 자체 패키지 이름을 명시한 경우에도 성공했으며 요청한 값이 기록되었습니다. 다른 패키지 이름이나 ROM 버전은 시스템 응답에 따라 달라집니다.
 - **ColorOS 또는 다른 ROM에서 플러그인 활성화가 필요하다고 하면?** 새로 설치하거나 강제 종료한 후 Android는 사용자가 상호작용할 때까지 앱을 중지 상태로 유지할 수 있습니다. AutoJs6 플러그인 센터에 활성화 작업이 표시되면 실행하거나, 런처 아이콘으로 3-Setup Installer를 연 다음 다시 시도하세요. 이는 [Android의 중지 상태 규칙](https://developer.android.com/reference/android/content/pm/ApplicationInfo#FLAG_STOPPED)을 따릅니다. ColorOS 고유 동작은 아직 실기기에서 검증하지 않았습니다.
-- **기본 설치 프로그램 설정이 실패하는 이유는?** ROM이 변경을 거부할 수 있습니다. 이전 Android 버전에서 기존 APK 기본 처리 앱이 있다면, 페이지 안내에 따라 시스템 설정에서 이전 앱의 기본값을 먼저 지워야 할 수 있습니다. 시스템에 기본값 삭제 기능이 없으면 교체를 보장할 수 없습니다. Shizuku 또는 Root를 사용할 수 있어도 1.0.0은 영구 고정을 보장하지 않습니다.
+- **기본 설치 프로그램 변경이 실패하거나 저장된 영구 표시가 현재 처리 앱과 다른 이유는?** 기본 설치 프로그램 페이지는 일반 기본값과 영구 정책을 구분합니다. 일반 기본값은 Shizuku 또는 Root를 사용하며 ROM 제한이 적용됩니다. Dhizuku 영구 정책은 API 26-33을 지원하며 API 34+는 소유자 콜백을 검증할 수 없어 변경 전에 거부합니다. Root는 지원 기기의 사용자 0에서만 system UID 보조 프로세스를 사용합니다. 경쟁하는 영구 정책을 덮어쓰지 않습니다. `persistentConfigured`는 이전 설정 성공 기록이며 현재 시스템 정책의 증거가 아닙니다. 수동 상태 조회는 `preferred` 또는 `none`만 보고합니다.
 - **원본이 삭제되지 않은 이유는?** 설치 성공 후에만 삭제를 시도합니다. 설치 실패, 취소 또는 시간 초과 시에는 원본을 항상 유지합니다. 삭제 실패는 설치 성공 결과를 바꾸지 않으며 외부 제공자가 삭제를 거부할 수 있습니다. 스크립트의 `deleteSource`는 호스트가 경로 또는 `file://` 원본을 삭제하고 `content://` 원본은 유지합니다. `sourceDeleted`와 `notes`를 확인하세요. 일괄 처리에서 다른 항목이 실패하거나 나머지 대기열이 취소되어도 성공이 확인된 항목에는 `deleteSource`가 적용됩니다.
 - **다시 시도하거나 이어서 실행할 수 있나요?** 실패한 외부 URI는 원본과 접근 권한을 사용할 수 있는 동안 다시 시도할 수 있습니다. 원본 또는 접근 권한이 해제되면 패키지를 다시 여세요. 프로세스가 다시 시작되면 복원된 화면에 저장된 확정 결과가 표시되고 미완료 항목은 중단으로 표시됩니다. 복원된 화면은 읽기 전용이며 설치나 재시도를 자동으로 실행하지 않습니다. 다시 시작하기 전에 실제 설치 상태를 확인하세요.
 
@@ -188,8 +203,8 @@ let setDefaultChosen = enabled => installer.setDefault(enabled, { authorizer: 's
 
 - Binder 진입점은 `org.autojs.permission.PLUGIN` 서명 권한으로 보호되어 AutoJs6만 접근할 수 있습니다. 외부 "연결 프로그램" 진입점은 패키지 파일만 받아들이며 스크립트를 실행하지 않습니다.
 - REQUEST_INSTALL_PACKAGES와 REQUEST_DELETE_PACKAGES는 Android 확인을 지원합니다. QUERY_ALL_PACKAGES는 설치된 앱 관리, 버전 및 서명 비교, 기본 설치 프로그램 감지에 사용됩니다.
-- FOREGROUND_SERVICE와 FOREGROUND_SERVICE_DATA_SYNC는 백그라운드 설치 작업을 지원하며 POST_NOTIFICATIONS는 진행률 및 결과 알림에 사용됩니다. 알림 권한이 없어도 설치를 차단하지 않습니다.
-- Shizuku와 Root는 사용자가 시작한 작업에만 사용됩니다. 특권 서비스는 상태를 보관하지 않고 작업 사이에 shell을 열어 두지 않으며 플러그인 외부에서 접근할 수 없습니다.
+- FOREGROUND_SERVICE와 FOREGROUND_SERVICE_DATA_SYNC는 설치 및 임시 원본 접근을 지원하고 POST_NOTIFICATIONS는 알림에 사용됩니다. `notification`은 알림과 설치 채널이 켜져 있어야 합니다. 다른 모드는 알림 권한이 없어도 실행됩니다.
+- Shizuku, Root 및 Dhizuku는 요청한 작업에 사용됩니다. 플러그인은 기기/프로필 소유자를 설정하지 않습니다. 영구 규칙은 설정 또는 해제 요청으로만 변경되며 패키지를 업로드하지 않습니다.
 - 설치, 검사, 기록 및 앱 관리는 오프라인으로 동작합니다. INTERNET은 사용자가 수동으로 버전을 확인할 때만 12시간 간격으로 플러그인의 고정 GitHub Releases API에 접근하는 데 사용됩니다. 백그라운드 업데이트 확인이나 패키지 업로드는 수행하지 않습니다.
 - 패키지 원본은 읽기 전용으로 열립니다. 기록에는 제한된 앱 메타데이터와 결과만 저장되며 패키지 내용이나 원본 URI는 저장되지 않습니다. 오류의 경로는 가려집니다. 비공개 저장소는 백업에서 제외됩니다. 기록을 삭제해도 앱이나 원본은 삭제되지 않습니다.
 
