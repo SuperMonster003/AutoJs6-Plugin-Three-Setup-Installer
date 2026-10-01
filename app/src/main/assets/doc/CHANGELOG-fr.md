@@ -21,6 +21,7 @@
 * `Correctif` Les actions d'annulation ne suivaient pas la langue du plugin sur les appareils dépourvus de la traduction système correspondante
 * `Correctif` Correction de la coche invisible des APK fractionnés obligatoires tels que base.apk lorsque leur case est désactivée, dans les thèmes clair et sombre
 * `Correctif` Correction de l'absence du plugin dans le sélecteur pour les conteneurs de paquets ouverts depuis Files by Google ou un fournisseur utilisant une URI opaque et un type MIME ZIP ou binaire générique
+* `Correctif` Refus des fournisseurs de paquets renvoyant des descripteurs modifiables et fermeture immédiate des descripteurs rejetés
 * `Amélioration` L'identifiant du plugin, le moteur, l'action / la categorie du service, le descripteur Binder et la version minimale de l'hote proviennent desormais des constantes du contrat installer-api de l'hote; les capacites declarent la version 1 du contrat d'installation et la build minimale de l'hote est fixee a 5299
 * `Amélioration` Les sources à accès aléatoire évitent une copie complète en cache, tandis que les flux sont stockés temporairement si nécessaire. Les paquets fractionnés en ZIP sont pris en charge, les AAB restent limités à l'inspection et les sources modifiées sont refusées.
 * `Amélioration` Le mode d'autorisation choisi explicitement ne bascule jamais vers un autre. Le refus, le délai dépassé et l'incompatibilité sont distingués, et les requêtes simultanées partagent l'autorisation et les connexions privilégiées.

@@ -10,6 +10,7 @@ import android.os.CancellationSignal
 import android.os.OperationCanceledException
 import android.provider.DocumentsContract
 import android.provider.OpenableColumns
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.binder.SourceDescriptors
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.engine.*
 import org.autojs.plugin.installer.api.InstallerContract
 import org.autojs.plugin.installer.api.InstallerErrorCodes
@@ -73,6 +74,9 @@ internal class ExternalSources private constructor(val uris: List<Uri>, val gran
             throw InstallFailure(InstallerErrorCodes.SOURCE_UNREADABLE, "Package source cannot be read", systemMessage = failure.message, cause = failure)
         } ?: throw InstallFailure(InstallerErrorCodes.SOURCE_UNREADABLE, "Package source cannot be opened")
         try {
+            // A provider can ignore the requested "r" mode. Apply the same actual descriptor
+            // boundary as the host Binder before retaining or reading the returned handle.
+            SourceDescriptors.validate(descriptor)
             checkActive()
             if (size < 0) size = descriptor.statSize
             if (size > PackageStaging.MAX_SOURCE_BYTES) throw RequestDocuments.invalid("Package source is too large")
