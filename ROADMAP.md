@@ -524,11 +524,11 @@ runtime/api/augment/installer/          Installer.kt (AugmentableKey("installer"
 
 目标: 补齐维护者第一轮未纳入 1.0.0 的授权方式与安装模式, 并让兄弟仓库共用解析 AAR.
 
-- [ ] (插件) Dhizuku 授权方式: 依赖 `io.github.iamr0s:Dhizuku-API` (核实许可证后记录), `DhizukuAuthorizer` (`Dhizuku.init` / `requestPermission`), `DhizukuInstallEngine` (`DevicePolicyManager` 所有者上下文的 `PackageInstaller`), 能力上报 `AUTHORIZERS` 增加 `dhizuku`; 脚本 `authorizer: 'dhizuku'`; 契约版本 2 (末尾追加方法, 旧顺序不变).
-- [ ] (插件) 持久化默认安装器: Dhizuku 路径 `DevicePolicyManager.addPersistentPreferredActivity` / `clearPackagePersistentPreferredActivities`; Root 以 system 身份的 spike (libsu 自定义 `su 1000` 或 `app_process` uid 切换) 若成立则也提供; 状态卡区分 "偏好" 与 "持久化".
-- [ ] (插件) 通知栏安装模式 (`interaction: 'notification'`): 无对话框, 通知承载确认 (none 路径仍需系统确认) 与结果; 设置页默认交互增加该项.
+- [x] (插件) Dhizuku 授权方式: 依赖 `io.github.iamr0s:Dhizuku-API` (核实许可证后记录), `DhizukuAuthorizer` (`Dhizuku.init` / `requestPermission`), `DhizukuInstallEngine` (`DevicePolicyManager` 所有者上下文的 `PackageInstaller`), 能力上报 `AUTHORIZERS` 增加 `dhizuku`; 脚本 `authorizer: 'dhizuku'`; 契约版本 2 (末尾追加方法, 旧顺序不变). (2026-10-02, API 2.6.0/MIT, API31实际安装/更新/卸载和有归属的进程死亡恢复; V1/V2共存. 见 docs/dev/p8-dhizuku-session-evidence.md 与 p8-integration-evidence.md.)
+- [x] (插件) 持久化默认安装器: Dhizuku 路径 `DevicePolicyManager.addPersistentPreferredActivity` / `clearPackagePersistentPreferredActivities`; Root 以 system 身份的 spike (libsu 自定义 `su 1000` 或 `app_process` uid 切换) 若成立则也提供; 状态卡区分 "偏好" 与 "持久化". (2026-10-02, Dhizuku/API31往返; Root/API24/Magisk真实UID1000成立并实现独立生产桥, Debug6/6及R8六操作通过. Dhizuku暂限API26-33; 本地回执不冒充实时策略. 见 docs/dev/p8-root-system-spike-evidence.md.)
+- [x] (插件) 通知栏安装模式 (`interaction: 'notification'`): 无对话框, 通知承载确认 (none 路径仍需系统确认) 与结果; 设置页默认交互增加该项. (2026-10-02, Sony/API31 Shizuku及none各真实安装1/1, 跨UID来源/并发取消1/1, 系统实际重建后不重开来源; Samsung/API36通知拒绝1/1. 见 docs/dev/p8-notification-evidence.md.)
 - [x] (兄弟) APK Inspector 改为消费 `package-archive-parser.aar`, 删除其分叉副本中与 AAR 重合的文件, 专有解析保留; 其 `ROADMAP.md` 与 changelog 记录; 宿主 `docs/dev/package-inspection-roadmap.md` 同步. (2026-10-02, Inspector 17fe20d / 1.2.2 / build 42, 231 JVM, Debug 3/3, 独立 Release 2/2; 证据见该仓库 docs/development/shared-parser-migration-evidence.md; 宿主文档 8c3045d24e.)
-- [ ] (文档) 文档 / d.ts / Ace / 离线文档同步 `dhizuku` 与 `notification`; 宿主与插件 changelog.
+- [x] (文档) 文档 / d.ts / Ace / 离线文档同步 `dhizuku` 与 `notification`; 宿主与插件 changelog. (2026-10-02, 宿主V2/回执, Docs code86, d.ts4.26.1, Ace1.18.1/build120, Offline6.8.5/build67及插件1.1.0十语言全部同步; 独立仓库提交和验证见 docs/dev/p8-integration-evidence.md.)
 
 ---
 
@@ -858,6 +858,7 @@ if (!installer.isDefault()) installer.setDefault(true);
 - 现状: InstallerX-Revived 未实现 (`canCallSystemRestrictedPreferredApis` 恒 false).
 - 推荐: P8 做一次 spike, 成立则纳入, 否则只保留 Dhizuku 路径.
 - 拍板 (2026-09-30): 按推荐值实施, P8 做一次 spike.
+- 实施 (2026-10-02): API24/Magisk/Enforcing 下真实 system UID/GID1000 设置四项持久策略成立, 已纳入独立生产桥; 仅主用户0与设备实际支持的环境, 不更改共享RootService身份或SELinux. 未知/竞争策略保护, 已知重复项幂等与明确清除, 取消及R8实测范围见 docs/dev/p8-root-system-spike-evidence.md.
 
 ---
 
@@ -1117,3 +1118,12 @@ if (!installer.isDefault()) installer.setDefault(true);
 - 原 P8 的 APK Inspector 迁移项完成. 兄弟仓库 17fe20d / 1.2.2 / build 42 消费同一 SHA-256 为 1441bbcee8468362b0ee41f7b3d5ab47eb87b4df78a1388bb1134223055f46e7 的共享 release AAR, 删除重复解码器/预算/TOC及容器副本; 签名, 显式 sidecar 所有权, 图标, DEX, 原生库与 16 KiB 等专有分析保留. 宿主文档提交 8c3045d24e 单独同步.
 - Inspector 231 JVM, Python 4项, 25文档校验, Sony API33 Debug 3/3及独立 Release 2/2通过; Debug/Release lint各0错误/37警告, 签名R8构建通过. 产物 autojs6-plugin-apk-inspector-v1.2.2-c81f2584.apk, 4,393,049字节, SHA-256 d0bd86f9c1bc29fdcab95504a2a0ca84f171818437eaca8f52d85dc4fa8d94b1. 设备原UID/用户数据/默认/20个OEM session/原Shizuku server保持; instrumentation显式NO_ISOLATED_STORAGE审计项与API33默认deny有效权限相同, 不假称全部app-op原始行相同.
 - 插件本次仅将这项跨仓库证据作为 build52 文档提交. P8 其余代码与设备验收正在进行, 不将中间 Debug 包描述为最终1.1.0交付; 对应完成状态和最终包另行记录.
+
+### 2026-10-02 (P8 五项实施与跨仓库同步)
+
+- 原 P8 五项全部完成, 没有新增, 拆分或丢弃条目. 版本升至1.1.0, V1最低宿主5299/V1脚本5300保留, V2新脚本选项建议完整宿主5307+. Dhizuku API2.6.0/MIT, 精确owner/provider身份, 当前用户与真实安装归属, 旧排序/禁用迁移及已知session恢复均已实现. 独立API31 AVD由本轮创建, 没有更换用户设备owner.
+- 持久默认实现Dhizuku/API26-33与Root/system/user0, Root Q9实际成立后纳入生产. 被动状态不从历史回执推断实时策略; API34+ Dhizuku策略缺少owner最终结果时写前拒绝. 已知重复filter可幂等/明确清除, 未知原始XML不认领, 不确定结果不重放或盲目补偿.
+- 通知安装在Sony/API31上两种授权均实际成功. 跨UID测试定位并修复FGS停止后的URI owner残留, 同时保护合法并发start; 实际主进程31355退出后系统因服务重建31969, 没有重新读取来源或安装. 系统实际redelivered=false仍由未知token/空任务集合拒绝, 不只依赖标志. 原8历史/32条默认/偏好/server/来源权限均核验恢复. 新Samsung/API36重新建立基线, 三项兼容/接口及实际通知拒绝共4项通过.
+- 主插件运行时按Dhizuku/V2, 持久默认, notification三笔逻辑提交, 分阶段保留能力边界和十语言changelog; 前两阶段独立源树的JVM/Kotlin/androidTest编译通过, 最终完整实现312 JVM通过. 完整README/插件说明/跨库证据另作文档提交, 保留1.0.0历史.
+- 关联仓库包括Inspector17fe20d, 宿主494e3e9493/bd9817980f/8c3045d24e/bb49c86ab129, Docs2ada5142, d.ts d789d42, Ace9f66fd62, Offline4d8115c5. 具体版本/验证/离线200文件摘要见 docs/dev/p8-integration-evidence.md. 宿主其他会话的Rhino等变更及Ace原有releases/保留, 不混入本任务提交.
+- 同一最终签名R8候选1.1.0/build57已完成Root实际main六操作和正式宿主UID的Dhizuku/persistent脚本往返. 最终构建, APK摘要, 多设备Release契约及交付核验单独记录. P7远端发布继续延迟, P9四个原条目尚未实施; 下一步从原P9高级选项开始, 继续仅本地提交.

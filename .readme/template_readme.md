@@ -117,9 +117,21 @@ let uninstallChosen = packageName => installer.uninstall(packageName, {
 
 // {{ example_default }}
 let setDefaultChosen = enabled => installer.setDefault(enabled, { authorizer: 'shizuku' });
+
+// {{ example_v2 }}
+let installViaDhizuku = source => installer.install(source, {
+    authorizer: 'dhizuku', interaction: 'notification', deleteSource: false,
+});
+
+// {{ example_persistent }}
+let setPersistentDefaultChosen = enabled => installer.setDefault(enabled, {
+    authorizer: 'root', mode: 'persistent',
+});
 ```
 
 {{ p_quick_start_details }}
+
+{{ p_v2_requirements }}
 
 ******
 

@@ -104,3 +104,44 @@ The new private process-identity and session-recovery methods retain the plugin 
 `InstallProcessDeathProbeActivity` is Debug-only, exported under `android.permission.DUMP`, and is included in the device component allowlist. Its self-termination control accepts only its current PID and an already recorded, active fixture case. A restarted process ignores a stale termination request. No Release component or Binder method can request arbitrary process termination. The official host uses a separate DUMP-protected debug caller process and a non-exported read-only source provider; its temporary enablement journal changes and restores only this plugin's existing enable key, never trust or priority.
 
 The lifecycle/security combination passed 11/11 on API 24 and API 35. Actual official-host cancellation and privileged process tests are recorded separately in `p6-process-death-evidence.md`; these now provide positive official-host UID evidence in addition to the earlier non-host rejection checks.
+
+## P8 review (2026-10-02)
+
+The public V2 default operation uses the same installed-host UID/signature/version guard before
+decoding its request or dispatching a callback. V1's first ten transactions stay frozen; capabilities
+advertise a minimum of 1 and a maximum of 2, and unchanged result envelopes remain readable by V1.
+The real production-service rejection test now covers nine guarded operations on API 24 and 36.
+
+Dhizuku initialization first verifies the current owner and provider package, user, UID and signing
+identity. It then verifies the API's cached owner before wrapping a fresh framework object. Shared
+process managers are not modified. Only current-user operations and the actual owner's installer
+identity are accepted; Root/shell flags and keep-data uninstall are rejected. API 24 does not initialize
+the API-26 library. The known-ID journal requires owner identity, package, size and a random origin
+marker before recovery can abandon a session. It skips a live creator, retains unverifiable records,
+and does not replay an installation. Real unfinished-session process death and a non-journal control
+session are recorded in [P8 Dhizuku evidence](p8-dhizuku-session-evidence.md).
+
+Persistent defaults distinguish passive public resolution from a local completed-write receipt.
+Dhizuku's API 34+ final policy callback cannot be verified by this transport, so it rejects changes
+before writing. Its partial failures retain uncertainty without clearing an older unknown policy.
+Root uses a separate bounded UID/GID 1000 process with fixed operations, user 0, component and filters;
+the shared RootService never changes identity. A verified handshake and explicit commit precede writes.
+Known duplicate policies are idempotent, unknown XML remains protected, and rollback cannot delete an
+unproven concurrent change. Cancellation, hard termination and the limits of compensation are recorded
+in [P8 Root evidence](p8-root-system-spike-evidence.md).
+
+Notification approval is an immutable, per-session/per-prompt action. Stale or repeated actions cannot
+approve a different item. Android confirmation is opened only by its notification action. Notification
+denial rejects a real external request before source opening or session creation on API 36. Cross-UID
+testing additionally found that a stopped service could retain its URI permission owner. Android 12's
+[start-result bookkeeping](https://raw.githubusercontent.com/aosp-mirror/platform_frameworks_base/android-12.0.0_r1/services/core/java/com/android/server/am/ActiveServices.java)
+removes the delivered start for a non-sticky result, while the
+[service record's shutdown cleanup](https://raw.githubusercontent.com/aosp-mirror/platform_frameworks_base/android-12.0.0_r1/services/core/java/com/android/server/am/ServiceRecord.java)
+revokes grants attached to the retained starts. The exact owner's device diagnosis, correction and
+re-delivery/no-replay verification belong to [P8 notification evidence](p8-notification-evidence.md);
+merely observing the foreground notification disappear is insufficient proof of permission release.
+
+No new exported production component or arbitrary process-kill operation is added. Notification
+source providers and relay activities belong only to the test APK, and process-death controls remain
+Debug-only, bound to this test's token, fixture, package UID and process identity. No broad URI revoke,
+DeviceOwner replacement on a user device, security-policy relaxation or remote publication is used.
