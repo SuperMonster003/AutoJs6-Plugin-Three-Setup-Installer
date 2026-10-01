@@ -17,6 +17,7 @@ plugins {
 val globalApplicationId = "io.github.supermonster003.autojs6.plugin.three.setup.installer"
 val buildTypeDebug = "debug"
 val buildTypeRelease = "release"
+val testRelease = providers.gradleProperty("androidTestRelease").isPresent
 
 // ---------------------------------------------------------------------------
 // Host protocol AARs are consumed only from libs/ and are pinned by locks/host-api-aars.lock.
@@ -107,13 +108,27 @@ android {
     namespace = globalApplicationId
     compileSdk = versions.sdkVersionCompile
 
+    // Exercise the signed, non-debuggable R8 artifact without exposing production internals to
+    // instrumentation or adding test-only keep rules to it. This opt-in uses only public IPC.
+    if (testRelease) {
+        require(signs.isValid) { "-PandroidTestRelease requires the configured release signing key" }
+        testBuildType = buildTypeRelease
+        sourceSets.named("androidTest") {
+            java.setSrcDirs(listOf("src/releaseTest/java"))
+            kotlin.setSrcDirs(listOf("src/releaseTest/java"))
+            assets.setSrcDirs(emptyList<String>())
+            manifest.srcFile("src/releaseTest/AndroidManifest.xml")
+        }
+    }
+
     defaultConfig {
         applicationId = globalApplicationId
         minSdk = versions.sdkVersionMin
         targetSdk = versions.sdkVersionTarget
         versionCode = versions.appVersionCode
         versionName = versions.appVersionName
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner = if (testRelease) "$globalApplicationId.release.ReleaseContractInstrumentation"
+            else "androidx.test.runner.AndroidJUnitRunner"
 
         resValue("string", "plugin_author", "SuperMonster003")
         resValue("string", "plugin_engine", "installer")
@@ -158,6 +173,8 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(*proguardFiles)
+            // This file shrinks the instrumentation APK only; the app keeps its release rules.
+            testProguardFiles("proguard-test-rules.pro")
             niceSigningConfig?.let { signingConfig = it }
         }
     }
@@ -225,9 +242,11 @@ dependencies {
 
     testImplementation(libs.junit)
 
-    androidTestImplementation(libs.test.runner)
-    androidTestImplementation(libs.test.rules)
-    androidTestImplementation(libs.test.ext.junit)
+    if (!testRelease) {
+        androidTestImplementation(libs.test.runner)
+        androidTestImplementation(libs.test.rules)
+        androidTestImplementation(libs.test.ext.junit)
+    }
 }
 
 tasks {
