@@ -72,6 +72,7 @@ internal object InstallPresentation {
         val metadata: Metadata? = null,
         val result: JsonObject? = null,
         val options: InstallOptions? = null,
+        val followUpPending: Boolean = false,
     )
     data class Snapshot(
         val revision: Long,
@@ -387,14 +388,18 @@ internal object InstallPresentation {
             changed()
         }
 
-        fun onItemResult(index: Int, result: JsonObject) {
+        fun onItemResult(index: Int, result: JsonObject) = itemOutcome(index, result, false)
+        fun onInstalled(index: Int, result: JsonObject) = itemOutcome(index, result, true)
+
+        private fun itemOutcome(index: Int, result: JsonObject, followUpPending: Boolean) {
             synchronized(lock) {
                 // Closing a window cannot discard the worker's authoritative package outcome.
                 if (terminal || index !in items.indices) return
                 val successful = result.get(InstallerContract.FIELD_OK)?.asBoolean == true
                 items = items.toMutableList().also {
                     it[index] = it[index].copy(result = result.deepCopy(), stage = if (successful) InstallerContract.STAGE_COMPLETED else InstallerContract.STAGE_FAILED,
-                        metadata = if (request.isBatch) it[index].metadata?.copy(icon = null) else it[index].metadata)
+                        metadata = if (request.isBatch) it[index].metadata?.copy(icon = null) else it[index].metadata,
+                        followUpPending = followUpPending)
                 }
                 revision++
             }
@@ -410,7 +415,7 @@ internal object InstallPresentation {
                     outcomes.getOrNull(i)?.let { outcome ->
                         item.copy(result = outcome.deepCopy(), stage = if (outcome.get(InstallerContract.FIELD_OK)?.asBoolean == true)
                             InstallerContract.STAGE_COMPLETED else InstallerContract.STAGE_FAILED,
-                            metadata = if (request.isBatch) item.metadata?.copy(icon = null) else item.metadata)
+                            metadata = if (request.isBatch) item.metadata?.copy(icon = null) else item.metadata, followUpPending = false)
                     } ?: item
                 }
                 terminal = true

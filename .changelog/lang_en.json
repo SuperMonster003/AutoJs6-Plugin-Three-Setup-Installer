@@ -5,6 +5,22 @@
   "changelog_label_improvement": "Improvement",
   "changelog_label_dependency": "Dependency",
   "$data": {
+    "v1.2.0": {
+      "released_date": "2026/10/02",
+      "feature": [
+        "Advanced installation options: `grantAllRequestedPermissions`, `requestUpdateOwnership`, `dexopt` (`none`/`verify`/`speed-profile`/`speed`), `installReason` and `packageSource`. Unsupported platforms or authorizers reject requests instead of silently ignoring them. `none` adds no manual compilation and does not disable Android compilation."
+      ],
+      "improvement": [
+        "Advanced script options require AutoJs6 build {{ v3_host_version_code }}+ and negotiated V3 with `advanced-install-options`. Omitted fields preserve existing behavior; explicit `false`/`none` still requires support. These local changes do not announce an official release or completion of every P9 item.",
+        "Successful results may report observed `updateOwner` and `dexopt`. Null means Android returned no owner to the current calling identity, possibly due to visibility filtering; it does not prove global absence. A failed read omits the field and adds notes. DexOpt states are accepted/failed/cancelled/timeout/unavailable/unknown; accepted includes a system skip and does not prove compilation ran. Failure of this extra step preserves confirmed installation success.",
+        "Permission-grant requests and non-none DexOpt require Shizuku/Root; verify needs API 26+. Install reason needs API 26+, package source API 33+, and requesting update ownership API 34+. Ownership can start only on initial installation; updates or an existing package in another user may be ignored. False does not revoke an existing owner.",
+        "The grant option requests permissions the system can grant, including supported installer-changeable app-ops such as USE_FULL_SCREEN_INTENT on Android 14. It does not guarantee every declared permission or grant accessibility, overlays or arbitrary signature permissions. Restricted/system-fixed/policy-fixed constraints remain, without an extra restricted-permission allowlist flag."
+      ],
+      "dependency": [
+        "Upgrade installer-api.aar to contract V3 (MPL 2.0), retaining V1/V2 and all eleven AIDL transactions; advanced script options require host build 5308+",
+        "Upgrade the shared package archive parser (MPL 2.0) to verify the actual manifest root and sharedUserId; ambiguous input is rejected"
+      ]
+    },
     "v1.1.0": {
       "released_date": "2026/10/02",
       "feature": [

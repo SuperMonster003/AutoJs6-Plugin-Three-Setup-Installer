@@ -145,6 +145,7 @@ internal object ExternalInstaller {
                             InstallerContract.STAGE_WRITING, progress, presentation.activityIntent(), ::cancel)
                     }
                     override fun onItemResult(index: Int, result: JsonObject) = presentation.onItemResult(index, result)
+                    override fun onInstalled(index: Int, result: JsonObject) = presentation.onInstalled(index, result)
                     override fun onCompleted(result: JsonObject) {
                         finished.set(true)
                         slot.close()

@@ -1,6 +1,8 @@
 3-Setup Installer 可從獨立首頁, AutoJs6 入口與腳本, 以及安裝套件的外部開啟和分享請求安裝, 更新, 檢查與解除安裝 Android 應用程式. 支援 Android 系統確認及透過 Shizuku, Root 或 Dhizuku 執行特權操作.
 
-1.1.0 已實作下述安裝, 應用程式管理與腳本功能. 官方 GitHub Release 和外掛程式中心索引收錄仍待完成. 宿主接入需要 AutoJs6 >= 6.8.0 (5299), `installer` 腳本 API 需要組建 5300 或更高版本. 裝置覆蓋與餘下驗收記錄在 [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md) 中. Dhizuku, 通知欄安裝和持久預設安裝器的腳本選項需要 AutoJs6 6.8.0 組建 5307 或以上及 installer V2 契約. 基本宿主接入仍支援組建 5299, V1 腳本方法從組建 5300 起可用.
+1.2.0 已實作下述安裝, 應用程式管理與腳本功能. 官方 GitHub Release 和外掛程式中心索引收錄仍待完成. 宿主接入需要 AutoJs6 >= 6.8.0 (5299), `installer` 腳本 API 需要組建 5300 或更高版本. 裝置覆蓋與餘下驗收記錄在 [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md) 中. Dhizuku, 通知欄安裝和持久預設安裝器的腳本選項需要 AutoJs6 6.8.0 組建 5307 或以上及 installer V2 契約. 基本宿主接入仍支援組建 5299, V1 腳本方法從組建 5300 起可用.
+
+進階指令碼選項需要 AutoJs6 構建 5308+ 並協商 V3 與 `advanced-install-options`. 省略欄位保留原行為, 明確指定 `false`/`none` 仍需對應支援. 本機實作不表示已正式發佈或全部 P9 項目完成.
 
 ### 使用方法
 
@@ -25,6 +27,7 @@
 - 略過低 targetSdk 封鎖自 Android 14 (API 34) 起存在; 更早的系統忽略該選項並在結果中註明.
 - 預設安裝器頁面區分一般偏好與持久化原則. 一般偏好透過 Shizuku 或 Root 設定, 仍受 ROM 限制. Dhizuku 的持久化原則支援 API 26-33; API 34+ 因無法驗證擁有者回呼, 在修改前拒絕. Root 僅在受支援裝置的使用者 0 中使用 system UID 輔助程序. 不覆寫衝突的持久原則. `persistentConfigured` 僅記錄此前成功設定的回執, 並非目前系統原則的證明; 被動查詢只回報 `preferred` 或 `none`.
 - `dhizuku`: 需要 Android 8.0 (API 26)+, 已啟用的 Dhizuku 裝置/設定檔擁有者, 並向此外掛程式授權. 只操作目前擁有者使用者, 安裝者歸屬使用真實擁有者套件名稱. 不提供 shell/root 的降級, 測試套件, 略過低 targetSdk, 其他使用者, 任意安裝者歸屬或解除安裝保留資料選項. 外掛程式不自動設定擁有者.
+- 權限授予請求及非 none 的 DexOpt 需要 Shizuku/Root, verify 需要 API 26+. 安裝原因需要 API 26+, 來源標籤需要 API 33+, 請求更新擁有權需要 API 34+. 擁有權僅能在首次安裝啟用, 更新或其他使用者已有該套件時可能被忽略; false 不撤銷既有 owner.
 
 ### 常見問題
 
@@ -40,10 +43,11 @@
 ### 權限與安全
 
 - Binder 入口受 `org.autojs.permission.PLUGIN` 簽章權限保護, 只有 AutoJs6 能夠存取; 外部 "開啟方式" 入口只接受安裝套件檔案, 從不執行腳本.
-- REQUEST_INSTALL_PACKAGES 和 REQUEST_DELETE_PACKAGES 用於 Android 確認. QUERY_ALL_PACKAGES 用於已安裝應用程式管理, 版本與簽章比對以及預設安裝器偵測.
+- REQUEST_INSTALL_PACKAGES 和 REQUEST_DELETE_PACKAGES 用於 Android 確認. QUERY_ALL_PACKAGES 用於已安裝應用程式管理, 版本與簽章比對以及預設安裝器偵測. 一般權限 ENFORCE_UPDATE_OWNERSHIP 用於明確請求更新擁有權, 不表示必然獲得 owner.
 - FOREGROUND_SERVICE 和 FOREGROUND_SERVICE_DATA_SYNC 支援安裝工作及臨時來源存取; POST_NOTIFICATIONS 用於通知. `notification` 互動要求通知與安裝頻道可用, 其他互動模式允許缺少通知權限.
 - Shizuku, Root 與 Dhizuku 用於請求的操作. 外掛程式不會自動設定裝置/設定檔擁有者. 持久預設規則只透過請求的設定或清除操作修改; 不上傳安裝套件.
 - 安裝, 檢查, 歷史和應用程式管理均可離線使用. INTERNET 僅在使用者手動檢查版本時存取插件固定的 GitHub Releases API, 間隔 12 小時. 不在背景檢查更新, 不上傳安裝套件.
 - 安裝套件來源以唯讀方式開啟. 歷史只儲存有限的應用程式中繼資料與結果, 不儲存套件內容或來源 URI, 錯誤中的路徑會遮蔽. 插件私人儲存空間不參與備份. 刪除歷史不會解除安裝對應應用程式或刪除來源.
+- 授予選項請求系統可授予的權限, 也可能包含 Android 14 的 USE_FULL_SCREEN_INTENT 等安裝器可改變的 app-op. 不保證全部宣告權限, 不授予無障礙, 懸浮視窗或任意簽章權限. restricted/system-fixed/policy-fixed 限制仍有效, 不額外設定 restricted 權限 allowlist 標誌.
 
 安裝指南與目前進度請參閱 [項目 README](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer) 與 [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md).

@@ -145,9 +145,9 @@ class InstallerBinderDeviceTest {
         val installer = IInstallerPlugin.Stub.asInterface(service.binder)
         val capabilities = installer.capabilities
         assertEquals(1, capabilities.getInt(InstallerCapabilityKeys.CONTRACT_VERSION))
-        assertEquals(2, capabilities.getInt(InstallerCapabilityKeys.MAX_CONTRACT_VERSION))
+        assertEquals(3, capabilities.getInt(InstallerCapabilityKeys.MAX_CONTRACT_VERSION))
         fun envelope(json: String, version: Int) = request(json).apply { putInt(InstallerContract.KEY_CONTRACT_VERSION, version) }
-        for (version in listOf(1, 2)) {
+        for (version in listOf(1, 2, 3)) {
             val reply = Reply()
             installer.getUsers(envelope("""{"authorizer":"none"}""", version), reply)
             assertEquals(1, reply.result().getAsJsonArray("users").size())
@@ -163,6 +163,22 @@ class InstallerBinderDeviceTest {
             installer.setDefaultInstallerV2(true, envelope("""{"authorizer":"none","mode":"persistent"}""", version), reply)
             assertEquals(if (version == 1) "INVALID_ARGUMENT" else "AUTHORIZER_REQUIRED", reply.error()["code"].asString)
             assertEquals(1, reply.count.get())
+        }
+    }
+
+    @Test fun explicitAdvancedFieldsRequireVersionThreeEvenForNoOpValues() {
+        val documents = listOf("""{"grantAllRequestedPermissions":false}""", """{"requestUpdateOwnership":false}""",
+            """{"dexopt":"none"}""", """{"installReason":"unknown"}""", """{"packageSource":"unspecified"}""")
+        for (document in documents) for (wrapped in listOf(document, """{"options":$document}""")) {
+            for (version in listOf(1, 2)) {
+                val envelope = request(wrapped).apply { putInt(InstallerContract.KEY_CONTRACT_VERSION, version) }
+                val error = assertThrows(io.github.supermonster003.autojs6.plugin.three.setup.installer.engine.InstallFailure::class.java) {
+                    io.github.supermonster003.autojs6.plugin.three.setup.installer.binder.InstallerBundles.request(envelope)
+                }
+                assertEquals("INVALID_ARGUMENT", error.code)
+            }
+            assertEquals(wrapped, io.github.supermonster003.autojs6.plugin.three.setup.installer.binder.InstallerBundles.request(
+                request(wrapped).apply { putInt(InstallerContract.KEY_CONTRACT_VERSION, 3) }))
         }
     }
 

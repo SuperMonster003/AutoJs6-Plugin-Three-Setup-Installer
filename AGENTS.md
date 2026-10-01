@@ -147,6 +147,7 @@ AutoJs6-Plugin-Three-Setup-Installer/
 | 权限 | 理由 |
 |---|---|
 | `REQUEST_INSTALL_PACKAGES` / `REQUEST_DELETE_PACKAGES` | `none` 授权方式的系统安装 / 卸载对话框 (D17 / D24) |
+| `ENFORCE_UPDATE_OWNERSHIP` | Android 14+ 显式请求更新所有权的普通权限; 不代表系统必然授予, 不撤销已有所有权 |
 | `QUERY_ALL_PACKAGES` | 已安装应用列表, 版本与签名比对, 默认安装器状态检测 (D23 / D36); 插件经 GitHub 分发, 不受商店政策限制, 在 Manifest 以 `tools:ignore` 标注 |
 | `FOREGROUND_SERVICE` / `FOREGROUND_SERVICE_DATA_SYNC` | 安装写入期间的 dataSync 前台服务与进度通知 (D26 / P3.4) |
 | `POST_NOTIFICATIONS` | 进度与结果通知; 原有交互可降级, 显式 notification 安装必须可见, 缺失或 channel 关闭时返回 NOTIFICATION_UNAVAILABLE |
@@ -165,6 +166,7 @@ AutoJs6-Plugin-Three-Setup-Installer/
 - `capabilities` 自 P1.2 起含 `PluginCapabilityKeys.REQUIRES_HOST_VERSION` 与 `InstallerCapabilityKeys.CONTRACT_VERSION`; `AUTHORIZERS`, `FEATURES`, `MAX_BATCH`, `MAX_SPLITS` 随 P2.6 的真实 Binder 路由一起声明 (路线图附录 B), 不提前声明尚未实现的能力.
 - 新增可选方法时先协商能力, 不通过捕获异常猜测协议版本.
 - P8 实现 V1/V2 共存: 最小能力版本为 1, 最大版本为 2; V1 AIDL 顺序冻结, V2 仅在末尾追加 setDefaultInstallerV2. 新请求选项须按同一 Binder 的实时能力协商; 未改变结构的结果 envelope 保持版本 1. 基础宿主仍为 5299, V1 脚本为 5300, 完整 V2 状态字段由 5307 起提供.
+- P9 扩展为 V1/V2/V3 共存, 最大版本为 3, 前十一项公共 AIDL 不变. 五个高级安装选项与 optimizing 阶段由 advanced-install-options 能力协商, 显式 false/none 也要求 V3; 未提供的字段不注入旧请求. V3 宿主起点为 5308, 共享清单安全字段 AAR 来源为 5309. 结果 envelope 保持 1, 门禁沿用 BLOCKED_BY_POLICY, 避免旧客户端将新错误误译为 INTERNAL.
 
 ## 8. Binder 与公共 API 设计
 
@@ -188,6 +190,8 @@ AutoJs6-Plugin-Three-Setup-Installer/
 - 持久默认只在操作确认后记本地回执. persistentConfigured 只表示上次成功配置, 普通状态读取不得据此宣称当前策略. Dhizuku 暂限 API 26-33; API 34+ 缺少 owner PolicyUpdateReceiver 最终结果时预写入拒绝. 部分失败记录不确定性, 不通过清除未知旧策略补偿.
 - Root 持久默认使用独立的 system UID 1000 进程, 固定 user 0/本插件组件/四个 APK filter, 不改变共享 RootService 身份. 写入前必须核对握手与策略基线, 明确提交后才可修改; 不覆盖竞争策略, 不降级 SELinux. 取消或进程死亡不重放操作, 不确定结果保留审计.
 - notification 只用于安装. 确认, 取消与系统确认均对应当前会话/单次 token; none 的系统确认仍需用户点击通知打开, 不自动弹出插件安装对话框. 外部临时 URI 授权须在 NoDisplay Activity 结束前交给前台服务, 重启不得恢复 worker 或来源授权.
+- 高级选项: grantAllRequestedPermissions / dexopt 仅允许 Shizuku 或 Root, 不增加受限权限 allowlist 或全局系统开关. ownership/reason/source 的 SDK 门槛分别为 34/26/33, verify 编译过滤器为 26+. 未提供 metadata 保留既有默认, 不支持的显式请求须在系统 session 创建前拒绝. 所有权仅报告实际读回, false 不表示撤销已有 owner.
+- 手动 dexopt 只对已确认成功安装的单包发固定 argv 和白名单 filter; 不支持全局编译, 清 profile, 重置或自动重试. API34+ 需解析 ART 最终状态, 不能只看退出码; 旧 Success 可包括跳过, 统一 accepted 不承诺实际编译. 超时/取消的最终系统状态可未知, 不可因此把已确认安装改成失败. 已确认结果先落盘, 进程恢复不重放编译或来源删除.
 
 ## 10. 字符串资源
 

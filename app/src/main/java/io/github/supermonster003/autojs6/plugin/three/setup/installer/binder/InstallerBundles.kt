@@ -5,6 +5,7 @@ import com.google.gson.JsonObject
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.ThreeSetupInstallerPlugin
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.engine.InstallFailure
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.engine.RequestDocuments
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.engine.AdvancedInstallOptions
 import org.autojs.plugin.installer.api.InstallerContract
 import org.autojs.plugin.installer.api.InstallerErrorCodes
 
@@ -22,13 +23,14 @@ internal object InstallerBundles {
             val json = (bundle[InstallerContract.KEY_REQUEST_JSON] as? String)
                 ?.takeIf { it.toByteArray(Charsets.UTF_8).size <= InstallerContract.MAX_JSON_BYTES }
                 ?: throw RequestDocuments.invalid("Request JSON is missing or too large")
-            if (version < 2) {
+            if (version < 3) {
                 val root = com.google.gson.JsonParser.parseString(json).takeIf { it.isJsonObject }?.asJsonObject
                 listOfNotNull(root, root?.get("options")?.takeIf { it.isJsonObject }?.asJsonObject).forEach { options ->
-                    if (options.get("authorizer")?.takeIf { it.isJsonPrimitive }?.asString == InstallerContract.AUTHORIZER_DHIZUKU ||
-                        options.get("interaction")?.takeIf { it.isJsonPrimitive }?.asString == InstallerContract.INTERACTION_NOTIFICATION || options.has(InstallerContract.FIELD_MODE)) {
+                    if (version < 2 && (options.get("authorizer")?.takeIf { it.isJsonPrimitive }?.asString == InstallerContract.AUTHORIZER_DHIZUKU ||
+                        options.get("interaction")?.takeIf { it.isJsonPrimitive }?.asString == InstallerContract.INTERACTION_NOTIFICATION || options.has(InstallerContract.FIELD_MODE))) {
                         throw RequestDocuments.invalid("This option requires installer contract version 2")
                     }
+                    if (options.keySet().any { it in AdvancedInstallOptions.keys }) throw RequestDocuments.invalid("Advanced installation options require installer contract version 3")
                 }
             }
             return json

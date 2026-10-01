@@ -70,6 +70,8 @@ internal object InstallDocuments {
         items.forEach { item ->
             item.remove(InstallerContract.FIELD_VERSION_NAME)
             item.remove(InstallerContract.FIELD_NOTES)
+            item.remove(InstallerContract.FIELD_UPDATE_OWNER)
+            item.remove(InstallerContract.FIELD_DEXOPT)
             boundPackage(item)
             if (item.get(InstallerContract.FIELD_OK)?.asBoolean == true) {
                 item.add(InstallerContract.FIELD_NOTES, JsonArray().apply { add("Optional result details were omitted to fit the response limit") })
@@ -93,6 +95,7 @@ internal object InstallDocuments {
         durationMillis: Long,
         sourceDeleted: Boolean,
         notes: List<String>,
+        followUp: InstallFollowUp = InstallFollowUp(),
     ): JsonObject = JsonObject().apply {
         addProperty(InstallerContract.FIELD_OK, true)
         packageName?.let { addProperty(InstallerContract.FIELD_PACKAGE_NAME, it) }
@@ -104,6 +107,13 @@ internal object InstallDocuments {
         addProperty(InstallerContract.FIELD_DURATION_MILLIS, durationMillis)
         addProperty(InstallerContract.FIELD_SOURCE_DELETED, sourceDeleted)
         add(InstallerContract.FIELD_NOTES, JsonArray().apply { notes.forEach { add(it) } })
+        if (followUp.updateOwnerRead) add(InstallerContract.FIELD_UPDATE_OWNER,
+            followUp.updateOwner?.let { com.google.gson.JsonPrimitive(it) } ?: com.google.gson.JsonNull.INSTANCE)
+        followUp.dexopt?.let { optimization -> add(InstallerContract.FIELD_DEXOPT, JsonObject().apply {
+            addProperty(InstallerContract.FIELD_FILTER, optimization.filter)
+            addProperty(InstallerContract.FIELD_DEXOPT_STATUS, optimization.status)
+            optimization.message?.let { addProperty(InstallerContract.FIELD_DEXOPT_MESSAGE, it) }
+        }) }
     }
 
     fun failedItem(failure: InstallFailure, packageName: String?, authorizer: String?, interaction: String?, durationMillis: Long?): JsonObject = JsonObject().apply {

@@ -193,6 +193,29 @@ class InstallEngineTest {
         assertTrue(listener.progress.zipWithNext().all { (before, after) -> after.first - before.first in 1..1024 * 1024 })
     }
 
+    @Test fun `optimization failures and late cancellation preserve a confirmed installation`() {
+        for ((failure, expected) in listOf(IOException("compiler unavailable") to "unknown",
+            InstallFailure(InstallerErrorCodes.CANCELLED, "stopped after installation") to "cancelled",
+            InstallFailure(InstallerErrorCodes.TIMEOUT, "no budget left") to "timeout")) {
+            val engine = FakeEngine().apply { followUp = { throw failure } }
+            val listener = RecordingListener()
+            val result = engine.install(request(apk("base-$expected.apk")).copy(options = InstallOptions(dexopt = "speed")), listener)
+            assertEquals("example.fixture", result.packageName)
+            assertEquals(expected, result.followUp.dexopt?.status)
+            assertTrue(result.notes.isNotEmpty())
+            assertEquals(listOf("writing", "committing", "optimizing"), listener.stages)
+            assertEquals(1, engine.followUpCalls)
+            assertTrue(engine.session.closed)
+            assertFalse(engine.session.abandoned)
+        }
+    }
+
+    @Test fun `an unsuccessful installation never starts optimization`() {
+        val engine = FakeEngine().apply { session.status = InstallStatusBridge.Status(1, "rejected", "example.fixture", null) }
+        assertThrows(InstallFailure::class.java) { engine.install(request(apk()).copy(options = InstallOptions(dexopt = "speed")), RecordingListener()) }
+        assertEquals(0, engine.followUpCalls)
+    }
+
     @Test fun `none platform security refusals are nonretryable policy errors`() {
         val denial = SecurityException("DISALLOW_INSTALL_APPS")
         val engine = FakeEngine(Authorizer.NONE).apply {
@@ -271,6 +294,13 @@ class InstallEngineTest {
         var opened = 0
         var parameters: Parameters? = null
         val session = FakeSession()
+        var followUp: () -> InstallFollowUp = { InstallFollowUp() }
+        var followUpCalls = 0
+        override fun afterInstallation(request: InstallEngine.Request, packageName: String,
+            deadlineMillis: Long, checkActive: () -> Unit): InstallFollowUp {
+            followUpCalls++
+            return followUp()
+        }
         override fun openSession(request: InstallEngine.Request, parameters: Parameters, deadlineMillis: Long): Session {
             opened++
             this.parameters = parameters

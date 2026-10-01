@@ -439,6 +439,26 @@ class InstallSessionTest {
         }
     }
 
+    @Test fun `early installed fact is distinct from final completion and never triggers source deletion`() {
+        val original = request(items = listOf(0))
+        val fixture = Fixture(original.copy(options = original.options.copy(dexopt = "speed")))
+        fixture.earlyInstalled = true
+        fixture.install = {
+            assertEquals(1, fixture.knownInstalled.size)
+            assertTrue(fixture.knownInstalled.single()["ok"].asBoolean)
+            assertTrue(fixture.itemResults.isEmpty())
+            assertTrue(fixture.cleanups.isEmpty())
+            fixture.session.cancel()
+            success()
+        }
+        fixture.run()
+        assertEquals(1, fixture.knownInstalled.size)
+        assertEquals(1, fixture.itemResults.size)
+        assertEquals(1, fixture.cleanups.size)
+        assertTrue(fixture.completed!!["ok"].asBoolean)
+        assertNull(fixture.failure)
+    }
+
     private fun request(items: List<Int> = listOf(0, 1, 2), continueOnError: Boolean = true, timeout: Long = 1_000, interaction: String = "auto") =
         InstallRequest("batch", items.mapIndexed { i, item -> SourceEntry(i, item, "same.apk", 1) }, interaction,
             InstallOptions(authorizer = "root", user = "42", deleteSource = true, continueOnError = continueOnError, timeoutMillis = timeout))
@@ -454,6 +474,7 @@ class InstallSessionTest {
         var failCleanup = false
         var failPostMetadata = false
         var failProgress = false
+        var earlyInstalled = false
         var expectedUserId = 42
         val calls = mutableListOf<InstallEngine.Request>()
         val prepared = mutableListOf<List<Int>>()
@@ -462,6 +483,7 @@ class InstallSessionTest {
         val versionTargets = mutableListOf<InstallSession.Target>()
         val cleanups = mutableListOf<Pair<Int, InstallOptions>>()
         val itemResults = mutableListOf<Pair<Int, JsonObject>>()
+        val knownInstalled = mutableListOf<JsonObject>()
         var afterPrepare: () -> Unit = {}
         var confirm: () -> Unit = {}
         var availability: () -> Unit = {}
@@ -477,6 +499,7 @@ class InstallSessionTest {
                 listener.onStage("writing")
                 listener.onProgress(1, 1)
                 checkCancelled()
+                if (earlyInstalled) listener.onInstalled(success())
                 return install()
             }
         }
@@ -517,6 +540,7 @@ class InstallSessionTest {
             events += "item:$index"
             itemResult(index, result)
         }
+        override fun onInstalled(index: Int, result: JsonObject) { knownInstalled += result.deepCopy() }
         override fun onCompleted(result: JsonObject) { terminalCallbacks++; completed = result; events += "completed" }
         override fun onFailed(failure: InstallFailure) { terminalCallbacks++; this.failure = failure; events += "failed" }
     }

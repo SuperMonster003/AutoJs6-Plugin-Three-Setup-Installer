@@ -52,7 +52,7 @@ Le plugin gère l'inspection des paquets, l'installation et les résultats indé
 
 ******
 
-1.1.0 décrit les fonctions d'installation, de gestion des applications et de scripts présentées ci-dessous. La publication officielle sur GitHub Releases et le référencement dans le centre de plugins restent à effectuer. L'intégration nécessite AutoJs6 >= 6.8.0 (5299), et l'API de scripts `installer` nécessite la compilation 5300 ou ultérieure. La couverture des appareils et les validations restantes figurent dans [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md). Dhizuku, l'installation par notification et les options de scripts pour l'installateur persistant nécessitent AutoJs6 6.8.0 compilation 5307 ou ultérieure avec le contrat installer V2. L'intégration de base reste disponible dès la compilation 5299, et les méthodes de scripts V1 dès 5300.
+1.2.0 décrit les fonctions d'installation, de gestion des applications et de scripts présentées ci-dessous. La publication officielle sur GitHub Releases et le référencement dans le centre de plugins restent à effectuer. L'intégration nécessite AutoJs6 >= 6.8.0 (5299), et l'API de scripts `installer` nécessite la compilation 5300 ou ultérieure. La couverture des appareils et les validations restantes figurent dans [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md). Dhizuku, l'installation par notification et les options de scripts pour l'installateur persistant nécessitent AutoJs6 6.8.0 compilation 5307 ou ultérieure avec le contrat installer V2. L'intégration de base reste disponible dès la compilation 5299, et les méthodes de scripts V1 dès 5300.
 
 ******
 
@@ -60,7 +60,7 @@ Le plugin gère l'inspection des paquets, l'installation et les résultats indé
 
 ******
 
-Fonctions implémentées dans 1.1.0:
+Fonctions implémentées dans 1.2.0:
 
 - Formats de paquet : `.apk`, `.apks`, `.xapk`, `.apkm`, `.apkz` et archives ZIP contenant des APK ; les paquets fractionnés sont sélectionnés pour l'appareil ; les fichiers `.aab` sont reconnus et décrits mais pas installés.
 - `none` utilise la confirmation Android. Les nouveaux paramètres essaient `shizuku -> root -> dhizuku -> none` pour `auto`, selon leur disponibilité; chaque méthode peut être déplacée ou désactivée. Les anciens paramètres à trois méthodes conservent leur ordre relatif et leurs activations, avec Dhizuku inséré avant `none` mais désactivé. Un choix explicite ne bascule jamais vers une autre méthode.
@@ -77,6 +77,8 @@ Fonctions implémentées dans 1.1.0:
 - Les paramètres enregistrent l'ordre et l'activation des méthodes, les options d'installation et les préférences de notification. Les installations locales/externes utilisent `dialog` par défaut; `auto`, `silent` ou `notification` peuvent être choisis explicitement. L'interface hôte utilise `dialog`; les scripts gardent leurs options explicites et `auto` par défaut. Les changements sont enregistrés après confirmation.
 - Les paramètres donnent accès à la page À propos et à l'historique des versions intégré en dix langues. La recherche manuelle de mises à jour utilise l'API GitHub Releases du plugin avec un intervalle de 12 heures, un cache et la gestion des versions ignorées. Les pages de publication s'ouvrent dans le navigateur; aucune mise à jour n'est téléchargée ni installée automatiquement.
 - `dhizuku`: nécessite Android 8.0 (API 26)+, un propriétaire d'appareil/profil Dhizuku actif et l'autorisation donnée au plugin. Les opérations sont limitées à l'utilisateur du propriétaire courant; l'attribution de l'installation utilise le vrai paquet propriétaire. Les options shell/root de rétrogradation, paquet de test, contournement du targetSdk, autres utilisateurs, attribution arbitraire et conservation des données à la désinstallation sont refusées. Le plugin ne configure pas de propriétaire.
+- Options avancées: `grantAllRequestedPermissions`, `requestUpdateOwnership`, `dexopt` (`none`/`verify`/`speed-profile`/`speed`), `installReason` et `packageSource`. Une plateforme ou autorisation incompatible refuse la requête. none n'ajoute pas de compilation manuelle et ne désactive pas celle d'Android.
+- Un résultat réussi peut contenir `updateOwner` et `dexopt` observés. null signifie qu'Android ne renvoie aucun owner à cette identité, éventuellement à cause du filtrage de visibilité, sans prouver une absence globale. Un échec de lecture omet le champ et ajoute des notes. Les états DexOpt sont accepted/failed/cancelled/timeout/unavailable/unknown. accepted inclut une opération ignorée par le système et ne prouve pas une compilation. L'échec de cette étape ne change pas une installation déjà confirmée.
 
 ******
 
@@ -159,11 +161,21 @@ let installViaDhizuku = source => installer.install(source, {
 let setPersistentDefaultChosen = enabled => installer.setDefault(enabled, {
     authorizer: 'root', mode: 'persistent',
 });
+
+// Exemple avancé: hôte V3, Root et API 33+ pour ces métadonnées. Appeler cette fonction lance l'installation
+let installAdvancedChosen = source => installer.installAsync(source, {
+    authorizer: 'root', interaction: 'dialog', deleteSource: false,
+    grantAllRequestedPermissions: false, requestUpdateOwnership: false,
+    dexopt: 'speed-profile', installReason: 'user', packageSource: 'local-file',
+}).then(result => console.log(result.ok, result.updateOwner, result.dexopt, result.notes))
+    .catch(error => console.error(error.code, error.systemMessage));
 ```
 
 Une source peut être un chemin, une URI `file://` ou une URI `content://` lisible. Un tableau représente des éléments indépendants; `{ splits: [...] }` installe une seule application. `session(...)` démarre immédiatement; l'objet retourné propose `cancel()` et `wait()`. Les appels synchrones peuvent lever `InstallerError` et sont interdits sur le thread UI. Cela concerne aussi la lecture de `installer.status`, la création de `installer.session(...)` et l'appel de `session.wait()`. Utilisez les méthodes Async sur le thread UI, ou exécutez les opérations synchrones sur un thread de travail du script. Un objet session doit être utilisé uniquement sur le thread du script qui l'a créé. Gérez les rejets des Promise et vérifiez `ok` et `error` pour chaque résultat du lot. Un plugin absent ou incompatible produit `PLUGIN_UNAVAILABLE`. `setDefault` indique si l'état demandé a été atteint, y compris l'effacement du choix par défaut. `app.uninstall` reste le raccourci système de l'hôte; utilisez `installer.uninstall` pour les options privilégiées. Consultez la [documentation API installer](https://docs.autojs6.com/#/installer) pour les options et événements.
 
 Dhizuku, l'installation par notification et les options de scripts pour l'installateur persistant nécessitent AutoJs6 6.8.0 compilation 5307 ou ultérieure avec le contrat installer V2. L'intégration de base reste disponible dès la compilation 5299, et les méthodes de scripts V1 dès 5300.
+
+Les options avancées nécessitent AutoJs6 build 5308+ et V3 avec `advanced-install-options`. L'omission conserve le comportement existant; `false`/`none` explicite exige aussi la prise en charge. Cette implémentation locale n'annonce ni publication officielle ni achèvement de tout P9.
 
 ******
 
@@ -177,6 +189,7 @@ Faits de plateforme qui délimitent ce que le plugin peut faire:
 - Le contournement du blocage des targetSdk bas existe depuis Android 14 (API 34) ; sur les systèmes plus anciens, l'option est ignorée et signalée dans le résultat.
 - La page de l'installateur par défaut distingue préférence ordinaire et règle persistante. La préférence utilise Shizuku ou Root et reste soumise à la ROM. Dhizuku gère les règles persistantes sur API 26-33; API 34+ est refusé avant toute modification car la réponse du propriétaire ne peut pas être vérifiée. Root utilise un auxiliaire sous UID système uniquement pour l'utilisateur 0 sur les appareils compatibles. Les règles persistantes concurrentes ne sont pas remplacées. `persistentConfigured` atteste une ancienne configuration réussie, sans prouver la règle système actuelle; l'observation passive indique seulement `preferred` ou `none`.
 - `dhizuku`: nécessite Android 8.0 (API 26)+, un propriétaire d'appareil/profil Dhizuku actif et l'autorisation donnée au plugin. Les opérations sont limitées à l'utilisateur du propriétaire courant; l'attribution de l'installation utilise le vrai paquet propriétaire. Les options shell/root de rétrogradation, paquet de test, contournement du targetSdk, autres utilisateurs, attribution arbitraire et conservation des données à la désinstallation sont refusées. Le plugin ne configure pas de propriétaire.
+- Les demandes de permissions et DexOpt autre que none exigent Shizuku/Root; verify exige API 26+. Le motif nécessite API 26+, la source API 33+ et la demande de propriété des mises à jour API 34+. Cette propriété ne démarre qu'à l'installation initiale; les mises à jour ou paquets présents chez un autre utilisateur peuvent être ignorés. false ne révoque pas un owner existant.
 
 ******
 
@@ -202,11 +215,12 @@ Faits de plateforme qui délimitent ce que le plugin peut faire:
 Le plugin respecte des limites explicites :
 
 - Les points d'entrée Binder sont protégés par la permission de signature `org.autojs.permission.PLUGIN`, seul AutoJs6 peut donc les atteindre ; l'entrée externe "Ouvrir avec" n'accepte que des fichiers de paquet et n'exécute jamais de script.
-- REQUEST_INSTALL_PACKAGES et REQUEST_DELETE_PACKAGES permettent la confirmation Android. QUERY_ALL_PACKAGES sert à gérer les applications installées, comparer versions et signatures, et détecter l'installateur par défaut.
+- REQUEST_INSTALL_PACKAGES et REQUEST_DELETE_PACKAGES permettent la confirmation Android. QUERY_ALL_PACKAGES sert à gérer les applications installées, comparer versions et signatures, et détecter l'installateur par défaut. La permission normale ENFORCE_UPDATE_OWNERSHIP permet une demande explicite de propriété des mises à jour, sans garantir un owner.
 - FOREGROUND_SERVICE et FOREGROUND_SERVICE_DATA_SYNC soutiennent l'installation et l'accès temporaire aux sources; POST_NOTIFICATIONS autorise les notifications. Le mode `notification` exige des notifications et un canal actifs. Les autres modes tolèrent une permission de notification absente.
 - Shizuku, Root et Dhizuku servent aux opérations demandées. Le plugin ne configure aucun propriétaire d'appareil/profil. Les règles persistantes ne changent que sur demande de définition ou de suppression; aucun paquet n'est envoyé en ligne.
 - L'installation, l'inspection, l'historique et la gestion des applications fonctionnent hors ligne. INTERNET est utilisé uniquement lors d'une recherche manuelle de versions auprès de l'API GitHub Releases fixe du plugin, avec un intervalle de 12 heures. Aucune recherche en arrière-plan ni aucun envoi de paquets n'est effectué.
 - Les sources sont ouvertes en lecture seule. L'historique conserve des métadonnées limitées et des résultats, sans contenu de paquet ni URI source; les chemins des erreurs sont masqués. Le stockage privé est exclu des sauvegardes. Supprimer une entrée ne désinstalle pas l'application et ne supprime pas sa source.
+- L'option demande les permissions que le système peut accorder et peut inclure des app-ops modifiables par l'installateur, comme USE_FULL_SCREEN_INTENT sur Android 14. Elle ne garantit pas toutes les permissions et n'accorde ni accessibilité, ni superposition, ni permissions de signature arbitraires. Les contraintes restricted/system-fixed/policy-fixed restent actives, sans drapeau allowlist supplémentaire.
 
 Après publication, n'obtenez le plugin que depuis la page officielle [Releases](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/releases) ou le centre de plugins d'AutoJs6. Les paquets de sources inconnues peuvent échouer à la vérification de l'hôte ou présenter des risques même lorsque le numéro de version semble identique.
 
@@ -247,6 +261,18 @@ Les plans et l'avancement du plugin sont tenus sous forme de liste cochable dans
 ### Historique des versions
 
 ******
+
+#### v1.2.0
+
+_2026/10/02_
+
+- `Fonctionnalité` Options avancées: `grantAllRequestedPermissions`, `requestUpdateOwnership`, `dexopt` (`none`/`verify`/`speed-profile`/`speed`), `installReason` et `packageSource`. Une plateforme ou autorisation incompatible refuse la requête. none n'ajoute pas de compilation manuelle et ne désactive pas celle d'Android.
+- `Amélioration` Les options avancées nécessitent AutoJs6 build 5308+ et V3 avec `advanced-install-options`. L'omission conserve le comportement existant; `false`/`none` explicite exige aussi la prise en charge. Cette implémentation locale n'annonce ni publication officielle ni achèvement de tout P9.
+- `Amélioration` Un résultat réussi peut contenir `updateOwner` et `dexopt` observés. null signifie qu'Android ne renvoie aucun owner à cette identité, éventuellement à cause du filtrage de visibilité, sans prouver une absence globale. Un échec de lecture omet le champ et ajoute des notes. Les états DexOpt sont accepted/failed/cancelled/timeout/unavailable/unknown. accepted inclut une opération ignorée par le système et ne prouve pas une compilation. L'échec de cette étape ne change pas une installation déjà confirmée.
+- `Amélioration` Les demandes de permissions et DexOpt autre que none exigent Shizuku/Root; verify exige API 26+. Le motif nécessite API 26+, la source API 33+ et la demande de propriété des mises à jour API 34+. Cette propriété ne démarre qu'à l'installation initiale; les mises à jour ou paquets présents chez un autre utilisateur peuvent être ignorés. false ne révoque pas un owner existant.
+- `Amélioration` L'option demande les permissions que le système peut accorder et peut inclure des app-ops modifiables par l'installateur, comme USE_FULL_SCREEN_INTENT sur Android 14. Elle ne garantit pas toutes les permissions et n'accorde ni accessibilité, ni superposition, ni permissions de signature arbitraires. Les contraintes restricted/system-fixed/policy-fixed restent actives, sans drapeau allowlist supplémentaire.
+- `Dépendance` Mise à niveau de installer-api.aar vers le contrat V3 (MPL 2.0), avec V1/V2 et les 11 transactions AIDL conservés; options avancées à partir du build hôte 5308
+- `Dépendance` Mise à niveau de l'analyseur partagé de paquets (MPL 2.0) pour vérifier la racine réelle du manifeste et sharedUserId et refuser les entrées ambiguës
 
 #### v1.1.0
 

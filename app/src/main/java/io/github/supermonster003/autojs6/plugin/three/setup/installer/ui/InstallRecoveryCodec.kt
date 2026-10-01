@@ -34,6 +34,7 @@ internal object InstallRecoveryCodec {
                 addProperty("user", item.user); addProperty("deleteRequested", item.deleteRequested)
                 item.ok?.let { addProperty("ok", it) }; item.sourceDeleted?.let { addProperty("sourceDeleted", it) }
                 item.failure?.let { add("failure", error(it)) }
+                if (item.followUpPending) addProperty("followUpPending", true)
             }) } })
         }
         return json.toString().toByteArray(Charsets.UTF_8).also { require(it.size <= InstallRecoverySnapshot.MAX_BYTES) }
@@ -66,10 +67,11 @@ internal object InstallRecoveryCodec {
             requireNotNull(number(root, "savedAt")), requireNotNull(number(root, "expiresAt")), requireNotNull(boolean(root, "terminal")),
             requireNotNull(string(root, "stage")), requireNotNull(integer(root, "index")), items.map { element ->
                 val item = element.asJsonObject
-                fields(item, setOf("label", "package", "versionName", "versionCode", "previousVersionCode", "user", "deleteRequested", "ok", "sourceDeleted", "failure"))
+                fields(item, setOf("label", "package", "versionName", "versionCode", "previousVersionCode", "user", "deleteRequested", "ok", "sourceDeleted", "failure", "followUpPending"))
                 InstallRecoverySnapshot.Item(requireNotNull(string(item, "label")), string(item, "package"), string(item, "versionName"),
                     number(item, "versionCode"), number(item, "previousVersionCode"), requireNotNull(string(item, "user")),
-                    requireNotNull(boolean(item, "deleteRequested")), boolean(item, "ok"), boolean(item, "sourceDeleted"), item.getAsJsonObject("failure")?.let(::error))
+                    requireNotNull(boolean(item, "deleteRequested")), boolean(item, "ok"), boolean(item, "sourceDeleted"), item.getAsJsonObject("failure")?.let(::error),
+                    boolean(item, "followUpPending") ?: false)
             }, root.getAsJsonObject("failure")?.let(::error), requireNotNull(boolean(root, "canDeleteSource")))
             .also(InstallRecoverySnapshot::validate)
     }

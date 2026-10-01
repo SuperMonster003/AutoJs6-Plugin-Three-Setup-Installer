@@ -16,6 +16,7 @@ import android.util.Log
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.ThreeSetupInstallerPlugin
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.engine.StorageErrors
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.priv.hidden.PackageInstallerHidden
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.priv.hidden.PackagePostInstall
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.priv.hidden.PackageManagerHidden
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.priv.hidden.UserManagerHidden
 import java.io.Closeable
@@ -30,6 +31,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 internal open class PrivilegedInstallerImpl(expectedOwnerUid: Int? = null) : IPrivilegedInstaller.Stub(), Closeable {
     private val packages = PackageManagerHidden()
     private val installer = packages.installer()
+    private val postInstallActions = PackagePostInstall(packages)
     private val ownerUid = expectedOwnerUid ?: packages.packageUid(ThreeSetupInstallerPlugin.PACKAGE_NAME, Process.myUid() / 100000)
     private val userId = ownerUid / 100000
     private val sessions = mutableMapOf<Int, Record>()
@@ -76,7 +78,8 @@ internal open class PrivilegedInstallerImpl(expectedOwnerUid: Int? = null) : IPr
     }
 
     override fun createSession(params: Bundle, installerPackageName: String, userId: Int): Int = privileged {
-        require(params.keySet().all { it in setOf(PrivilegedOptions.FLAGS, PrivilegedOptions.SIZE, PrivilegedOptions.PACKAGE_NAME) }) { "Unknown session option" }
+        require(params.keySet().all { it in setOf(PrivilegedOptions.FLAGS, PrivilegedOptions.SIZE, PrivilegedOptions.PACKAGE_NAME,
+            PrivilegedOptions.REQUEST_UPDATE_OWNERSHIP, PrivilegedOptions.INSTALL_REASON, PrivilegedOptions.PACKAGE_SOURCE) }) { "Unknown session option" }
         PrivilegedOptions.validatePackage(installerPackageName)
         require(userId >= 0) { "Invalid user" }
         val flags = params.getInt(PrivilegedOptions.FLAGS, PrivilegedOptions.INSTALL_REPLACE_EXISTING)
@@ -84,15 +87,31 @@ internal open class PrivilegedInstallerImpl(expectedOwnerUid: Int? = null) : IPr
         val size = params.getLong(PrivilegedOptions.SIZE, -1)
         require(size >= -1) { "Invalid size" }
         val packageName = params.getString(PrivilegedOptions.PACKAGE_NAME)?.also(PrivilegedOptions::validatePackage)
+        @Suppress("DEPRECATION")
+        fun optionalInt(key: String): Int? = if (params.containsKey(key)) {
+            require(params.get(key) is Int) { "Invalid $key type" }
+            params.getInt(key)
+        } else null
+        val requestOwner = if (params.containsKey(PrivilegedOptions.REQUEST_UPDATE_OWNERSHIP)) {
+            @Suppress("DEPRECATION")
+            require(params.get(PrivilegedOptions.REQUEST_UPDATE_OWNERSHIP) is Boolean) { "Invalid update ownership type" }
+            params.getBoolean(PrivilegedOptions.REQUEST_UPDATE_OWNERSHIP)
+        } else false
+        val installReason = optionalInt(PrivilegedOptions.INSTALL_REASON)
+        val packageSource = optionalInt(PrivilegedOptions.PACKAGE_SOURCE)
+        PrivilegedOptions.validateMetadata(Build.VERSION.SDK_INT, requestOwner, installReason, packageSource)
         val sessionParams = PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL).apply {
+            // Public setters below also update installFlags. Set the closed flag set first.
+            PackageInstallerHidden.setFlags(this, flags)
             if (size >= 0) setSize(size)
             packageName?.let(::setAppPackageName)
             // This is the actual app that requested its private service to install the package.
             setOriginatingUid(ownerUid)
             if (Build.VERSION.SDK_INT >= 31) setRequireUserAction(PackageInstaller.SessionParams.USER_ACTION_NOT_REQUIRED)
-            if (Build.VERSION.SDK_INT >= 33) setPackageSource(PackageInstaller.PACKAGE_SOURCE_LOCAL_FILE)
+            if (Build.VERSION.SDK_INT >= 26 && installReason != null) setInstallReason(installReason)
+            if (Build.VERSION.SDK_INT >= 33) setPackageSource(packageSource ?: PackageInstaller.PACKAGE_SOURCE_LOCAL_FILE)
+            if (Build.VERSION.SDK_INT >= 34 && requestOwner) setRequestUpdateOwnership(true)
         }
-        PackageInstallerHidden.setFlags(sessionParams, flags)
         synchronized(this) {
             checkActive()
             check(sessions.size < PrivilegedOptions.MAX_SESSIONS) { "Too many sessions" }
@@ -269,6 +288,10 @@ internal open class PrivilegedInstallerImpl(expectedOwnerUid: Int? = null) : IPr
 
     override fun getUsers(): Bundle = privileged { UserManagerHidden.users() }
 
+    override fun postInstall(packageName: String, userId: Int, dexopt: String, readUpdateOwner: Boolean, timeoutMillis: Long): Bundle = privileged {
+        postInstallActions.run(packageName, userId, dexopt, readUpdateOwner, timeoutMillis)
+    }
+
     override fun destroy() {
         val caller = Binder.getCallingUid()
         check(caller == ownerUid || caller == 0 || caller == 2000) { "Unauthorized service shutdown" }
@@ -294,6 +317,7 @@ internal open class PrivilegedInstallerImpl(expectedOwnerUid: Int? = null) : IPr
         }
         val identity = Binder.clearCallingIdentity()
         try {
+            postInstallActions.close()
             ids.forEach { remove(it, abandon = true) }
             writers.shutdownNow()
         } finally {

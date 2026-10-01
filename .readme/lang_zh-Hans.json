@@ -26,7 +26,9 @@
     "私有安装历史最多保留 200 项, 包含包名, 标签, 新旧版本, 结果, 时间, 来源 (宿主/脚本/外部/首页), 授权方式及失败详情. 可单条删除或清空, 不卸载应用也不删除源文件. 进程退出后未完成项目标为取消, 不会自动续跑.",
     "设置保存授权顺序与启用状态, 安装选项及通知偏好. 首页/外部安装默认使用 `dialog`, 可显式选择 `auto`, `silent` 或 `notification`. 宿主界面安装入口使用 `dialog`; 脚本保留显式选项且默认仍为 `auto`. 修改在确认后保存.",
     "设置中提供关于页面和十语言内置发行历史. 手动更新检查访问插件的 GitHub Releases API, 间隔 12 小时, 支持缓存结果与忽略版本管理. 发布页在浏览器中打开, 不会自动下载或安装更新.",
-    "`dhizuku`: 需要 Android 8.0 (API 26)+, 已激活的 Dhizuku 设备/资料所有者, 并向本插件授权. 只操作当前所有者用户, 安装者归属使用真实所有者包名. 不提供 shell/root 的降级, 测试包, 绕过低 targetSdk, 其他用户, 任意安装者归属或卸载保留数据选项. 插件不自动配置所有者."
+    "`dhizuku`: 需要 Android 8.0 (API 26)+, 已激活的 Dhizuku 设备/资料所有者, 并向本插件授权. 只操作当前所有者用户, 安装者归属使用真实所有者包名. 不提供 shell/root 的降级, 测试包, 绕过低 targetSdk, 其他用户, 任意安装者归属或卸载保留数据选项. 插件不自动配置所有者.",
+    "高级安装选项: `grantAllRequestedPermissions`, `requestUpdateOwnership`, `dexopt` (`none`/`verify`/`speed-profile`/`speed`), `installReason` 和 `packageSource`. 平台或授权方式不支持时明确拒绝, 不静默忽略. none 不追加手动编译, 也不关闭 Android 自身的编译.",
+    "成功结果可报告读回的 `updateOwner` 和 `dexopt`. null 表示 Android 未向当前调用身份返回 owner, 可能没有 owner 或受可见性过滤, 不能证明全局不存在; 读取失败省略字段并写入 notes. DexOpt 状态为 accepted/failed/cancelled/timeout/unavailable/unknown; accepted 包含系统跳过, 不证明实际执行编译. 附加步骤失败不改变已经确认的安装成功."
   ],
   "h3_usage": "使用方法",
   "usage_steps": [
@@ -54,7 +56,8 @@
     "Android 7.0 (API 24) 及以上. 设备验证情况和剩余覆盖范围记录在 [ROADMAP.md]({{ roadmap_url }}) 中.",
     "绕过低 targetSdk 拦截自 Android 14 (API 34) 起存在; 更早的系统忽略该选项并在结果中注明.",
     "默认安装器页面区分普通偏好与持久化策略. 普通偏好通过 Shizuku 或 Root 设置, 仍受 ROM 限制. Dhizuku 的持久化策略支持 API 26-33; API 34+ 因无法核验所有者回调, 在修改前拒绝. Root 仅在受支持设备的用户 0 中使用 system UID 辅助进程. 不覆盖竞争的持久策略. `persistentConfigured` 仅记录此前成功配置的回执, 不是当前系统策略的证明; 被动查询只报告 `preferred` 或 `none`.",
-    "`dhizuku`: 需要 Android 8.0 (API 26)+, 已激活的 Dhizuku 设备/资料所有者, 并向本插件授权. 只操作当前所有者用户, 安装者归属使用真实所有者包名. 不提供 shell/root 的降级, 测试包, 绕过低 targetSdk, 其他用户, 任意安装者归属或卸载保留数据选项. 插件不自动配置所有者."
+    "`dhizuku`: 需要 Android 8.0 (API 26)+, 已激活的 Dhizuku 设备/资料所有者, 并向本插件授权. 只操作当前所有者用户, 安装者归属使用真实所有者包名. 不提供 shell/root 的降级, 测试包, 绕过低 targetSdk, 其他用户, 任意安装者归属或卸载保留数据选项. 插件不自动配置所有者.",
+    "权限授予请求及非 none 的 DexOpt 需要 Shizuku/Root, verify 需要 API 26+. 安装原因需要 API 26+, 来源标签需要 API 33+, 请求更新所有权需要 API 34+. 所有权仅能在初装时启用, 更新或其他用户已有该包时可能被忽略; false 不撤销既有 owner."
   ],
   "h3_faq": "常见问题",
   "faq_items": [
@@ -71,11 +74,12 @@
   "p_security_intro": "插件遵循明确的边界:",
   "security_points": [
     "Binder 入口受 `org.autojs.permission.PLUGIN` 签名权限保护, 只有 AutoJs6 能够访问; 外部 \"打开方式\" 入口只接受安装包文件, 从不运行脚本.",
-    "REQUEST_INSTALL_PACKAGES 和 REQUEST_DELETE_PACKAGES 用于 Android 确认. QUERY_ALL_PACKAGES 用于已安装应用管理, 版本与签名比对以及默认安装器检测.",
+    "REQUEST_INSTALL_PACKAGES 和 REQUEST_DELETE_PACKAGES 用于 Android 确认. QUERY_ALL_PACKAGES 用于已安装应用管理, 版本与签名比对以及默认安装器检测. 普通权限 ENFORCE_UPDATE_OWNERSHIP 用于显式请求更新所有权, 不表示必然获得 owner.",
     "FOREGROUND_SERVICE 和 FOREGROUND_SERVICE_DATA_SYNC 支持安装工作及临时来源访问; POST_NOTIFICATIONS 用于通知. `notification` 交互要求通知与安装渠道可用, 其它交互模式允许缺少通知许可.",
     "Shizuku, Root 与 Dhizuku 用于请求的操作. 插件不会自动配置设备/资料所有者. 持久默认规则只通过请求的设置或清除操作修改; 不上传安装包.",
     "安装, 检查, 历史和应用管理均可离线使用. INTERNET 仅在用户手动检查版本时访问插件固定的 GitHub Releases API, 间隔 12 小时. 不后台检查更新, 不上传安装包.",
-    "安装包来源以只读方式打开. 历史只保存有限的应用元数据与结果, 不保存安装包内容或来源 URI, 错误中的路径会脱敏. 插件私有存储不参与备份. 删除历史不会卸载对应应用或删除来源."
+    "安装包来源以只读方式打开. 历史只保存有限的应用元数据与结果, 不保存安装包内容或来源 URI, 错误中的路径会脱敏. 插件私有存储不参与备份. 删除历史不会卸载对应应用或删除来源.",
+    "授予选项请求系统可授予的权限, 也可能包含 Android 14 的 USE_FULL_SCREEN_INTENT 等安装器可改变的 app-op. 不保证全部声明权限, 不授予无障碍, 悬浮窗或任意签名权限. restricted/system-fixed/policy-fixed 限制仍有效, 不额外设置 restricted 权限 allowlist 标志."
   ],
   "p_security_permission": "正式发布后, 请只从官方 [Releases]({{ repo_url }}/releases) 页面或 AutoJs6 插件中心获取插件. 来源不明的安装包即使版本号相同, 也可能无法通过宿主校验或带来风险.",
   "h3_plugin_interface": "插件接口",
@@ -115,5 +119,7 @@
   "example_default": "true 设本插件为默认, false 清除本插件默认项; 受 ROM 限制.",
   "example_v2": "V2 示例需要宿主构建 {{ v2_host_version_code }}. Dhizuku 需要已激活所有者, 通知模式需要通知许可.",
   "example_persistent": "Root 持久模式要求设备支持用户 0 的 system UID 访问; 保留竞争策略.",
-  "p_v2_requirements": "Dhizuku, 通知栏安装和持久默认安装器的脚本选项需要 AutoJs6 {{ required_host_version_name }} 构建 {{ v2_host_version_code }} 或以上及 installer V2 契约. 基础宿主接入仍支持构建 {{ required_host_version_code }}, V1 脚本方法从构建 {{ script_host_version_code }} 起可用."
+  "p_v2_requirements": "Dhizuku, 通知栏安装和持久默认安装器的脚本选项需要 AutoJs6 {{ required_host_version_name }} 构建 {{ v2_host_version_code }} 或以上及 installer V2 契约. 基础宿主接入仍支持构建 {{ required_host_version_code }}, V1 脚本方法从构建 {{ script_host_version_code }} 起可用.",
+  "p_v3_requirements": "高级脚本选项需要 AutoJs6 构建 {{ v3_host_version_code }}+ 并协商 V3 与 `advanced-install-options`. 省略字段保持原行为, 显式 `false`/`none` 仍需对应支持. 本地实现不表示已经正式发布或全部 P9 条目完成.",
+  "example_v3": "高级示例: 需要宿主 V3, Root 及这些元数据字段所需的 API 33+; 调用函数才开始安装"
 }

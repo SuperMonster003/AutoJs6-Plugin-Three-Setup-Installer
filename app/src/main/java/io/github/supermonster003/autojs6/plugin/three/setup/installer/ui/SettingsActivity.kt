@@ -105,6 +105,31 @@ class SettingsActivity : SettingsPageActivity() {
             }
         }
         flag(R.string.install_delete_source, defaults.options.deleteSource, "settings-delete-source") { defaults.copy(options = defaults.options.copy(deleteSource = it)) }
+        flag(R.string.advanced_grant_permissions, defaults.options.grantAllRequestedPermissions, "settings-grant-permissions") {
+            defaults.copy(options = defaults.options.copy(grantAllRequestedPermissions = it))
+        }
+        flag(R.string.advanced_update_ownership, defaults.options.requestUpdateOwnership, "settings-update-ownership") {
+            defaults.copy(options = defaults.options.copy(requestUpdateOwnership = it))
+        }
+        row(R.string.advanced_dexopt, getString(AdvancedInstallUi.dexopt.first { it.first == defaults.options.dexopt }.second), tag = "settings-dexopt") {
+            val choices = AdvancedInstallUi.dexopt
+            choose(R.string.advanced_dexopt, choices.map { it.second }, choices.indexOfFirst { it.first == defaults.options.dexopt }) {
+                save(defaults.copy(options = defaults.options.copy(dexopt = choices[it].first)))
+            }
+        }
+        row(R.string.advanced_install_reason, getString(AdvancedInstallUi.reasons.first { it.first == defaults.options.installReason }.second), tag = "settings-install-reason") {
+            val choices = AdvancedInstallUi.reasons
+            choose(R.string.advanced_install_reason, choices.map { it.second }, choices.indexOfFirst { it.first == defaults.options.installReason }) {
+                save(defaults.copy(options = defaults.options.copy(installReason = choices[it].first)))
+            }
+        }
+        row(R.string.advanced_package_source, getString(AdvancedInstallUi.sources.first { it.first == defaults.options.packageSource }.second), tag = "settings-package-source") {
+            val choices = AdvancedInstallUi.sources
+            choose(R.string.advanced_package_source, choices.map { it.second }, choices.indexOfFirst { it.first == defaults.options.packageSource }) {
+                save(defaults.copy(options = defaults.options.copy(packageSource = choices[it].first)))
+            }
+        }
+        content.addView(settingsUi.caption(getString(R.string.advanced_sdk_note)))
         content.addView(settingsUi.caption(getString(R.string.settings_defaults_note)))
         content.addView(settingsUi.group(R.string.settings_notifications))
         flag(R.string.settings_progress_notifications, defaults.progressNotifications, "settings-notifications") { defaults.copy(progressNotifications = it) }

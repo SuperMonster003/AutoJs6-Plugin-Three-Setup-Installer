@@ -63,7 +63,9 @@ class InstallerPreferencesTest {
 
     @Test fun optionsSerializeWithoutLosingInstallerFlagsOrTargetUser() {
         val options = InstallOptions(allowDowngrade = true, allowTestOnly = true, bypassLowTargetSdk = true,
-            installer = "com.android.shell", user = "10", deleteSource = true, continueOnError = false)
+            installer = "com.android.shell", user = "10", deleteSource = true, continueOnError = false,
+            grantAllRequestedPermissions = true, requestUpdateOwnership = true, dexopt = "speed-profile",
+            installReason = "user", packageSource = "downloaded-file")
         assertEquals(options, InstallOptions.parse(InstallerPreferences.optionsDocument(options), "defaults"))
         assertFalse(InstallerPreferences.optionsDocument(InstallOptions()).has(InstallerContract.FIELD_INSTALLER))
     }

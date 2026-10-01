@@ -6,6 +6,8 @@ internal object PrivilegedOptions {
     const val INSTALL_ALLOW_TEST = 0x4
     const val INSTALL_ALL_USERS = 0x40
     const val INSTALL_REQUEST_DOWNGRADE = 0x80
+    // Named INSTALL_GRANT_RUNTIME_PERMISSIONS on older AOSP releases; the bit is unchanged.
+    const val INSTALL_GRANT_ALL_REQUESTED_PERMISSIONS = 0x100
     const val INSTALL_ALLOW_DOWNGRADE = 0x100000
     const val INSTALL_BYPASS_LOW_TARGET_SDK_BLOCK = 0x1000000
     const val DELETE_KEEP_DATA = 0x1
@@ -15,15 +17,36 @@ internal object PrivilegedOptions {
     const val FLAGS = "flags"
     const val SIZE = "size"
     const val PACKAGE_NAME = "packageName"
+    const val REQUEST_UPDATE_OWNERSHIP = "requestUpdateOwnership"
+    const val INSTALL_REASON = "installReason"
+    const val PACKAGE_SOURCE = "packageSource"
+    const val MAX_POST_INSTALL_TIMEOUT = 120_000L
     const val DEFAULT_REQUIRES_CLEAR = -1
     // Exact private Binder marker. Only a verified ENOSPC/EDQUOT cause may produce it.
     const val ERROR_INSUFFICIENT_STORAGE = "THREE_SETUP_INSTALLER:INSUFFICIENT_STORAGE"
 
     fun validateFlags(flags: Int, sdk: Int) {
         val allowed = INSTALL_REPLACE_EXISTING or INSTALL_ALLOW_TEST or INSTALL_ALL_USERS or
-            INSTALL_REQUEST_DOWNGRADE or INSTALL_ALLOW_DOWNGRADE or
+            INSTALL_REQUEST_DOWNGRADE or INSTALL_ALLOW_DOWNGRADE or INSTALL_GRANT_ALL_REQUESTED_PERMISSIONS or
             (if (sdk >= 34) INSTALL_BYPASS_LOW_TARGET_SDK_BLOCK else 0)
         require(flags and allowed.inv() == 0) { "Unsupported install flags" }
+    }
+
+    fun validateMetadata(sdk: Int, requestUpdateOwnership: Boolean, installReason: Int?, packageSource: Int?) {
+        require(!requestUpdateOwnership || sdk >= 34) { "Update ownership requires Android 14 or newer" }
+        if (installReason != null) {
+            require(sdk >= 26) { "Install reason requires Android 8 or newer" }
+            require(installReason in 0..4) { "Unsupported install reason" }
+        }
+        if (packageSource != null) {
+            require(sdk >= 33) { "Package source requires Android 13 or newer" }
+            require(packageSource in 0..4) { "Unsupported package source" }
+        }
+    }
+
+    fun validateDexopt(filter: String, sdk: Int) {
+        require(filter in setOf("none", "verify", "speed-profile", "speed")) { "Unsupported compilation filter" }
+        require(filter != "verify" || sdk >= 26) { "The verify compilation filter requires Android 8 or newer" }
     }
 
     fun validateName(name: String) {

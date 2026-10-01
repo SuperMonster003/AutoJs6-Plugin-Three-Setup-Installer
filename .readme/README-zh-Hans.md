@@ -52,7 +52,7 @@
 
 ******
 
-1.1.0 已实现下述安装, 应用管理与脚本功能. 官方 GitHub Release 和插件中心索引准入仍待完成. 宿主接入需要 AutoJs6 >= 6.8.0 (5299), `installer` 脚本 API 需要构建 5300 或更高版本. 设备覆盖与剩余验收记录在 [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md) 中. Dhizuku, 通知栏安装和持久默认安装器的脚本选项需要 AutoJs6 6.8.0 构建 5307 或以上及 installer V2 契约. 基础宿主接入仍支持构建 5299, V1 脚本方法从构建 5300 起可用.
+1.2.0 已实现下述安装, 应用管理与脚本功能. 官方 GitHub Release 和插件中心索引准入仍待完成. 宿主接入需要 AutoJs6 >= 6.8.0 (5299), `installer` 脚本 API 需要构建 5300 或更高版本. 设备覆盖与剩余验收记录在 [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md) 中. Dhizuku, 通知栏安装和持久默认安装器的脚本选项需要 AutoJs6 6.8.0 构建 5307 或以上及 installer V2 契约. 基础宿主接入仍支持构建 5299, V1 脚本方法从构建 5300 起可用.
 
 ******
 
@@ -60,7 +60,7 @@
 
 ******
 
-1.1.0 已实现的功能:
+1.2.0 已实现的功能:
 
 - 安装包格式: `.apk`, `.apks`, `.xapk`, `.apkm`, `.apkz` 以及包含 APK 的 ZIP 压缩包; 分包按设备选择; `.aab` 文件只识别与说明, 不安装.
 - `none` 使用 Android 确认. 新配置的 `auto` 按 `shizuku -> root -> dhizuku -> none` 选择可用方式, 可调整顺序和启用状态. 已保存的旧三项配置保留原相对顺序及启用选择, Dhizuku 插入 `none` 前但默认禁用. 显式指定的授权方式不回退.
@@ -77,6 +77,8 @@
 - 设置保存授权顺序与启用状态, 安装选项及通知偏好. 首页/外部安装默认使用 `dialog`, 可显式选择 `auto`, `silent` 或 `notification`. 宿主界面安装入口使用 `dialog`; 脚本保留显式选项且默认仍为 `auto`. 修改在确认后保存.
 - 设置中提供关于页面和十语言内置发行历史. 手动更新检查访问插件的 GitHub Releases API, 间隔 12 小时, 支持缓存结果与忽略版本管理. 发布页在浏览器中打开, 不会自动下载或安装更新.
 - `dhizuku`: 需要 Android 8.0 (API 26)+, 已激活的 Dhizuku 设备/资料所有者, 并向本插件授权. 只操作当前所有者用户, 安装者归属使用真实所有者包名. 不提供 shell/root 的降级, 测试包, 绕过低 targetSdk, 其他用户, 任意安装者归属或卸载保留数据选项. 插件不自动配置所有者.
+- 高级安装选项: `grantAllRequestedPermissions`, `requestUpdateOwnership`, `dexopt` (`none`/`verify`/`speed-profile`/`speed`), `installReason` 和 `packageSource`. 平台或授权方式不支持时明确拒绝, 不静默忽略. none 不追加手动编译, 也不关闭 Android 自身的编译.
+- 成功结果可报告读回的 `updateOwner` 和 `dexopt`. null 表示 Android 未向当前调用身份返回 owner, 可能没有 owner 或受可见性过滤, 不能证明全局不存在; 读取失败省略字段并写入 notes. DexOpt 状态为 accepted/failed/cancelled/timeout/unavailable/unknown; accepted 包含系统跳过, 不证明实际执行编译. 附加步骤失败不改变已经确认的安装成功.
 
 ******
 
@@ -159,11 +161,21 @@ let installViaDhizuku = source => installer.install(source, {
 let setPersistentDefaultChosen = enabled => installer.setDefault(enabled, {
     authorizer: 'root', mode: 'persistent',
 });
+
+// 高级示例: 需要宿主 V3, Root 及这些元数据字段所需的 API 33+; 调用函数才开始安装
+let installAdvancedChosen = source => installer.installAsync(source, {
+    authorizer: 'root', interaction: 'dialog', deleteSource: false,
+    grantAllRequestedPermissions: false, requestUpdateOwnership: false,
+    dexopt: 'speed-profile', installReason: 'user', packageSource: 'local-file',
+}).then(result => console.log(result.ok, result.updateOwner, result.dexopt, result.notes))
+    .catch(error => console.error(error.code, error.systemMessage));
 ```
 
 来源可为路径, `file://` 或有读取权限的 `content://` URI. 数组表示独立批量项目, `{ splits: [...] }` 表示一个应用的分包. `session(...)` 创建后立即开始, 返回对象支持 `cancel()` 和 `wait()`. 同步调用可能抛出 `InstallerError`, 且不能在 UI 线程执行. 读取 `installer.status`, 创建 `installer.session(...)` 和调用 `session.wait()` 同样受此限制. UI 线程请使用 Async 方法, 或在脚本工作线程执行同步操作. 会话对象只能在创建它的脚本线程使用. 请处理 Promise 拒绝, 并逐项检查批量结果的 `ok` 与 `error`. 插件缺失或不兼容时报告 `PLUGIN_UNAVAILABLE`. `setDefault` 返回是否达到请求状态, 清除默认项成功也返回 true. `app.uninstall` 仍是宿主的系统卸载快捷入口, 需要特权选项时使用 `installer.uninstall`. 完整选项与事件见 [installer API 文档](https://docs.autojs6.com/#/installer).
 
 Dhizuku, 通知栏安装和持久默认安装器的脚本选项需要 AutoJs6 6.8.0 构建 5307 或以上及 installer V2 契约. 基础宿主接入仍支持构建 5299, V1 脚本方法从构建 5300 起可用.
+
+高级脚本选项需要 AutoJs6 构建 5308+ 并协商 V3 与 `advanced-install-options`. 省略字段保持原行为, 显式 `false`/`none` 仍需对应支持. 本地实现不表示已经正式发布或全部 P9 条目完成.
 
 ******
 
@@ -177,6 +189,7 @@ Dhizuku, 通知栏安装和持久默认安装器的脚本选项需要 AutoJs6 6.
 - 绕过低 targetSdk 拦截自 Android 14 (API 34) 起存在; 更早的系统忽略该选项并在结果中注明.
 - 默认安装器页面区分普通偏好与持久化策略. 普通偏好通过 Shizuku 或 Root 设置, 仍受 ROM 限制. Dhizuku 的持久化策略支持 API 26-33; API 34+ 因无法核验所有者回调, 在修改前拒绝. Root 仅在受支持设备的用户 0 中使用 system UID 辅助进程. 不覆盖竞争的持久策略. `persistentConfigured` 仅记录此前成功配置的回执, 不是当前系统策略的证明; 被动查询只报告 `preferred` 或 `none`.
 - `dhizuku`: 需要 Android 8.0 (API 26)+, 已激活的 Dhizuku 设备/资料所有者, 并向本插件授权. 只操作当前所有者用户, 安装者归属使用真实所有者包名. 不提供 shell/root 的降级, 测试包, 绕过低 targetSdk, 其他用户, 任意安装者归属或卸载保留数据选项. 插件不自动配置所有者.
+- 权限授予请求及非 none 的 DexOpt 需要 Shizuku/Root, verify 需要 API 26+. 安装原因需要 API 26+, 来源标签需要 API 33+, 请求更新所有权需要 API 34+. 所有权仅能在初装时启用, 更新或其他用户已有该包时可能被忽略; false 不撤销既有 owner.
 
 ******
 
@@ -202,11 +215,12 @@ Dhizuku, 通知栏安装和持久默认安装器的脚本选项需要 AutoJs6 6.
 插件遵循明确的边界:
 
 - Binder 入口受 `org.autojs.permission.PLUGIN` 签名权限保护, 只有 AutoJs6 能够访问; 外部 "打开方式" 入口只接受安装包文件, 从不运行脚本.
-- REQUEST_INSTALL_PACKAGES 和 REQUEST_DELETE_PACKAGES 用于 Android 确认. QUERY_ALL_PACKAGES 用于已安装应用管理, 版本与签名比对以及默认安装器检测.
+- REQUEST_INSTALL_PACKAGES 和 REQUEST_DELETE_PACKAGES 用于 Android 确认. QUERY_ALL_PACKAGES 用于已安装应用管理, 版本与签名比对以及默认安装器检测. 普通权限 ENFORCE_UPDATE_OWNERSHIP 用于显式请求更新所有权, 不表示必然获得 owner.
 - FOREGROUND_SERVICE 和 FOREGROUND_SERVICE_DATA_SYNC 支持安装工作及临时来源访问; POST_NOTIFICATIONS 用于通知. `notification` 交互要求通知与安装渠道可用, 其它交互模式允许缺少通知许可.
 - Shizuku, Root 与 Dhizuku 用于请求的操作. 插件不会自动配置设备/资料所有者. 持久默认规则只通过请求的设置或清除操作修改; 不上传安装包.
 - 安装, 检查, 历史和应用管理均可离线使用. INTERNET 仅在用户手动检查版本时访问插件固定的 GitHub Releases API, 间隔 12 小时. 不后台检查更新, 不上传安装包.
 - 安装包来源以只读方式打开. 历史只保存有限的应用元数据与结果, 不保存安装包内容或来源 URI, 错误中的路径会脱敏. 插件私有存储不参与备份. 删除历史不会卸载对应应用或删除来源.
+- 授予选项请求系统可授予的权限, 也可能包含 Android 14 的 USE_FULL_SCREEN_INTENT 等安装器可改变的 app-op. 不保证全部声明权限, 不授予无障碍, 悬浮窗或任意签名权限. restricted/system-fixed/policy-fixed 限制仍有效, 不额外设置 restricted 权限 allowlist 标志.
 
 正式发布后, 请只从官方 [Releases](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/releases) 页面或 AutoJs6 插件中心获取插件. 来源不明的安装包即使版本号相同, 也可能无法通过宿主校验或带来风险.
 
@@ -247,6 +261,18 @@ minimum host build: 5299 (6.8.0)
 ### 发行历史
 
 ******
+
+#### v1.2.0
+
+_2026/10/02_
+
+- `新增` 高级安装选项: `grantAllRequestedPermissions`, `requestUpdateOwnership`, `dexopt` (`none`/`verify`/`speed-profile`/`speed`), `installReason` 和 `packageSource`. 平台或授权方式不支持时明确拒绝, 不静默忽略. none 不追加手动编译, 也不关闭 Android 自身的编译.
+- `优化` 高级脚本选项需要 AutoJs6 构建 5308+ 并协商 V3 与 `advanced-install-options`. 省略字段保持原行为, 显式 `false`/`none` 仍需对应支持. 本地实现不表示已经正式发布或全部 P9 条目完成.
+- `优化` 成功结果可报告读回的 `updateOwner` 和 `dexopt`. null 表示 Android 未向当前调用身份返回 owner, 可能没有 owner 或受可见性过滤, 不能证明全局不存在; 读取失败省略字段并写入 notes. DexOpt 状态为 accepted/failed/cancelled/timeout/unavailable/unknown; accepted 包含系统跳过, 不证明实际执行编译. 附加步骤失败不改变已经确认的安装成功.
+- `优化` 权限授予请求及非 none 的 DexOpt 需要 Shizuku/Root, verify 需要 API 26+. 安装原因需要 API 26+, 来源标签需要 API 33+, 请求更新所有权需要 API 34+. 所有权仅能在初装时启用, 更新或其他用户已有该包时可能被忽略; false 不撤销既有 owner.
+- `优化` 授予选项请求系统可授予的权限, 也可能包含 Android 14 的 USE_FULL_SCREEN_INTENT 等安装器可改变的 app-op. 不保证全部声明权限, 不授予无障碍, 悬浮窗或任意签名权限. restricted/system-fixed/policy-fixed 限制仍有效, 不额外设置 restricted 权限 allowlist 标志.
+- `依赖` 升级 installer-api.aar 至契约 V3 (MPL 2.0), 保留 V1/V2 与全部 11 个 AIDL 事务; 高级脚本选项需要宿主构建 5308+
+- `依赖` 升级共享安装包解析器 (MPL 2.0), 核验真实清单根元素及 sharedUserId, 拒绝有歧义的输入
 
 #### v1.1.0
 

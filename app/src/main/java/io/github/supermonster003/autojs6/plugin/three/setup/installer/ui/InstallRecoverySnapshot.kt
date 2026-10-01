@@ -28,7 +28,7 @@ internal data class InstallRecoverySnapshot(
     }
     data class Item(val label: String, val packageName: String?, val versionName: String?, val versionCode: Long?,
         val previousVersionCode: Long?, val user: String, val deleteRequested: Boolean, val ok: Boolean?,
-        val sourceDeleted: Boolean?, val failure: Failure?)
+        val sourceDeleted: Boolean?, val failure: Failure?, val followUpPending: Boolean = false)
 
     fun display(): InstallPresentation.Snapshot {
         val interrupted = !terminal
@@ -45,7 +45,7 @@ internal data class InstallRecoverySnapshot(
             }
             InstallPresentation.Item(item.label,
                 stage = when (item.ok) { true -> InstallerContract.STAGE_COMPLETED; false -> InstallerContract.STAGE_FAILED; null -> InstallerContract.STAGE_CANCELLED },
-                result = result, options = InstallOptions(user = item.user, deleteSource = item.deleteRequested))
+                result = result, options = InstallOptions(user = item.user, deleteSource = item.deleteRequested), followUpPending = item.followUpPending)
         }
         return InstallPresentation.Snapshot(revision,
             if (interrupted) InstallerContract.STAGE_CANCELLED else stage, index, 0f, restoredItems, null, true,
@@ -92,7 +92,7 @@ internal data class InstallRecoverySnapshot(
                     options.user, options.deleteSource, ok, result?.get(InstallerContract.FIELD_SOURCE_DELETED)?.asBoolean,
                     if (ok == false) failure(error?.get(InstallerContract.FIELD_ERROR_CODE)?.asString,
                         error?.get(InstallerContract.FIELD_ERROR_STATUS)?.asInt,
-                        error?.get(InstallerContract.FIELD_ERROR_SYSTEM_MESSAGE)?.asString) else null)
+                        error?.get(InstallerContract.FIELD_ERROR_SYSTEM_MESSAGE)?.asString) else null, item.followUpPending)
             }
             return InstallRecoverySnapshot(token, state.revision, now,
                 now + remainingMillis.coerceIn(1, if (state.terminal) RETENTION_MILLIS else MAX_TTL_MILLIS),
@@ -115,6 +115,7 @@ internal data class InstallRecoverySnapshot(
                 require(error.platformCode == null || PLATFORM.matches(error.platformCode))
             }
             value.items.forEach { item ->
+                require(!item.followUpPending || item.ok == true)
                 require(item.label.length <= 96 && text(item.label, 96) == item.label)
                 require(item.packageName == null || item.packageName.length <= 255 && PACKAGE.matches(item.packageName))
                 require(item.versionName == null || item.versionName.length <= 64 && text(item.versionName, 64) == item.versionName)

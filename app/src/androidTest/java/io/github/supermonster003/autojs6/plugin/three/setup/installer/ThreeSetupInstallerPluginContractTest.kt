@@ -148,14 +148,15 @@ class ThreeSetupInstallerPluginContractTest {
         // The old key remains 1 so installed V1 hosts can still discover the plugin. New hosts
         // negotiate the separate maximum instead of unconditionally sending the newest version.
         assertEquals(1, capabilities.getInt(InstallerCapabilityKeys.CONTRACT_VERSION))
-        assertEquals(2, capabilities.getInt(InstallerCapabilityKeys.MAX_CONTRACT_VERSION))
+        assertEquals(3, capabilities.getInt(InstallerCapabilityKeys.MAX_CONTRACT_VERSION))
         assertEquals(InstallerContract.AUTHORIZERS, capabilities.getStringArray(InstallerCapabilityKeys.AUTHORIZERS)?.toList())
         assertEquals(InstallerContract.MAX_BATCH_SOURCES, capabilities.getInt(InstallerCapabilityKeys.MAX_BATCH))
         assertEquals(InstallerContract.MAX_SPLITS_PER_PACKAGE, capabilities.getInt(InstallerCapabilityKeys.MAX_SPLITS))
         assertEquals(setOf(InstallerCapabilityKeys.FEATURE_BATCH, InstallerCapabilityKeys.FEATURE_SPLITS,
             InstallerCapabilityKeys.FEATURE_INSPECT, InstallerCapabilityKeys.FEATURE_USERS, InstallerCapabilityKeys.FEATURE_SILENT_UNINSTALL,
             InstallerCapabilityKeys.FEATURE_DELETE_SOURCE, InstallerCapabilityKeys.FEATURE_DEFAULT_INSTALLER,
-            InstallerCapabilityKeys.FEATURE_NOTIFICATION_INSTALL, InstallerCapabilityKeys.FEATURE_PERSISTENT_DEFAULT_INSTALLER),
+            InstallerCapabilityKeys.FEATURE_NOTIFICATION_INSTALL, InstallerCapabilityKeys.FEATURE_PERSISTENT_DEFAULT_INSTALLER,
+            InstallerCapabilityKeys.FEATURE_ADVANCED_INSTALL_OPTIONS),
             capabilities.getStringArray(InstallerCapabilityKeys.FEATURES_KEY)?.toSet())
     }
 

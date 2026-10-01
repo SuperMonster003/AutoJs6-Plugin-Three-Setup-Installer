@@ -235,7 +235,7 @@ runtime/api/augment/installer/          Installer.kt (AugmentableKey("installer"
 
 建议会话切分: P0 一次 (骨架 + spike); P1 两到三次 (共享 AAR 为一次; 契约 + 客户端 + 路由为一次; 删除旧安装器 + 调用方改造 + 文档为一次); P2 两到三次 (来源与授权; 安装引擎; 卸载 / 批量 / 路由); P3 一到两次; P4 两次 (install / session / errors; uninstall / inspect / authorizer / setDefault / 示例); P5 一到两次; P6 一到两次; P7 一次; P8 两次; P9 两到三次.
 
-当前进度 (2026-10-02): P0-P6原条目已完成所列范围验收. 本轮补齐API 24应用Root与同一Sony API 33 Shizuku的安装选项六格矩阵, Samsung/API 36证明实际低targetSdk拒绝及标志解除拒绝; XQ-AT72默认页/实际Files/取消/解锁通过且保留四条原插件最近使用. P6.3原设备表完整, Redmi实际Files由系统安装器接管等ROM限制作为实测结果保留, 不记为插件确认成功. 既有特权恢复API/元数据, API 24大字号/系统多窗口及未专项ColorOS边界仍见证据. P7.1/P7.2和P7.3本地构建检查已完成; 下一步仅剩P7.3远端仓库/tag/Release/官方索引/宿主推送, 当前仍仅本地提交, 不提前进入P8/P9.
+当前进度 (2026-10-02): P0-P6和P8原条目已完成所列范围验收, P7远端发布继续按维护者指示延迟. P9高级安装选项已实施, 其余原条目继续按原结构推进. 既有ROM限制和证据范围保持, 不把系统限制或未覆盖组合写成成功. 所有仓库仅本地提交, 不推送, 创建标签或发布; 最新实现与验证见文末会话记录及各阶段证据.
 
 ---
 
@@ -534,7 +534,7 @@ runtime/api/augment/installer/          Installer.kt (AugmentableKey("installer"
 
 ## P9: 1.2.0 (高级安装选项)
 
-- [ ] (插件) `grantAllRequestedPermissions` (`INSTALL_GRANT_ALL_REQUESTED_PERMISSIONS`, 特权), `requestUpdateOwnership` (API 34+ `setRequestUpdateOwnership`), `dexopt` (`pm compile` 或 `performDexOptMode`, 特权), 安装原因 / 包来源 (`setInstallReason`, `setPackageSource`).
+- [x] (插件) `grantAllRequestedPermissions` (`INSTALL_GRANT_ALL_REQUESTED_PERMISSIONS`, 特权), `requestUpdateOwnership` (API 34+ `setRequestUpdateOwnership`), `dexopt` (`pm compile` 或 `performDexOptMode`, 特权), 安装原因 / 包来源 (`setInstallReason`, `setPackageSource`).
 - [ ] (插件) 签名门禁 (签名不一致 / 未知签名时默认拒绝并可在对话框放行), 包名 / SharedUID 黑名单 (设置页), 权限预览 (对话框展开 `uses-permission` 列表, 复用共享 AAR 清单解码).
 - [ ] (插件) 按来源的配置文件 (宿主 / 脚本 / 外部入口 / 指定包名前缀 -> 默认授权方式与选项), 设置页管理.
 - [ ] (宿主 + 文档) 脚本选项与文档 / d.ts 同步; 契约版本 3.
@@ -1134,3 +1134,10 @@ if (!installer.isDefault()) installer.setDefault(true);
 - API24/31/36同包独立契约各2/2, 包括V2新增事务的非宿主拒绝; 最终R8的Root主入口六次往返与真实宿主UID的Dhizuku脚本实际安装/卸载/持久往返通过. 通知完整实装与生命周期按各自固定Debug版本记载, 最后Sony保数据交付同包; 不扩大成所有功能/ROM的最终R8全矩阵.
 - 用户设备原默认/历史/授权状态核验保护, 新三星按新基线配置宿主/插件并移除临时测试包, 专用自建AVD已关闭, 用户AVD保持. 主插件build52-57六笔本地提交, 最终计数57且工作区干净. 关联仓库各自提交, 其他会话与Ace既有文件保留. 详情见 docs/dev/p8-release-evidence.md.
 - P8原五项完成, 本轮不进入繁杂的P9四项实现. 下一步从原P9高级选项/契约V3继续; P7远端发布仍按维护者指示延迟. 当前没有新的设备, 关键决策或手动操作待维护者处理.
+
+### 2026-10-02 (P9 高级选项与已确认安装结果)
+
+- 原P9第一项完成, 不新增, 分拆或丢弃路线图条目. 五个选项接入安装对话框/设置和宿主V3, V1/V2及原公开AIDL顺序兼容. 不支持的显式metadata或有效特权请求在创建平台session前拒绝, 不静默忽略. 所有权只报告实际读取, 不承诺必然获授或把false当撤销.
+- 额外DexOpt仅对已成功安装的单包发白名单argv, 不强制重编译, 清profile或自动重试. API34+检查ART最终状态, 旧Success包含跳过的可能. 先保存已确认安装, 再执行可选工作; 超时/取消不改写安装成功, 进程恢复不重放编译或来源删除.
+- API24 Root和API33 Root/Shizuku三组各4/4, 包括真实权限前后变化, 编译调用及安装后零预算超时. API35 Shizuku/shell高级用例2/2, 另签名查询/写前守卫3/3和V3接口14/14. API35实际ART PERFORMED; 特权owner为com.android.shell且普通应用查询为null, 测试改为独立系统dump核对, 保留首轮跨身份错误断言日志. 空值文案同步为当前身份未获可见owner, 不证明全局不存在.
+- 高级选项独立提交树已剥离尚在验证的签名策略, 生产/androidTest Kotlin和JVM通过. 证据见 docs/dev/p9-advanced-options-evidence.md 与 docs/dev/p9-advanced-device-evidence.md. 本项按build58本地提交; P9签名/黑名单/预览及跨库最终验收继续进行, 按来源配置文件保留未完成. 最终签名Release与交付核验另行记录.

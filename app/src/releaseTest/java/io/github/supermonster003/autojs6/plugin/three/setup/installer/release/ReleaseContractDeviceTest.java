@@ -161,11 +161,11 @@ public final class ReleaseContractDeviceTest {
         Objects.requireNonNull(capabilities, "Capabilities are missing");
         equal(5299L, capabilities.getLong("requiresHostVersion"), "Minimum host build");
         equal(1, capabilities.getInt("installerContractVersion"), "Installer contract version");
-        equal(2, capabilities.getInt("installerMaxContractVersion"), "Maximum installer contract version");
+        equal(3, capabilities.getInt("installerMaxContractVersion"), "Maximum installer contract version");
         check(Arrays.equals(new String[]{"none", "shizuku", "root", "dhizuku"}, capabilities.getStringArray("installerAuthorizers")), "Authorizers differ from contract V2");
         equal(32, capabilities.getInt("installerMaxBatch"), "Maximum batch size");
         equal(64, capabilities.getInt("installerMaxSplits"), "Maximum split count");
-        equal(new HashSet<>(Arrays.asList("batch", "splits", "inspect", "users", "silent-uninstall", "delete-source", "default-installer", "persistent-default-installer", "notification-install")),
+        equal(new HashSet<>(Arrays.asList("batch", "splits", "inspect", "users", "silent-uninstall", "delete-source", "default-installer", "persistent-default-installer", "notification-install", "advanced-install-options")),
                 new HashSet<>(Arrays.asList(Objects.requireNonNull(capabilities.getStringArray("installerFeatures")))), "Installer features");
     }
 
