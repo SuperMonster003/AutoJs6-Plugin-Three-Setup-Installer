@@ -129,6 +129,7 @@ class InstallDialogDeviceTest {
                 }.apply { start() }
                 waitForView(scenario, InstallDialogActivity.TAG_CONFIRM)
                 scenario.onActivity { it.window.decorView.findViewWithTag<View>(InstallDialogActivity.TAG_CANCEL).performClick() }
+                record.cancel()
                 assertTrue(done.await(5, TimeUnit.SECONDS))
                 assertEquals(InstallerErrorCodes.USER_CANCELLED, failure.get().code)
                 assertEquals(0, cancelCallbacks.get())
@@ -228,6 +229,54 @@ class InstallDialogDeviceTest {
                 waitUntil { scenario.state == Lifecycle.State.DESTROYED }
             }
         } finally { record.close(); worker?.interrupt(); worker?.join(5_000); file.delete() }
+    }
+
+    @Test fun cancellationAfterApprovalReachesTheWorkerExactlyOnceBeforeThePromptIsCleared() {
+        unlocked()
+        val file = fixture()
+        val approved = CountDownLatch(1)
+        val releaseWorker = CountDownLatch(1)
+        val blockedOnce = AtomicBoolean()
+        val cancelled = AtomicBoolean()
+        val cancelCalls = AtomicInteger()
+        val record = InstallPresentation.create(context, request(), InstallPresentation.Callbacks(cancel = {
+            cancelCalls.incrementAndGet()
+            cancelled.set(true)
+        }))
+        val done = CountDownLatch(1)
+        val failure = AtomicReference<InstallFailure>()
+        var worker: Thread? = null
+        try {
+            ActivityScenario.launch<InstallDialogActivity>(record.activityIntent()).use { scenario ->
+                worker = Thread {
+                    try {
+                        record.confirm(0, prepared(file), target(), InstallOptions(), SystemClock.elapsedRealtime() + 20_000) {
+                            if (record.snapshot().prompt?.decision?.result() != null && blockedOnce.compareAndSet(false, true)) {
+                                approved.countDown()
+                                check(releaseWorker.await(8, TimeUnit.SECONDS)) { "The test did not release the approved worker" }
+                            }
+                            if (cancelled.get()) throw InstallFailure(InstallerErrorCodes.CANCELLED, "Execution cancelled after approval")
+                        }
+                    } catch (error: Throwable) { failure.set(InstallFailure.from(error)) }
+                    finally { done.countDown() }
+                }.apply { start() }
+                waitForView(scenario, InstallDialogActivity.TAG_CONFIRM)
+                scenario.onActivity { it.window.decorView.findViewWithTag<View>(InstallDialogActivity.TAG_CONFIRM).performClick() }
+                assertTrue(approved.await(5, TimeUnit.SECONDS))
+                assertNotNull(record.snapshot().prompt)
+                val cancellations = List(2) { Thread { record.cancel() } }
+                cancellations.forEach { it.start() }
+                cancellations.forEach { it.join(2_000); assertFalse("Cancellation must not wait for the blocked worker", it.isAlive) }
+                assertEquals(1, cancelCalls.get())
+                releaseWorker.countDown()
+                assertTrue(done.await(5, TimeUnit.SECONDS))
+                assertEquals(InstallerErrorCodes.CANCELLED, failure.get()?.code)
+                record.onFailed(requireNotNull(failure.get()))
+                waitForView(scenario, InstallDialogActivity.TAG_DONE)
+                scenario.onActivity { it.window.decorView.findViewWithTag<View>(InstallDialogActivity.TAG_DONE).performClick() }
+                waitUntil { scenario.state == Lifecycle.State.DESTROYED }
+            }
+        } finally { releaseWorker.countDown(); record.close(); worker?.interrupt(); worker?.join(5_000); file.delete() }
     }
 
     /** Injects a display result only; the referenced system package is never installed or opened. */

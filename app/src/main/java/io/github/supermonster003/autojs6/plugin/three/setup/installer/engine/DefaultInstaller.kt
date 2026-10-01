@@ -41,7 +41,7 @@ internal class DefaultInstaller(private val backend: Backend) {
 
 /** Cheap reads use public package queries. Only writes bind a privileged service. */
 internal class AndroidDefaultInstaller(context: Context,
-    private val component: ComponentName = ComponentName(context.packageName, "${context.packageName}.ui.PackageInstallerEntryActivity"),
+    private val component: ComponentName = ComponentName(context.packageName, "${context.packageName}.ui.ExternalInstallActivity"),
 ) : DefaultInstaller.Backend {
     private val context = context.applicationContext
     private val packages = context.packageManager

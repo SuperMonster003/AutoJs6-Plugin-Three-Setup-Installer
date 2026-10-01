@@ -29,7 +29,10 @@ internal class DescriptorInstallEnvironment private constructor(
     private val configuration: ((Int, PreparedPackage, InstallSession.Target, InstallRequest, Long, () -> Unit) -> InstallSession.Selection)?,
     private val preparedListener: (Int, PreparedPackage) -> Unit,
     private val installed: (Int, InstallOptions) -> InstallSession.SourceCleanup,
+    private val sourceLoader: ((SourceEntry, () -> Unit) -> SourceDescriptor)? = null,
 ) : InstallSession.Environment {
+    /** A lazily opened external source; prepare owns and closes its descriptor immediately. */
+    data class SourceDescriptor(val descriptor: ParcelFileDescriptor, val displayName: String, val size: Long)
     private val context = context.applicationContext
     private var directory: File? = null
     private val closed = AtomicBoolean()
@@ -58,13 +61,14 @@ internal class DescriptorInstallEnvironment private constructor(
         val parts = sources.map { source ->
             checkActive()
             val folder = File(item, "source-${source.descriptor}").apply { check(mkdir()) { "Cannot create source staging" } }
-            val descriptor = descriptors[source.descriptor]
-            val opened = descriptor.use {
-                PackageStaging.open(context, folder, PackageSource.Descriptor(it, source.displayName, source.size), stagingCancellation, checkActive = checkActive)
+            val loaded = sourceLoader?.invoke(source, checkActive)
+                ?: SourceDescriptor(descriptors[source.descriptor], source.displayName, source.size)
+            val opened = loaded.descriptor.use {
+                PackageStaging.open(context, folder, PackageSource.Descriptor(it, loaded.displayName, loaded.size), stagingCancellation, checkActive = checkActive)
             }
             openedSources.getOrPut(index) { mutableListOf() } += opened
             checkActive()
-            ArchiveOpener.open(opened.file, source.displayName, device, folder, prepareForInstallation = true, checkActive = checkActive)
+            ArchiveOpener.open(opened.file, loaded.displayName, device, folder, prepareForInstallation = true, checkActive = checkActive)
         }
         checkActive()
         return ArchiveOpener.combine(parts).also { preparedListener(index, it) }
@@ -107,6 +111,16 @@ internal class DescriptorInstallEnvironment private constructor(
     private fun remaining(): Long = (deadline - SystemClock.elapsedRealtime()).coerceIn(1, PrivilegedClient.BIND_TIMEOUT_MILLIS)
 
     companion object {
+        /** External sources are opened in each item's prepare phase, preserving batch failures. */
+        fun acquireSources(context: Context,
+            sourceLoader: (SourceEntry, () -> Unit) -> SourceDescriptor,
+            configuration: (Int, PreparedPackage, InstallSession.Target, InstallRequest, Long, () -> Unit) -> InstallSession.Selection,
+            preparedListener: (Int, PreparedPackage) -> Unit,
+            installed: (Int, InstallOptions) -> InstallSession.SourceCleanup,
+        ): DescriptorInstallEnvironment = DescriptorInstallEnvironment(context, emptyList(),
+            confirmation = { _, _, _, _ -> throw InstallFailure(InstallerErrorCodes.INTERNAL, "External confirmation configuration is missing") },
+            configuration = configuration, preparedListener = preparedListener, installed = installed, sourceLoader = sourceLoader)
+
         fun acquire(context: Context, descriptors: List<ParcelFileDescriptor>,
             configuration: ((Int, PreparedPackage, InstallSession.Target, InstallRequest, Long, () -> Unit) -> InstallSession.Selection)? = null,
             preparedListener: (Int, PreparedPackage) -> Unit = { _, _ -> },

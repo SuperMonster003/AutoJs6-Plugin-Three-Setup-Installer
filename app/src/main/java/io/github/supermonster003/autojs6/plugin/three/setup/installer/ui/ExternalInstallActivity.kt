@@ -1,0 +1,189 @@
+package io.github.supermonster003.autojs6.plugin.three.setup.installer.ui
+
+import android.app.Activity
+import android.content.Context
+import android.os.Bundle
+import android.os.SystemClock
+import com.google.gson.JsonObject
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.engine.*
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.source.ExternalSources
+import org.autojs.plugin.installer.api.InstallerContract
+import org.autojs.plugin.installer.api.InstallerErrorCodes
+import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledThreadPoolExecutor
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
+
+/** External input is limited to package URIs. The visible dialog owns the forwarded URI grants. */
+class ExternalInstallActivity : Activity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        try {
+            if (savedInstanceState == null) ExternalInstaller.start(this, ExternalSources.fromIntent(intent))
+        } catch (failure: Exception) {
+            ExternalInstaller.showFailure(this, InstallFailure.from(failure))
+        } finally { finish() }
+    }
+}
+
+/** Defaults use the same request schema that the future settings page edits. */
+internal object InstallDefaults {
+    fun options(context: Context): InstallOptions = runCatching {
+        val json = context.getSharedPreferences("installer_settings", Context.MODE_PRIVATE).getString("default_options", null)
+        if (json == null) InstallOptions() else InstallOptions.parse(RequestDocuments.parseObject(json, "installation defaults"), "installation defaults")
+    }.getOrDefault(InstallOptions())
+}
+
+internal object ExternalInstaller {
+    private val workers = Executors.newFixedThreadPool(InstallerContract.MAX_CONCURRENT_SESSIONS) { Thread(it, "external-install").apply { isDaemon = true } }
+    private val sourceDeadlines = ScheduledThreadPoolExecutor(1) { Thread(it, "external-source-deadline").apply { isDaemon = true } }
+        .apply { removeOnCancelPolicy = true }
+    private val sourceCancellations = Executors.newFixedThreadPool(InstallerContract.MAX_CONCURRENT_SESSIONS) {
+        Thread(it, "external-source-cancel").apply { isDaemon = true }
+    }
+    private val tasks = ConcurrentHashMap<String, Task>()
+
+    fun start(context: Context, sources: ExternalSources, options: InstallOptions = InstallDefaults.options(context)): String {
+        val slot = InstallSlots.acquire()
+        try {
+            val request = InstallRequest(UUID.randomUUID().toString(), sources.provisionalEntries(), InstallerContract.INTERACTION_DIALOG, options)
+            val task = Task(context.applicationContext, request, sources, slot)
+            tasks[task.presentation.token] = task
+            try {
+                InstallationUi.show(context, task.presentation, sources.grantIntent)
+                workers.execute(task::run)
+            } catch (failure: Exception) { task.dispose(); throw failure }
+            return task.presentation.token
+        } catch (failure: Throwable) { slot.close(); throw failure }
+    }
+
+    fun showFailure(context: Context, failure: InstallFailure) {
+        val request = InstallRequest(UUID.randomUUID().toString(), listOf(SourceEntry(0, 0, "package", -1)),
+            InstallerContract.INTERACTION_DIALOG, InstallOptions())
+        runCatching {
+            InstallPresentation.create(context, request, InstallPresentation.Callbacks(cancel = {})).apply {
+                onFailed(failure)
+                show()
+            }
+        }
+    }
+
+    private class Task(private val context: Context, private val request: InstallRequest,
+        private val sources: ExternalSources, private val slot: java.io.Closeable) {
+        private val cancelled = AtomicBoolean()
+        private val sourceCancellation = android.os.CancellationSignal()
+        private val sourceCancellationRequested = AtomicBoolean()
+        private val finished = AtomicBoolean()
+        private val disposed = AtomicBoolean()
+        @Volatile private var core: InstallSession? = null
+        @Volatile private var worker: Thread? = null
+        private val workerLock = Any()
+        private val deadline = SystemClock.elapsedRealtime() + request.options.timeoutMillis
+        val presentation = InstallPresentation.create(context, request, InstallPresentation.Callbacks(
+            cancel = ::cancel,
+            retry = { index ->
+                if (!finished.get() || disposed.get() || index !in sources.uris.indices) false else {
+                    start(context, sources.single(index), presentationOptions(index))
+                    true
+                }
+            },
+            close = ::dispose,
+        ), canDeleteSource = true)
+        // A blocked ContentResolver query/open does not return to checkActive on its own. This
+        // deadline cancels its signal without setting the core's user-cancellation flag or
+        // interrupting a pooled thread, so the reported failure remains TIMEOUT.
+        private val sourceDeadline = sourceDeadlines.schedule(::cancelSource,
+            (deadline - SystemClock.elapsedRealtime()).coerceAtLeast(0), TimeUnit.MILLISECONDS)
+
+        private fun presentationOptions(index: Int): InstallOptions =
+            presentation.snapshot().items.getOrNull(index)?.options ?: request.options
+
+        fun run() {
+            synchronized(workerLock) { worker = Thread.currentThread() }
+            try {
+                checkActive()
+                val actual = request.copy(options = request.options.copy(
+                    timeoutMillis = (deadline - SystemClock.elapsedRealtime()).coerceAtLeast(1)))
+                lateinit var environment: DescriptorInstallEnvironment
+                environment = DescriptorInstallEnvironment.acquireSources(context,
+                    sourceLoader = { source, check ->
+                        checkActive()
+                        sources.openItem(context, source.descriptor, sourceCancellation) { checkActive(); check() }
+                    },
+                    configuration = { index, prepared, target, selectedRequest, expires, check ->
+                        InstallationUi.configure(context, presentation, environment, index, prepared, target, selectedRequest, expires, check)
+                    },
+                    preparedListener = { index, prepared -> presentation.onPrepared(index, prepared) },
+                    installed = { index, options -> sources.deleteInstalled(context, index, options) },
+                )
+                val session = InstallSession(actual, environment, object : InstallSession.Listener {
+                    override fun onStage(stage: String, detail: JsonObject) {
+                        presentation.onStage(stage, detail)
+                        InstallNotifications.update(context, presentation.token, actual.sources.first().displayName, stage,
+                            presentation.snapshot().progress, presentation.activityIntent(), ::cancel)
+                    }
+                    override fun onProgress(progress: Float, detail: JsonObject) {
+                        presentation.onProgress(progress, detail)
+                        InstallNotifications.update(context, presentation.token, actual.sources.first().displayName,
+                            InstallerContract.STAGE_WRITING, progress, presentation.activityIntent(), ::cancel)
+                    }
+                    override fun onItemResult(index: Int, result: JsonObject) = presentation.onItemResult(index, result)
+                    override fun onCompleted(result: JsonObject) {
+                        finished.set(true)
+                        slot.close()
+                        presentation.onCompleted(result)
+                        InstallNotifications.complete(context, presentation.token, presentation.snapshot().items.all {
+                            it.result?.get(InstallerContract.FIELD_OK)?.asBoolean == true
+                        }, openIntent = presentation.activityIntent())
+                    }
+                    override fun onFailed(failure: InstallFailure) {
+                        finished.set(true)
+                        slot.close()
+                        presentation.onFailed(failure)
+                        InstallNotifications.complete(context, presentation.token, false, openIntent = presentation.activityIntent())
+                    }
+                }, SystemClock::elapsedRealtime)
+                core = session
+                if (cancelled.get()) session.cancel()
+                // Already on the bounded worker pool: avoid nesting another queued worker.
+                session.start(java.util.concurrent.Executor { it.run() })
+            } catch (failure: Exception) {
+                finished.set(true)
+                presentation.onFailed(InstallFailure.from(failure))
+                InstallNotifications.complete(context, presentation.token, false, openIntent = presentation.activityIntent())
+            } finally {
+                sourceDeadline.cancel(false)
+                synchronized(workerLock) { worker = null; Thread.interrupted() }
+                slot.close()
+            }
+        }
+
+        private fun checkActive() {
+            if (cancelled.get() || Thread.currentThread().isInterrupted) throw InstallFailure(InstallerErrorCodes.CANCELLED, "Installation cancelled")
+            if (SystemClock.elapsedRealtime() >= deadline) throw InstallFailure(InstallerErrorCodes.TIMEOUT, "Installation timed out")
+        }
+        private fun cancel() {
+            cancelled.set(true)
+            core?.cancel()
+            synchronized(workerLock) { worker?.interrupt() }
+            sourceDeadline.cancel(false)
+            cancelSource()
+        }
+        private fun cancelSource() {
+            if (!sourceCancellationRequested.compareAndSet(false, true)) return
+            // A provider's cancellation callback may perform IPC. Keep that work off the UI,
+            // deadline scheduler and installation worker, and never interrupt a reused thread.
+            sourceCancellations.execute { runCatching { sourceCancellation.cancel() } }
+        }
+        fun dispose() {
+            if (!disposed.compareAndSet(false, true)) return
+            cancel()
+            tasks.remove(presentation.token, this)
+            InstallNotifications.remove(context, presentation.token)
+            // The worker owns its sources and releases capacity only after cleanup.
+            presentation.close()
+        }
+    }
+}

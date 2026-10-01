@@ -128,6 +128,7 @@ internal object InstallPresentation {
         private var closed = false
         private var shown = false
         private var retrying = false
+        private var cancellationRequested = false
         private val queuedUpdate = AtomicBoolean()
         @Volatile internal var expiresAt = Long.MAX_VALUE
             private set
@@ -236,10 +237,13 @@ internal object InstallPresentation {
         }
 
         internal fun accept() {
-            val waiting = synchronized(lock) { prompt } ?: return
-            if (!waiting.choices.valid()) return
-            val value = waiting.choices.snapshot()
-            waiting.decision.answer(Choice(value.options, value.selectedApkNames))
+            synchronized(lock) {
+                if (closed || terminal || cancellationRequested) return
+                val waiting = prompt ?: return
+                if (!waiting.choices.valid()) return
+                val value = waiting.choices.snapshot()
+                waiting.decision.answer(Choice(value.options, value.selectedApkNames))
+            }
         }
 
         fun onStage(value: String, detail: JsonObject) {
@@ -327,11 +331,20 @@ internal object InstallPresentation {
         }
 
         fun cancel() {
-            val waiting = synchronized(lock) { if (closed || terminal) return else prompt }
-            if (waiting == null || request.isBatch) callbacks.cancel()
-            // For a batch, mark the whole worker cancelled before releasing its current prompt.
-            // Otherwise a fast worker could enter the next item between the two operations.
-            if (waiting != null) waiting.decision.answer(null)
+            val waiting = synchronized(lock) {
+                if (closed || terminal || cancellationRequested) return
+                cancellationRequested = true
+                val current = prompt
+                if (current != null && !request.isBatch) {
+                    // A pending single-item prompt is a refusal (USER_CANCELLED). Once approval
+                    // wins, cancellation must reach the worker even before it clears the prompt.
+                    if (current.decision.answer(null) || current.decision.result() == null) return
+                }
+                current
+            }
+            // Run owner callbacks outside the presentation lock. For a batch, the cancellation
+            // flag reaches the worker before its prompt is released; repeated taps call once.
+            try { callbacks.cancel() } finally { waiting?.decision?.answer(null) }
         }
 
         internal fun retry(index: Int): Boolean {

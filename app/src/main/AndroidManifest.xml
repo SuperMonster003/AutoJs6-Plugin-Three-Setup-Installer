@@ -112,6 +112,59 @@
         <activity android:name=".ui.UserActionActivity" android:exported="false"
             android:excludeFromRecents="true" android:theme="@android:style/Theme.Translucent.NoTitleBar" />
 
+        <activity android:name=".ui.ExternalInstallActivity" android:exported="true"
+            android:excludeFromRecents="true" android:theme="@android:style/Theme.NoDisplay">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <action android:name="android.intent.action.INSTALL_PACKAGE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="content" />
+                <data android:scheme="file" />
+                <data android:mimeType="application/vnd.android.package-archive" />
+                <data android:mimeType="application/x-apks" />
+                <data android:mimeType="application/vnd.apkm" />
+                <data android:mimeType="application/xapk-package-archive" />
+                <data android:mimeType="application/x-apkz" />
+                <data android:mimeType="application/x-aab" />
+                <data android:mimeType="application/vnd.android.aab" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <action android:name="android.intent.action.INSTALL_PACKAGE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="content" />
+                <data android:host="*" />
+                <data android:mimeType="application/zip" />
+                <data android:mimeType="application/octet-stream" />
+                <data android:pathPattern=".*\\.apk" />
+                <data android:pathPattern=".*\\.APK" />
+                <data android:pathPattern=".*\\.apks" />
+                <data android:pathPattern=".*\\.APKS" />
+                <data android:pathPattern=".*\\.xapk" />
+                <data android:pathPattern=".*\\.XAPK" />
+                <data android:pathPattern=".*\\.apkm" />
+                <data android:pathPattern=".*\\.APKM" />
+                <data android:pathPattern=".*\\.apkz" />
+                <data android:pathPattern=".*\\.APKZ" />
+                <data android:pathPattern=".*\\.aab" />
+                <data android:pathPattern=".*\\.AAB" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <action android:name="android.intent.action.SEND_MULTIPLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="application/vnd.android.package-archive" />
+                <data android:mimeType="application/x-apks" />
+                <data android:mimeType="application/vnd.apkm" />
+                <data android:mimeType="application/xapk-package-archive" />
+                <data android:mimeType="application/x-apkz" />
+                <data android:mimeType="application/x-aab" />
+                <data android:mimeType="application/vnd.android.aab" />
+                <data android:mimeType="application/zip" />
+                <data android:mimeType="application/octet-stream" />
+            </intent-filter>
+        </activity>
+
         <service android:name=".ui.InstallForegroundService" android:exported="false"
             android:foregroundServiceType="dataSync" />
         <receiver android:name=".ui.InstallNotifications$CancelReceiver" android:exported="false" />

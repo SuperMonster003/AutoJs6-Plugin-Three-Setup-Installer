@@ -149,7 +149,8 @@ class ThreeSetupInstallerPluginContractTest {
         assertEquals(InstallerContract.MAX_BATCH_SOURCES, capabilities.getInt(InstallerCapabilityKeys.MAX_BATCH))
         assertEquals(InstallerContract.MAX_SPLITS_PER_PACKAGE, capabilities.getInt(InstallerCapabilityKeys.MAX_SPLITS))
         assertEquals(setOf(InstallerCapabilityKeys.FEATURE_BATCH, InstallerCapabilityKeys.FEATURE_SPLITS,
-            InstallerCapabilityKeys.FEATURE_INSPECT, InstallerCapabilityKeys.FEATURE_USERS, InstallerCapabilityKeys.FEATURE_SILENT_UNINSTALL),
+            InstallerCapabilityKeys.FEATURE_INSPECT, InstallerCapabilityKeys.FEATURE_USERS, InstallerCapabilityKeys.FEATURE_SILENT_UNINSTALL,
+            InstallerCapabilityKeys.FEATURE_DELETE_SOURCE, InstallerCapabilityKeys.FEATURE_DEFAULT_INSTALLER),
             capabilities.getStringArray(InstallerCapabilityKeys.FEATURES_KEY)?.toSet())
     }
 

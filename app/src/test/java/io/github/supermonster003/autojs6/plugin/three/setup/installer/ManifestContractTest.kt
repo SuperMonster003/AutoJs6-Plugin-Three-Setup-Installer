@@ -70,7 +70,7 @@ class ManifestContractTest {
     fun `the wake activity follows the activation contract and uninstall is internal`() {
         val activities = manifest.child("application").children("activity").associateBy { it.androidAttribute("name") }
         assertEquals(setOf(".WakeActivity", ".ui.UninstallDialogActivity", ".ui.ConfirmationActivity",
-            ".ui.InstallDialogActivity", ".ui.UserActionActivity"), activities.keys)
+            ".ui.InstallDialogActivity", ".ui.UserActionActivity", ".ui.ExternalInstallActivity"), activities.keys)
         listOf(".ui.InstallDialogActivity", ".ui.UserActionActivity").forEach { name ->
             assertEquals("false", activities.getValue(name).androidAttribute("exported"))
             assertEquals("true", activities.getValue(name).androidAttribute("excludeFromRecents"))
@@ -78,6 +78,10 @@ class ManifestContractTest {
         val install = activities.getValue(".ui.InstallDialogActivity")
         assertEquals("standard", install.androidAttribute("launchMode"))
         assertEquals("intoExisting", install.androidAttribute("documentLaunchMode"))
+        val external = activities.getValue(".ui.ExternalInstallActivity")
+        assertNull(external.androidAttributeOrNull("permission"))
+        val actions = external.children("intent-filter").flatMap { it.children("action") }.map { it.androidAttribute("name") }.toSet()
+        assertEquals(setOf("android.intent.action.VIEW", "android.intent.action.INSTALL_PACKAGE", "android.intent.action.SEND", "android.intent.action.SEND_MULTIPLE"), actions)
         val confirmation = activities.getValue(".ui.ConfirmationActivity")
         assertEquals("false", confirmation.androidAttribute("exported"))
         assertEquals("true", confirmation.androidAttribute("excludeFromRecents"))
@@ -138,6 +142,7 @@ class ManifestContractTest {
             ".WakeActivity" to PLUGIN_PERMISSION,
             ".ThreeSetupInstallerPluginInfoService" to PLUGIN_PERMISSION,
             ".ThreeSetupInstallerPluginService" to PLUGIN_PERMISSION,
+            ".ui.ExternalInstallActivity" to null,
             "rikka.shizuku.ShizukuProvider" to "android.permission.INTERACT_ACROSS_USERS_FULL",
         )
         val components = listOf("activity", "activity-alias", "service", "receiver", "provider")

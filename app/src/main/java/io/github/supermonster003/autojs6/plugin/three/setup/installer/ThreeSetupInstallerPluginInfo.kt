@@ -51,8 +51,8 @@ internal fun ThreeSetupInstallerPluginRuntimeInfo.toPluginInfo(): PluginInfo {
 
 /**
  * Capability negotiation bundle: the minimum host build and the installer contract version the
- * plugin implements. Default selection awaits the P3 external entry; source deletion still belongs
- * to the host for PFD requests, so neither optional capability is advertised prematurely.
+ * plugin implements. The external URI entry owns best-effort deletion; a host PFD still leaves
+ * deletion with its caller. Default selection now targets the formal external entry.
  */
 internal fun ThreeSetupInstallerPluginRuntimeInfo.capabilitiesBundle(): Bundle = Bundle().apply {
     putLong(PluginCapabilityKeys.REQUIRES_HOST_VERSION, requiresHostVersion)
@@ -60,7 +60,8 @@ internal fun ThreeSetupInstallerPluginRuntimeInfo.capabilitiesBundle(): Bundle =
     putStringArray(InstallerCapabilityKeys.AUTHORIZERS, InstallerContract.AUTHORIZERS.toTypedArray())
     putStringArray(InstallerCapabilityKeys.FEATURES_KEY, arrayOf(InstallerCapabilityKeys.FEATURE_BATCH,
         InstallerCapabilityKeys.FEATURE_SPLITS, InstallerCapabilityKeys.FEATURE_SILENT_UNINSTALL,
-        InstallerCapabilityKeys.FEATURE_USERS, InstallerCapabilityKeys.FEATURE_INSPECT))
+        InstallerCapabilityKeys.FEATURE_USERS, InstallerCapabilityKeys.FEATURE_INSPECT,
+        InstallerCapabilityKeys.FEATURE_DELETE_SOURCE, InstallerCapabilityKeys.FEATURE_DEFAULT_INSTALLER))
     putInt(InstallerCapabilityKeys.MAX_BATCH, InstallerContract.MAX_BATCH_SOURCES)
     putInt(InstallerCapabilityKeys.MAX_SPLITS, InstallerContract.MAX_SPLITS_PER_PACKAGE)
 }
