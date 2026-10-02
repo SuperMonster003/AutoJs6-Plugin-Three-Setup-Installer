@@ -43,6 +43,7 @@ import io.github.supermonster003.autojs6.plugin.three.setup.installer.ui.AboutAc
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.ui.DefaultInstallerActivity
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.ui.HomeActivity
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.ui.InstalledAppsActivity
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.ui.InstallProfilesActivity
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.ui.ReleaseHistoryActivity
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.ui.SettingsActivity
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.ui.appearance.AppearancePreferences
@@ -61,8 +62,10 @@ import kotlin.math.min
 class StandaloneAppearanceDeviceTest {
     private val instrumentation = InstrumentationRegistry.getInstrumentation()
     private val context = instrumentation.targetContext
-    private val pages = listOf(HomeActivity::class.java, SettingsActivity::class.java, DefaultInstallerActivity::class.java,
-        InstalledAppsActivity::class.java, AboutActivity::class.java, ReleaseHistoryActivity::class.java)
+    private val pages = if (InstrumentationRegistry.getArguments().getString("profileAppearanceOnly") == "true")
+        listOf(InstallProfilesActivity::class.java)
+    else listOf(HomeActivity::class.java, SettingsActivity::class.java, DefaultInstallerActivity::class.java,
+        InstalledAppsActivity::class.java, InstallProfilesActivity::class.java, AboutActivity::class.java, ReleaseHistoryActivity::class.java)
 
     @Test fun lightNavajoPagesKeepControlsInsideInsets() = withRestoredState {
         exercisePages(Case("en-light-font1", "en", 1f, false, null))
@@ -233,7 +236,11 @@ class StandaloneAppearanceDeviceTest {
         val geometry = windowGeometry(activity.window)
         check(!geometry.imeVisible) { "Unexpected keyboard on the page" }
         val config = activity.resources.configuration
-        val extra = if (activity is HomeActivity) listOf(element(decor.findViewWithTag("home-more")), element(decor.findViewWithTag("home-pick"))) else emptyList()
+        val extra = when (activity) {
+            is HomeActivity -> listOf("home-more", "home-pick")
+            is InstallProfilesActivity -> listOf("profiles-add", "profiles-cancel", "profiles-save")
+            else -> emptyList()
+        }.map { element(requireNotNull(decor.findViewWithTag<View>(it))) }
         return PageSample(geometry, element(root), element(header), element(headerText), element(scroll), lineBounds(edge, line),
             layout.getEllipsisCount(line), headerText.textSize,
             TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 20f, activity.resources.displayMetrics),

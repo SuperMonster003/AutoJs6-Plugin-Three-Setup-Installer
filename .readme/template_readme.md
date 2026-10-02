@@ -135,6 +135,12 @@ let installAdvancedChosen = source => installer.installAsync(source, {
     dexopt: 'speed-profile', installReason: 'user', packageSource: 'local-file',
 }).then(result => console.log(result.ok, result.updateOwner, result.dexopt, result.notes))
     .catch(error => console.error(error.code, error.systemMessage));
+
+// {{ example_profiles }}
+let installWithProfileResets = source => installer.installAsync(source, {
+    interaction: 'dialog', deleteSource: false,
+    installer: null, installReason: null, packageSource: null,
+});
 ```
 
 {{ p_quick_start_details }}
@@ -142,6 +148,12 @@ let installAdvancedChosen = source => installer.installAsync(source, {
 {{ p_v2_requirements }}
 
 {{ p_v3_requirements }}
+
+{{ p_profiles_requirements }}
+
+{{ p_profiles_lifecycle }}
+
+{{ p_profiles_cleanup }}
 
 ******
 

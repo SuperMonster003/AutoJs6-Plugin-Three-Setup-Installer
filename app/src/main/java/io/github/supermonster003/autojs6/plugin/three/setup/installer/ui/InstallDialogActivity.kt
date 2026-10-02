@@ -161,6 +161,9 @@ class InstallDialogActivity : HostAppearanceActivity() {
         val choices = prompt.choices
         header(dialog.content, metadata)
         metadata(dialog.content, metadata)
+        state.items.getOrNull(prompt.index)?.profileName?.let {
+            dialog.content.addView(kit.text(getString(R.string.profile_matched, it), 14f, kit.palette.muted))
+        }
         if (metadata.splits.size > 1) {
             section(dialog.content, R.string.install_splits)
             val selected = choices.snapshot().selectedApkNames

@@ -80,6 +80,7 @@
 - 고급 설치 옵션: `grantAllRequestedPermissions`, `requestUpdateOwnership`, `dexopt` (`none`/`verify`/`speed-profile`/`speed`), `installReason`, `packageSource`. 지원하지 않는 플랫폼이나 권한 방식은 명시적으로 거부합니다. none은 수동 컴파일을 추가하지 않으며 Android의 기본 컴파일을 끄지 않습니다.
 - 성공 결과에는 읽어 온 `updateOwner` 및 `dexopt`가 포함될 수 있습니다. null은 Android가 현재 호출 주체에 owner를 반환하지 않았음을 뜻하며 가시성 제한일 수 있어 전체적으로 없다는 증거가 아닙니다. 읽기 실패 시 필드를 생략하고 notes에 기록합니다. DexOpt 상태는 accepted/failed/cancelled/timeout/unavailable/unknown입니다. accepted에는 시스템의 건너뛰기도 포함되며 실제 컴파일을 보장하지 않습니다. 추가 작업 실패는 확인된 설치 성공을 바꾸지 않습니다.
 - 서명 검사와 로컬 패키지 이름/SharedUID 정확 일치 차단 목록은 모든 진입점에 적용되며 `BLOCKED_BY_POLICY`를 사용합니다. 실제 dialog에서만 해당 항목의 mismatch/unknown 서명을 한 번 허용할 수 있고 Android의 서명 검증은 유지됩니다. 무음/알림 모드에서는 허용할 수 없고 차단 목록은 무시할 수 없습니다. 권한 미리 보기는 선택한 APK 분할의 선언이며 실제 부여 목록이 아닙니다.
+- 설정에서 출처별 프로필 이름, 활성화, 편집 및 순서를 관리. 출처와 실제 패키지 접두사가 모두 일치하는 첫 활성 프로필을 적용하며 여러 프로필을 합치지 않음. 모든 출처에는 홈도 포함. 앱별 12개 옵션의 일부 기본값만 제공하며 명시적 요청이 우선하고 실제 확인 화면에서 최종 변경 가능.
 
 ******
 
@@ -170,13 +171,25 @@ let installAdvancedChosen = source => installer.installAsync(source, {
     dexopt: 'speed-profile', installReason: 'user', packageSource: 'local-file',
 }).then(result => console.log(result.ok, result.updateOwner, result.dexopt, result.notes))
     .catch(error => console.error(error.code, error.systemMessage));
+
+// 프로필 예제: 호스트 5312+ 필요. 파일 보존 및 세 상속 필드 재설정. 함수 호출 시 설치 시작
+let installWithProfileResets = source => installer.installAsync(source, {
+    interaction: 'dialog', deleteSource: false,
+    installer: null, installReason: null, packageSource: null,
+});
 ```
 
 원본에는 경로, `file://` 또는 읽을 수 있는 `content://` URI를 사용할 수 있습니다. 배열은 독립적인 일괄 항목이며 `{ splits: [...] }`는 한 앱을 설치합니다. `session(...)`은 생성 즉시 시작하고 반환된 객체는 `cancel()`과 `wait()`를 지원합니다. 동기 호출은 `InstallerError`를 발생시킬 수 있고 UI 스레드에서는 사용할 수 없습니다. `installer.status` 읽기, `installer.session(...)` 생성 및 `session.wait()` 호출도 이 제한을 따릅니다. UI 스레드에서는 Async 메서드를 사용하거나 스크립트 작업 스레드에서 동기 작업을 실행하세요. 세션 객체는 이를 만든 스크립트 스레드에서만 사용해야 합니다. Promise 거부를 처리하고 각 일괄 결과의 `ok`와 `error`를 확인하세요. 플러그인이 없거나 호환되지 않으면 `PLUGIN_UNAVAILABLE`을 보고합니다. `setDefault`는 기본값 해제를 포함하여 요청한 상태에 도달했는지 반환합니다. `app.uninstall`은 기존 시스템 제거 바로가기로 유지됩니다. 특권 옵션에는 `installer.uninstall`을 사용하세요. 전체 옵션과 이벤트는 [installer API 문서](https://docs.autojs6.com/#/installer)를 확인하세요.
 
 Dhizuku, 알림 설치 및 영구 기본 설치 프로그램의 스크립트 옵션에는 installer V2와 AutoJs6 6.8.0 빌드 5307 이상이 필요합니다. 기본 호스트 연동은 빌드 5299, V1 스크립트 메서드는 5300 이상을 계속 지원합니다.
 
-고급 스크립트 옵션에는 AutoJs6 빌드 5308+ 및 V3와 `advanced-install-options` 지원 확인이 필요합니다. 생략 시 기존 동작을 유지하며 명시적 `false`/`none`도 지원이 필요합니다. 로컬 구현은 공식 배포나 P9 전체 완료를 뜻하지 않습니다.
+고급 스크립트 옵션에는 AutoJs6 5308+ 및 V3 `advanced-install-options`가 필요. 프로필 덮어쓰기가 없으면 생략 시 기존 동작을 유지하며 명시적 `false`/`none`도 지원이 필요. 공식 출시 및 장치 검증 상태는 로드맵 참조.
+
+호스트 UI 및 스크립트 프로필은 AutoJs6 5312+ 및 V3 `source-profiles`가 필요. 이전 호스트나 협상하지 않은 요청은 기존 동작을 유지. 생략한 필드는 상속하고 명시적 `false`/`auto`/`current`/`none`은 덮어씀. null 재설정은 `installer`, `installReason`, `packageSource`만 허용하며 뒤의 두 필드는 고급 옵션 지원도 필요. `interaction`, `timeout`, `continueOnError`는 세션 전체 값으로 프로필에서 제외.
+
+처리 시작 시 프로필과 자동 권한 순서를 고정하여 설정 편집이 진행 중 작업이나 같은 배치의 후속 항목을 바꾸지 않음. 확인된 재시도는 확인한 모든 옵션을 유지하고 미확인 재시도는 진입점 기본값과 프로필을 다시 읽음. 매번 소스와 서명을 다시 검사하며 일회성 정책 허용을 재사용하지 않음. 프로필로 서명, 블랙리스트, 권한 또는 Android 제한을 우회할 수 없음.
+
+프로필 협상 후 성공 항목의 `sourceDeleteRequested`는 최종 삭제 요청이며 삭제 완료 증거가 아님. 호스트의 명시적 `deleteSource: false`는 삭제를 금지하며 결정값이 없거나 잘못된 형식이면 파일을 유지하고 notes에 기록. 호스트는 배치 결과 후 실패, 미처리 또는 보존 항목과 공유하는 파일 및 확인된 별칭을 유지. 로컬 외부 진입점도 중복 URI/정규화 경로를 유지. 실제 정리는 `sourceDeleted`로 표시하며 호스트는 content URI를 삭제하지 않음.
 
 ******
 
@@ -271,12 +284,16 @@ _2026/10/02_
 
 - `기능` 고급 설치 옵션: `grantAllRequestedPermissions`, `requestUpdateOwnership`, `dexopt` (`none`/`verify`/`speed-profile`/`speed`), `installReason`, `packageSource`. 지원하지 않는 플랫폼이나 권한 방식은 명시적으로 거부합니다. none은 수동 컴파일을 추가하지 않으며 Android의 기본 컴파일을 끄지 않습니다.
 - `기능` 서명 검사와 로컬 패키지 이름/SharedUID 정확 일치 차단 목록은 모든 진입점에 적용되며 `BLOCKED_BY_POLICY`를 사용합니다. 실제 dialog에서만 해당 항목의 mismatch/unknown 서명을 한 번 허용할 수 있고 Android의 서명 검증은 유지됩니다. 무음/알림 모드에서는 허용할 수 없고 차단 목록은 무시할 수 없습니다. 권한 미리 보기는 선택한 APK 분할의 선언이며 실제 부여 목록이 아닙니다.
-- `개선` 고급 스크립트 옵션에는 AutoJs6 빌드 5308+ 및 V3와 `advanced-install-options` 지원 확인이 필요합니다. 생략 시 기존 동작을 유지하며 명시적 `false`/`none`도 지원이 필요합니다. 로컬 구현은 공식 배포나 P9 전체 완료를 뜻하지 않습니다.
+- `기능` 설정에서 출처별 프로필 이름, 활성화, 편집 및 순서를 관리. 출처와 실제 패키지 접두사가 모두 일치하는 첫 활성 프로필을 적용하며 여러 프로필을 합치지 않음. 모든 출처에는 홈도 포함. 앱별 12개 옵션의 일부 기본값만 제공하며 명시적 요청이 우선하고 실제 확인 화면에서 최종 변경 가능.
+- `개선` 고급 스크립트 옵션에는 AutoJs6 5308+ 및 V3 `advanced-install-options`가 필요. 프로필 덮어쓰기가 없으면 생략 시 기존 동작을 유지하며 명시적 `false`/`none`도 지원이 필요. 공식 출시 및 장치 검증 상태는 로드맵 참조.
 - `개선` 성공 결과에는 읽어 온 `updateOwner` 및 `dexopt`가 포함될 수 있습니다. null은 Android가 현재 호출 주체에 owner를 반환하지 않았음을 뜻하며 가시성 제한일 수 있어 전체적으로 없다는 증거가 아닙니다. 읽기 실패 시 필드를 생략하고 notes에 기록합니다. DexOpt 상태는 accepted/failed/cancelled/timeout/unavailable/unknown입니다. accepted에는 시스템의 건너뛰기도 포함되며 실제 컴파일을 보장하지 않습니다. 추가 작업 실패는 확인된 설치 성공을 바꾸지 않습니다.
 - `개선` 권한 부여 요청과 none 이외의 DexOpt에는 Shizuku/Root가 필요하고 verify는 API 26+가 필요합니다. 설치 이유는 API 26+, 출처는 API 33+, 업데이트 소유권 요청은 API 34+가 필요합니다. 소유권은 최초 설치에서만 활성화되며 업데이트나 다른 사용자에게 이미 있는 패키지에서는 무시될 수 있습니다. false는 기존 owner를 해제하지 않습니다.
 - `개선` 권한 옵션은 시스템이 부여할 수 있는 권한을 요청하며 Android 14의 USE_FULL_SCREEN_INTENT처럼 설치 관리자가 변경할 수 있는 app-op을 포함할 수 있습니다. 모든 선언 권한을 보장하거나 접근성, 오버레이, 임의의 서명 권한을 부여하지 않습니다. restricted/system-fixed/policy-fixed 제약을 유지하고 restricted 권한 allowlist 플래그를 추가하지 않습니다.
 - `개선` none/Dhizuku의 설치된 서명 확인은 현재 사용자만 대상으로 하며 Shizuku/Root는 전체를 조회합니다. SharedUID 규칙이 있으면 다른 사용자의 기존 패키지를 배제할 수 없는 경우 예외 없이 거부합니다.
-- `의존성` installer-api.aar를 계약 V3 (MPL 2.0)로 업그레이드하며 V1/V2와 11개 AIDL 트랜잭션 유지. 고급 스크립트 옵션은 호스트 빌드 5308+ 필요
+- `개선` 호스트 UI 및 스크립트 프로필은 AutoJs6 5312+ 및 V3 `source-profiles`가 필요. 이전 호스트나 협상하지 않은 요청은 기존 동작을 유지. 생략한 필드는 상속하고 명시적 `false`/`auto`/`current`/`none`은 덮어씀. null 재설정은 `installer`, `installReason`, `packageSource`만 허용하며 뒤의 두 필드는 고급 옵션 지원도 필요. `interaction`, `timeout`, `continueOnError`는 세션 전체 값으로 프로필에서 제외.
+- `개선` 처리 시작 시 프로필과 자동 권한 순서를 고정하여 설정 편집이 진행 중 작업이나 같은 배치의 후속 항목을 바꾸지 않음. 확인된 재시도는 확인한 모든 옵션을 유지하고 미확인 재시도는 진입점 기본값과 프로필을 다시 읽음. 매번 소스와 서명을 다시 검사하며 일회성 정책 허용을 재사용하지 않음. 프로필로 서명, 블랙리스트, 권한 또는 Android 제한을 우회할 수 없음.
+- `개선` 프로필 협상 후 성공 항목의 `sourceDeleteRequested`는 최종 삭제 요청이며 삭제 완료 증거가 아님. 호스트의 명시적 `deleteSource: false`는 삭제를 금지하며 결정값이 없거나 잘못된 형식이면 파일을 유지하고 notes에 기록. 호스트는 배치 결과 후 실패, 미처리 또는 보존 항목과 공유하는 파일 및 확인된 별칭을 유지. 로컬 외부 진입점도 중복 URI/정규화 경로를 유지. 실제 정리는 `sourceDeleted`로 표시하며 호스트는 content URI를 삭제하지 않음.
+- `의존성` installer-api.aar를 계약 V3 (MPL 2.0)로 업그레이드하며 V1/V2와 11개 AIDL 트랜잭션 유지. 고급 스크립트 옵션은 호스트 빌드 5308+ 필요. 같은 V3 계약에 선택적 source-profiles 기능과 프로필 필드를 추가. 호스트 5312부터 지원하며 11개 AIDL 트랜잭션은 유지
 - `의존성` 공유 패키지 파서 (MPL 2.0)를 업그레이드하여 실제 매니페스트 루트와 sharedUserId를 검증하고 모호한 입력 거부. 실제 Android 네임스페이스 요소에서 권한 선언을 읽고 주석 및 확장 네임스페이스의 가짜 선언을 제외하며 컴파일된 속성 충돌을 거부.
 
 #### v1.1.0

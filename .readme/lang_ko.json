@@ -29,7 +29,8 @@
     "`dhizuku`: Android 8.0 (API 26)+, 활성 Dhizuku 기기/프로필 소유자 및 이 플러그인에 부여한 권한이 필요합니다. 현재 소유자 사용자에서만 작동하고 실제 소유자 패키지를 설치자로 기록합니다. shell/root용 다운그레이드, 테스트 패키지, 낮은 targetSdk 제한 우회, 다른 사용자, 임의 설치자 지정 및 제거 시 데이터 보존 옵션은 지원하지 않습니다. 플러그인은 소유자를 설정하지 않습니다.",
     "고급 설치 옵션: `grantAllRequestedPermissions`, `requestUpdateOwnership`, `dexopt` (`none`/`verify`/`speed-profile`/`speed`), `installReason`, `packageSource`. 지원하지 않는 플랫폼이나 권한 방식은 명시적으로 거부합니다. none은 수동 컴파일을 추가하지 않으며 Android의 기본 컴파일을 끄지 않습니다.",
     "성공 결과에는 읽어 온 `updateOwner` 및 `dexopt`가 포함될 수 있습니다. null은 Android가 현재 호출 주체에 owner를 반환하지 않았음을 뜻하며 가시성 제한일 수 있어 전체적으로 없다는 증거가 아닙니다. 읽기 실패 시 필드를 생략하고 notes에 기록합니다. DexOpt 상태는 accepted/failed/cancelled/timeout/unavailable/unknown입니다. accepted에는 시스템의 건너뛰기도 포함되며 실제 컴파일을 보장하지 않습니다. 추가 작업 실패는 확인된 설치 성공을 바꾸지 않습니다.",
-    "서명 검사와 로컬 패키지 이름/SharedUID 정확 일치 차단 목록은 모든 진입점에 적용되며 `BLOCKED_BY_POLICY`를 사용합니다. 실제 dialog에서만 해당 항목의 mismatch/unknown 서명을 한 번 허용할 수 있고 Android의 서명 검증은 유지됩니다. 무음/알림 모드에서는 허용할 수 없고 차단 목록은 무시할 수 없습니다. 권한 미리 보기는 선택한 APK 분할의 선언이며 실제 부여 목록이 아닙니다."
+    "서명 검사와 로컬 패키지 이름/SharedUID 정확 일치 차단 목록은 모든 진입점에 적용되며 `BLOCKED_BY_POLICY`를 사용합니다. 실제 dialog에서만 해당 항목의 mismatch/unknown 서명을 한 번 허용할 수 있고 Android의 서명 검증은 유지됩니다. 무음/알림 모드에서는 허용할 수 없고 차단 목록은 무시할 수 없습니다. 권한 미리 보기는 선택한 APK 분할의 선언이며 실제 부여 목록이 아닙니다.",
+    "설정에서 출처별 프로필 이름, 활성화, 편집 및 순서를 관리. 출처와 실제 패키지 접두사가 모두 일치하는 첫 활성 프로필을 적용하며 여러 프로필을 합치지 않음. 모든 출처에는 홈도 포함. 앱별 12개 옵션의 일부 기본값만 제공하며 명시적 요청이 우선하고 실제 확인 화면에서 최종 변경 가능."
   ],
   "h3_usage": "사용 방법",
   "usage_steps": [
@@ -123,6 +124,10 @@
   "example_v2": "V2 예제에는 호스트 빌드 {{ v2_host_version_code }}이 필요합니다. Dhizuku는 활성 소유자, 알림 모드는 알림 권한이 필요합니다.",
   "example_persistent": "Root 영구 모드는 사용자 0의 system UID 접근을 지원하는 기기가 필요합니다. 경쟁 정책은 유지합니다.",
   "p_v2_requirements": "Dhizuku, 알림 설치 및 영구 기본 설치 프로그램의 스크립트 옵션에는 installer V2와 AutoJs6 {{ required_host_version_name }} 빌드 {{ v2_host_version_code }} 이상이 필요합니다. 기본 호스트 연동은 빌드 {{ required_host_version_code }}, V1 스크립트 메서드는 {{ script_host_version_code }} 이상을 계속 지원합니다.",
-  "p_v3_requirements": "고급 스크립트 옵션에는 AutoJs6 빌드 {{ v3_host_version_code }}+ 및 V3와 `advanced-install-options` 지원 확인이 필요합니다. 생략 시 기존 동작을 유지하며 명시적 `false`/`none`도 지원이 필요합니다. 로컬 구현은 공식 배포나 P9 전체 완료를 뜻하지 않습니다.",
-  "example_v3": "고급 예제: 호스트 V3, Root 및 해당 메타데이터용 API 33+ 필요. 함수를 호출하면 설치 시작"
+  "p_v3_requirements": "고급 스크립트 옵션에는 AutoJs6 {{ v3_host_version_code }}+ 및 V3 `advanced-install-options`가 필요. 프로필 덮어쓰기가 없으면 생략 시 기존 동작을 유지하며 명시적 `false`/`none`도 지원이 필요. 공식 출시 및 장치 검증 상태는 로드맵 참조.",
+  "example_v3": "고급 예제: 호스트 V3, Root 및 해당 메타데이터용 API 33+ 필요. 함수를 호출하면 설치 시작",
+  "p_profiles_requirements": "호스트 UI 및 스크립트 프로필은 AutoJs6 {{ profiles_host_version_code }}+ 및 V3 `source-profiles`가 필요. 이전 호스트나 협상하지 않은 요청은 기존 동작을 유지. 생략한 필드는 상속하고 명시적 `false`/`auto`/`current`/`none`은 덮어씀. null 재설정은 `installer`, `installReason`, `packageSource`만 허용하며 뒤의 두 필드는 고급 옵션 지원도 필요. `interaction`, `timeout`, `continueOnError`는 세션 전체 값으로 프로필에서 제외.",
+  "p_profiles_lifecycle": "처리 시작 시 프로필과 자동 권한 순서를 고정하여 설정 편집이 진행 중 작업이나 같은 배치의 후속 항목을 바꾸지 않음. 확인된 재시도는 확인한 모든 옵션을 유지하고 미확인 재시도는 진입점 기본값과 프로필을 다시 읽음. 매번 소스와 서명을 다시 검사하며 일회성 정책 허용을 재사용하지 않음. 프로필로 서명, 블랙리스트, 권한 또는 Android 제한을 우회할 수 없음.",
+  "p_profiles_cleanup": "프로필 협상 후 성공 항목의 `sourceDeleteRequested`는 최종 삭제 요청이며 삭제 완료 증거가 아님. 호스트의 명시적 `deleteSource: false`는 삭제를 금지하며 결정값이 없거나 잘못된 형식이면 파일을 유지하고 notes에 기록. 호스트는 배치 결과 후 실패, 미처리 또는 보존 항목과 공유하는 파일 및 확인된 별칭을 유지. 로컬 외부 진입점도 중복 URI/정규화 경로를 유지. 실제 정리는 `sourceDeleted`로 표시하며 호스트는 content URI를 삭제하지 않음.",
+  "example_profiles": "프로필 예제: 호스트 5312+ 필요. 파일 보존 및 세 상속 필드 재설정. 함수 호출 시 설치 시작"
 }

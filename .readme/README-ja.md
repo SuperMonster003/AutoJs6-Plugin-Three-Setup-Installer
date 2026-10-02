@@ -80,6 +80,7 @@
 - 高度なインストールオプション: `grantAllRequestedPermissions`, `requestUpdateOwnership`, `dexopt` (`none`/`verify`/`speed-profile`/`speed`), `installReason`, `packageSource`. 未対応の環境や認可では明示的に拒否. none は手動コンパイルを追加せず, Android 自身のコンパイルを無効にしません.
 - 成功結果は読み取れた `updateOwner` と `dexopt` を返す場合があります. null は現在の呼び出し元に Android が owner を返さなかったことを示し, 可視性による非表示も含むため全体での不在を証明しません. 読み取り失敗では省略して notes に記録. DexOpt 状態は accepted/failed/cancelled/timeout/unavailable/unknown. accepted はシステムによるスキップも含み, 実際のコンパイルを保証しません. 追加処理の失敗は確認済みのインストール成功を変更しません.
 - 署名チェックとローカルのパッケージ名/SharedUID 完全一致ブロックリストは全入口に適用され, `BLOCKED_BY_POLICY` を返します. mismatch/unknown の署名は実際の dialog でその項目だけ一度許可できますが, Android の署名検証は残ります. サイレント/通知では許可できず, ブロックリストは上書き不可. 権限プレビューは選択した APK 分割の宣言であり, 付与済み権限ではありません.
+- 起点別プロファイルは設定で命名, 有効化, 編集, 並べ替えが可能. 起点と実際のパッケージ名プレフィックスが両方一致する最初の有効プロファイルを適用し, 複数を重ねない. 任意の起点にはホームも含む. アプリごとの 12 オプションに部分的な既定値を設定し, 明示的な要求を優先. 実際の確認画面で最終変更も可能.
 
 ******
 
@@ -170,13 +171,25 @@ let installAdvancedChosen = source => installer.installAsync(source, {
     dexopt: 'speed-profile', installReason: 'user', packageSource: 'local-file',
 }).then(result => console.log(result.ok, result.updateOwner, result.dexopt, result.notes))
     .catch(error => console.error(error.code, error.systemMessage));
+
+// プロファイル例: ホスト 5312+ が必要. ファイルを保持し 3 つの継承値をリセット. 関数の呼び出し時にインストールを開始
+let installWithProfileResets = source => installer.installAsync(source, {
+    interaction: 'dialog', deleteSource: false,
+    installer: null, installReason: null, packageSource: null,
+});
 ```
 
 ソースにはパス, `file://`, 読み取り可能な `content://` URI を指定できます. 配列は独立した一括項目, `{ splits: [...] }` は 1 つのアプリの分割ファイルです. `session(...)` は作成時に開始し, 戻り値は `cancel()` と `wait()` を提供します. 同期呼び出しは `InstallerError` を投げる場合があり, UI スレッドでは使えません. `installer.status` の読み取り, `installer.session(...)` の作成, `session.wait()` の呼び出しも同様です. UI スレッドでは Async メソッドを使用するか, スクリプトのワーカースレッドで同期処理を実行してください. セッションオブジェクトは作成したスクリプトスレッドでのみ使用できます. Promise の拒否を処理し, 一括結果ごとの `ok` と `error` を確認してください. プラグインがない場合や非互換の場合は `PLUGIN_UNAVAILABLE` です. `setDefault` は既定設定の解除も含め, 要求した状態になったかを返します. `app.uninstall` は従来のシステム削除への入口です. 特権オプションには `installer.uninstall` を使用してください. 全オプションとイベントは [installer API ドキュメント](https://docs.autojs6.com/#/installer) を参照してください.
 
 Dhizuku, 通知インストール, 永続的な既定インストーラーのスクリプトオプションには installer V2 と AutoJs6 6.8.0 ビルド 5307 以降が必要です. 基本的なホスト連携はビルド 5299, V1 スクリプトは 5300 以降を引き続きサポートします.
 
-高度なスクリプトオプションには AutoJs6 ビルド 5308+ と V3 / `advanced-install-options` の対応確認が必要. 省略時は従来の動作を維持し, 明示的な `false`/`none` も対応が必要. ローカル実装は正式公開や P9 全項目の完了を意味しません.
+高度なスクリプトオプションには AutoJs6 5308+ と V3 `advanced-install-options` が必要. プロファイルの上書きがない場合, 省略時は従来動作を維持. 明示的な `false`/`none` も対応が必要. 正式公開と端末検証の状態はロードマップを参照.
+
+ホスト画面とスクリプトのプロファイルには AutoJs6 5312+ と V3 `source-profiles` が必要. 旧ホストや未協商の要求は従来動作を維持. 省略フィールドは継承し, 明示的な `false`/`auto`/`current`/`none` は上書き. null リセットは `installer`, `installReason`, `packageSource` のみで, 後者 2 項目は高度なオプションの対応も必要. `interaction`, `timeout`, `continueOnError` はセッション全体の値で, プロファイルには含まれない.
+
+処理開始時にプロファイルと自動認証順を固定し, 設定編集は処理中のタスクや同じバッチの後続項目に影響しない. 確認済みの再試行は確認済みの全オプションを保持し, 未確認の再試行は入口の既定値とプロファイルを再読込. 毎回ソースと署名を再検査し, 一度限りの許可は再利用しない. 署名, ブラックリスト, 認証, Android の制限は迂回しない.
+
+協商後の成功項目の `sourceDeleteRequested` は有効な削除要求であり, 削除済みの証明ではない. ホストの明示的な `deleteSource: false` は削除を拒否し, 判断値の欠落や型違いもファイルを保持して notes に記録. バッチ結果後に, 失敗, 未処理, 保持項目と共有するファイルや確認可能な別名を保持. ローカル外部入口も同じバッチの重複 URI/正規化パスを保持. 実際の削除は `sourceDeleted` に記録し, ホストは content URI を削除しない.
 
 ******
 
@@ -271,12 +284,16 @@ _2026/10/02_
 
 - `機能` 高度なインストールオプション: `grantAllRequestedPermissions`, `requestUpdateOwnership`, `dexopt` (`none`/`verify`/`speed-profile`/`speed`), `installReason`, `packageSource`. 未対応の環境や認可では明示的に拒否. none は手動コンパイルを追加せず, Android 自身のコンパイルを無効にしません.
 - `機能` 署名チェックとローカルのパッケージ名/SharedUID 完全一致ブロックリストは全入口に適用され, `BLOCKED_BY_POLICY` を返します. mismatch/unknown の署名は実際の dialog でその項目だけ一度許可できますが, Android の署名検証は残ります. サイレント/通知では許可できず, ブロックリストは上書き不可. 権限プレビューは選択した APK 分割の宣言であり, 付与済み権限ではありません.
-- `改善` 高度なスクリプトオプションには AutoJs6 ビルド 5308+ と V3 / `advanced-install-options` の対応確認が必要. 省略時は従来の動作を維持し, 明示的な `false`/`none` も対応が必要. ローカル実装は正式公開や P9 全項目の完了を意味しません.
+- `機能` 起点別プロファイルは設定で命名, 有効化, 編集, 並べ替えが可能. 起点と実際のパッケージ名プレフィックスが両方一致する最初の有効プロファイルを適用し, 複数を重ねない. 任意の起点にはホームも含む. アプリごとの 12 オプションに部分的な既定値を設定し, 明示的な要求を優先. 実際の確認画面で最終変更も可能.
+- `改善` 高度なスクリプトオプションには AutoJs6 5308+ と V3 `advanced-install-options` が必要. プロファイルの上書きがない場合, 省略時は従来動作を維持. 明示的な `false`/`none` も対応が必要. 正式公開と端末検証の状態はロードマップを参照.
 - `改善` 成功結果は読み取れた `updateOwner` と `dexopt` を返す場合があります. null は現在の呼び出し元に Android が owner を返さなかったことを示し, 可視性による非表示も含むため全体での不在を証明しません. 読み取り失敗では省略して notes に記録. DexOpt 状態は accepted/failed/cancelled/timeout/unavailable/unknown. accepted はシステムによるスキップも含み, 実際のコンパイルを保証しません. 追加処理の失敗は確認済みのインストール成功を変更しません.
 - `改善` 権限付与要求と none 以外の DexOpt は Shizuku/Root が必要で, verify は API 26+ が必要. インストール理由は API 26+, ソースは API 33+, 更新所有権の要求は API 34+. 所有権は初回インストールのみで有効化でき, 更新や別ユーザーの既存パッケージでは無視される場合があります. false は既存 owner を解除しません.
 - `改善` 権限付与はシステムが許可できる権限を要求し, Android 14 の USE_FULL_SCREEN_INTENT などインストーラーが変更できる app-op を含む場合があります. 全宣言権限を保証せず, アクセシビリティ, オーバーレイや任意の署名権限は付与しません. restricted/system-fixed/policy-fixed 制限を維持し, restricted 権限 allowlist フラグを追加しません.
 - `改善` none/Dhizuku の既存署名確認は現在のユーザーのみで, Shizuku/Root は全体を照会します. SharedUID ルールがある場合, 別ユーザーの既存パッケージを除外できなければ例外なしで拒否します.
-- `依存関係` installer-api.aar を契約 V3 (MPL 2.0) に更新し, V1/V2 と全 11 AIDL トランザクションを維持. 高度なスクリプトオプションはホストビルド 5308+ が必要
+- `改善` ホスト画面とスクリプトのプロファイルには AutoJs6 5312+ と V3 `source-profiles` が必要. 旧ホストや未協商の要求は従来動作を維持. 省略フィールドは継承し, 明示的な `false`/`auto`/`current`/`none` は上書き. null リセットは `installer`, `installReason`, `packageSource` のみで, 後者 2 項目は高度なオプションの対応も必要. `interaction`, `timeout`, `continueOnError` はセッション全体の値で, プロファイルには含まれない.
+- `改善` 処理開始時にプロファイルと自動認証順を固定し, 設定編集は処理中のタスクや同じバッチの後続項目に影響しない. 確認済みの再試行は確認済みの全オプションを保持し, 未確認の再試行は入口の既定値とプロファイルを再読込. 毎回ソースと署名を再検査し, 一度限りの許可は再利用しない. 署名, ブラックリスト, 認証, Android の制限は迂回しない.
+- `改善` 協商後の成功項目の `sourceDeleteRequested` は有効な削除要求であり, 削除済みの証明ではない. ホストの明示的な `deleteSource: false` は削除を拒否し, 判断値の欠落や型違いもファイルを保持して notes に記録. バッチ結果後に, 失敗, 未処理, 保持項目と共有するファイルや確認可能な別名を保持. ローカル外部入口も同じバッチの重複 URI/正規化パスを保持. 実際の削除は `sourceDeleted` に記録し, ホストは content URI を削除しない.
+- `依存関係` installer-api.aar を契約 V3 (MPL 2.0) に更新し, V1/V2 と全 11 AIDL トランザクションを維持. 高度なスクリプトオプションはホストビルド 5308+ が必要. 同じ V3 契約に任意の source-profiles 機能と設定フィールドを追加. ホスト 5312 から対応し, 11 個の AIDL トランザクションは不変
 - `依存関係` 共有パッケージ解析器 (MPL 2.0) を更新し, 実際のマニフェストルートと sharedUserId を検証して曖昧な入力を拒否. 実際の Android 名前空間の要素から権限宣言を読み取り, コメントや拡張名前空間の偽宣言を除外し, コンパイル済み属性の矛盾を拒否.
 
 #### v1.1.0

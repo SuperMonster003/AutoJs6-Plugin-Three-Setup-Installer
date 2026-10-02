@@ -18,7 +18,7 @@ internal object InstallQueue {
     data class Snapshot(val token: String, val origin: String, val createdAt: Long, val state: InstallPresentation.Snapshot)
 
     fun start(context: Context, sources: ExternalSources, origin: String = InstallerContract.SOURCE_HOME,
-        options: InstallOptions = InstallDefaults.options(context), isBatch: Boolean = sources.uris.size > 1): String =
+        options: InstallOptions? = null, isBatch: Boolean = sources.uris.size > 1): String =
         ExternalInstaller.start(context, sources, options, origin, isBatch)
 
     /** Includes every live installation source, including silent Binder sessions. No IO. */

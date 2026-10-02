@@ -2,7 +2,7 @@
 
 1.2.0 已实现下述安装, 应用管理与脚本功能. 官方 GitHub Release 和插件中心索引准入仍待完成. 宿主接入需要 AutoJs6 >= 6.8.0 (5299), `installer` 脚本 API 需要构建 5300 或更高版本. 设备覆盖与剩余验收记录在 [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md) 中. Dhizuku, 通知栏安装和持久默认安装器的脚本选项需要 AutoJs6 6.8.0 构建 5307 或以上及 installer V2 契约. 基础宿主接入仍支持构建 5299, V1 脚本方法从构建 5300 起可用.
 
-高级脚本选项需要 AutoJs6 构建 5308+ 并协商 V3 与 `advanced-install-options`. 省略字段保持原行为, 显式 `false`/`none` 仍需对应支持. 本地实现不表示已经正式发布或全部 P9 条目完成.
+高级脚本选项需要 AutoJs6 构建 5308+ 并协商 V3 与 `advanced-install-options`. 无配置覆盖时, 省略字段保持原行为; 显式 `false`/`none` 仍需对应支持. 正式发布和设备验收状态以路线图为准.
 
 ### 使用方法
 

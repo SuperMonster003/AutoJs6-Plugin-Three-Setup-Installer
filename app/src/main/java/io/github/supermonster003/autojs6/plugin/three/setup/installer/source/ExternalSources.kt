@@ -90,6 +90,12 @@ internal class ExternalSources private constructor(val uris: List<Uri>, val gran
     fun deleteInstalled(context: Context, index: Int, options: InstallOptions): InstallSession.SourceCleanup {
         if (!options.deleteSource) return InstallSession.SourceCleanup()
         val uri = uris[index]
+        val key = sourceKey(uri)
+        if (uris.count { sourceKey(it) == key } > 1) {
+            // Later items have not opened their URI or chosen their final options yet.
+            // Conservatively retain a shared source instead of deleting their input early.
+            return InstallSession.SourceCleanup(notes = listOf("Installation succeeded; a source shared with another batch item was retained"))
+        }
         val deleted = runCatching {
             if (uri.scheme.equals("content", true)) {
                 if (DocumentsContract.isDocumentUri(context, uri)) DocumentsContract.deleteDocument(context.contentResolver, uri)
@@ -100,6 +106,10 @@ internal class ExternalSources private constructor(val uris: List<Uri>, val gran
     }
 
     fun single(index: Int): ExternalSources = fromUris(listOf(uris[index]), grantIntent.flags)
+
+    private fun sourceKey(uri: Uri): String = if (uri.scheme.equals("file", true))
+        runCatching { "file:" + File(requireNotNull(uri.path)).canonicalPath }.getOrDefault(uri.normalizeScheme().toString())
+        else uri.normalizeScheme().toString()
 
     companion object {
         fun fromIntent(intent: Intent): ExternalSources {

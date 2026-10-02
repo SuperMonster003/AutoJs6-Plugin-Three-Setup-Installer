@@ -235,7 +235,7 @@ runtime/api/augment/installer/          Installer.kt (AugmentableKey("installer"
 
 建议会话切分: P0 一次 (骨架 + spike); P1 两到三次 (共享 AAR 为一次; 契约 + 客户端 + 路由为一次; 删除旧安装器 + 调用方改造 + 文档为一次); P2 两到三次 (来源与授权; 安装引擎; 卸载 / 批量 / 路由); P3 一到两次; P4 两次 (install / session / errors; uninstall / inspect / authorizer / setDefault / 示例); P5 一到两次; P6 一到两次; P7 一次; P8 两次; P9 两到三次.
 
-当前进度 (2026-10-02): P0-P6和P8原条目已完成所列范围验收, P7远端发布继续按维护者指示延迟. P9高级安装选项及签名门禁/黑名单/权限预览两项已实施, 按来源配置文件仍待后续; V3和已实现选项的跨库同步完成, 原整体同步项留待配置文件实施后一并收口. 既有ROM限制和证据范围保持, 不把系统限制或未覆盖组合写成成功. 所有仓库仅本地提交, 不推送, 创建标签或发布; 最新实现与验证见文末会话记录及各阶段证据.
+当前进度 (2026-10-02): P0-P6和P8原条目已完成所列范围验收, P7远端发布继续按维护者指示延迟. P9高级安装选项, 签名门禁/黑名单/权限预览及按来源配置文件前三项已实施; 原整体同步项正在来源配置的最终宿主与文档验收. 既有ROM限制和证据范围保持, 不把系统限制或未覆盖组合写成成功. 所有仓库仅本地提交, 不推送, 创建标签或发布; 最新实现与验证见文末会话记录及各阶段证据.
 
 ---
 
@@ -536,7 +536,7 @@ runtime/api/augment/installer/          Installer.kt (AugmentableKey("installer"
 
 - [x] (插件) `grantAllRequestedPermissions` (`INSTALL_GRANT_ALL_REQUESTED_PERMISSIONS`, 特权), `requestUpdateOwnership` (API 34+ `setRequestUpdateOwnership`), `dexopt` (`pm compile` 或 `performDexOptMode`, 特权), 安装原因 / 包来源 (`setInstallReason`, `setPackageSource`).
 - [x] (插件) 签名门禁 (签名不一致 / 未知签名时默认拒绝并可在对话框放行), 包名 / SharedUID 黑名单 (设置页), 权限预览 (对话框展开 `uses-permission` 列表, 复用共享 AAR 清单解码).
-- [ ] (插件) 按来源的配置文件 (宿主 / 脚本 / 外部入口 / 指定包名前缀 -> 默认授权方式与选项), 设置页管理.
+- [x] (插件) 按来源的配置文件 (宿主 / 脚本 / 外部入口 / 指定包名前缀 -> 默认授权方式与选项), 设置页管理.
 - [ ] (宿主 + 文档) 脚本选项与文档 / d.ts 同步; 契约版本 3.
 
 ---
@@ -1158,3 +1158,11 @@ if (!installer.isDefault()) installer.setDefault(true);
 - 三台用户测试设备保数据覆盖同包并恢复各自原测试APK, 原默认/权限模式/历史偏好/服务身份按各自证据核验. 校正旧接口runner的OK(14)统计为13通过+1显式未启用的实装用例跳过; 生命周期用例的6条自有waiting.apk历史经token/时间/内容及原记录完整比对后精确移除. API35原2条历史和偏好字节保持, 重装同一Release后独立2项再次通过. 不将临时测试或更新记账说成完全无文件变化.
 - 专属AVD最终无夹具/session/安装FGS, Dhizuku owner不变, 仅关闭本轮自有5562; 用户5554及另一会话5574保持. 三星已收回, 本轮未重新申请, 不声称新增API36/37实测. 全部证据见 docs/dev/p9-release-evidence.md 与 docs/dev/p9-integration-evidence.md.
 - 主插件两笔实现提交为321e4ac/build58与b07b018/build59, 本次最后一笔证据提交使用build60并核对可达提交数/工作区. P9前两条完成, 下一步从原按来源配置文件继续; P7远端发布依然延迟. 当前没有新的设备, 关键产品决策或手动操作需要维护者处理.
+
+### 2026-10-02 (P9 来源配置与逐包默认)
+
+- 原P9第三项完成, 不新增, 分拆或丢弃条目. 设置页支持名称/启停/来源/真实包名前缀/12字段部分覆写及顺序管理, 首个启用匹配项生效且不叠加. 三层草稿只在列表保存时持久化, revision防并发覆盖, 损坏配置明确重置; 保存失败只回滚本次拥有的字段, 不确定状态不应用新默认.
+- 处理开始冻结配置和自动授权排序, 先解析真实包名再逐项解析授权. 显式false/auto/current/none及三种null重置高于配置, 最终对话框选择最高; 会话交互/超时/继续策略不进入配置. 已确认AUTO失败重试重新显示对话框, 避免恢复未选split后静默安装, 签名审核与包锁内验证重新执行.
+- 同一Binder的V3+source-profiles才启用远端配置, 基础宿主5299不变, 新功能宿主5312+. installer-api AAR来源48376c3b64901de0e6b4e0c0a565a41341a60e0a, SHA-256=4681a41e3e10fc2c8589cf3e5e0f4c898e07155290c48ada9c4527a7b87c5b0b, 十一项AIDL不变. 最终成功结果给宿主有效来源删除决定, 明确false/缺失错误类型/共用保留项均不删除, 安装成功不因清理问题改为失败.
+- 新增实现及回归后394 JVM零失败/错误/跳过, Debug/androidTest构建及Debug lint0错误/51警告通过, 36文档/15图标校验一致. 专属API31管理UI4/4+外观2/2, 真实外部配置安装2项+重复来源保留1项+精确V3门禁1项共4/4通过. 原24条历史字节不变, 设置恢复; 过期UI恢复快照由生产逻辑剪除, 不冒称全目录无变化. 两次实际Dhizuku安装与所有恢复范围见p9-profiles-runtime-evidence.md, 页面证据见p9-profiles-ui-evidence.md.
+- 本项以build61本地提交, 十语言说明/依赖/changelog同行为一起提交. 原整体宿主+文档项继续最终PFD别名和正式宿主脚本验收, 最终签名Release另记. P7远端发布保持延迟, 本轮无需三星设备.

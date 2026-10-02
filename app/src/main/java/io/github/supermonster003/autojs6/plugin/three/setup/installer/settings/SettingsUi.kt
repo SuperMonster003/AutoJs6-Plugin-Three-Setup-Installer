@@ -130,6 +130,9 @@ internal class SettingsUi(private val owner: HostAppearanceActivity, val kit: In
     }
 
     fun row(title: Int, summary: CharSequence?, icon: Int = R.drawable.ic_settings_tune,
+        tag: String? = null, click: (() -> Unit)? = null): LinearLayout = row(context.getString(title), summary, icon, tag, click)
+
+    fun row(title: CharSequence, summary: CharSequence?, icon: Int = R.drawable.ic_settings_tune,
         tag: String? = null, click: (() -> Unit)? = null): LinearLayout = LinearLayout(context).apply {
         this.tag = tag
         gravity = Gravity.CENTER_VERTICAL
@@ -141,7 +144,7 @@ internal class SettingsUi(private val owner: HostAppearanceActivity, val kit: In
         }, LinearLayout.LayoutParams(dp(24), dp(24)).apply { marginEnd = dp(16) })
         val text = LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
-            addView(kit.text(context.getString(title), 16f), LinearLayout.LayoutParams(-1, -2))
+            addView(kit.text(title, 16f), LinearLayout.LayoutParams(-1, -2))
             if (!summary.isNullOrEmpty()) addView(kit.text(summary, 14f, palette.muted),
                 LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(4) })
         }

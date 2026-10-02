@@ -33,6 +33,10 @@ class ExternalInstallActivity : Activity() {
     }
 }
 
+/** A confirmed AUTO item must revisit its split selection and signature review on manual retry. */
+internal fun installRetryInteraction(requested: String, confirmedOptions: Boolean): String =
+    if (confirmedOptions && requested == InstallerContract.INTERACTION_AUTO) InstallerContract.INTERACTION_DIALOG else requested
+
 internal object ExternalInstaller {
     private val workers = Executors.newFixedThreadPool(InstallerContract.MAX_CONCURRENT_SESSIONS) { Thread(it, "external-install").apply { isDaemon = true } }
     private val sourceDeadlines = ScheduledThreadPoolExecutor(1) { Thread(it, "external-source-deadline").apply { isDaemon = true } }
@@ -42,15 +46,19 @@ internal object ExternalInstaller {
     }
     private val tasks = ConcurrentHashMap<String, Task>()
 
-    fun start(context: Context, sources: ExternalSources, options: InstallOptions = InstallDefaults.options(context),
+    fun start(context: Context, sources: ExternalSources, options: InstallOptions? = null,
         origin: String = InstallerContract.SOURCE_EXTERNAL, isBatch: Boolean = sources.uris.size > 1,
-        interaction: String = InstallDefaults.interaction(context)): String {
+        interaction: String? = null): String {
+        val defaults = io.github.supermonster003.autojs6.plugin.three.setup.installer.settings.InstallerPreferences.read(context)
+        val actualOptions = options ?: defaults.options
+        val actualInteraction = interaction ?: defaults.interaction
         require(origin == InstallerContract.SOURCE_EXTERNAL || origin == InstallerContract.SOURCE_HOME)
-        require(InstallerContract.isInteraction(interaction))
+        require(InstallerContract.isInteraction(actualInteraction))
         val slot = InstallSlots.acquire()
         try {
-            val request = InstallRequest(UUID.randomUUID().toString(), sources.provisionalEntries(), interaction, options,
-                isBatch = isBatch, origin = origin)
+            val request = InstallRequest(UUID.randomUUID().toString(), sources.provisionalEntries(), actualInteraction, actualOptions,
+                isBatch = isBatch, origin = origin, applySourceProfiles = true,
+                explicitOptions = if (options == null) emptySet() else io.github.supermonster003.autojs6.plugin.three.setup.installer.profiles.InstallProfileOverrides.ALLOWED_KEYS)
             val task = Task(context.applicationContext, request, sources, slot)
             tasks[task.presentation.token] = task
             try {
@@ -97,7 +105,8 @@ internal object ExternalInstaller {
             cancel = ::cancel,
             retry = { index ->
                 if (!finished.get() || disposed.get() || index !in sources.uris.indices) false else {
-                    start(context, sources.single(index), presentationOptions(index), origin = request.origin, interaction = request.interaction)
+                    start(context, sources.single(index), retryOptions(index), origin = request.origin,
+                        interaction = retryInteraction(index))
                     true
                 }
             },
@@ -109,15 +118,22 @@ internal object ExternalInstaller {
         private val sourceDeadline = sourceDeadlines.schedule(::cancelSource,
             (deadline - SystemClock.elapsedRealtime()).coerceAtLeast(0), TimeUnit.MILLISECONDS)
 
-        private fun presentationOptions(index: Int): InstallOptions =
-            presentation.snapshot().items.getOrNull(index)?.options ?: request.options
+        private fun retryOptions(index: Int): InstallOptions? {
+            val item = presentation.snapshot().items.getOrNull(index)
+            // Confirmed choices retain their exact values. Unconfirmed defaults get a fresh
+            // profile/default snapshot on explicit retry, never the earlier effective values.
+            return if (item?.confirmedOptions == true) item.options
+                else request.options.takeIf { request.explicitOptions.isNotEmpty() }
+        }
+
+        private fun retryInteraction(index: Int): String = installRetryInteraction(request.interaction,
+            presentation.snapshot().items.getOrNull(index)?.confirmedOptions == true)
 
         fun run() {
             synchronized(workerLock) { worker = Thread.currentThread() }
             try {
                 checkActive()
                 val actual = request.copy(
-                    interaction = if (InstallationUi.needsDialog(context, request)) InstallerContract.INTERACTION_DIALOG else request.interaction,
                     options = request.options.copy(timeoutMillis = (deadline - SystemClock.elapsedRealtime()).coerceAtLeast(1)))
                 lateinit var environment: DescriptorInstallEnvironment
                 environment = DescriptorInstallEnvironment.acquireSources(context,
@@ -148,6 +164,8 @@ internal object ExternalInstaller {
                     }
                     override fun onItemResult(index: Int, result: JsonObject) = presentation.onItemResult(index, result)
                     override fun onInstalled(index: Int, result: JsonObject) = presentation.onInstalled(index, result)
+                    override fun onOptionsResolved(index: Int, options: InstallOptions, interaction: String, profileName: String?) =
+                        presentation.onOptionsResolved(index, options, interaction, profileName)
                     override fun onCompleted(result: JsonObject) {
                         finished.set(true)
                         slot.close()

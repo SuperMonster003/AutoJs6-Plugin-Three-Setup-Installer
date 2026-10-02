@@ -10,7 +10,7 @@ license, reproduced in full in the distribution of the respective project.
 | --- | --- | --- | --- | --- |
 | `common-plugin-api.aar` | AutoJs6 module `plugin-api/common-plugin-api` (https://github.com/SuperMonster003/AutoJs6) | host build 6.8.0 / 5298, commit `86d9bfa26b` | MPL 2.0 | `ee7eb7879a53506c4cca5e2d19d3058e28df2168fb33351a52302a3b9e532e15` |
 | `package-archive-parser.aar` | AutoJs6 module `plugin-api/package-archive-parser` (shared package archive parser, roadmap P9) | module source `0d21303f6759fd4d83b595a8dbc7eed241c67731`, 2026-10-02; release AAR, 275,454 bytes; no independent host versionCode | MPL 2.0 | `41f9348190895b772b1b8af9aa2c82c5543f62646000598ca08e9b68360259a3` |
-| `installer-api.aar` | AutoJs6 module `plugin-api/installer-api` (installer contract V3, compatible with V1/V2) | host build 6.8.0 / 5308, commit `e173241b8874`, 2026-10-02; release AAR, 32,967 bytes | MPL 2.0 | `39971b5d9f29901075259e50da73367b1122c5f9453b4a9528d664c8cbfe575c` |
+| `installer-api.aar` | AutoJs6 module `plugin-api/installer-api` (installer contract V3, compatible with V1/V2) | host build 6.8.0 / 5312, commit `48376c3b64901de0e6b4e0c0a565a41341a60e0a`, 2026-10-02; release AAR, 33,220 bytes | MPL 2.0 | `4681a41e3e10fc2c8589cf3e5e0f4c898e07155290c48ada9c4527a7b87c5b0b` |
 
 ## Runtime dependencies (Gradle)
 

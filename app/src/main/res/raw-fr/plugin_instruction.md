@@ -2,7 +2,7 @@
 
 1.2.0 décrit les fonctions d'installation, de gestion des applications et de scripts présentées ci-dessous. La publication officielle sur GitHub Releases et le référencement dans le centre de plugins restent à effectuer. L'intégration nécessite AutoJs6 >= 6.8.0 (5299), et l'API de scripts `installer` nécessite la compilation 5300 ou ultérieure. La couverture des appareils et les validations restantes figurent dans [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md). Dhizuku, l'installation par notification et les options de scripts pour l'installateur persistant nécessitent AutoJs6 6.8.0 compilation 5307 ou ultérieure avec le contrat installer V2. L'intégration de base reste disponible dès la compilation 5299, et les méthodes de scripts V1 dès 5300.
 
-Les options avancées nécessitent AutoJs6 build 5308+ et V3 avec `advanced-install-options`. L'omission conserve le comportement existant; `false`/`none` explicite exige aussi la prise en charge. Cette implémentation locale n'annonce ni publication officielle ni achèvement de tout P9.
+Les options avancées nécessitent AutoJs6 5308+ et V3 avec `advanced-install-options`. Sans profil prioritaire, l'omission conserve le comportement; `false`/`none` explicite exige toujours la prise en charge. L'état de publication et de validation des appareils figure dans la feuille de route.
 
 ### Utilisation
 

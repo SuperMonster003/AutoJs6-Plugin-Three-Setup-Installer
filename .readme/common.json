@@ -24,5 +24,6 @@
   "min_android_version": "7.0",
   "script_host_version_code": "5300",
   "v2_host_version_code": "5307",
-  "v3_host_version_code": "5308"
+  "v3_host_version_code": "5308",
+  "profiles_host_version_code": "5312"
 }

@@ -182,6 +182,21 @@ class InstallerBinderDeviceTest {
         }
     }
 
+    @Test fun sourceProfileOptInRequiresVersionThreeEvenWhenFalse() {
+        for (enabled in listOf(false, true)) {
+            val json = """{"applySourceProfiles":$enabled}"""
+            for (version in listOf(1, 2)) {
+                val failure = assertThrows(io.github.supermonster003.autojs6.plugin.three.setup.installer.engine.InstallFailure::class.java) {
+                    io.github.supermonster003.autojs6.plugin.three.setup.installer.binder.InstallerBundles.request(
+                        request(json).apply { putInt(InstallerContract.KEY_CONTRACT_VERSION, version) })
+                }
+                assertEquals(InstallerErrorCodes.INVALID_ARGUMENT, failure.code)
+            }
+            assertEquals(json, io.github.supermonster003.autojs6.plugin.three.setup.installer.binder.InstallerBundles.request(
+                request(json).apply { putInt(InstallerContract.KEY_CONTRACT_VERSION, 3) }))
+        }
+    }
+
     @Test fun inspectAndUsersRoundTripThroughTheRemoteRouter() = bind(endpoint).use { service ->
         assertNull(service.binder.queryLocalInterface(IInstallerPlugin.DESCRIPTOR))
         val installer = IInstallerPlugin.Stub.asInterface(service.binder)

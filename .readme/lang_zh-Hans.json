@@ -29,7 +29,8 @@
     "`dhizuku`: 需要 Android 8.0 (API 26)+, 已激活的 Dhizuku 设备/资料所有者, 并向本插件授权. 只操作当前所有者用户, 安装者归属使用真实所有者包名. 不提供 shell/root 的降级, 测试包, 绕过低 targetSdk, 其他用户, 任意安装者归属或卸载保留数据选项. 插件不自动配置所有者.",
     "高级安装选项: `grantAllRequestedPermissions`, `requestUpdateOwnership`, `dexopt` (`none`/`verify`/`speed-profile`/`speed`), `installReason` 和 `packageSource`. 平台或授权方式不支持时明确拒绝, 不静默忽略. none 不追加手动编译, 也不关闭 Android 自身的编译.",
     "成功结果可报告读回的 `updateOwner` 和 `dexopt`. null 表示 Android 未向当前调用身份返回 owner, 可能没有 owner 或受可见性过滤, 不能证明全局不存在; 读取失败省略字段并写入 notes. DexOpt 状态为 accepted/failed/cancelled/timeout/unavailable/unknown; accepted 包含系统跳过, 不证明实际执行编译. 附加步骤失败不改变已经确认的安装成功.",
-    "签名门禁与本地包名/SharedUID 精确黑名单适用于全部入口, 使用 `BLOCKED_BY_POLICY`. 仅真实 dialog 可对当前项目一次放行 mismatch/unknown 签名, Android 仍会验签; 静默/通知不能放行, 黑名单不可覆盖. 权限预览显示实际选中 APK 分包声明的权限, 不代表已授予权限."
+    "签名门禁与本地包名/SharedUID 精确黑名单适用于全部入口, 使用 `BLOCKED_BY_POLICY`. 仅真实 dialog 可对当前项目一次放行 mismatch/unknown 签名, Android 仍会验签; 静默/通知不能放行, 黑名单不可覆盖. 权限预览显示实际选中 APK 分包声明的权限, 不代表已授予权限.",
+    "来源配置文件可在设置中命名, 启停, 编辑及排序. 按实际包名选择首个同时匹配来源和包名前缀的已启用配置, 不叠加多个配置; 任意来源包含首页. 配置只提供 12 项每应用选项的局部默认值, 显式请求优先, 真实确认页的最终选择仍可调整."
   ],
   "h3_usage": "使用方法",
   "usage_steps": [
@@ -123,6 +124,10 @@
   "example_v2": "V2 示例需要宿主构建 {{ v2_host_version_code }}. Dhizuku 需要已激活所有者, 通知模式需要通知许可.",
   "example_persistent": "Root 持久模式要求设备支持用户 0 的 system UID 访问; 保留竞争策略.",
   "p_v2_requirements": "Dhizuku, 通知栏安装和持久默认安装器的脚本选项需要 AutoJs6 {{ required_host_version_name }} 构建 {{ v2_host_version_code }} 或以上及 installer V2 契约. 基础宿主接入仍支持构建 {{ required_host_version_code }}, V1 脚本方法从构建 {{ script_host_version_code }} 起可用.",
-  "p_v3_requirements": "高级脚本选项需要 AutoJs6 构建 {{ v3_host_version_code }}+ 并协商 V3 与 `advanced-install-options`. 省略字段保持原行为, 显式 `false`/`none` 仍需对应支持. 本地实现不表示已经正式发布或全部 P9 条目完成.",
-  "example_v3": "高级示例: 需要宿主 V3, Root 及这些元数据字段所需的 API 33+; 调用函数才开始安装"
+  "p_v3_requirements": "高级脚本选项需要 AutoJs6 构建 {{ v3_host_version_code }}+ 并协商 V3 与 `advanced-install-options`. 无配置覆盖时, 省略字段保持原行为; 显式 `false`/`none` 仍需对应支持. 正式发布和设备验收状态以路线图为准.",
+  "example_v3": "高级示例: 需要宿主 V3, Root 及这些元数据字段所需的 API 33+; 调用函数才开始安装",
+  "p_profiles_requirements": "宿主界面与脚本使用来源配置需要 AutoJs6 {{ profiles_host_version_code }}+ 及 V3 `source-profiles` 能力. 旧宿主或未协商的请求保持原行为. 省略字段可继承配置, 显式 `false`/`auto`/`current`/`none` 覆盖配置. 只有 `installer`, `installReason`, `packageSource` 接受 null 清除继承; 后两者的 null 仍需高级选项能力. `interaction`, `timeout`, `continueOnError` 属于整次会话, 不进入配置.",
+  "p_profiles_lifecycle": "任务开始处理时固定来源配置及自动授权排序, 编辑设置不会改变正在处理的任务或同批后续项目. 已确认的重试沿用完整确认选项, 未确认的重试重新读取入口默认值及配置. 每次仍重新检查来源和签名, 不复用一次性策略放行. 配置不能绕过签名, 黑名单, 授权或系统限制.",
+  "p_profiles_cleanup": "协商来源配置后, 成功项的 `sourceDeleteRequested` 表示最终删除请求, 不代表已删除. 宿主显式 `deleteSource: false` 禁止删除; 决策字段缺失或类型错误时保留文件并记录 notes. 宿主等待批量结果, 保留与失败, 未处理或要求保留项目共用的文件及可确认的别名. 本地外部入口也保留同批重复 URI/规范化路径. `sourceDeleted` 才报告实际清理结果, content URI 不由宿主删除.",
+  "example_profiles": "来源配置示例: 需要宿主 5312+; 保留文件并清除三个继承字段, 调用函数才开始安装"
 }

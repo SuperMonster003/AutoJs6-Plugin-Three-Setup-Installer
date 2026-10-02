@@ -163,8 +163,9 @@ internal class InstallerBinder(context: Context, private val guard: CallerGuard 
                 lateinit var core: InstallSession
                 val earlyCancellation = java.util.concurrent.atomic.AtomicBoolean()
                 val cancellableCore = java.util.concurrent.atomic.AtomicReference<InstallSession?>()
-                val interactive = InstallationUi.needsDialog(context, decoded)
-                val actual = if (interactive) decoded.copy(interaction = InstallerContract.INTERACTION_DIALOG) else decoded
+                // AUTO is decided per parsed item, after its profile has selected the identity.
+                val interactive = decoded.interaction == InstallerContract.INTERACTION_DIALOG
+                val actual = decoded
                 // Silent requests have a passive record for notification taps, never an automatic popup.
                 val record = InstallPresentation.create(context, actual,
                     InstallPresentation.Callbacks(cancel = {
@@ -175,7 +176,7 @@ internal class InstallerBinder(context: Context, private val guard: CallerGuard 
                 presentation = record
                 lateinit var owned: DescriptorInstallEnvironment
                 owned = DescriptorInstallEnvironment.acquire(context, descriptors,
-                    configuration = if (!interactive && !record.notificationMode) null else { index, prepared, target, selectedRequest, deadline, check ->
+                    configuration = { index, prepared, target, selectedRequest, deadline, check ->
                         InstallationUi.configure(context, record, owned, index, prepared, target, selectedRequest, deadline, check)
                     },
                     preparedListener = { index, prepared -> record?.onPrepared(index, prepared) },
@@ -202,6 +203,8 @@ internal class InstallerBinder(context: Context, private val guard: CallerGuard 
                     }
                     override fun onItemResult(index: Int, result: com.google.gson.JsonObject) { record?.onItemResult(index, result) }
                     override fun onInstalled(index: Int, result: com.google.gson.JsonObject) { record?.onInstalled(index, result) }
+                    override fun onOptionsResolved(index: Int, options: io.github.supermonster003.autojs6.plugin.three.setup.installer.engine.InstallOptions,
+                        interaction: String, profileName: String?) { record.onOptionsResolved(index, options, interaction, profileName) }
                     override fun onCompleted(result: com.google.gson.JsonObject) {
                         capacity.close()
                         record?.onCompleted(result)

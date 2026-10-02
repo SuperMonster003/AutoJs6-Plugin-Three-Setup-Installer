@@ -11,6 +11,7 @@ import java.io.StringReader
 import org.autojs.plugin.installer.api.InstallerContract
 import org.autojs.plugin.installer.api.InstallerErrorCodes
 import java.nio.charset.StandardCharsets
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.profiles.InstallProfileOverrides
 
 /**
  * Plugin-side decoding of the request documents of the installer contract (protocol document,
@@ -166,6 +167,11 @@ internal data class InstallRequest(
     val options: InstallOptions,
     val isBatch: Boolean = sources.map { it.item }.distinct().size > 1,
     val origin: String = InstallerContract.SOURCE_HOST,
+    /** Local entries opt in directly; remote callers negotiate the V3 profile capability. */
+    val applySourceProfiles: Boolean = false,
+    val explicitOptions: Set<String> = InstallProfileOverrides.ALLOWED_KEYS,
+    /** Private presentation metadata, never accepted from incoming request JSON. */
+    val matchedProfileName: String? = null,
 ) {
     /** The request items in first-appearance order; each holds the descriptors of one package. */
     val items: List<List<SourceEntry>> = sources.groupBy { it.item }.values.toList()
@@ -203,13 +209,19 @@ internal data class InstallRequest(
             if (!isBatch && items.size != 1) throw invalid("$WHAT: a non-batch request must contain exactly one package")
             val origin = root.string(InstallerContract.FIELD_SOURCE_ORIGIN) ?: InstallerContract.SOURCE_HOST
             if (origin !in setOf(InstallerContract.SOURCE_HOST, InstallerContract.SOURCE_SCRIPT)) throw invalid("$WHAT: invalid source origin")
+            val profileValue = root.get(InstallerContract.FIELD_APPLY_SOURCE_PROFILES)
+            if (profileValue != null && (!profileValue.isJsonPrimitive || !profileValue.asJsonPrimitive.isBoolean))
+                throw invalid("applySourceProfiles must be a boolean")
+            val suppliedOptions = root.obj(InstallerContract.FIELD_OPTIONS)
             InstallRequest(
                 id = id,
                 sources = entries,
                 interaction = interactionOf(root.string(InstallerContract.FIELD_INTERACTION), WHAT),
-                options = InstallOptions.parse(root.obj(InstallerContract.FIELD_OPTIONS), WHAT),
+                options = InstallOptions.parse(suppliedOptions, WHAT),
                 isBatch = isBatch,
                 origin = origin,
+                applySourceProfiles = profileValue?.asBoolean == true,
+                explicitOptions = suppliedOptions?.keySet()?.toSet().orEmpty(),
             )
         }
     }

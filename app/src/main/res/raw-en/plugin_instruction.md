@@ -2,7 +2,7 @@
 
 1.2.0 documents the implemented installation, app-management and script features below. The official GitHub Release and plugin-center listing are still pending. Host integration requires AutoJs6 >= 6.8.0 (5299), and the `installer` script API requires build 5300 or later. Device coverage and remaining acceptance work are recorded in [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md). Dhizuku, notification installation and persistent-default script options require AutoJs6 6.8.0 build 5307 or later with installer contract V2. Base host integration remains available from build 5299, and V1 script methods from build 5300.
 
-Advanced script options require AutoJs6 build 5308+ and negotiated V3 with `advanced-install-options`. Omitted fields preserve existing behavior; explicit `false`/`none` still requires support. These local changes do not announce an official release or completion of every P9 item.
+Advanced script options require AutoJs6 build 5308+ and negotiated V3 with `advanced-install-options`. Without profile overrides, omission preserves existing behavior; explicit `false`/`none` still requires support. The roadmap records official release and device acceptance status.
 
 ### Usage
 

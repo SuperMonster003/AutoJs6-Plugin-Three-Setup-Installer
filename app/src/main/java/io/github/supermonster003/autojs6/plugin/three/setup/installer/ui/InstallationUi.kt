@@ -25,13 +25,6 @@ internal object InstallationUi {
             }
         }, 1_500)
     }
-    fun needsDialog(context: Context, request: InstallRequest): Boolean = when (request.interaction) {
-        InstallerContract.INTERACTION_DIALOG -> true
-        InstallerContract.INTERACTION_SILENT -> false
-        InstallerContract.INTERACTION_NOTIFICATION -> false
-        else -> !io.github.supermonster003.autojs6.plugin.three.setup.installer.settings.InstallerPreferences.resolveAuthorizer(context, request.options.authorizer).privileged
-    }
-
     fun configure(context: Context, record: InstallPresentation.Record, environment: InstallSession.Environment,
         index: Int, prepared: PreparedPackage, target: InstallSession.Target, request: InstallRequest,
         deadline: Long, checkActive: () -> Unit): InstallSession.Selection {

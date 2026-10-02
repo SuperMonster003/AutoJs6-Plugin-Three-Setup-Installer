@@ -25,6 +25,7 @@ internal object InstallerBundles {
                 ?: throw RequestDocuments.invalid("Request JSON is missing or too large")
             if (version < 3) {
                 val root = com.google.gson.JsonParser.parseString(json).takeIf { it.isJsonObject }?.asJsonObject
+                if (root?.has(InstallerContract.FIELD_APPLY_SOURCE_PROFILES) == true) throw RequestDocuments.invalid("Source profiles require installer contract version 3")
                 listOfNotNull(root, root?.get("options")?.takeIf { it.isJsonObject }?.asJsonObject).forEach { options ->
                     if (version < 2 && (options.get("authorizer")?.takeIf { it.isJsonPrimitive }?.asString == InstallerContract.AUTHORIZER_DHIZUKU ||
                         options.get("interaction")?.takeIf { it.isJsonPrimitive }?.asString == InstallerContract.INTERACTION_NOTIFICATION || options.has(InstallerContract.FIELD_MODE))) {

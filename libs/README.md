@@ -19,12 +19,16 @@ resource IDs and raw/typed conflicts. Comments and unrelated namespace attribute
 The host workspace's concurrently edited build number was 5310; that version file is not part of
 this module commit and does not identify a delivered host APK. The library has no independent host
 versionCode, and the separately frozen host 5309 test APK was not rebuilt for this parser refresh.
-`installer-api.aar` is the 32,967-byte release AAR from AutoJs6 6.8.0 / build 5308, commit
-`e173241b8874`, assembled on 2026-10-02. V3 retains all eleven V1/V2 AIDL transactions and negotiates
+`installer-api.aar` is the 33,220-byte release AAR from AutoJs6 6.8.0 / build 5312, commit
+`48376c3b64901de0e6b4e0c0a565a41341a60e0a`, assembled on 2026-10-02. V3 retains all eleven V1/V2 AIDL transactions and negotiates
 advanced installation options on the same live Binder. The base capability and unchanged result
 envelope remain V1; minimum/maximum version and feature capabilities distinguish V2/V3 additions.
 Absent V3 options are not injected into older requests. The `optimizing` stage and optional
 update-owner/optimization observations do not change a confirmed installation's success.
+The optional `source-profiles` feature adds a negotiated `applySourceProfiles` request marker,
+preserves explicit option presence and reports a successful item's effective `sourceDeleteRequested`.
+Old peers keep their complete request shape and do not apply remote profiles. The host retains its
+source ownership and protects shared inputs when any corresponding item requests retention.
 `persistentConfigured` remains a historical receipt rather than a live-policy assertion.
 `InstallerIds.REQUIRED_HOST_VERSION_CODE` stays 5299. The common plugin AAR is unchanged.
 License and individual hashes are in `../THIRD_PARTY_NOTICES.md` and `../locks/host-api-aars.lock`.

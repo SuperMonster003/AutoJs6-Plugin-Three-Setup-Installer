@@ -1,0 +1,35 @@
+# P9 source profiles
+
+Date: 2026-10-02. This implements the third original P9 item without adding, splitting or removing roadmap items. Remote publication under P7 remains delayed.
+
+## Behavior and compatibility
+
+Profiles are local plugin settings, managed through Settings -> Installation profiles. A profile has a name, enabled flag, origin and optional literal package-name prefix. Origins are any, host, script and external; any also includes Home. Both conditions must match the actual prepared APK manifest. The first enabled matching profile wins, including an intentionally empty override, and later profiles never stack. The limit is 32 profiles and a 65,536-byte UTF-8 document.
+
+Profiles provide partial defaults for the 12 per-package fields defined by the shared installer contract. Missing fields inherit the original entry defaults. Explicit caller values, including false/auto/current/none, take precedence. Only installer, installReason and packageSource allow an explicit null reset. The actual confirmation dialog can make final changes. Interaction, timeout and continueOnError stay session-wide. Remote requests do not inherit the plugin's local Home/external global defaults.
+
+The processing worker freezes the profile document, explicit-field set and automatic authorizer ordering once. With eligible profiles, the engine prepares each package before resolving its effective authorizer/user. An unusable entry default therefore cannot reject a package before a matching profile supplies another authorizer. AUTO selects its dialog behavior after this per-item resolution. A later settings edit does not alter subsequent items in that existing batch. Mandatory signature/blacklist checks and authorization/system constraints remain active and cannot be overridden by a profile.
+
+An unconfirmed manual retry reads entry defaults and profiles again. Confirmed choices preserve all final per-package options. A confirmed AUTO retry now uses DIALOG: preparing an archive again must not silently reinstall a previously deselected optional split after the user switched to a privileged authorizer. Split selection and signature review run again, with fresh source checks and a fresh one-time policy proof.
+
+The UI keeps field, profile-editor and list drafts separate. Only list Save persists. Cancel/back never saves; configuration recreation retains the edit draft. Revisions detect a competing save. Strict decoding rejects unknown keys, repeated JSON members, excessive nesting, invalid types/IDs and size limits. Damaged storage requires an explicit reset. A failed SharedPreferences commit is not accepted merely because its in-memory map changed: rollback owns only the exact new document, preserves other values, and uncertain recovery stays unreadable until an explicit successful save. The small process-kill window and actual storage-test scope are documented in the runtime evidence.
+
+## Host protocol and source ownership
+
+The shared installer-api release AAR comes from AutoJs6 commit `48376c3b64901de0e6b4e0c0a565a41341a60e0a`, build 5312. It is 33,220 bytes with SHA-256 `4681a41e3e10fc2c8589cf3e5e0f4c898e07155290c48ada9c4527a7b87c5b0b`. Its license remains MPL-2.0. The 11 public AIDL methods and V1/V2 behavior remain unchanged; V3 advertises the optional source-profiles capability. The lock, library provenance and third-party notices were updated together. The parser AAR remains the build-5309 artifact already used by P9 policy.
+
+Host/script profile opt-in requires V3 plus source-profiles on the same live Binder and a known internal explicit-field set. The new host sends only explicitly supplied per-package fields and applySourceProfiles=true. A legacy or programmatic request whose explicit-field set is unknown retains the previous complete request and does not opt in. The basic host minimum stays 5299; profile-aware host behavior starts at 5312. Even applySourceProfiles=false requires a V3 request when the field is present.
+
+Only final successful per-item results include sourceDeleteRequested after opt-in. It describes the effective request, not a completed deletion. The host consumes this only when its own local negotiation state opted in, including a callback received before openSession returns. Explicit deleteSource=false remains a hard veto. Missing/malformed decisions retain the source with notes without turning installation success into failure. Host UI and scripts finish source cleanup before releasing their owned descriptors.
+
+The host protects sources shared with failed, unprocessed or retained items, including proven descriptor aliases. It never deletes a content URI. Local external batches conservatively retain repeated normalized URIs or canonical file paths before attempting deletion, so a later lazy input remains usable. Cleanup still requires authoritative installation success and uses the final confirmed options.
+
+## Validation
+
+- The first complete integration passed 391 JVM tests with zero failures/errors/skips, Debug and androidTest assembly, and Debug lint with 0 errors / 51 warnings. New model/Core tests cover strict storage bounds, first matching rules, partial overrides, immutable snapshots, deferred identity resolution, batch continuation, absolute deadlines, final dialog priority, mandatory policy ordering and source deletion decisions. Ten failure-injection tests exercise SharedPreferences rollback, original field types/absence, external replacement and explicit recovery.
+- A later review added the confirmed-AUTO retry regression and a shared-contract field-set parity check. All 394 JVM tests then passed with zero failures/errors/skips and Debug assembly completed. Initial failures from Kotlin recursive property inference, comparing a List to a Set in the parity assertion and non-ASCII punctuation in the evidence were corrected; raw failed logs remain under build/. No production validation was weakened.
+- Dedicated API 31 UI: 4/4 management tests plus 2/2 appearance tests. English light/default size and Arabic dark/2x size/360 dp content width were inspected. Scope and the missing whole-run UI history baseline are recorded in [UI evidence](p9-profiles-ui-evidence.md).
+- Dedicated API 31 runtime: 3/3 profile cases plus one exact Binder V3 marker test, 4/4 without skips. Two actual Dhizuku installations prove manifest-prefix defaults and explicit false precedence; duplicate-source retention uses the actual cleanup entry point. All original 24 history records were restored byte-for-byte. Expired UI recovery snapshots were legitimately pruned and are not described as unchanged. See [runtime evidence](p9-profiles-runtime-evidence.md).
+- Host true-Android PFD/early-callback checks and the public script on the final signed R8 APK are recorded separately with final integration/release evidence. Device tests use the task-owned API 31 AVD; no Samsung rental is needed.
+
+The implementation and its ten-language resources, README, plugin instructions and changelog form one local feature commit. Final ecosystem synchronization and signed delivery use separate logical commits. No push, tag or remote release is performed.
