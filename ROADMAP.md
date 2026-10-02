@@ -235,7 +235,7 @@ runtime/api/augment/installer/          Installer.kt (AugmentableKey("installer"
 
 建议会话切分: P0 一次 (骨架 + spike); P1 两到三次 (共享 AAR 为一次; 契约 + 客户端 + 路由为一次; 删除旧安装器 + 调用方改造 + 文档为一次); P2 两到三次 (来源与授权; 安装引擎; 卸载 / 批量 / 路由); P3 一到两次; P4 两次 (install / session / errors; uninstall / inspect / authorizer / setDefault / 示例); P5 一到两次; P6 一到两次; P7 一次; P8 两次; P9 两到三次.
 
-当前进度 (2026-10-02): P0-P6和P8原条目已完成所列范围验收, P7远端发布继续按维护者指示延迟. P9高级安装选项, 签名门禁/黑名单/权限预览及按来源配置文件前三项已实施; 原整体同步项正在来源配置的最终宿主与文档验收. 既有ROM限制和证据范围保持, 不把系统限制或未覆盖组合写成成功. 所有仓库仅本地提交, 不推送, 创建标签或发布; 最新实现与验证见文末会话记录及各阶段证据.
+当前进度 (2026-10-02): P0-P6, P8和P9原条目已完成所列范围的实施与验收, P7远端发布继续按维护者指示延迟. P9四项包含按来源配置文件及最终宿主/文档/d.ts同步, 本地签名交付检查见文末记录. 既有ROM限制和证据范围保持, 不把系统限制或未覆盖组合写成成功. 所有仓库仅本地提交, 不推送, 创建标签或发布; 最新实现与验证见文末会话记录及各阶段证据.
 
 ---
 
@@ -537,7 +537,7 @@ runtime/api/augment/installer/          Installer.kt (AugmentableKey("installer"
 - [x] (插件) `grantAllRequestedPermissions` (`INSTALL_GRANT_ALL_REQUESTED_PERMISSIONS`, 特权), `requestUpdateOwnership` (API 34+ `setRequestUpdateOwnership`), `dexopt` (`pm compile` 或 `performDexOptMode`, 特权), 安装原因 / 包来源 (`setInstallReason`, `setPackageSource`).
 - [x] (插件) 签名门禁 (签名不一致 / 未知签名时默认拒绝并可在对话框放行), 包名 / SharedUID 黑名单 (设置页), 权限预览 (对话框展开 `uses-permission` 列表, 复用共享 AAR 清单解码).
 - [x] (插件) 按来源的配置文件 (宿主 / 脚本 / 外部入口 / 指定包名前缀 -> 默认授权方式与选项), 设置页管理.
-- [ ] (宿主 + 文档) 脚本选项与文档 / d.ts 同步; 契约版本 3.
+- [x] (宿主 + 文档) 脚本选项与文档 / d.ts 同步; 契约版本 3.
 
 ---
 
@@ -1166,3 +1166,10 @@ if (!installer.isDefault()) installer.setDefault(true);
 - 同一Binder的V3+source-profiles才启用远端配置, 基础宿主5299不变, 新功能宿主5312+. installer-api AAR来源48376c3b64901de0e6b4e0c0a565a41341a60e0a, SHA-256=4681a41e3e10fc2c8589cf3e5e0f4c898e07155290c48ada9c4527a7b87c5b0b, 十一项AIDL不变. 最终成功结果给宿主有效来源删除决定, 明确false/缺失错误类型/共用保留项均不删除, 安装成功不因清理问题改为失败.
 - 新增实现及回归后394 JVM零失败/错误/跳过, Debug/androidTest构建及Debug lint0错误/51警告通过, 36文档/15图标校验一致. 专属API31管理UI4/4+外观2/2, 真实外部配置安装2项+重复来源保留1项+精确V3门禁1项共4/4通过. 原24条历史字节不变, 设置恢复; 过期UI恢复快照由生产逻辑剪除, 不冒称全目录无变化. 两次实际Dhizuku安装与所有恢复范围见p9-profiles-runtime-evidence.md, 页面证据见p9-profiles-ui-evidence.md.
 - 本项以build61本地提交, 十语言说明/依赖/changelog同行为一起提交. 原整体宿主+文档项继续最终PFD别名和正式宿主脚本验收, 最终签名Release另记. P7远端发布保持延迟, 本轮无需三星设备.
+
+### 2026-10-02 (P9 来源配置宿主与文档同步)
+
+- 原P9第四项完成, 四项全部保持原结构勾选. 宿主48376c3b64/build5312提供同Binder可选V3配置协商, 三null重置和UI/脚本共用来源清理; 旧宿主基本边界不变, 未知显式字段集合的程序调用保持旧语义. API模块10项/宿主安装器105项JVM通过.
+- 自有API31两项真实Binder/PFD会话回归通过. 首轮第三项创建hardlink被SELinux拒绝, 未放宽权限; 测试提交f983f6f0a3/build5313改用真实文件与ContentProvider同inode别名, 1/1无跳过通过, 不冒称真硬链接创建已覆盖. 固定宿主5312含另一会话Terminal/Inspector源码, 不归称干净安装器提交制品. 用户手机宿主未替换.
+- Docs6bdbdad6/6.8.0内容88, d.ts18b36840/4.28.0, Ace9bf6851b/1.20.0/build122, Offline9bcdfd18/6.8.6/build69各自门禁通过并本地提交. 离线200文件/11744511字节, 聚合SHA-256=65786402628484d27bb4b59f23646f90477f0306c171ff70b2b99ea3f8ac7ec9. Ace原releases和宿主并行工作保留, 其余相关工作区干净.
+- 本条以build62独立文档提交, 细节见docs/dev/p9-profiles-integration-evidence.md. 最终R8正式宿主脚本/多API契约和签名产物另作最后一笔验收提交. P7继续延迟, 没有远端动作或新设备申请.
