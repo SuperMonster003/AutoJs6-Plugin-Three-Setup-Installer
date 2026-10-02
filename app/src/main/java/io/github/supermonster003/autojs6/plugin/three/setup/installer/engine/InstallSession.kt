@@ -3,6 +3,7 @@ package io.github.supermonster003.autojs6.plugin.three.setup.installer.engine
 import android.content.Intent
 import com.google.gson.JsonObject
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.auth.Authorizer
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.policy.DialogSafetyApproval
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.source.PreparedPackage
 import org.autojs.plugin.installer.api.InstallerContract
 import org.autojs.plugin.installer.api.InstallerErrorCodes
@@ -27,6 +28,12 @@ internal class InstallSession(
         fun checkAvailable() = Unit
         fun resolve(request: InstallRequest, deadlineMillis: Long, checkActive: () -> Unit): Target
         fun prepare(index: Int, sources: List<SourceEntry>, checkActive: () -> Unit): PreparedPackage
+        fun checkInstallPolicy(prepared: PreparedPackage) = Unit
+        fun reviewSafety(index: Int, prepared: PreparedPackage, target: Target, options: InstallOptions,
+            interaction: String, deadlineMillis: Long, onReviewRequired: () -> Unit,
+            checkActive: () -> Unit): DialogSafetyApproval? = null
+        fun validateSafety(index: Int, prepared: PreparedPackage, target: Target, options: InstallOptions,
+            approval: DialogSafetyApproval?, checkActive: () -> Unit) = Unit
         fun installedVersion(packageName: String, target: Target): Version?
         /** P3 supplies the plugin confirmation. Explicit dialog must never silently bypass it. */
         fun confirm(prepared: PreparedPackage, target: Target, deadlineMillis: Long, checkActive: () -> Unit)
@@ -123,6 +130,7 @@ internal class InstallSession(
                 prepared = environment.prepare(index, sources, ::checkActive)
                 checkActive()
                 prepared.failure()?.let { throw it }
+                environment.checkInstallPolicy(prepared)
                 if (request.interaction == InstallerContract.INTERACTION_DIALOG || request.interaction == InstallerContract.INTERACTION_NOTIFICATION) {
                     stage(InstallerContract.STAGE_CONFIRMING, index, prepared.packageName)
                     val selection = environment.configure(index, prepared, target, request, deadline, ::checkActive)
@@ -136,10 +144,17 @@ internal class InstallSession(
                     stage(InstallerContract.STAGE_PREPARING, index, prepared.packageName)
                 }
                 val current = prepared
+                // A safety review belongs to the final selected bytes and target. It never
+                // holds the package lock while waiting for the user's dialog acknowledgement.
+                val safetyApproval = environment.reviewSafety(index, current, target, options, request.interaction, deadline,
+                    { stage(InstallerContract.STAGE_CONFIRMING, index, current.packageName) }, ::checkActive)
+                checkActive()
+                if (safetyApproval != null) stage(InstallerContract.STAGE_PREPARING, index, current.packageName)
                 // Confirmation may change the target and can take minutes. Acquire only once it
                 // finishes, then keep version sampling and the entire platform session together.
                 packageLease = PackageInstallLocks.acquire(current.packageName, ::checkActive)
                 val previous = prepared.packageName?.let { environment.installedVersion(it, target) }
+                environment.validateSafety(index, current, target, options, safetyApproval, ::checkActive)
                 checkActive()
                 val installed = target.engine.install(
                     InstallEngine.Request(current, options, target.userId, request.interaction, deadline),

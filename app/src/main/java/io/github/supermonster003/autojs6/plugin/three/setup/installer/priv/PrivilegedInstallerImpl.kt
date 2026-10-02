@@ -16,6 +16,7 @@ import android.util.Log
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.ThreeSetupInstallerPlugin
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.engine.StorageErrors
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.priv.hidden.PackageInstallerHidden
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.priv.hidden.InstalledSigningInfo
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.priv.hidden.PackagePostInstall
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.priv.hidden.PackageManagerHidden
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.priv.hidden.UserManagerHidden
@@ -290,6 +291,15 @@ internal open class PrivilegedInstallerImpl(expectedOwnerUid: Int? = null) : IPr
 
     override fun postInstall(packageName: String, userId: Int, dexopt: String, readUpdateOwner: Boolean, timeoutMillis: Long): Bundle = privileged {
         postInstallActions.run(packageName, userId, dexopt, readUpdateOwner, timeoutMillis)
+    }
+
+    override fun getInstalledSigningInfo(packageName: String, userId: Int): Bundle = privileged {
+        PrivilegedOptions.validatePackage(packageName)
+        require(userId >= 0) { "Invalid user" }
+        // The privileged query adds MATCH_ANY_USER where necessary, covering global packages
+        // without falsely reporting installation for the target user. Null alone means absent.
+        InstalledSigningInfo.encode(packageName, userId, packages.packageInfo(packageName, userId,
+            InstalledSigningInfo.flags(includeOtherUsers = true)))
     }
 
     override fun destroy() {

@@ -181,6 +181,8 @@ internal class InstallerBinder(context: Context, private val guard: CallerGuard 
                     preparedListener = { index, prepared -> record?.onPrepared(index, prepared) },
                     availability = record::checkNotificationAvailable,
                     userAction = record::showSystemConfirmation,
+                    safetyOwnerToken = record.token,
+                    safetyReview = record::reviewSafety,
                 )
                 environment = owned
                 val notificationToken = record?.token ?: java.util.UUID.randomUUID().toString()

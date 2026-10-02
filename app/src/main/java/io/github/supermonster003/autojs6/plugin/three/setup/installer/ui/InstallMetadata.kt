@@ -57,9 +57,9 @@ internal object InstallMetadata {
         }
         return InstallPresentation.Metadata(label, prepared.packageName, prepared.versionName, prepared.versionCode,
             previous, userId, installedKnown, prepared.sourceSize, prepared.minSdk, prepared.targetSdk, signature, icon, prepared.format,
-            prepared.apks.map { InstallPresentation.Split(it.name, it.size, true, it.splitName == null) } +
+            prepared.apks.map { InstallPresentation.Split(it.name, it.size, true, it.splitName == null, it.manifest?.requestedPermissions.orEmpty()) } +
                 prepared.splits.filterNot { it.selected }.map { InstallPresentation.Split(it.name, it.size, false, false) },
-            prepared.aabModules.toList())
+            prepared.aabModules.toList(), prepared.sharedUserId)
     }
 
     @Suppress("DEPRECATION")

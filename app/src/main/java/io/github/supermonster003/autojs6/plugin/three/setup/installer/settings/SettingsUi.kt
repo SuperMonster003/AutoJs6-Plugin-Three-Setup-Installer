@@ -215,7 +215,8 @@ internal class SettingsUi(private val owner: HostAppearanceActivity, val kit: In
             layout.scroll.post { layout.scroll.scrollTo(0, 0) }
         }
 
-    fun input(title: Int, value: String, note: String, validate: (String) -> String?, confirm: (String) -> Boolean): Dialog =
+    fun input(title: Int, value: String, note: String, validate: (String) -> String?,
+        multiline: Boolean = false, maxLength: Int = 255, confirm: (String) -> Boolean): Dialog =
         dialog(context.getString(title)) { layout, dialog ->
             layout.content.addView(kit.text(note, 14f, palette.muted))
             val field = TextInputLayout(context).apply {
@@ -238,8 +239,13 @@ internal class SettingsUi(private val owner: HostAppearanceActivity, val kit: In
                 tag = "settings-input"
                 setText(value); setTextColor(palette.text); setHintTextColor(palette.muted)
                 highlightColor = InstallerColorPolicy.withAlpha(palette.accent, 0x55)
-                setSingleLine(true)
-                filters = arrayOf(android.text.InputFilter.LengthFilter(255))
+                setSingleLine(!multiline)
+                if (multiline) {
+                    inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_FLAG_MULTI_LINE
+                    minLines = 3
+                    maxLines = 9
+                }
+                filters = arrayOf(android.text.InputFilter.LengthFilter(maxLength))
                 if (android.os.Build.VERSION.SDK_INT >= 29) {
                     textCursorDrawable = textCursorDrawable?.mutate()?.apply { setTint(palette.accent) }
                     textSelectHandle?.let { setTextSelectHandle(it.mutate().apply { setTint(palette.accent) }) }

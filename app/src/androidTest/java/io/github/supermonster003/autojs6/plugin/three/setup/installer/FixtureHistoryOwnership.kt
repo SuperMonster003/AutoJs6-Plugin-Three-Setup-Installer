@@ -17,13 +17,16 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
 /** Owns one newly created external fixture token, never a package-wide or whole-history deletion. */
-internal class FixtureHistoryOwnership(private val context: Context) : Closeable {
+internal class FixtureHistoryOwnership(private val context: Context, private val fixturePackage: String = FixtureInstallUi.PACKAGE_NAME) : Closeable {
     private val baseline: Map<String, InstallHistoryEntry>
     private val history: InstallHistoryStore
     private val startedAt = System.currentTimeMillis()
     private var record: InstallPresentation.Record? = null
 
     init {
+        require(fixturePackage in setOf(FixtureInstallUi.PACKAGE_NAME,
+            "io.github.supermonster003.autojs6.installer.advanced.fixture",
+            "io.github.supermonster003.autojs6.installer.advanced.shared.fixture"))
         // Read before loading the production store, whose restart recovery cancels unfinished entries.
         val disk = settledDisk()
         check(disk.all { it.terminal }) { "Unfinished history exists; refusing an external fixture audit" }
@@ -54,7 +57,7 @@ internal class FixtureHistoryOwnership(private val context: Context) : Closeable
             before.filter { it.id in ids }.forEach { entry ->
                 InstallHistoryEntry.validate(entry)
                 check(entry.token == owned.token && entry.origin == InstallerContract.SOURCE_EXTERNAL &&
-                    entry.startedAt >= startedAt && entry.packageName in setOf(null, FixtureInstallUi.PACKAGE_NAME)) {
+                    entry.startedAt >= startedAt && entry.packageName in setOf(null, fixturePackage)) {
                     "The selected history entry does not belong to the fixed external fixture"
                 }
             }

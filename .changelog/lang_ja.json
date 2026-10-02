@@ -8,17 +8,19 @@
     "v1.2.0": {
       "released_date": "2026/10/02",
       "feature": [
-        "高度なインストールオプション: `grantAllRequestedPermissions`, `requestUpdateOwnership`, `dexopt` (`none`/`verify`/`speed-profile`/`speed`), `installReason`, `packageSource`. 未対応の環境や認可では明示的に拒否. none は手動コンパイルを追加せず, Android 自身のコンパイルを無効にしません."
+        "高度なインストールオプション: `grantAllRequestedPermissions`, `requestUpdateOwnership`, `dexopt` (`none`/`verify`/`speed-profile`/`speed`), `installReason`, `packageSource`. 未対応の環境や認可では明示的に拒否. none は手動コンパイルを追加せず, Android 自身のコンパイルを無効にしません.",
+        "署名チェックとローカルのパッケージ名/SharedUID 完全一致ブロックリストは全入口に適用され, `BLOCKED_BY_POLICY` を返します. mismatch/unknown の署名は実際の dialog でその項目だけ一度許可できますが, Android の署名検証は残ります. サイレント/通知では許可できず, ブロックリストは上書き不可. 権限プレビューは選択した APK 分割の宣言であり, 付与済み権限ではありません."
       ],
       "improvement": [
         "高度なスクリプトオプションには AutoJs6 ビルド {{ v3_host_version_code }}+ と V3 / `advanced-install-options` の対応確認が必要. 省略時は従来の動作を維持し, 明示的な `false`/`none` も対応が必要. ローカル実装は正式公開や P9 全項目の完了を意味しません.",
         "成功結果は読み取れた `updateOwner` と `dexopt` を返す場合があります. null は現在の呼び出し元に Android が owner を返さなかったことを示し, 可視性による非表示も含むため全体での不在を証明しません. 読み取り失敗では省略して notes に記録. DexOpt 状態は accepted/failed/cancelled/timeout/unavailable/unknown. accepted はシステムによるスキップも含み, 実際のコンパイルを保証しません. 追加処理の失敗は確認済みのインストール成功を変更しません.",
         "権限付与要求と none 以外の DexOpt は Shizuku/Root が必要で, verify は API 26+ が必要. インストール理由は API 26+, ソースは API 33+, 更新所有権の要求は API 34+. 所有権は初回インストールのみで有効化でき, 更新や別ユーザーの既存パッケージでは無視される場合があります. false は既存 owner を解除しません.",
-        "権限付与はシステムが許可できる権限を要求し, Android 14 の USE_FULL_SCREEN_INTENT などインストーラーが変更できる app-op を含む場合があります. 全宣言権限を保証せず, アクセシビリティ, オーバーレイや任意の署名権限は付与しません. restricted/system-fixed/policy-fixed 制限を維持し, restricted 権限 allowlist フラグを追加しません."
+        "権限付与はシステムが許可できる権限を要求し, Android 14 の USE_FULL_SCREEN_INTENT などインストーラーが変更できる app-op を含む場合があります. 全宣言権限を保証せず, アクセシビリティ, オーバーレイや任意の署名権限は付与しません. restricted/system-fixed/policy-fixed 制限を維持し, restricted 権限 allowlist フラグを追加しません.",
+        "none/Dhizuku の既存署名確認は現在のユーザーのみで, Shizuku/Root は全体を照会します. SharedUID ルールがある場合, 別ユーザーの既存パッケージを除外できなければ例外なしで拒否します."
       ],
       "dependency": [
         "installer-api.aar を契約 V3 (MPL 2.0) に更新し, V1/V2 と全 11 AIDL トランザクションを維持. 高度なスクリプトオプションはホストビルド 5308+ が必要",
-        "共有パッケージ解析器 (MPL 2.0) を更新し, 実際のマニフェストルートと sharedUserId を検証して曖昧な入力を拒否"
+        "共有パッケージ解析器 (MPL 2.0) を更新し, 実際のマニフェストルートと sharedUserId を検証して曖昧な入力を拒否. 実際の Android 名前空間の要素から権限宣言を読み取り, コメントや拡張名前空間の偽宣言を除外し, コンパイル済み属性の矛盾を拒否."
       ]
     },
     "v1.1.0": {
