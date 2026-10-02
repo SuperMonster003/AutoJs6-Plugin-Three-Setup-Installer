@@ -1139,7 +1139,7 @@ if (!installer.isDefault()) installer.setDefault(true);
 
 - 原P9第一项完成, 不新增, 分拆或丢弃路线图条目. 五个选项接入安装对话框/设置和宿主V3, V1/V2及原公开AIDL顺序兼容. 不支持的显式metadata或有效特权请求在创建平台session前拒绝, 不静默忽略. 所有权只报告实际读取, 不承诺必然获授或把false当撤销.
 - 额外DexOpt仅对已成功安装的单包发白名单argv, 不强制重编译, 清profile或自动重试. API34+检查ART最终状态, 旧Success包含跳过的可能. 先保存已确认安装, 再执行可选工作; 超时/取消不改写安装成功, 进程恢复不重放编译或来源删除.
-- API24 Root和API33 Root/Shizuku三组各4/4, 包括真实权限前后变化, 编译调用及安装后零预算超时. API35 Shizuku/shell高级用例2/2, 另签名查询/写前守卫3/3和V3接口14/14. API35实际ART PERFORMED; 特权owner为com.android.shell且普通应用查询为null, 测试改为独立系统dump核对, 保留首轮跨身份错误断言日志. 空值文案同步为当前身份未获可见owner, 不证明全局不存在.
+- API24 Root和API33 Root/Shizuku三组各4/4, 包括真实权限前后变化, 编译调用及安装后零预算超时. API35 Shizuku/shell高级用例2/2, 另签名查询/写前守卫3/3; V3接口13项通过, 1项既有实装用例因未启用engineAuthorizer而跳过, 不计为通过. API35实际ART PERFORMED; 特权owner为com.android.shell且普通应用查询为null, 测试改为独立系统dump核对, 保留首轮跨身份错误断言日志. 空值文案同步为当前身份未获可见owner, 不证明全局不存在.
 - 高级选项独立提交树已剥离尚在验证的签名策略, 生产/androidTest Kotlin和JVM通过. 证据见 docs/dev/p9-advanced-options-evidence.md 与 docs/dev/p9-advanced-device-evidence.md. 本项按build58本地提交; P9签名/黑名单/预览及跨库最终验收继续进行, 按来源配置文件保留未完成. 最终签名Release与交付核验另行记录.
 
 ### 2026-10-02 (P9 签名审核, 本地规则与权限预览)
@@ -1149,3 +1149,12 @@ if (!installer.isDefault()) installer.setDefault(true);
 - 专属API31真实界面4/4, 27.666秒, 无跳过: 四种mode包黑名单/声明SharedUID写前拒绝, 权限展开, 未勾选阻止, 明确放行后框架异签名拒绝, 规则变更使旧确认失效, 私有快照抵御原inode变化. 原10历史字节, 偏好集合, 默认和session保持, 自有夹具及policy journal清除. 已有SharedUID省略场景按纯策略测试范围记录, 不冒充同等实机覆盖.
 - 审阅同时修复共享解析器原权限regex受注释/扩展namespace污染的问题. 宿主模块0d21303f6759fd4d83b595a8dbc7eed241c67731, 69 JVM通过; 新release AAR为275454字节, SHA-256 41f9348190895b772b1b8af9aa2c82c5543f62646000598ca08e9b68360259a3. 保留真实SDK23别名, 验证编译资源ID与raw/typed冲突. 宿主另一会话的5310版本文件保持未提交原状, 不把它当作已交付宿主.
 - 插件新AAR集成后347 JVM零失败/跳过, Debug及androidTest装配通过. 详细实现/固定包范围见 docs/dev/p9-policy-evidence.md. 本项按build59本地提交; 配置文件原条目不勾选, V3跨库同步和最终签名包另记, P7发布继续延迟.
+
+### 2026-10-02 (P9 前两项 build60 本地交付)
+
+- 最终1.2.0/build60签名R8为 autojs6-plugin-three-setup-installer-v1.2.0-ce29bb60.apk, 2074763字节, SHA-256 00adf451b1875b5b652975a740657e3079e0954e786056bec3a05ca705822b33. CRC/v2签名/非Debug/无native通过, releases仅此包; 旧1.1.0摘要核验后归档. Temurin单组平台决策, 347 JVM零失败/跳过, Debug/Release各0 lint错误与43警告, 36文档/15图标检查通过.
+- 同一Release在API24/31/33/35独立跨UID/PID契约各2/2, 六类未授权业务操作拒绝. API31专属AVD真实宿主UID10152分别通过Dhizuku和Shizuku/shell执行安装/更新/卸载及签名拒绝; shell还验证权限确实授予, optimizing非终态事件, 单次完成和dexopt结构化结果完整返回脚本. 旧平台Success只记accepted, 不冒充PERFORMED.
+- 宿主e173241b88/3876677bae/e86186920d/0d21303f67, Docs695f21a0, d.ts396a9706, Ace10e6dd31, Offline7e11fb39均本地提交. Docs/类型/离线工作区干净, Ace原releases和宿主另一会话的inspector/terminal/版本等改动保留. V3当前选项同步已完成, 原第四条仍待来源配置文件实施后的最终同步, 不分拆勾选.
+- 三台用户测试设备保数据覆盖同包并恢复各自原测试APK, 原默认/权限模式/历史偏好/服务身份按各自证据核验. 校正旧接口runner的OK(14)统计为13通过+1显式未启用的实装用例跳过; 生命周期用例的6条自有waiting.apk历史经token/时间/内容及原记录完整比对后精确移除. API35原2条历史和偏好字节保持, 重装同一Release后独立2项再次通过. 不将临时测试或更新记账说成完全无文件变化.
+- 专属AVD最终无夹具/session/安装FGS, Dhizuku owner不变, 仅关闭本轮自有5562; 用户5554及另一会话5574保持. 三星已收回, 本轮未重新申请, 不声称新增API36/37实测. 全部证据见 docs/dev/p9-release-evidence.md 与 docs/dev/p9-integration-evidence.md.
+- 主插件两笔实现提交为321e4ac/build58与b07b018/build59, 本次最后一笔证据提交使用build60并核对可达提交数/工作区. P9前两条完成, 下一步从原按来源配置文件继续; P7远端发布依然延迟. 当前没有新的设备, 关键产品决策或手动操作需要维护者处理.

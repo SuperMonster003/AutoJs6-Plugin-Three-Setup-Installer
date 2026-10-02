@@ -45,7 +45,7 @@ The second fixed Debug main was 8,681,002 bytes, SHA-256 `4fb2149a6d81feddad0e04
 - Manual `speed` compilation returned exit code 0 and ART final status `PERFORMED`; the public result was `accepted` with that detail.
 - A third real successful replacement used a zero-budget post-install call. No compilation process started; the follow-up was `timeout`, the result retained `ok=true`, and the installed version remained 1.
 - The owned fixture was uninstalled. Private settings and the history file were byte-identical to their saved baseline after this run.
-- V3 Binder and plugin contract checks passed 14/14, including explicit false/none fields requiring V3, with no skip.
+- V3 Binder and plugin contract checks passed 13 cases, including explicit false/none fields requiring V3. One additional existing real-install case was skipped because its explicit engineAuthorizer opt-in was absent; the runner printed 14 tests, which must not be mistaken for 14 passes. Actual installations are covered by the separate advanced-option runs above.
 
 API 24 Root and API 33 Root/Shizuku results, original-device state and cleanup are recorded in [the separate device evidence](p9-advanced-device-evidence.md). They exercise the older compiler output path rather than ART's API 34+ output. They do not substitute for all SDK/ROM combinations.
 

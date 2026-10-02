@@ -67,4 +67,19 @@ Root 和 Shizuku 测试后, 原普通 XML, 持久空集, 用户列表, 0/20 个�
 
 Debug 测试 APK 的临时 Manifest 权限与原独立 Release 测试器不同. 测试结束已经用各自精确备份保数据覆盖恢复测试 APK, 再核验实际摘要, UID, 权限与私有文件. 两台 `after-test-restore.json` 均无基线差异, `test-restoration.json` 记录恢复依据; 没有卸载预先存在的测试包或手动重置权限来制造一致.
 
-完整日志位于 `build/p9-backend-devices/<serial>/initial-root/instrumentation.log`, Sony 的另一组为 `initial-shizuku/instrumentation.log`. 当前主包保留上述验证用 Debug 等待最终 Release 交付; 这不是设备最终发行状态. 后续交付会另记录签名 Release 的真实版本与摘要, 原测试 APK 已完成恢复.
+完整日志位于 `build/p9-backend-devices/<serial>/initial-root/instrumentation.log`, Sony 的另一组为 `initial-shizuku/instrumentation.log`. 此阶段结束时主包暂留上述验证用 Debug, 原测试 APK 已恢复; 最终发行状态见下节.
+
+## 最终 Release 60 交付
+
+两台均保数据覆盖为同一非 Debug 1.2.0/build 60: `autojs6-plugin-three-setup-installer-v1.2.0-ce29bb60.apk`, 2,074,763 字节, SHA-256 `00adf451b1875b5b652975a740657e3079e0954e786056bec3a05ca705822b33`. 部署前再次核对 SDK/ABI, 原测试包和完整基线; 部署后直接读取实际已安装 APK 核对摘要及版本. 没有重跑上述高级选项矩阵或把其中间 Debug 结果改写为最终 R8 全矩阵.
+
+使用独立 Java/平台发行测试器补验同一最终 Release, 测试器为 17,892 字节, SHA-256 `dbffb97dbfaa08fa73542b0de18b86e664ed5019cfca0ab4dca666274be65fce`. 两台各 2/2 通过, 无跳过, 证明发行产物非 Debug/无调试组件/无 native, 从实际 R8 APK 加载公共协议完成 INFO/INSTALLER 往返, 并拒绝非宿主 UID 的六类业务操作.
+
+| 设备 | 插件 / 探针 UID | 插件 / 探针 PID | INFO / 全部往返 | 结果 |
+| --- | --- | --- | --- | --- |
+| emulator-5554 / API 24 | 10293 / 10294 | 28238 / 28256 | 15 ms / 70 ms | 2/2 |
+| QV770340J7 / API 33 | 10623 / 10659 | 10006 / 10025 | 13 ms / 51 ms | 2/2 |
+
+测试后分别覆盖恢复各自原测试 APK, 实际摘要仍为 `8e253348315d83e0b77bd41dfe99ed4669c13ef63be01a3fa72b762602fd8c51`, 测试包 UID/权限/记录的私有文件相同. 最后审计确认主包 UID, 原授权/app-op/来源设置, 普通默认完整摘要, 持久空集, 0/20 个原系统 session, 偏好/历史和原服务进程身份保持. 夹具含保留数据在所有用户中均缺席, 无安装前台服务或本轮插件 helper.
+
+应用更新后, 两台 AndroidX `files/profileinstaller_profileWrittenFor_lastUpdateTime.dat` 自然刷新, Sony 另有 `files/profileInstalled` 更新. 这些框架性能记账变化单独保留, 不手工回写来声称所有目录字节相同; 其余记录的主包私有文件均与原基线相同. `build/p9-backend-devices/<serial>/final-delivery.json` 和汇总 `build/p9-backend-devices/final-delivery.json` 均为 phase=`delivered`, 包含实际 APK/test 摘要, 两项结果, 完整原 session IDs 和记账前后摘要. 原始发行测试输出在同目录 `release60-contract.log`, 最终核对为 `final-audit.json`.

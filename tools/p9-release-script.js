@@ -7,6 +7,8 @@
     function require(value, message) { if (!value) throw new Error(message); }
     require(c && c.ownedAvd === 'Three_Setup_Dhizuku_P8_API31', 'Dedicated AVD opt-in required');
     require(c.token && /^[0-9a-f]{32}$/.test(c.token), 'Invalid acceptance token');
+    var authorizer = c.authorizer || 'dhizuku';
+    require(authorizer === 'dhizuku' || authorizer === 'shizuku', 'Unsupported fixture authorizer');
     require(String(context.getPackageName()) === 'org.autojs.autojs6', 'Official host required');
     require(android.os.Build.VERSION.SDK_INT === 31 && String(android.os.Build.MODEL) === 'sdk_gphone64_x86_64', 'Dedicated API 31 emulator required');
     require(Math.floor(android.os.Process.myUid() / 100000) === 0, 'Primary test user required');
@@ -34,7 +36,7 @@
         return result;
     }
     function options(extra) {
-        var result = { authorizer: 'dhizuku', interaction: 'silent', timeout: 30000 };
+        var result = { authorizer: authorizer, interaction: 'silent', timeout: 30000 };
         Object.keys(extra || {}).forEach(function (key) { result[key] = extra[key]; });
         return result;
     }
@@ -56,22 +58,32 @@
         require(installer.isAvailable(), 'Plugin is unavailable');
         report.status = installer.status;
         require(report.status.contractVersion === 3, 'V3 must be negotiated with the live plugin');
-        var state = installer.authorizer.state('dhizuku');
-        require(state.available && state.running && state.granted, 'Dhizuku must already be authorized');
-        rejected('v1.apk', { grantAllRequestedPermissions: true }, 'AUTHORIZER_REQUIRED');
-        rejected('v1.apk', { dexopt: 'speed' }, 'AUTHORIZER_REQUIRED');
+        var state = installer.authorizer.state(authorizer);
+        require(state.available && state.running && state.granted, 'The selected authorizer must already be authorized');
+        if (authorizer === 'dhizuku') {
+            rejected('v1.apk', { grantAllRequestedPermissions: true }, 'AUTHORIZER_REQUIRED');
+            rejected('v1.apk', { dexopt: 'speed' }, 'AUTHORIZER_REQUIRED');
+        }
         rejected('v1.apk', { requestUpdateOwnership: true }, 'INVALID_ARGUMENT');
         rejected('v1.apk', { packageSource: 'other' }, 'INVALID_ARGUMENT');
         require(installedVersion() === null, 'Unsupported choices installed a package');
         installStarted = true;
-        var session = installer.session(directory + '/v1.apk', options({ grantAllRequestedPermissions: false,
-            requestUpdateOwnership: false, dexopt: 'none', installReason: 'user' }));
+        var session = installer.session(directory + '/v1.apk', options({ grantAllRequestedPermissions: authorizer === 'shizuku',
+            requestUpdateOwnership: false, dexopt: authorizer === 'shizuku' ? 'speed' : 'none', installReason: 'user' }));
         session.on('stage', function (stage) { report.stages.push(stage); });
         session.on('complete', function () { report.terminalCount++; });
         report.install = session.wait(30000);
         require(report.install.ok && report.install.versionCode === 1 && installedVersion() === 1, 'V3 session install failed');
         require(session.state === 'completed' && report.terminalCount === 1 && session.cancel() === false, 'Session terminal events differ');
-        require(report.install.dexopt === undefined && report.install.updateOwner === undefined, 'Unrequested optional results must be absent');
+        require(report.install.updateOwner === undefined, 'Unrequested ownership results must be absent');
+        if (authorizer === 'shizuku') {
+            require(report.install.dexopt && report.install.dexopt.filter === 'speed' && report.install.dexopt.status === 'accepted',
+                'The optional compilation result did not survive the public host API');
+            require(report.stages.indexOf('optimizing') >= 0, 'Compilation stage was not delivered');
+            require(context.getPackageManager().checkPermission('android.permission.READ_CALENDAR', packageName) === 0,
+                'The runtime permission was not actually granted');
+            report.grantedRuntimePermission = 'android.permission.READ_CALENDAR';
+        } else require(report.install.dexopt === undefined, 'Unrequested compilation results must be absent');
         report.update = installer.install(directory + '/v2.apk', options({ installReason: 'user' }));
         require(report.update.ok && installedVersion() === 2, 'Same-signer update failed');
         rejected('v2-other.apk', {}, 'BLOCKED_BY_POLICY');
