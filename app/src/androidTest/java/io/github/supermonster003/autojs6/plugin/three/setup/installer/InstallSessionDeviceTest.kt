@@ -92,7 +92,9 @@ class InstallSessionDeviceTest {
             assertEquals("TIMEOUT", failure.code)
             assertTrue(SystemClock.elapsedRealtime() - started < 3_000)
             assertTrue(pipe[0].fileDescriptor.valid())
-            assertTrue(directory.parentFile == PackageStaging.root(context))
+            // Android may expose cacheDir through /data/data or /data/user/0. Staging
+            // deliberately canonicalizes its root, so compare the actual directory identity.
+            assertEquals(PackageStaging.root(context).canonicalFile, directory.parentFile?.canonicalFile)
         } finally {
             pipe.forEach { it.close() }
             PackageStaging.discard(directory)
