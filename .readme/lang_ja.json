@@ -8,7 +8,7 @@
   "p_introduction_what": "3-Setup Installer は独立したホーム画面, AutoJs6 の入口とスクリプト, 外部アプリからのパッケージの開き方や共有を通じて Android アプリをインストール, 更新, 検査, アンインストールします. Android の確認と, Shizuku, Root または Dhizuku による特権操作に対応します.",
   "p_introduction_how": "プラグインがホストとは独立してパッケージの検査, インストール, 結果表示を処理します. 対話, サイレント, 通知の各モードを選べます. 通知モードでは確認, キャンセル, 結果を通知に表示し, 必要な Android の確認画面はその通知をタップしたときだけ開きます.",
   "h3_status": "現在の状態",
-  "p_status": "{{ version_name }} は以下のインストール, アプリ管理, スクリプト機能を実装しています. GitHub Releases での正式公開とプラグインセンターへの登録は未完了です. ホスト連携には AutoJs6 >= {{ required_host_version_name }} ({{ required_host_version_code }}), `installer` スクリプト API にはビルド {{ script_host_version_code }} 以降が必要です. 端末の検証範囲と残りの受け入れ項目は [ROADMAP.md]({{ roadmap_url }}) に記録しています. Dhizuku, 通知インストール, 永続的な既定インストーラーのスクリプトオプションには installer V2 と AutoJs6 {{ required_host_version_name }} ビルド {{ v2_host_version_code }} 以降が必要です. 基本的なホスト連携はビルド {{ required_host_version_code }}, V1 スクリプトは {{ script_host_version_code }} 以降を引き続きサポートします.",
+  "p_status": "{{ version_name }} は以下のインストール, アプリ管理, スクリプト機能を実装しています. このバージョンは [GitHub Releases]({{ repo_url }}/releases/tag/v{{ version_name }}) または AutoJs6 のプラグインセンターから入手できます. ホスト連携には AutoJs6 >= {{ required_host_version_name }} ({{ required_host_version_code }}), `installer` スクリプト API にはビルド {{ script_host_version_code }} 以降が必要です. 端末の検証範囲と残りの受け入れ項目は [ROADMAP.md]({{ roadmap_url }}) に記録しています. Dhizuku, 通知インストール, 永続的な既定インストーラーのスクリプトオプションには installer V2 と AutoJs6 {{ required_host_version_name }} ビルド {{ v2_host_version_code }} 以降が必要です. 基本的なホスト連携はビルド {{ required_host_version_code }}, V1 スクリプトは {{ script_host_version_code }} 以降を引き続きサポートします.",
   "h3_features": "機能",
   "p_features_intro": "{{ version_name }} で実装された機能",
   "features": [

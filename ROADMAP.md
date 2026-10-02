@@ -229,13 +229,13 @@ runtime/api/augment/installer/          Installer.kt (AugmentableKey("installer"
 | P4 | 脚本 API `installer` (同步 + Async + 会话, InstallerError, 示例) | 宿主 | P1, P2 |
 | P5 | 独立应用形态: 设置页, 默认安装器页, 关于 / 发行历史 / 更新检查, 启动器图标 | 插件 | P2, P3 |
 | P6 | 健壮性, 安全, 兼容矩阵, 性能, 体积 | 全部 | P3, P4, P5 |
-| P7 | 文档, d.ts, Ace, 离线文档, README, changelog, GitHub 仓库, 官方索引, 1.0.0 发布 gate | 文档 + 发布 | P6 |
+| P7 | 文档, d.ts, Ace, 离线文档, README, changelog, GitHub 仓库, 官方索引, 首次发布 gate (已延后至 1.2.0) | 文档 + 发布 | P6 |
 | P8 | 1.1.0: Dhizuku 授权, 持久化默认安装器, 通知栏安装模式, APK Inspector 迁移到共享 AAR | 插件 + 宿主 + 兄弟 | P7 本地 gate; 2026-10-02 维护者允许远端发布延迟时先行 |
 | P9 | 1.2.0: 授予全部权限 / 更新所有权 / DexOpt / 签名门禁 / 黑名单 / 权限预览 / 按来源配置 | 插件 (+ 宿主小) | P8 |
 
 建议会话切分: P0 一次 (骨架 + spike); P1 两到三次 (共享 AAR 为一次; 契约 + 客户端 + 路由为一次; 删除旧安装器 + 调用方改造 + 文档为一次); P2 两到三次 (来源与授权; 安装引擎; 卸载 / 批量 / 路由); P3 一到两次; P4 两次 (install / session / errors; uninstall / inspect / authorizer / setDefault / 示例); P5 一到两次; P6 一到两次; P7 一次; P8 两次; P9 两到三次.
 
-当前进度 (2026-10-02): P0-P6, P8和P9原条目已完成所列范围的实施与验收, P7远端发布继续按维护者指示延迟. P9四项包含按来源配置文件及最终宿主/文档/d.ts同步, 本地签名交付检查见文末记录. 既有ROM限制和证据范围保持, 不把系统限制或未覆盖组合写成成功. 所有仓库仅本地提交, 不推送, 创建标签或发布; 最新实现与验证见文末会话记录及各阶段证据.
+当前进度 (2026-10-02): P0-P9原条目已按所列范围完成. 维护者已授权P7远端发布, 本插件首次公开发行使用已验收v1.2.0/build63, 官方索引已收录, 实际宿主向导已从线上发现/下载/安装. 宿主依维护者再次明确的要求继续仅本地提交, 不推送任何远端分支; 其他关联仓库也未自动扩大为远端发布. 既有ROM限制与固定制品证据范围保持, 不将未覆盖组合写成成功. 当前发布链接, 源码提交和验证记录见文末及docs/dev/p7-remote-publication-evidence.md.
 
 ---
 
@@ -512,11 +512,11 @@ runtime/api/augment/installer/          Installer.kt (AugmentableKey("installer"
 ### P7.3 发布 gate
 
 - [x] (发布) 平台验收构建 (Temurin 参数) + `:app:testDebugUnitTest` + `:app:assembleDebugAndroidTest` + `:app:lintDebug` + `:app:appendDigestToReleasedFiles` (签名 APK, CRC32 文件名 `autojs6-plugin-three-setup-installer-v1.0.0-XXXXXXXX.apk`); `git diff --check`; `VERSION_BUILD == git rev-list --count HEAD`; 工作树干净. (RELEASE / JVM / DEVICE 2026-10-01: build 48平台检查通过, 268 JVM零失败/跳过, Debug/Release lint零错误, 签名R8包CRC32=8601e5e9, 1,902,783字节. API 24/35/37同包跨进程契约各2/2, 八台保留数据覆盖Release并核验. VERSION_BUILD与最终提交数48一致, 工作树干净; 仅本地gate, 不代表原P2/P6缺口或远端发布已完成. 见 docs/dev/p7-local-gate-evidence.md.) (刷新 RELEASE / DEVICE 2026-10-02: build51全部本地检查通过, 268 JVM零失败/跳过, 签名APK CRC32=cf864c74, 当前4台保留数据交付, API24/31/33契约各2/2, Samsung/API36/16KiB独立首页通过. VERSION_BUILD与最终提交数51一致且工作树干净, 见 docs/dev/p7-matrix-complete-release-evidence.md.)
-- [ ] (发布) GitHub 仓库 `SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer` (功能性描述, 例如 `App installer plugin for AutoJs6 with Shizuku and Root silent installation`), 推送, tag `v1.0.0`, Release 附 APK 与 SHA-256.
-- [ ] (索引) `official-repositories.json` 插入仓库名 (字母序, 总数 45 -> 46, README 计数同步), `release-manifests/io.github.supermonster003.autojs6.plugin.three.setup.installer/<versionCode>.json` 准入清单, 本地运行生成器验证后提交推送 `main`, 确认 Actions 生成成功.
-- [ ] (宿主) 宿主提交 (`feat(installer): ...` 系列) 是否推送按维护者指示; 宿主 `PluginInstallWizardCatalog` 条目在索引可解析后生效.
+- [x] (发布) GitHub 仓库 `SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer` 使用功能性描述, 推送, tag `v1.2.0`, Release 附 APK 与 SHA-256. (2026-10-02: P7依维护者指示延后至P9之后, 首次公开发行采用已验收1.2.0/build63而非旧1.0.0包. 标签固定1e63028234e9542f13a1fec8aa75eaa09cf25114, Release401825139公开, APK与LF格式SHA256SUMS均公开下载核验, APK保持d8ae073d...b5fbe不变. 见docs/dev/p7-remote-publication-evidence.md.)
+- [x] (索引) `official-repositories.json` 插入仓库名 (字母序, 总数 45 -> 46, README 计数同步), `release-manifests/io.github.supermonster003.autojs6.plugin.three.setup.installer/<versionCode>.json` 准入清单, 本地运行生成器验证后提交推送 `main`, 确认 Actions 生成成功. (2026-10-02: 准入63.json绑定tag/source/APK/签名, 46项单元测试及46官方项目/62发行项生成通过; 索引229b1afa推送, Actions37011765516成功, 公开main原始JSON与提交blob字节一致.)
+- [x] (宿主) 宿主提交 (`feat(installer): ...` 系列) 是否推送按维护者指示; 宿主 `PluginInstallWizardCatalog` 条目在索引可解析后生效. (2026-10-02: 维护者再次明确宿主继续本地提交不推送, 本轮未推送private/public任何分支. 新建专属API31上使用固定Host5312, 实际向导从线上索引发现/下载并通过系统确认安装Release63, 下载及设备APK摘要一致, 见docs/dev/p7-live-wizard-release-evidence.md.)
 
-验收条件: 四个关联仓库已提交; 插件 Release 与索引条目可被宿主插件中心向导发现并安装; 1.0.0 关闭.
+验收条件: 四个关联仓库已提交; 插件 Release 与索引条目可被宿主插件中心向导发现并安装; 首次公开发行1.2.0关闭 (原P7延后至P9之后, 未新增或拆分条目, 宿主推送依维护者决定继续保留本地).
 
 ---
 
@@ -1180,3 +1180,12 @@ if (!installer.isDefault()) installer.setDefault(true);
 - 同一最终APK在API24/31/35独立Release契约各2/2通过, 实际跨UID/PID且六类未授权业务均拒绝. API24/35保数据覆盖主包, 各自原test直接备份恢复并核对摘要; 私有Release历史未读取且没有为此额外Debug覆盖. 不把此前固定Debug/UI或PFD假完成回归冒称全ROM最终R8全矩阵, 无新Samsung/API33/36/37验收.
 - 自有5562最后保留最终Release, 无测试夹具/系统活跃session/安装FGS, 原Dhizuku owner保持. 仅其本轮记录的进程38644和AVD身份确认后关闭, 用户5554与其他设备保持运行. 全部失败/修正/恢复边界见docs/dev/p9-profiles-release-evidence.md及设备独立证据.
 - 主插件本轮按336478a/build61来源配置, 49b5e66/build62整体同步及本笔build63最终gate三笔本地提交. 最终VERSION_BUILD与可达提交数一致且工作区干净; 关联仓库各自提交, 其他会话工作及Ace原releases保留. 原P9四项完成, 只有原P7三项按维护者要求继续延迟, 不推送/打标签/发布. 无新增设备, 产品抉择或手动操作待维护者处理.
+
+### 2026-10-02 (P7远端发布与宿主保留本地)
+
+- 维护者明确授权P7远端发布, 随后再次明确宿主依旧本地提交不推送. 本插件master与v1.2.0标签已原子推送, 首个公开Release401825139发布于2026-10-02 21:05:08 (Asia/Shanghai). 采用此前已验收build63, tag源码固定1e63028234e9542f13a1fec8aa75eaa09cf25114, APK大小2140911及SHA-256=d8ae073dfaaa155ce31540663f55395639be13b8d5074c57f6057ef62b5b5fbe均保持. 原P7条目只回填延后后的实际版本, 不新增/分拆/丢弃条目.
+- APK和最终LF格式SHA256SUMS已无认证公开下载并重算, GNU sha256sum --check实际通过. 初次下载误用草稿untagged URL及Windows默认CRLF校验文件问题分别修正并保留记录; 只替换辅助校验文件, 不替换APK或移动tag.
+- 官方索引229b1afa10287ae1e53de2792415c13af23a8029已推送, 官方项目45->46, 63.json精确绑定tag/source/package/APK/签名. 46项生成器测试通过, 62发行项保持完整, Actions37011765516成功, 普通公开main原始JSON字节等于Git blob. 宿主private/public分支均未推送, 末次读取仍为原8b8b52f80c/ed3eb10e88.
+- 新建专属API31以固定Host5312真实首启向导发现线上条目, 两次实际网络下载及最终设备base.apk摘要均相同. 第一轮由测试操作取消确认, 第二轮通过Play Protect正常扫描/系统安装, 向导显示Installed:1, 插件页显示1.2.0(63)已启用. 宿主临时未知来源开关恢复关闭, 缓存自动清理, preferred XML相同, 无active sessions/owner/特权server. 仅本轮独有AVD/PID46028核验后关闭, 用户API24 AVD保持.
+- 初次完整云端API24/35各有一条旧测试以未经canonical的cache路径和实际canonical目录直接比较而失败. f8b746b/build64只修测试断言和版本计数, 保留超时/宿主描述符/目录边界校验, 不改生产代码. 完整Actions37012451323复验成功: API24记录266项/58跳过/0失败, API35记录276项/64跳过/0失败, JVM/APK/lint及Markdown通过; 不把需要专属环境的跳过项计为实装成功, 不改写tag上的原失败记录.
+- 十语言当前发布状态及36生成物同步, 历史changelog保持. 本笔发布记录使用build65, VERSION_BUILD与可达提交数一致, 主插件和索引工作区干净并同步远端; 已发布APK仍为immutable build63. 完整证据见docs/dev/p7-remote-publication-evidence.md及p7-live-wizard-release-evidence.md. 原P0-P9按记录范围全部完成, 宿主按维护者要求继续本地, 无额外设备/资料/关键决策/手动操作待处理.

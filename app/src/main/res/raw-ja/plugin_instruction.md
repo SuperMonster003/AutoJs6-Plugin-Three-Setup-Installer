@@ -1,6 +1,6 @@
 3-Setup Installer は独立したホーム画面, AutoJs6 の入口とスクリプト, 外部アプリからのパッケージの開き方や共有を通じて Android アプリをインストール, 更新, 検査, アンインストールします. Android の確認と, Shizuku, Root または Dhizuku による特権操作に対応します.
 
-1.2.0 は以下のインストール, アプリ管理, スクリプト機能を実装しています. GitHub Releases での正式公開とプラグインセンターへの登録は未完了です. ホスト連携には AutoJs6 >= 6.8.0 (5299), `installer` スクリプト API にはビルド 5300 以降が必要です. 端末の検証範囲と残りの受け入れ項目は [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md) に記録しています. Dhizuku, 通知インストール, 永続的な既定インストーラーのスクリプトオプションには installer V2 と AutoJs6 6.8.0 ビルド 5307 以降が必要です. 基本的なホスト連携はビルド 5299, V1 スクリプトは 5300 以降を引き続きサポートします.
+1.2.0 は以下のインストール, アプリ管理, スクリプト機能を実装しています. このバージョンは [GitHub Releases](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/releases/tag/v1.2.0) または AutoJs6 のプラグインセンターから入手できます. ホスト連携には AutoJs6 >= 6.8.0 (5299), `installer` スクリプト API にはビルド 5300 以降が必要です. 端末の検証範囲と残りの受け入れ項目は [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md) に記録しています. Dhizuku, 通知インストール, 永続的な既定インストーラーのスクリプトオプションには installer V2 と AutoJs6 6.8.0 ビルド 5307 以降が必要です. 基本的なホスト連携はビルド 5299, V1 スクリプトは 5300 以降を引き続きサポートします.
 
 高度なスクリプトオプションには AutoJs6 5308+ と V3 `advanced-install-options` が必要. プロファイルの上書きがない場合, 省略時は従来動作を維持. 明示的な `false`/`none` も対応が必要. 正式公開と端末検証の状態はロードマップを参照.
 
