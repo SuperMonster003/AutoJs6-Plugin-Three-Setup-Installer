@@ -26,6 +26,11 @@ internal class InstallSession(
     interface Environment : Closeable {
         /** A mandatory presentation may become unavailable while the worker is waiting/writing. */
         fun checkAvailable() = Unit
+        /** Null defers identity selection until a parsed item's profile has been applied. */
+        fun initialTarget(request: InstallRequest, deadlineMillis: Long, checkActive: () -> Unit): Target? =
+            resolve(request, deadlineMillis, checkActive)
+        fun itemRequest(index: Int, prepared: PreparedPackage, request: InstallRequest): InstallRequest = request
+        fun interaction(request: InstallRequest, target: Target): String = request.interaction
         fun resolve(request: InstallRequest, deadlineMillis: Long, checkActive: () -> Unit): Target
         fun prepare(index: Int, sources: List<SourceEntry>, checkActive: () -> Unit): PreparedPackage
         fun checkInstallPolicy(prepared: PreparedPackage) = Unit
@@ -52,6 +57,7 @@ internal class InstallSession(
         fun onProgress(progress: Float, detail: JsonObject) = Unit
         fun onItemResult(index: Int, result: JsonObject) = Unit
         fun onInstalled(index: Int, result: JsonObject) = Unit
+        fun onOptionsResolved(index: Int, options: InstallOptions, interaction: String, profileName: String?) = Unit
         fun onCompleted(result: JsonObject)
         fun onFailed(failure: InstallFailure)
     }
@@ -114,7 +120,7 @@ internal class InstallSession(
 
     private fun executeItems() {
         checkActive()
-        val initialTarget = environment.resolve(request, deadline, ::checkActive)
+        val initialTarget = environment.initialTarget(request, deadline, ::checkActive)
         checkActive()
         val results = mutableListOf<JsonObject>()
         for ((index, sources) in request.items.withIndex()) {
@@ -123,6 +129,7 @@ internal class InstallSession(
             var prepared: PreparedPackage? = null
             var target = initialTarget
             var options = request.options
+            var interaction = request.interaction
             var packageLease: Closeable? = null
             try {
                 checkActive()
@@ -131,14 +138,22 @@ internal class InstallSession(
                 checkActive()
                 prepared.failure()?.let { throw it }
                 environment.checkInstallPolicy(prepared)
-                if (request.interaction == InstallerContract.INTERACTION_DIALOG || request.interaction == InstallerContract.INTERACTION_NOTIFICATION) {
+                var selectedRequest = environment.itemRequest(index, prepared, request)
+                options = selectedRequest.options
+                notifyListener { listener.onOptionsResolved(index, options, interaction, selectedRequest.matchedProfileName) }
+                target = initialTarget ?: environment.resolve(selectedRequest, deadline, ::checkActive)
+                interaction = environment.interaction(selectedRequest, target)
+                if (interaction != selectedRequest.interaction) selectedRequest = selectedRequest.copy(interaction = interaction)
+                notifyListener { listener.onOptionsResolved(index, options, interaction, selectedRequest.matchedProfileName) }
+                if (interaction == InstallerContract.INTERACTION_DIALOG || interaction == InstallerContract.INTERACTION_NOTIFICATION) {
                     stage(InstallerContract.STAGE_CONFIRMING, index, prepared.packageName)
-                    val selection = environment.configure(index, prepared, target, request, deadline, ::checkActive)
+                    val selection = environment.configure(index, prepared, target, selectedRequest, deadline, ::checkActive)
                     prepared = selection.prepared
                     target = selection.target
                     options = selection.options
                     prepared.failure()?.let { throw it }
                     checkActive()
+                    notifyListener { listener.onOptionsResolved(index, options, interaction, selectedRequest.matchedProfileName) }
                     // The confirmation has been consumed. A same-package wait is preparation,
                     // not another request for approval, and must retain only the cancel action.
                     stage(InstallerContract.STAGE_PREPARING, index, prepared.packageName)
@@ -146,18 +161,19 @@ internal class InstallSession(
                 val current = prepared
                 // A safety review belongs to the final selected bytes and target. It never
                 // holds the package lock while waiting for the user's dialog acknowledgement.
-                val safetyApproval = environment.reviewSafety(index, current, target, options, request.interaction, deadline,
+                val selectedTarget = requireNotNull(target)
+                val safetyApproval = environment.reviewSafety(index, current, selectedTarget, options, interaction, deadline,
                     { stage(InstallerContract.STAGE_CONFIRMING, index, current.packageName) }, ::checkActive)
                 checkActive()
                 if (safetyApproval != null) stage(InstallerContract.STAGE_PREPARING, index, current.packageName)
                 // Confirmation may change the target and can take minutes. Acquire only once it
                 // finishes, then keep version sampling and the entire platform session together.
                 packageLease = PackageInstallLocks.acquire(current.packageName, ::checkActive)
-                val previous = prepared.packageName?.let { environment.installedVersion(it, target) }
-                environment.validateSafety(index, current, target, options, safetyApproval, ::checkActive)
+                val previous = prepared.packageName?.let { environment.installedVersion(it, selectedTarget) }
+                environment.validateSafety(index, current, selectedTarget, options, safetyApproval, ::checkActive)
                 checkActive()
-                val installed = target.engine.install(
-                    InstallEngine.Request(current, options, target.userId, request.interaction, deadline),
+                val installed = selectedTarget.engine.install(
+                    InstallEngine.Request(current, options, selectedTarget.userId, interaction, deadline),
                     object : InstallEngine.Listener {
                         override fun onStage(stage: String) = stage(stage, index, current.packageName)
                         override fun onProgress(bytesWritten: Long, totalBytes: Long) {
@@ -172,7 +188,7 @@ internal class InstallSession(
                             // This is a durable fact, not a second item-completion callback. Keep
                             // deletion and result notifications at the existing final boundary.
                             val confirmed = InstallDocuments.installResult(result.packageName ?: current.packageName,
-                                current.versionName, current.versionCode, previous?.code, target.authorizer.id,
+                                current.versionName, current.versionCode, previous?.code, selectedTarget.authorizer.id,
                                 result.interaction, (clock() - startedAt).coerceAtLeast(0), false, result.notes)
                             listener.onInstalled(index, confirmed)
                         }
@@ -188,19 +204,20 @@ internal class InstallSession(
                 }
                 notes += cleanup.notes
                 val version = try {
-                    packageName?.let { environment.installedVersion(it, target) }
+                    packageName?.let { environment.installedVersion(it, selectedTarget) }
                 } catch (_: Exception) {
                     notes += "Installed version could not be read; archive version is reported"
                     null
                 }
                 val result = InstallDocuments.installResult(packageName, version?.name ?: prepared.versionName,
-                    version?.code ?: prepared.versionCode, previous?.code, target.authorizer.id, installed.interaction,
+                    version?.code ?: prepared.versionCode, previous?.code, selectedTarget.authorizer.id, installed.interaction,
                     (clock() - startedAt).coerceAtLeast(0), cleanup.deleted, notes, followUp = installed.followUp)
+                if (request.applySourceProfiles) result.addProperty(InstallerContract.FIELD_SOURCE_DELETE_REQUESTED, options.deleteSource)
                 results += result
                 runCatching { listener.onItemResult(index, result.deepCopy()) }
             } catch (failure: Exception) {
                 val error = InstallFailure.from(failure, prepared?.packageName)
-                val result = InstallDocuments.failedItem(error, prepared?.packageName, target.authorizer.id, null,
+                val result = InstallDocuments.failedItem(error, prepared?.packageName, target?.authorizer?.id, null,
                     (clock() - startedAt).coerceAtLeast(0))
                 runCatching { listener.onItemResult(index, result.deepCopy()) }
                 if (!request.isBatch || !options.continueOnError) throw error

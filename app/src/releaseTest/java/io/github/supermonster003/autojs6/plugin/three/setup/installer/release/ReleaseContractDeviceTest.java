@@ -165,7 +165,7 @@ public final class ReleaseContractDeviceTest {
         check(Arrays.equals(new String[]{"none", "shizuku", "root", "dhizuku"}, capabilities.getStringArray("installerAuthorizers")), "Authorizers differ from contract V2");
         equal(32, capabilities.getInt("installerMaxBatch"), "Maximum batch size");
         equal(64, capabilities.getInt("installerMaxSplits"), "Maximum split count");
-        equal(new HashSet<>(Arrays.asList("batch", "splits", "inspect", "users", "silent-uninstall", "delete-source", "default-installer", "persistent-default-installer", "notification-install", "advanced-install-options")),
+        equal(new HashSet<>(Arrays.asList("batch", "splits", "inspect", "users", "silent-uninstall", "delete-source", "default-installer", "persistent-default-installer", "notification-install", "advanced-install-options", "source-profiles")),
                 new HashSet<>(Arrays.asList(Objects.requireNonNull(capabilities.getStringArray("installerFeatures")))), "Installer features");
     }
 

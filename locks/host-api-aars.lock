@@ -1,6 +1,6 @@
 # AutoJs6 6.8.0 host API release AARs: common-plugin-api from host commit 86d9bfa26b (module unchanged since 9c3ba2e520).
 # package-archive-parser from module source 0d21303f6759fd4d83b595a8dbc7eed241c67731 on 2026-10-02, 275454 bytes; no independent host versionCode.
-# installer-api from host build 5308 commit e173241b8874 on 2026-10-02, 32967 bytes; V3 advanced options, unchanged eleven public AIDL transactions.
+# installer-api from host build 5312 commit 48376c3b64901de0e6b4e0c0a565a41341a60e0a on 2026-10-02, 33220 bytes; negotiated V3 profiles, unchanged eleven public AIDL transactions.
 # InstallerIds.REQUIRED_HOST_VERSION_CODE remains 5299; common-plugin-api is unchanged. See libs/README.md for the concurrent host version-file boundary.
 format=1
 common-plugin-api.file=common-plugin-api.aar
@@ -8,4 +8,4 @@ common-plugin-api.sha256=ee7eb7879a53506c4cca5e2d19d3058e28df2168fb33351a52302a3
 package-archive-parser.file=package-archive-parser.aar
 package-archive-parser.sha256=41f9348190895b772b1b8af9aa2c82c5543f62646000598ca08e9b68360259a3
 installer-api.file=installer-api.aar
-installer-api.sha256=39971b5d9f29901075259e50da73367b1122c5f9453b4a9528d664c8cbfe575c
+installer-api.sha256=4681a41e3e10fc2c8589cf3e5e0f4c898e07155290c48ada9c4527a7b87c5b0b

@@ -2,7 +2,7 @@
 
 1.2.0은 아래 설치, 앱 관리 및 스크립트 기능을 구현합니다. 공식 GitHub Release 게시와 플러그인 센터 등록은 아직 완료되지 않았습니다. 호스트 연동에는 AutoJs6 >= 6.8.0 (5299), `installer` 스크립트 API에는 빌드 5300 이상이 필요합니다. 기기 검증 범위와 남은 검증 항목은 [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md)에 기록되어 있습니다. Dhizuku, 알림 설치 및 영구 기본 설치 프로그램의 스크립트 옵션에는 installer V2와 AutoJs6 6.8.0 빌드 5307 이상이 필요합니다. 기본 호스트 연동은 빌드 5299, V1 스크립트 메서드는 5300 이상을 계속 지원합니다.
 
-고급 스크립트 옵션에는 AutoJs6 빌드 5308+ 및 V3와 `advanced-install-options` 지원 확인이 필요합니다. 생략 시 기존 동작을 유지하며 명시적 `false`/`none`도 지원이 필요합니다. 로컬 구현은 공식 배포나 P9 전체 완료를 뜻하지 않습니다.
+고급 스크립트 옵션에는 AutoJs6 5308+ 및 V3 `advanced-install-options`가 필요. 프로필 덮어쓰기가 없으면 생략 시 기존 동작을 유지하며 명시적 `false`/`none`도 지원이 필요. 공식 출시 및 장치 검증 상태는 로드맵 참조.
 
 ### 사용 방법
 

@@ -29,7 +29,8 @@
     "`dhizuku`: Android 8.0 (API 26)+, 有効な Dhizuku デバイス/プロファイル所有者, このプラグインへの許可が必要です. 現在の所有者ユーザーのみを操作し, 実際の所有者パッケージをインストーラーとして記録します. shell/root 用のダウングレード, テストパッケージ, 低 targetSdk 制限回避, 他のユーザー, 任意のインストーラー指定, 削除時のデータ保持は非対応です. プラグインは所有者を設定しません.",
     "高度なインストールオプション: `grantAllRequestedPermissions`, `requestUpdateOwnership`, `dexopt` (`none`/`verify`/`speed-profile`/`speed`), `installReason`, `packageSource`. 未対応の環境や認可では明示的に拒否. none は手動コンパイルを追加せず, Android 自身のコンパイルを無効にしません.",
     "成功結果は読み取れた `updateOwner` と `dexopt` を返す場合があります. null は現在の呼び出し元に Android が owner を返さなかったことを示し, 可視性による非表示も含むため全体での不在を証明しません. 読み取り失敗では省略して notes に記録. DexOpt 状態は accepted/failed/cancelled/timeout/unavailable/unknown. accepted はシステムによるスキップも含み, 実際のコンパイルを保証しません. 追加処理の失敗は確認済みのインストール成功を変更しません.",
-    "署名チェックとローカルのパッケージ名/SharedUID 完全一致ブロックリストは全入口に適用され, `BLOCKED_BY_POLICY` を返します. mismatch/unknown の署名は実際の dialog でその項目だけ一度許可できますが, Android の署名検証は残ります. サイレント/通知では許可できず, ブロックリストは上書き不可. 権限プレビューは選択した APK 分割の宣言であり, 付与済み権限ではありません."
+    "署名チェックとローカルのパッケージ名/SharedUID 完全一致ブロックリストは全入口に適用され, `BLOCKED_BY_POLICY` を返します. mismatch/unknown の署名は実際の dialog でその項目だけ一度許可できますが, Android の署名検証は残ります. サイレント/通知では許可できず, ブロックリストは上書き不可. 権限プレビューは選択した APK 分割の宣言であり, 付与済み権限ではありません.",
+    "起点別プロファイルは設定で命名, 有効化, 編集, 並べ替えが可能. 起点と実際のパッケージ名プレフィックスが両方一致する最初の有効プロファイルを適用し, 複数を重ねない. 任意の起点にはホームも含む. アプリごとの 12 オプションに部分的な既定値を設定し, 明示的な要求を優先. 実際の確認画面で最終変更も可能."
   ],
   "h3_usage": "使い方",
   "usage_steps": [
@@ -123,6 +124,10 @@
   "example_v2": "V2 の例にはホストビルド {{ v2_host_version_code }} が必要. Dhizuku は有効な所有者, 通知モードは通知許可が必要です.",
   "example_persistent": "Root の永続設定はユーザー 0 で system UID を利用できる端末向け. 競合ポリシーは保持します.",
   "p_v2_requirements": "Dhizuku, 通知インストール, 永続的な既定インストーラーのスクリプトオプションには installer V2 と AutoJs6 {{ required_host_version_name }} ビルド {{ v2_host_version_code }} 以降が必要です. 基本的なホスト連携はビルド {{ required_host_version_code }}, V1 スクリプトは {{ script_host_version_code }} 以降を引き続きサポートします.",
-  "p_v3_requirements": "高度なスクリプトオプションには AutoJs6 ビルド {{ v3_host_version_code }}+ と V3 / `advanced-install-options` の対応確認が必要. 省略時は従来の動作を維持し, 明示的な `false`/`none` も対応が必要. ローカル実装は正式公開や P9 全項目の完了を意味しません.",
-  "example_v3": "高度な例: ホスト V3, Root とこのメタデータに必要な API 33+ が必要. 関数呼び出し時にインストールを開始"
+  "p_v3_requirements": "高度なスクリプトオプションには AutoJs6 {{ v3_host_version_code }}+ と V3 `advanced-install-options` が必要. プロファイルの上書きがない場合, 省略時は従来動作を維持. 明示的な `false`/`none` も対応が必要. 正式公開と端末検証の状態はロードマップを参照.",
+  "example_v3": "高度な例: ホスト V3, Root とこのメタデータに必要な API 33+ が必要. 関数呼び出し時にインストールを開始",
+  "p_profiles_requirements": "ホスト画面とスクリプトのプロファイルには AutoJs6 {{ profiles_host_version_code }}+ と V3 `source-profiles` が必要. 旧ホストや未協商の要求は従来動作を維持. 省略フィールドは継承し, 明示的な `false`/`auto`/`current`/`none` は上書き. null リセットは `installer`, `installReason`, `packageSource` のみで, 後者 2 項目は高度なオプションの対応も必要. `interaction`, `timeout`, `continueOnError` はセッション全体の値で, プロファイルには含まれない.",
+  "p_profiles_lifecycle": "処理開始時にプロファイルと自動認証順を固定し, 設定編集は処理中のタスクや同じバッチの後続項目に影響しない. 確認済みの再試行は確認済みの全オプションを保持し, 未確認の再試行は入口の既定値とプロファイルを再読込. 毎回ソースと署名を再検査し, 一度限りの許可は再利用しない. 署名, ブラックリスト, 認証, Android の制限は迂回しない.",
+  "p_profiles_cleanup": "協商後の成功項目の `sourceDeleteRequested` は有効な削除要求であり, 削除済みの証明ではない. ホストの明示的な `deleteSource: false` は削除を拒否し, 判断値の欠落や型違いもファイルを保持して notes に記録. バッチ結果後に, 失敗, 未処理, 保持項目と共有するファイルや確認可能な別名を保持. ローカル外部入口も同じバッチの重複 URI/正規化パスを保持. 実際の削除は `sourceDeleted` に記録し, ホストは content URI を削除しない.",
+  "example_profiles": "プロファイル例: ホスト 5312+ が必要. ファイルを保持し 3 つの継承値をリセット. 関数の呼び出し時にインストールを開始"
 }

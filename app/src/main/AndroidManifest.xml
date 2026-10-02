@@ -74,6 +74,7 @@
         </receiver>
         <activity android:name=".ui.InstalledAppsActivity" android:exported="false" android:configChanges="uiMode|locale|layoutDirection" />
         <activity android:name=".ui.SettingsActivity" android:exported="false" android:configChanges="uiMode|locale|layoutDirection" />
+        <activity android:name=".ui.InstallProfilesActivity" android:exported="false" android:configChanges="uiMode|locale|layoutDirection" />
         <activity android:name=".ui.DefaultInstallerActivity" android:exported="false" android:configChanges="uiMode|locale|layoutDirection" />
         <activity android:name=".ui.AboutActivity" android:exported="false" android:configChanges="uiMode|locale|layoutDirection" />
         <activity android:name=".ui.ReleaseHistoryActivity" android:exported="false" android:configChanges="uiMode|locale|layoutDirection" />

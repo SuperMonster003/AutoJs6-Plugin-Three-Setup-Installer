@@ -9,6 +9,7 @@ import io.github.supermonster003.autojs6.plugin.three.setup.installer.auth.Autho
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.engine.RequestDocuments
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.policy.InstallSafetyPolicy
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.policy.InstallSafetyPreferences
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.profiles.InstallProfilePreferences
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.settings.*
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.ui.appearance.AppearancePreferences
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.ui.appearance.HostAppearanceReader
@@ -18,6 +19,7 @@ import org.autojs.plugin.installer.api.InstallerContract
 class SettingsActivity : SettingsPageActivity() {
     override val pageTitle = R.string.settings_title
     private var updates: AppUpdateController? = null
+    private var displayedProfileRevision: String? = null
 
     override fun buildPage(content: LinearLayout) {
         val appearancePreference = AppearancePreferences.read(this)
@@ -133,6 +135,10 @@ class SettingsActivity : SettingsPageActivity() {
         }
         content.addView(settingsUi.caption(getString(R.string.advanced_sdk_note)))
         content.addView(settingsUi.caption(getString(R.string.settings_defaults_note)))
+        val profiles = InstallProfilePreferences.read(this)
+        displayedProfileRevision = profiles.revision
+        row(R.string.profile_title, if (profiles.readable) getString(R.string.profile_count, profiles.profiles.count { it.enabled }, profiles.profiles.size)
+            else getString(R.string.profile_unreadable), tag = "settings-profiles") { open(InstallProfilesActivity::class.java) }
         content.addView(settingsUi.group(R.string.policy_settings_title))
         val policy = InstallSafetyPreferences.read(this)
         row(R.string.policy_packages_title, if (policy.readable) getString(R.string.policy_rule_count, policy.packages.size)
@@ -157,7 +163,10 @@ class SettingsActivity : SettingsPageActivity() {
         }
     }
 
-    override fun onResume() { super.onResume(); LauncherIcons.prepare(this) }
+    override fun onResume() {
+        super.onResume(); LauncherIcons.prepare(this)
+        if (displayedProfileRevision != InstallProfilePreferences.read(this).revision) renderPage()
+    }
     override fun onPageAppearanceChanged() { updates?.close(); updates = null }
     override fun onStop() { updates?.close(); updates = null; super.onStop() }
 

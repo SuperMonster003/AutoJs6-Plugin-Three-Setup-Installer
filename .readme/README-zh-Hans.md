@@ -80,6 +80,7 @@
 - 高级安装选项: `grantAllRequestedPermissions`, `requestUpdateOwnership`, `dexopt` (`none`/`verify`/`speed-profile`/`speed`), `installReason` 和 `packageSource`. 平台或授权方式不支持时明确拒绝, 不静默忽略. none 不追加手动编译, 也不关闭 Android 自身的编译.
 - 成功结果可报告读回的 `updateOwner` 和 `dexopt`. null 表示 Android 未向当前调用身份返回 owner, 可能没有 owner 或受可见性过滤, 不能证明全局不存在; 读取失败省略字段并写入 notes. DexOpt 状态为 accepted/failed/cancelled/timeout/unavailable/unknown; accepted 包含系统跳过, 不证明实际执行编译. 附加步骤失败不改变已经确认的安装成功.
 - 签名门禁与本地包名/SharedUID 精确黑名单适用于全部入口, 使用 `BLOCKED_BY_POLICY`. 仅真实 dialog 可对当前项目一次放行 mismatch/unknown 签名, Android 仍会验签; 静默/通知不能放行, 黑名单不可覆盖. 权限预览显示实际选中 APK 分包声明的权限, 不代表已授予权限.
+- 来源配置文件可在设置中命名, 启停, 编辑及排序. 按实际包名选择首个同时匹配来源和包名前缀的已启用配置, 不叠加多个配置; 任意来源包含首页. 配置只提供 12 项每应用选项的局部默认值, 显式请求优先, 真实确认页的最终选择仍可调整.
 
 ******
 
@@ -170,13 +171,25 @@ let installAdvancedChosen = source => installer.installAsync(source, {
     dexopt: 'speed-profile', installReason: 'user', packageSource: 'local-file',
 }).then(result => console.log(result.ok, result.updateOwner, result.dexopt, result.notes))
     .catch(error => console.error(error.code, error.systemMessage));
+
+// 来源配置示例: 需要宿主 5312+; 保留文件并清除三个继承字段, 调用函数才开始安装
+let installWithProfileResets = source => installer.installAsync(source, {
+    interaction: 'dialog', deleteSource: false,
+    installer: null, installReason: null, packageSource: null,
+});
 ```
 
 来源可为路径, `file://` 或有读取权限的 `content://` URI. 数组表示独立批量项目, `{ splits: [...] }` 表示一个应用的分包. `session(...)` 创建后立即开始, 返回对象支持 `cancel()` 和 `wait()`. 同步调用可能抛出 `InstallerError`, 且不能在 UI 线程执行. 读取 `installer.status`, 创建 `installer.session(...)` 和调用 `session.wait()` 同样受此限制. UI 线程请使用 Async 方法, 或在脚本工作线程执行同步操作. 会话对象只能在创建它的脚本线程使用. 请处理 Promise 拒绝, 并逐项检查批量结果的 `ok` 与 `error`. 插件缺失或不兼容时报告 `PLUGIN_UNAVAILABLE`. `setDefault` 返回是否达到请求状态, 清除默认项成功也返回 true. `app.uninstall` 仍是宿主的系统卸载快捷入口, 需要特权选项时使用 `installer.uninstall`. 完整选项与事件见 [installer API 文档](https://docs.autojs6.com/#/installer).
 
 Dhizuku, 通知栏安装和持久默认安装器的脚本选项需要 AutoJs6 6.8.0 构建 5307 或以上及 installer V2 契约. 基础宿主接入仍支持构建 5299, V1 脚本方法从构建 5300 起可用.
 
-高级脚本选项需要 AutoJs6 构建 5308+ 并协商 V3 与 `advanced-install-options`. 省略字段保持原行为, 显式 `false`/`none` 仍需对应支持. 本地实现不表示已经正式发布或全部 P9 条目完成.
+高级脚本选项需要 AutoJs6 构建 5308+ 并协商 V3 与 `advanced-install-options`. 无配置覆盖时, 省略字段保持原行为; 显式 `false`/`none` 仍需对应支持. 正式发布和设备验收状态以路线图为准.
+
+宿主界面与脚本使用来源配置需要 AutoJs6 5312+ 及 V3 `source-profiles` 能力. 旧宿主或未协商的请求保持原行为. 省略字段可继承配置, 显式 `false`/`auto`/`current`/`none` 覆盖配置. 只有 `installer`, `installReason`, `packageSource` 接受 null 清除继承; 后两者的 null 仍需高级选项能力. `interaction`, `timeout`, `continueOnError` 属于整次会话, 不进入配置.
+
+任务开始处理时固定来源配置及自动授权排序, 编辑设置不会改变正在处理的任务或同批后续项目. 已确认的重试沿用完整确认选项, 未确认的重试重新读取入口默认值及配置. 每次仍重新检查来源和签名, 不复用一次性策略放行. 配置不能绕过签名, 黑名单, 授权或系统限制.
+
+协商来源配置后, 成功项的 `sourceDeleteRequested` 表示最终删除请求, 不代表已删除. 宿主显式 `deleteSource: false` 禁止删除; 决策字段缺失或类型错误时保留文件并记录 notes. 宿主等待批量结果, 保留与失败, 未处理或要求保留项目共用的文件及可确认的别名. 本地外部入口也保留同批重复 URI/规范化路径. `sourceDeleted` 才报告实际清理结果, content URI 不由宿主删除.
 
 ******
 
@@ -271,12 +284,16 @@ _2026/10/02_
 
 - `新增` 高级安装选项: `grantAllRequestedPermissions`, `requestUpdateOwnership`, `dexopt` (`none`/`verify`/`speed-profile`/`speed`), `installReason` 和 `packageSource`. 平台或授权方式不支持时明确拒绝, 不静默忽略. none 不追加手动编译, 也不关闭 Android 自身的编译.
 - `新增` 签名门禁与本地包名/SharedUID 精确黑名单适用于全部入口, 使用 `BLOCKED_BY_POLICY`. 仅真实 dialog 可对当前项目一次放行 mismatch/unknown 签名, Android 仍会验签; 静默/通知不能放行, 黑名单不可覆盖. 权限预览显示实际选中 APK 分包声明的权限, 不代表已授予权限.
-- `优化` 高级脚本选项需要 AutoJs6 构建 5308+ 并协商 V3 与 `advanced-install-options`. 省略字段保持原行为, 显式 `false`/`none` 仍需对应支持. 本地实现不表示已经正式发布或全部 P9 条目完成.
+- `新增` 来源配置文件可在设置中命名, 启停, 编辑及排序. 按实际包名选择首个同时匹配来源和包名前缀的已启用配置, 不叠加多个配置; 任意来源包含首页. 配置只提供 12 项每应用选项的局部默认值, 显式请求优先, 真实确认页的最终选择仍可调整.
+- `优化` 高级脚本选项需要 AutoJs6 构建 5308+ 并协商 V3 与 `advanced-install-options`. 无配置覆盖时, 省略字段保持原行为; 显式 `false`/`none` 仍需对应支持. 正式发布和设备验收状态以路线图为准.
 - `优化` 成功结果可报告读回的 `updateOwner` 和 `dexopt`. null 表示 Android 未向当前调用身份返回 owner, 可能没有 owner 或受可见性过滤, 不能证明全局不存在; 读取失败省略字段并写入 notes. DexOpt 状态为 accepted/failed/cancelled/timeout/unavailable/unknown; accepted 包含系统跳过, 不证明实际执行编译. 附加步骤失败不改变已经确认的安装成功.
 - `优化` 权限授予请求及非 none 的 DexOpt 需要 Shizuku/Root, verify 需要 API 26+. 安装原因需要 API 26+, 来源标签需要 API 33+, 请求更新所有权需要 API 34+. 所有权仅能在初装时启用, 更新或其他用户已有该包时可能被忽略; false 不撤销既有 owner.
 - `优化` 授予选项请求系统可授予的权限, 也可能包含 Android 14 的 USE_FULL_SCREEN_INTENT 等安装器可改变的 app-op. 不保证全部声明权限, 不授予无障碍, 悬浮窗或任意签名权限. restricted/system-fixed/policy-fixed 限制仍有效, 不额外设置 restricted 权限 allowlist 标志.
 - `优化` none/Dhizuku 仅能检查当前用户的已安装签名, Shizuku/Root 进行全局查询. SharedUID 规则非空时, 无法排除其他用户已有该包会硬拒绝, 不能一次放行.
-- `依赖` 升级 installer-api.aar 至契约 V3 (MPL 2.0), 保留 V1/V2 与全部 11 个 AIDL 事务; 高级脚本选项需要宿主构建 5308+
+- `优化` 宿主界面与脚本使用来源配置需要 AutoJs6 5312+ 及 V3 `source-profiles` 能力. 旧宿主或未协商的请求保持原行为. 省略字段可继承配置, 显式 `false`/`auto`/`current`/`none` 覆盖配置. 只有 `installer`, `installReason`, `packageSource` 接受 null 清除继承; 后两者的 null 仍需高级选项能力. `interaction`, `timeout`, `continueOnError` 属于整次会话, 不进入配置.
+- `优化` 任务开始处理时固定来源配置及自动授权排序, 编辑设置不会改变正在处理的任务或同批后续项目. 已确认的重试沿用完整确认选项, 未确认的重试重新读取入口默认值及配置. 每次仍重新检查来源和签名, 不复用一次性策略放行. 配置不能绕过签名, 黑名单, 授权或系统限制.
+- `优化` 协商来源配置后, 成功项的 `sourceDeleteRequested` 表示最终删除请求, 不代表已删除. 宿主显式 `deleteSource: false` 禁止删除; 决策字段缺失或类型错误时保留文件并记录 notes. 宿主等待批量结果, 保留与失败, 未处理或要求保留项目共用的文件及可确认的别名. 本地外部入口也保留同批重复 URI/规范化路径. `sourceDeleted` 才报告实际清理结果, content URI 不由宿主删除.
+- `依赖` 升级 installer-api.aar 至契约 V3 (MPL 2.0), 保留 V1/V2 与全部 11 个 AIDL 事务; 高级脚本选项需要宿主构建 5308+. 同一 V3 契约追加可选 source-profiles 能力及来源配置字段, 宿主接入从 5312 起, 十一项 AIDL 事务保持不变
 - `依赖` 升级共享安装包解析器 (MPL 2.0), 核验真实清单根元素及 sharedUserId, 拒绝有歧义的输入. 从真实 Android 命名空间元素读取权限声明, 排除注释和扩展命名空间伪声明, 并拒绝编译属性冲突.
 
 #### v1.1.0

@@ -77,6 +77,9 @@ internal object InstallPresentation {
         val result: JsonObject? = null,
         val options: InstallOptions? = null,
         val followUpPending: Boolean = false,
+        val effectiveInteraction: String? = null,
+        val profileName: String? = null,
+        val confirmedOptions: Boolean = false,
     )
     data class Snapshot(
         val revision: Long,
@@ -312,7 +315,7 @@ internal object InstallPresentation {
                     if (waiting.decision.await(minOf(100, deadline - now, expires - now))) {
                         val choice = waiting.decision.result() ?: throw InstallFailure(InstallerErrorCodes.USER_CANCELLED, "Installation was declined")
                         checkActive()
-                        synchronized(lock) { items = items.toMutableList().also { it[index] = it[index].copy(options = choice.options) } }
+                        synchronized(lock) { items = items.toMutableList().also { it[index] = it[index].copy(options = choice.options, confirmedOptions = true) } }
                         return choice
                     }
                 }
@@ -351,7 +354,7 @@ internal object InstallPresentation {
         /** Only a currently attached real dialog can mint an approval; nothing is serialized. */
         fun reviewSafety(binding: InstallSafetyBinding, deadline: Long, checkActive: () -> Unit): DialogSafetyApproval {
             check(Looper.myLooper() != Looper.getMainLooper())
-            check(request.interaction == InstallerContract.INTERACTION_DIALOG && !notificationMode)
+            check(canReviewSafety(binding.itemIndex) && !notificationMode)
             val waiting = SafetyReview(binding)
             synchronized(lock) {
                 if (closed || terminal || cancellationRequested) throw cancelled()
@@ -390,9 +393,37 @@ internal object InstallPresentation {
 
         internal fun acceptSafety(owner: InstallDialogActivity, promptToken: String): Boolean = synchronized(lock) {
             val waiting = safetyReview ?: return@synchronized false
-            if (closed || terminal || cancellationRequested || notificationMode || request.interaction != InstallerContract.INTERACTION_DIALOG ||
+            if (closed || terminal || cancellationRequested || notificationMode || !canReviewSafety(waiting.binding.itemIndex) ||
                 activity.get() !== owner || !isAttached || waiting.token != promptToken || !waiting.acknowledged) return@synchronized false
             waiting.decision.answer(DialogSafetyApproval.fromDialog(token, waiting.token, waiting.binding))
+        }
+
+        private fun canReviewSafety(itemIndex: Int): Boolean = synchronized(lock) {
+            request.interaction == InstallerContract.INTERACTION_DIALOG ||
+                (request.interaction == InstallerContract.INTERACTION_AUTO &&
+                    items.getOrNull(itemIndex)?.let { it.effectiveInteraction == InstallerContract.INTERACTION_DIALOG && it.confirmedOptions } == true)
+        }
+
+        /** Effective defaults are presentation facts; they are not a reusable user decision. */
+        fun onOptionsResolved(index: Int, options: InstallOptions, interaction: String, profileName: String?) {
+            synchronized(lock) {
+                if (closed || terminal || index !in items.indices) return
+                val targetUser = options.user.toIntOrNull() ?: (android.os.Process.myUid() / 100000)
+                items = items.toMutableList().also { list ->
+                    val prior = list[index]
+                    // Early archive display may have sampled the current user. Do not present
+                    // that user's installed version/signature as another profile target's fact.
+                    val metadata = prior.metadata?.let { value ->
+                        if (value.installedUserId == targetUser) value else value.copy(installedUserId = targetUser,
+                            previousVersion = null, installedKnown = false, signature = InstallMetadata.OTHER_USER)
+                    }
+                    list[index] = prior.copy(options = options, metadata = metadata,
+                        effectiveInteraction = interaction, profileName = profileName)
+                }
+                revision++
+            }
+            persist()
+            changed()
         }
 
         fun checkNotificationAvailable() {

@@ -82,7 +82,7 @@ class ManifestContractTest {
         val activities = manifest.child("application").children("activity").associateBy { it.androidAttribute("name") }
         assertEquals(setOf(".WakeActivity", ".ui.UninstallDialogActivity", ".ui.ConfirmationActivity",
             ".ui.InstallDialogActivity", ".ui.UserActionActivity", ".ui.ExternalInstallActivity", ".ui.HomeActivity",
-            ".ui.InstalledAppsActivity", ".ui.SettingsActivity", ".ui.DefaultInstallerActivity", ".ui.AboutActivity",
+            ".ui.InstalledAppsActivity", ".ui.SettingsActivity", ".ui.InstallProfilesActivity", ".ui.DefaultInstallerActivity", ".ui.AboutActivity",
             ".ui.ReleaseHistoryActivity", ".ui.InstallerSettingsActivity"), activities.keys)
         listOf(".ui.InstallDialogActivity", ".ui.UserActionActivity").forEach { name ->
             assertEquals("false", activities.getValue(name).androidAttribute("exported"))
@@ -122,7 +122,7 @@ class ManifestContractTest {
             assertEquals("android.intent.action.MAIN", it.child("intent-filter").child("action").androidAttribute("name"))
             assertEquals("android.intent.category.LAUNCHER", it.child("intent-filter").child("category").androidAttribute("name"))
         }
-        listOf(".ui.HomeActivity", ".ui.SettingsActivity", ".ui.DefaultInstallerActivity", ".ui.AboutActivity", ".ui.ReleaseHistoryActivity", ".ui.InstalledAppsActivity").forEach {
+        listOf(".ui.HomeActivity", ".ui.SettingsActivity", ".ui.InstallProfilesActivity", ".ui.DefaultInstallerActivity", ".ui.AboutActivity", ".ui.ReleaseHistoryActivity", ".ui.InstalledAppsActivity").forEach {
             assertEquals("false", activities.getValue(it).androidAttribute("exported"))
         }
         assertEquals(PLUGIN_PERMISSION, activities.getValue(".ui.InstallerSettingsActivity").androidAttribute("permission"))

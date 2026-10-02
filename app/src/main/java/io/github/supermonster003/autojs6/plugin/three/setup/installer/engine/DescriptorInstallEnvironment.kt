@@ -13,6 +13,11 @@ import io.github.supermonster003.autojs6.plugin.three.setup.installer.auth.Privi
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.policy.DialogSafetyApproval
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.policy.InstallSafetyBinding
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.policy.InstallSafetyGate
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.profiles.InstallProfilePreferences
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.profiles.InstallProfileSnapshot
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.profiles.InstallProfilePlan
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.settings.AuthorizerPreferences
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.settings.InstallerPreferences
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.source.ArchiveOpener
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.source.PackageStaging
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.source.PackageSource
@@ -46,12 +51,38 @@ internal class DescriptorInstallEnvironment private constructor(
     private val stagingCancellation = AtomicBoolean()
     private val openedSources = mutableMapOf<Int, MutableList<SeekableSource>>()
     private var deadline = Long.MAX_VALUE
+    private var profiles = InstallProfileSnapshot()
+    private var profilePlan: InstallProfilePlan? = null
+    private var authorizers: AuthorizerPreferences? = null
     private val safety = InstallSafetyGate(this.context, safetyOwnerToken, safetyReview, ::remaining) { requireNotNull(directory) }
+
+    override fun initialTarget(request: InstallRequest, deadlineMillis: Long, checkActive: () -> Unit): InstallSession.Target? {
+        deadline = deadlineMillis
+        checkActive()
+        authorizers = InstallerPreferences.read(context).authorizers
+        profiles = if (request.applySourceProfiles) InstallProfilePreferences.read(context).frozen() else InstallProfileSnapshot()
+        if (!profiles.readable) {
+            val text = context.getString(io.github.supermonster003.autojs6.plugin.three.setup.installer.R.string.profile_storage_unreadable)
+            throw InstallFailure(InstallerErrorCodes.BLOCKED_BY_POLICY, text, systemMessage = text)
+        }
+        checkActive()
+        val plan = InstallProfilePlan(profiles, request).also { profilePlan = it }
+        return if (plan.deferIdentity) null else resolve(request, deadlineMillis, checkActive)
+    }
+
+    override fun itemRequest(index: Int, prepared: PreparedPackage, request: InstallRequest): InstallRequest {
+        return profilePlan?.forPackage(prepared.packageName) ?: request
+    }
+
+    override fun interaction(request: InstallRequest, target: InstallSession.Target): String =
+        if (request.interaction == InstallerContract.INTERACTION_AUTO && !target.authorizer.privileged)
+            InstallerContract.INTERACTION_DIALOG else request.interaction
 
     override fun resolve(request: InstallRequest, deadlineMillis: Long, checkActive: () -> Unit): InstallSession.Target {
         deadline = deadlineMillis
         checkActive()
-        val authorizer = io.github.supermonster003.autojs6.plugin.three.setup.installer.settings.InstallerPreferences.resolveAuthorizer(context, request.options.authorizer)
+        val preference = authorizers ?: InstallerPreferences.read(context).authorizers
+        val authorizer = AuthorizerResolver.resolve(request.options.authorizer, AuthorizerStates.states(context), preference.order, preference.enabled)
         if (!authorizer.privileged && (request.interaction == InstallerContract.INTERACTION_SILENT || request.options.privilegedOptions.isNotEmpty())) {
             throw InstallFailure(InstallerErrorCodes.AUTHORIZER_REQUIRED, "Silent installation and privileged options require Shizuku or Root")
         }

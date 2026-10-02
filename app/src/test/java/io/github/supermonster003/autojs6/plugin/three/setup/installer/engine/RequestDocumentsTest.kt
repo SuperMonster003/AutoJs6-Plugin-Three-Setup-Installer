@@ -4,6 +4,21 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class RequestDocumentsTest {
+    @Test fun `profile opt in is typed and explicit false null and default values retain their keys`() {
+        fun parse(extra: String) = InstallRequest.parse("""{"id":"x","sources":[{"displayName":"x.apk"}],$extra}""", 1)
+        val omitted = parse("\"options\":{}")
+        assertFalse(omitted.applySourceProfiles)
+        assertTrue(omitted.explicitOptions.isEmpty())
+        val explicit = parse(""""applySourceProfiles":true,"options":{"authorizer":"auto","deleteSource":false,"dexopt":"none","user":"current","installer":null,"installReason":null,"packageSource":null}""")
+        assertTrue(explicit.applySourceProfiles)
+        assertEquals(setOf("authorizer", "deleteSource", "dexopt", "user", "installer", "installReason", "packageSource"), explicit.explicitOptions)
+        assertFalse(explicit.options.deleteSource)
+        assertNull(explicit.options.installReason)
+        for (value in listOf("null", "1", "\"true\"", "{}", "[]")) {
+            assertEquals("INVALID_ARGUMENT", assertThrows(InstallFailure::class.java) { parse("\"applySourceProfiles\":$value") }.code)
+        }
+    }
+
     @Test fun `wrong optional field types cannot silently become defaults`() {
         for (options in listOf("{\"authorizer\":false}", "{\"user\":0}", "{\"allowDowngrade\":\"true\"}",
             "{\"timeoutMillis\":1.5}", "{\"timeoutMillis\":1e99}", "[]")) {

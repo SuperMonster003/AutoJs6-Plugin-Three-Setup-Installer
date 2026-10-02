@@ -10,12 +10,16 @@
 
 * `新增` 進階安裝選項: `grantAllRequestedPermissions`, `requestUpdateOwnership`, `dexopt` (`none`/`verify`/`speed-profile`/`speed`), `installReason` 及 `packageSource`. 平台或授權方式不支援時明確拒絕, 不靜默忽略. none 不追加手動編譯, 也不關閉 Android 自身的編譯.
 * `新增` 簽章檢查與本機套件名稱/SharedUID 精確封鎖清單適用於全部入口, 使用 `BLOCKED_BY_POLICY`. 僅真實 dialog 可對目前項目一次放行 mismatch/unknown 簽章, Android 仍會驗證; 靜默/通知不能放行, 封鎖清單不可覆寫. 權限預覽顯示實際選取 APK 分包宣告的權限, 不代表已授予權限.
-* `優化` 進階指令碼選項需要 AutoJs6 建置 5308+ 並協商 V3 與 `advanced-install-options`. 省略欄位保留原行為, 明確指定 `false`/`none` 仍需對應支援. 本機實作不表示已正式發行或全部 P9 項目完成.
+* `新增` 來源設定檔可在設定中命名, 啟停, 編輯及排序. 按實際套件名稱選擇首個同時符合來源和名稱前綴的已啟用設定檔, 不疊加多個設定檔; 任意來源包含首頁. 設定檔只提供 12 項每應用程式選項的局部預設值, 明確請求優先, 真實確認頁的最終選擇仍可調整.
+* `優化` 進階指令碼選項需要 AutoJs6 組建 5308+ 並協商 V3 與 `advanced-install-options`. 沒有設定檔覆蓋時, 省略欄位保留原行為; 明確的 `false`/`none` 仍需對應支援. 正式發佈及裝置驗收狀態以路線圖為準.
 * `優化` 成功結果可回報讀回的 `updateOwner` 及 `dexopt`. null 表示 Android 未向目前呼叫身分傳回 owner, 可能沒有 owner 或受可見性過濾, 不能證明全域不存在; 讀取失敗省略欄位並寫入 notes. DexOpt 狀態為 accepted/failed/cancelled/timeout/unavailable/unknown; accepted 包含系統略過, 不證明實際執行編譯. 附加步驟失敗不改變已確認的安裝成功.
 * `優化` 權限授予請求及非 none 的 DexOpt 需要 Shizuku/Root, verify 需要 API 26+. 安裝原因需要 API 26+, 來源標籤需要 API 33+, 請求更新擁有權需要 API 34+. 擁有權僅能在首次安裝啟用, 更新或其他使用者已有該套件時可能被忽略; false 不撤銷既有 owner.
 * `優化` 授予選項請求系統可授予的權限, 也可能包含 Android 14 的 USE_FULL_SCREEN_INTENT 等安裝器可改變的 app-op. 不保證全部宣告權限, 不授予無障礙, 懸浮視窗或任意簽章權限. restricted/system-fixed/policy-fixed 限制仍有效, 不額外設定 restricted 權限 allowlist 標誌.
 * `優化` none/Dhizuku 僅能檢查目前使用者的已安裝簽章, Shizuku/Root 進行全域查詢. SharedUID 規則非空時, 無法排除其他使用者已有該套件會直接拒絕, 不能一次放行.
-* `相依性` 升級 installer-api.aar 至契約 V3 (MPL 2.0), 保留 V1/V2 與全部 11 個 AIDL 交易; 進階指令碼選項需要宿主建置 5308+
+* `優化` 主程式介面及指令碼使用來源設定檔需要 AutoJs6 5312+ 及 V3 `source-profiles` 能力. 舊主程式或未協商的請求保留原行為. 省略欄位可繼承設定檔, 明確的 `false`/`auto`/`current`/`none` 覆蓋設定檔. 只有 `installer`, `installReason`, `packageSource` 接受 null 清除繼承; 後兩者的 null 仍需進階選項能力. `interaction`, `timeout`, `continueOnError` 屬於整次工作階段, 不進入設定檔.
+* `優化` 任務開始處理時固定來源設定檔及自動授權排序, 編輯設定不會改變正在處理的任務或同批後續項目. 已確認的重試沿用完整確認選項, 未確認的重試重新讀取入口預設值及設定檔. 每次仍重新檢查來源和簽章, 不重用一次性策略放行. 設定檔不能繞過簽章, 黑名單, 授權或系統限制.
+* `優化` 協商來源設定檔後, 成功項目的 `sourceDeleteRequested` 表示最終刪除請求, 不代表已刪除. 主程式明確的 `deleteSource: false` 禁止刪除; 決策欄位缺失或型別錯誤時保留檔案並記錄 notes. 主程式等待批次結果, 保留與失敗, 未處理或要求保留項目共用的檔案及可確認的別名. 本機外部入口也保留同批重複 URI/正規化路徑. `sourceDeleted` 才報告實際清理結果, content URI 不由主程式刪除.
+* `相依性` 升級 installer-api.aar 至契約 V3 (MPL 2.0), 保留 V1/V2 與全部 11 個 AIDL 交易; 進階指令碼選項需要宿主建置 5308+. 同一 V3 契約附加可選 source-profiles 能力及來源設定檔欄位, 主程式接入從 5312 起, 十一項 AIDL 交易保持不變
 * `相依性` 升級共用安裝套件解析器 (MPL 2.0), 核驗真實資訊清單根元素及 sharedUserId, 拒絕有歧義的輸入. 從真實 Android 命名空間元素讀取權限宣告, 排除註解及擴充命名空間偽宣告, 並拒絕編譯屬性衝突.
 
 # v1.1.0
