@@ -7,6 +7,8 @@ import android.widget.LinearLayout
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.R
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.auth.Authorizer
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.engine.RequestDocuments
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.policy.InstallSafetyPolicy
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.policy.InstallSafetyPreferences
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.settings.*
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.ui.appearance.AppearancePreferences
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.ui.appearance.HostAppearanceReader
@@ -131,6 +133,13 @@ class SettingsActivity : SettingsPageActivity() {
         }
         content.addView(settingsUi.caption(getString(R.string.advanced_sdk_note)))
         content.addView(settingsUi.caption(getString(R.string.settings_defaults_note)))
+        content.addView(settingsUi.group(R.string.policy_settings_title))
+        val policy = InstallSafetyPreferences.read(this)
+        row(R.string.policy_packages_title, if (policy.readable) getString(R.string.policy_rule_count, policy.packages.size)
+            else getString(R.string.policy_unreadable), R.drawable.ic_shield, "settings-package-blacklist") { editPolicy(false) }
+        row(R.string.policy_shared_users_title, if (policy.readable) getString(R.string.policy_rule_count, policy.sharedUsers.size)
+            else getString(R.string.policy_unreadable), R.drawable.ic_shield, "settings-shared-user-blacklist") { editPolicy(true) }
+        content.addView(settingsUi.caption(getString(R.string.policy_settings_note)))
         content.addView(settingsUi.group(R.string.settings_notifications))
         flag(R.string.settings_progress_notifications, defaults.progressNotifications, "settings-notifications") { defaults.copy(progressNotifications = it) }
         content.addView(settingsUi.caption(getString(R.string.settings_notifications_note)))
@@ -157,6 +166,30 @@ class SettingsActivity : SettingsPageActivity() {
     }
     private fun save(value: InstallerPreferences): Boolean = runCatching { value.save(this) }.getOrDefault(false).also {
         if (it) renderPage() else notify(R.string.settings_error)
+    }
+    private fun editPolicy(sharedUser: Boolean) {
+        val current = InstallSafetyPreferences.read(this)
+        fun save(packages: Set<String>, sharedUsers: Set<String>): Boolean = runCatching {
+            InstallSafetyPreferences.save(this, current, packages, sharedUsers)
+        }.getOrDefault(false).also { if (it) renderPage() else notify(R.string.settings_error) }
+        if (!current.readable) {
+            prompt = settingsUi.confirmedChoice(R.string.policy_settings_title,
+                listOf(SettingsChoice(getString(R.string.policy_reset), getString(R.string.policy_unreadable))), 0) {
+                save(emptySet(), emptySet())
+            }
+            return
+        }
+        val selected = if (sharedUser) current.sharedUsers else current.packages
+        val otherCount = if (sharedUser) current.packages.size else current.sharedUsers.size
+        prompt = settingsUi.input(if (sharedUser) R.string.policy_shared_users_title else R.string.policy_packages_title,
+            selected.sorted().joinToString("\n"), getString(R.string.policy_editor_note, InstallSafetyPolicy.MAX_RULES),
+            validate = { value ->
+                val rules = runCatching { InstallSafetyPolicy.parseLines(value) }.getOrNull()
+                if (rules == null || rules.size + otherCount > InstallSafetyPolicy.MAX_RULES) getString(R.string.policy_invalid_rules) else null
+            }, multiline = true, maxLength = InstallSafetyPolicy.MAX_EDITOR_LENGTH + 1) { value ->
+                val rules = InstallSafetyPolicy.parseLines(value)
+                if (sharedUser) save(current.packages, rules) else save(rules, current.sharedUsers)
+            }
     }
     private fun saveAppearance(value: AppearancePreferences): Boolean = runCatching { value.save(this) }.getOrDefault(false).also {
         if (it) recreate() else notify(R.string.settings_error)

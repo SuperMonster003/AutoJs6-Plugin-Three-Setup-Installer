@@ -132,6 +132,8 @@ internal object ExternalInstaller {
                     installed = { index, options -> sources.deleteInstalled(context, index, options) },
                     availability = presentation::checkNotificationAvailable,
                     userAction = presentation::showSystemConfirmation,
+                    safetyOwnerToken = presentation.token,
+                    safetyReview = presentation::reviewSafety,
                 )
                 val session = InstallSession(actual, environment, object : InstallSession.Listener {
                     override fun onStage(stage: String, detail: JsonObject) {

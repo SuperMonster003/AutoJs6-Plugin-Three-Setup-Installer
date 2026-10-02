@@ -8,17 +8,19 @@
     "v1.2.0": {
       "released_date": "2026/10/02",
       "feature": [
-        "Advanced installation options: `grantAllRequestedPermissions`, `requestUpdateOwnership`, `dexopt` (`none`/`verify`/`speed-profile`/`speed`), `installReason` and `packageSource`. Unsupported platforms or authorizers reject requests instead of silently ignoring them. `none` adds no manual compilation and does not disable Android compilation."
+        "Advanced installation options: `grantAllRequestedPermissions`, `requestUpdateOwnership`, `dexopt` (`none`/`verify`/`speed-profile`/`speed`), `installReason` and `packageSource`. Unsupported platforms or authorizers reject requests instead of silently ignoring them. `none` adds no manual compilation and does not disable Android compilation.",
+        "Signature checks and local exact package-name/SharedUID blacklists apply to every entry point, using `BLOCKED_BY_POLICY`. Only a real dialog can allow a mismatch/unknown signature once for that item; Android still validates it. Silent/notification modes cannot grant this exception, and a blacklist cannot be overridden. Permission preview describes declarations in the selected APK splits, not granted permissions."
       ],
       "improvement": [
         "Advanced script options require AutoJs6 build {{ v3_host_version_code }}+ and negotiated V3 with `advanced-install-options`. Omitted fields preserve existing behavior; explicit `false`/`none` still requires support. These local changes do not announce an official release or completion of every P9 item.",
         "Successful results may report observed `updateOwner` and `dexopt`. Null means Android returned no owner to the current calling identity, possibly due to visibility filtering; it does not prove global absence. A failed read omits the field and adds notes. DexOpt states are accepted/failed/cancelled/timeout/unavailable/unknown; accepted includes a system skip and does not prove compilation ran. Failure of this extra step preserves confirmed installation success.",
         "Permission-grant requests and non-none DexOpt require Shizuku/Root; verify needs API 26+. Install reason needs API 26+, package source API 33+, and requesting update ownership API 34+. Ownership can start only on initial installation; updates or an existing package in another user may be ignored. False does not revoke an existing owner.",
-        "The grant option requests permissions the system can grant, including supported installer-changeable app-ops such as USE_FULL_SCREEN_INTENT on Android 14. It does not guarantee every declared permission or grant accessibility, overlays or arbitrary signature permissions. Restricted/system-fixed/policy-fixed constraints remain, without an extra restricted-permission allowlist flag."
+        "The grant option requests permissions the system can grant, including supported installer-changeable app-ops such as USE_FULL_SCREEN_INTENT on Android 14. It does not guarantee every declared permission or grant accessibility, overlays or arbitrary signature permissions. Restricted/system-fixed/policy-fixed constraints remain, without an extra restricted-permission allowlist flag.",
+        "none/Dhizuku can inspect installed signatures only in the current user; Shizuku/Root query globally. With nonempty SharedUID rules, uncertainty about a package in another user is blocked without an exception."
       ],
       "dependency": [
         "Upgrade installer-api.aar to contract V3 (MPL 2.0), retaining V1/V2 and all eleven AIDL transactions; advanced script options require host build 5308+",
-        "Upgrade the shared package archive parser (MPL 2.0) to verify the actual manifest root and sharedUserId; ambiguous input is rejected"
+        "Upgrade the shared package archive parser (MPL 2.0) to verify the actual manifest root and sharedUserId; ambiguous input is rejected. Read permission declarations from real Android-namespace elements, excluding comment and extension-namespace decoys and refusing conflicting compiled attributes."
       ]
     },
     "v1.1.0": {

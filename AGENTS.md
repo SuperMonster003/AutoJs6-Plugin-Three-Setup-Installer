@@ -192,6 +192,7 @@ AutoJs6-Plugin-Three-Setup-Installer/
 - notification 只用于安装. 确认, 取消与系统确认均对应当前会话/单次 token; none 的系统确认仍需用户点击通知打开, 不自动弹出插件安装对话框. 外部临时 URI 授权须在 NoDisplay Activity 结束前交给前台服务, 重启不得恢复 worker 或来源授权.
 - 高级选项: grantAllRequestedPermissions / dexopt 仅允许 Shizuku 或 Root, 不增加受限权限 allowlist 或全局系统开关. ownership/reason/source 的 SDK 门槛分别为 34/26/33, verify 编译过滤器为 26+. 未提供 metadata 保留既有默认, 不支持的显式请求须在系统 session 创建前拒绝. 所有权仅报告实际读回, false 不表示撤销已有 owner.
 - 手动 dexopt 只对已确认成功安装的单包发固定 argv 和白名单 filter; 不支持全局编译, 清 profile, 重置或自动重试. API34+ 需解析 ART 最终状态, 不能只看退出码; 旧 Success 可包括跳过, 统一 accepted 不承诺实际编译. 超时/取消的最终系统状态可未知, 不可因此把已确认安装改成失败. 已确认结果先落盘, 进程恢复不重放编译或来源删除.
+- 包名/SharedUID 黑名单是插件本地规则, 包含传入包及既有安装身份, 不提供公共脚本绕过. 签名身份门禁覆盖所有安装入口, 明确使用平台验证后的 base 证书及实际目标用户事实; scheme 存在性不是证书证明, split 整体仍须系统最终验证. 危险/未知签名只允许当前真实 dialog 的一次明确勾选, 绑定选中内容摘要, 目标用户, 当前证书/版本与规则revision; 拿包锁后重新核验, 变化则拒绝. 不在 JSON, 偏好或恢复文件保存放行凭据, notification/silent 不能替代签名审核.
 
 ## 10. 字符串资源
 

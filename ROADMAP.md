@@ -235,7 +235,7 @@ runtime/api/augment/installer/          Installer.kt (AugmentableKey("installer"
 
 建议会话切分: P0 一次 (骨架 + spike); P1 两到三次 (共享 AAR 为一次; 契约 + 客户端 + 路由为一次; 删除旧安装器 + 调用方改造 + 文档为一次); P2 两到三次 (来源与授权; 安装引擎; 卸载 / 批量 / 路由); P3 一到两次; P4 两次 (install / session / errors; uninstall / inspect / authorizer / setDefault / 示例); P5 一到两次; P6 一到两次; P7 一次; P8 两次; P9 两到三次.
 
-当前进度 (2026-10-02): P0-P6和P8原条目已完成所列范围验收, P7远端发布继续按维护者指示延迟. P9高级安装选项已实施, 其余原条目继续按原结构推进. 既有ROM限制和证据范围保持, 不把系统限制或未覆盖组合写成成功. 所有仓库仅本地提交, 不推送, 创建标签或发布; 最新实现与验证见文末会话记录及各阶段证据.
+当前进度 (2026-10-02): P0-P6和P8原条目已完成所列范围验收, P7远端发布继续按维护者指示延迟. P9高级安装选项及签名门禁/黑名单/权限预览两项已实施, 按来源配置文件仍待后续; V3和已实现选项的跨库同步完成, 原整体同步项留待配置文件实施后一并收口. 既有ROM限制和证据范围保持, 不把系统限制或未覆盖组合写成成功. 所有仓库仅本地提交, 不推送, 创建标签或发布; 最新实现与验证见文末会话记录及各阶段证据.
 
 ---
 
@@ -535,7 +535,7 @@ runtime/api/augment/installer/          Installer.kt (AugmentableKey("installer"
 ## P9: 1.2.0 (高级安装选项)
 
 - [x] (插件) `grantAllRequestedPermissions` (`INSTALL_GRANT_ALL_REQUESTED_PERMISSIONS`, 特权), `requestUpdateOwnership` (API 34+ `setRequestUpdateOwnership`), `dexopt` (`pm compile` 或 `performDexOptMode`, 特权), 安装原因 / 包来源 (`setInstallReason`, `setPackageSource`).
-- [ ] (插件) 签名门禁 (签名不一致 / 未知签名时默认拒绝并可在对话框放行), 包名 / SharedUID 黑名单 (设置页), 权限预览 (对话框展开 `uses-permission` 列表, 复用共享 AAR 清单解码).
+- [x] (插件) 签名门禁 (签名不一致 / 未知签名时默认拒绝并可在对话框放行), 包名 / SharedUID 黑名单 (设置页), 权限预览 (对话框展开 `uses-permission` 列表, 复用共享 AAR 清单解码).
 - [ ] (插件) 按来源的配置文件 (宿主 / 脚本 / 外部入口 / 指定包名前缀 -> 默认授权方式与选项), 设置页管理.
 - [ ] (宿主 + 文档) 脚本选项与文档 / d.ts 同步; 契约版本 3.
 
@@ -1141,3 +1141,11 @@ if (!installer.isDefault()) installer.setDefault(true);
 - 额外DexOpt仅对已成功安装的单包发白名单argv, 不强制重编译, 清profile或自动重试. API34+检查ART最终状态, 旧Success包含跳过的可能. 先保存已确认安装, 再执行可选工作; 超时/取消不改写安装成功, 进程恢复不重放编译或来源删除.
 - API24 Root和API33 Root/Shizuku三组各4/4, 包括真实权限前后变化, 编译调用及安装后零预算超时. API35 Shizuku/shell高级用例2/2, 另签名查询/写前守卫3/3和V3接口14/14. API35实际ART PERFORMED; 特权owner为com.android.shell且普通应用查询为null, 测试改为独立系统dump核对, 保留首轮跨身份错误断言日志. 空值文案同步为当前身份未获可见owner, 不证明全局不存在.
 - 高级选项独立提交树已剥离尚在验证的签名策略, 生产/androidTest Kotlin和JVM通过. 证据见 docs/dev/p9-advanced-options-evidence.md 与 docs/dev/p9-advanced-device-evidence.md. 本项按build58本地提交; P9签名/黑名单/预览及跨库最终验收继续进行, 按来源配置文件保留未完成. 最终签名Release与交付核验另行记录.
+
+### 2026-10-02 (P9 签名审核, 本地规则与权限预览)
+
+- 原P9第二项完成. 所有安装入口共用门禁, 危险或未知签名默认拒绝; 仅真实对话框明确勾选后可作一次尝试. 审核凭据不进入JSON/偏好/恢复文件, 绑定最终选中APK摘要/大小/目标用户/授权/已有证书版本及规则revision, 取包锁后再次核对. 黑名单包含传入和已安装SharedUID且不可放行覆盖; 损坏规则和必要事实未知时拒绝.
+- 外部可写来源的base经同摘要私有只读快照供平台验证, 不混用两次读取的摘要与证书. split完整验证仍由Android执行; 合法轮换可能需审核. none/Dhizuku只当前user, SH/Root查全局记录且另报目标user是否安装. 权限预览仅列选中APK的真实声明, 不等同授予.
+- 专属API31真实界面4/4, 27.666秒, 无跳过: 四种mode包黑名单/声明SharedUID写前拒绝, 权限展开, 未勾选阻止, 明确放行后框架异签名拒绝, 规则变更使旧确认失效, 私有快照抵御原inode变化. 原10历史字节, 偏好集合, 默认和session保持, 自有夹具及policy journal清除. 已有SharedUID省略场景按纯策略测试范围记录, 不冒充同等实机覆盖.
+- 审阅同时修复共享解析器原权限regex受注释/扩展namespace污染的问题. 宿主模块0d21303f6759fd4d83b595a8dbc7eed241c67731, 69 JVM通过; 新release AAR为275454字节, SHA-256 41f9348190895b772b1b8af9aa2c82c5543f62646000598ca08e9b68360259a3. 保留真实SDK23别名, 验证编译资源ID与raw/typed冲突. 宿主另一会话的5310版本文件保持未提交原状, 不把它当作已交付宿主.
+- 插件新AAR集成后347 JVM零失败/跳过, Debug及androidTest装配通过. 详细实现/固定包范围见 docs/dev/p9-policy-evidence.md. 本项按build59本地提交; 配置文件原条目不勾选, V3跨库同步和最终签名包另记, P7发布继续延迟.

@@ -50,6 +50,7 @@ __pycache__/
 !/tools/build-performance-install-fixture.ps1
 !/tools/run-release-performance.ps1
 !/tools/p8-release-script.js
+!/tools/p9-release-script.js
 !/tools/install-permission-journal.py
 !/tools/run-process-death-acceptance.py
 !/tools/run-privileged-spike.ps1

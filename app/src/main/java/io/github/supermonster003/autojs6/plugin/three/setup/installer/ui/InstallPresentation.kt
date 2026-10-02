@@ -17,6 +17,8 @@ import io.github.supermonster003.autojs6.plugin.three.setup.installer.engine.Ins
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.engine.UserActionLauncher
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.history.InstallHistoryCapture
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.history.InstallHistoryStore
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.policy.DialogSafetyApproval
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.policy.InstallSafetyBinding
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.source.PreparedPackage
 import org.autojs.plugin.installer.api.InstallerContract
 import org.autojs.plugin.installer.api.InstallerErrorCodes
@@ -48,7 +50,8 @@ internal object InstallPresentation {
 
     data class Callbacks(val cancel: () -> Unit, val retry: ((Int) -> Boolean)? = null, val close: () -> Unit = {})
     data class Choice(val options: InstallOptions, val selectedApkNames: Set<String>)
-    data class Split(val name: String, val size: Long, val selectable: Boolean, val base: Boolean)
+    data class Split(val name: String, val size: Long, val selectable: Boolean, val base: Boolean,
+        val requestedPermissions: List<String> = emptyList())
     data class Metadata(
         val label: String,
         val packageName: String?,
@@ -65,6 +68,7 @@ internal object InstallPresentation {
         val format: String,
         val splits: List<Split>,
         val aabModules: List<String>,
+        val sharedUserId: String? = null,
     )
     data class Item(
         val displayName: String,
@@ -87,7 +91,14 @@ internal object InstallPresentation {
         val canDeleteSource: Boolean,
         val recovered: Boolean = false,
         val interrupted: Boolean = false,
+        val safetyReview: SafetyReview? = null,
     )
+    class SafetyReview internal constructor(val binding: InstallSafetyBinding) {
+        val token: String = UUID.randomUUID().toString()
+        @Volatile var acknowledged = false
+            internal set
+        internal val decision = InstallDecision<DialogSafetyApproval>()
+    }
     /** Application-independent view used by Home; ownership remains in the installation worker. */
     data class TaskSnapshot(val token: String, val origin: String, val createdAt: Long, val state: Snapshot)
     class Prompt internal constructor(
@@ -151,6 +162,7 @@ internal object InstallPresentation {
         private val callbacks: Callbacks,
         private val canDeleteSource: Boolean,
     ) {
+        private var safetyReview: SafetyReview? = null
         val token: String = UUID.randomUUID().toString()
         val notificationMode: Boolean get() = request.interaction == InstallerContract.INTERACTION_NOTIFICATION
         val createdAt: Long = System.currentTimeMillis()
@@ -186,7 +198,7 @@ internal object InstallPresentation {
 
         fun snapshot(): Snapshot = synchronized(lock) {
             Snapshot(revision, stage, index, progress, items.toList(), prompt, terminal, failure,
-                terminal && !retrying && callbacks.retry != null, canDeleteSource)
+                terminal && !retrying && callbacks.retry != null, canDeleteSource, safetyReview = safetyReview)
         }
 
         internal fun startPersistence() {
@@ -336,6 +348,53 @@ internal object InstallPresentation {
                 waiting.decision.answer(Choice(choice.options, choice.selectedApkNames))
         }
 
+        /** Only a currently attached real dialog can mint an approval; nothing is serialized. */
+        fun reviewSafety(binding: InstallSafetyBinding, deadline: Long, checkActive: () -> Unit): DialogSafetyApproval {
+            check(Looper.myLooper() != Looper.getMainLooper())
+            check(request.interaction == InstallerContract.INTERACTION_DIALOG && !notificationMode)
+            val waiting = SafetyReview(binding)
+            synchronized(lock) {
+                if (closed || terminal || cancellationRequested) throw cancelled()
+                check(prompt == null && safetyReview == null)
+                safetyReview = waiting
+                index = binding.itemIndex
+                stage = InstallerContract.STAGE_CONFIRMING
+                revision++
+            }
+            val expires = minOf(deadline, SystemClock.elapsedRealtime() + InstallerContract.DEFAULT_USER_ACTION_TIMEOUT_MILLIS)
+            try {
+                persist()
+                show()
+                changed()
+                while (true) {
+                    checkActive()
+                    val now = SystemClock.elapsedRealtime()
+                    if (now >= deadline) throw InstallFailure(InstallerErrorCodes.TIMEOUT, "Installation session timed out")
+                    if (now >= expires) throw InstallFailure(InstallerErrorCodes.USER_ACTION_TIMEOUT, "Signature review timed out")
+                    if (waiting.decision.await(minOf(100, expires - now))) {
+                        checkActive()
+                        return waiting.decision.result() ?: throw InstallFailure(InstallerErrorCodes.USER_CANCELLED, "Signature review was declined")
+                    }
+                }
+            } finally {
+                synchronized(lock) { if (safetyReview === waiting) { safetyReview = null; revision++ } }
+                changed()
+            }
+        }
+
+        internal fun acknowledgeSafety(owner: InstallDialogActivity, promptToken: String, acknowledged: Boolean) = synchronized(lock) {
+            val waiting = safetyReview ?: return@synchronized
+            if (closed || terminal || cancellationRequested || activity.get() !== owner || !isAttached || waiting.token != promptToken) return@synchronized
+            waiting.acknowledged = acknowledged
+        }
+
+        internal fun acceptSafety(owner: InstallDialogActivity, promptToken: String): Boolean = synchronized(lock) {
+            val waiting = safetyReview ?: return@synchronized false
+            if (closed || terminal || cancellationRequested || notificationMode || request.interaction != InstallerContract.INTERACTION_DIALOG ||
+                activity.get() !== owner || !isAttached || waiting.token != promptToken || !waiting.acknowledged) return@synchronized false
+            waiting.decision.answer(DialogSafetyApproval.fromDialog(token, waiting.token, waiting.binding))
+        }
+
         fun checkNotificationAvailable() {
             if (!notificationMode) return
             notificationTransportFailure?.let { throw it }
@@ -445,6 +504,8 @@ internal object InstallPresentation {
                 }
                 prompt?.decision?.answer(null)
                 prompt = null
+                safetyReview?.decision?.answer(null)
+                safetyReview = null
                 expiresAt = SystemClock.elapsedRealtime() + RESULT_RETENTION_MILLIS
                 revision++
             }
@@ -456,6 +517,8 @@ internal object InstallPresentation {
             val waiting = synchronized(lock) {
                 if (closed || terminal || cancellationRequested) return
                 cancellationRequested = true
+                val safety = safetyReview
+                if (safety != null && !request.isBatch && (safety.decision.answer(null) || safety.decision.result() == null)) return
                 val current = prompt
                 if (current != null && !request.isBatch) {
                     // A pending single-item prompt is a refusal (USER_CANCELLED). Once approval
@@ -466,7 +529,10 @@ internal object InstallPresentation {
             }
             // Run owner callbacks outside the presentation lock. For a batch, the cancellation
             // flag reaches the worker before its prompt is released; repeated taps call once.
-            try { callbacks.cancel() } finally { waiting?.decision?.answer(null) }
+            try { callbacks.cancel() } finally {
+                waiting?.decision?.answer(null)
+                synchronized(lock) { safetyReview?.decision?.answer(null) }
+            }
         }
 
         internal fun retry(index: Int): Boolean {
@@ -493,6 +559,8 @@ internal object InstallPresentation {
                 closed = true
                 prompt?.decision?.answer(null)
                 prompt = null
+                safetyReview?.decision?.answer(null)
+                safetyReview = null
             }
             records.remove(token, this)
             notifyObservers()

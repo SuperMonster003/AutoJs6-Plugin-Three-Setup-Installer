@@ -29,6 +29,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.radiobutton.MaterialRadioButton
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.R
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.engine.DeviceUsers
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.policy.SignatureRisk
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.ui.appearance.HostAppearanceActivity
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.ui.kit.InstallerDialogLayout
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.ui.kit.InstallerColorPolicy
@@ -48,6 +49,7 @@ class InstallDialogActivity : HostAppearanceActivity() {
     private var recoveryState: InstallPresentation.Snapshot? = null
     private var recoveryGeneration = 0
     private var closing = false
+    private var permissionsExpanded = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -122,6 +124,7 @@ class InstallDialogActivity : HostAppearanceActivity() {
             state.terminal && state.stage == InstallerContract.STAGE_COMPLETED -> R.string.install_success
             state.terminal && state.stage == InstallerContract.STAGE_CANCELLED -> R.string.install_cancelled
             state.terminal -> R.string.install_failed
+            state.safetyReview != null -> R.string.policy_signature_review
             state.prompt != null -> R.string.confirm_install_title
             else -> R.string.install_in_progress
         }
@@ -130,7 +133,8 @@ class InstallDialogActivity : HostAppearanceActivity() {
         if (state.recovered && state.interrupted) dialog.content.addView(kit.text(getString(R.string.install_interrupted_explanation)).apply { tag = "install_recovery_explanation" })
         if (state.items.size > 1) batch(dialog.content, state)
         val item = state.items.getOrNull(state.index)
-        if (state.prompt != null) confirmation(dialog, state, state.prompt)
+        if (state.safetyReview != null && !state.terminal) signatureReview(dialog, state.safetyReview)
+        else if (state.prompt != null) confirmation(dialog, state, state.prompt)
         else if (state.terminal) results(dialog, state)
         else {
             item?.metadata?.let { header(dialog.content, it) }
@@ -168,10 +172,12 @@ class InstallDialogActivity : HostAppearanceActivity() {
                 }
                 dialog.content.addView(kit.checkBox(split.name, split.name in selected, "install_split_${split.name}") { checked ->
                     choices.select(split.name, checked)
+                    redraw()
                 }.apply { isEnabled = split.selectable && !split.base })
                 dialog.content.addView(kit.text(description, color = kit.palette.muted).apply { setPaddingRelative(kit.dp(40), 0, 0, kit.dp(8)) })
             }
         }
+        permissionPreview(dialog.content, metadata, choices.snapshot().selectedApkNames)
         section(dialog.content, R.string.install_options)
         section(dialog.content, R.string.install_authorizer)
         val initial = choices.snapshot().options
@@ -311,6 +317,20 @@ class InstallDialogActivity : HostAppearanceActivity() {
         }
         content.addView(kit.text(getString(signer), color = if (signer == R.string.install_signature_mismatch) kit.palette.danger else kit.palette.muted))
         content.addView(kit.text(getString(R.string.install_metadata_user, data.installedUserId), color = kit.palette.muted))
+        data.sharedUserId?.let { content.addView(kit.text(getString(R.string.policy_shared_uid, it), color = kit.palette.muted)) }
+    }
+
+    private fun permissionPreview(content: LinearLayout, metadata: InstallPresentation.Metadata, selected: Set<String>) {
+        val permissions = metadata.splits.filter { it.name in selected }.flatMap { it.requestedPermissions }.distinct().sorted()
+        content.addView(kit.textButton(getString(R.string.policy_permissions, permissions.size), "install_permissions_expand") {
+            permissionsExpanded = !permissionsExpanded
+            redraw()
+        })
+        if (permissionsExpanded) {
+            content.addView(kit.text(getString(R.string.policy_permissions_note), 14f, kit.palette.muted))
+            content.addView(kit.text(if (permissions.isEmpty()) getString(R.string.policy_permissions_none) else permissions.joinToString("\n"),
+                14f, kit.palette.text).apply { tag = "install_permissions_list"; setTextIsSelectable(true) })
+        }
     }
 
     private fun advancedChoice(content: LinearLayout, title: Int, options: List<Pair<String?, Int>>, current: String?,
@@ -325,6 +345,30 @@ class InstallDialogActivity : HostAppearanceActivity() {
                 .setPositiveButton(R.string.settings_confirm) { _, _ -> changed(options[draft].first); redraw() }
                 .setBackground(kit.roundedFill(kit.palette.surface, 24)).create().also { it.show() }
         }.apply { isEnabled = enabled })
+    }
+
+    private fun signatureReview(dialog: InstallerDialogLayout, review: InstallPresentation.SafetyReview) {
+        val facts = review.binding
+        dialog.content.addView(kit.text(facts.packageName, 16f, medium = true))
+        dialog.content.addView(kit.text(if (facts.requestedUser == InstallerContract.USER_ALL) getString(R.string.confirm_all_users)
+            else getString(R.string.install_metadata_user, facts.userId), color = kit.palette.muted))
+        dialog.content.addView(kit.text(getString(if (facts.signatureRisk == SignatureRisk.MISMATCH)
+            R.string.policy_signature_mismatch else R.string.policy_signature_unknown), color = kit.palette.danger))
+        dialog.content.addView(kit.text(getString(R.string.policy_signature_scope), 14f, kit.palette.muted))
+        dialog.content.addView(kit.text(getString(R.string.policy_source_signers,
+            facts.sourceSigners.takeIf { it.isNotEmpty() }?.sorted()?.joinToString("\n") ?: getString(R.string.install_unknown)), 14f).apply { setTextIsSelectable(true) })
+        val installed = if (facts.installed.known && !facts.installed.found) getString(R.string.install_signature_not_installed)
+            else facts.installed.signers.takeIf { it.isNotEmpty() }?.sorted()?.joinToString("\n") ?: getString(R.string.install_unknown)
+        dialog.content.addView(kit.text(getString(R.string.policy_installed_signers, installed), 14f).apply { setTextIsSelectable(true) })
+        val accept = kit.textButton(getString(R.string.action_install), "install_signature_continue") {
+            record?.acceptSafety(this, review.token)
+        }.apply { id = android.R.id.button1; isEnabled = review.acknowledged }
+        dialog.content.addView(kit.checkBox(getString(R.string.policy_signature_allow_once), review.acknowledged, "install_signature_acknowledge") { checked ->
+            record?.acknowledgeSafety(this, review.token, checked)
+            accept.isEnabled = review.acknowledged
+        })
+        dialog.actions.addView(kit.textButton(getString(R.string.action_cancel), TAG_CANCEL) { record?.cancel() }.apply { id = android.R.id.button2 })
+        dialog.actions.addView(accept)
     }
 
     private fun batch(content: LinearLayout, state: InstallPresentation.Snapshot) {

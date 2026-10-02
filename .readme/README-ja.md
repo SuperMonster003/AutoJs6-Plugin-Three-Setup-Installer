@@ -79,6 +79,7 @@
 - `dhizuku`: Android 8.0 (API 26)+, 有効な Dhizuku デバイス/プロファイル所有者, このプラグインへの許可が必要です. 現在の所有者ユーザーのみを操作し, 実際の所有者パッケージをインストーラーとして記録します. shell/root 用のダウングレード, テストパッケージ, 低 targetSdk 制限回避, 他のユーザー, 任意のインストーラー指定, 削除時のデータ保持は非対応です. プラグインは所有者を設定しません.
 - 高度なインストールオプション: `grantAllRequestedPermissions`, `requestUpdateOwnership`, `dexopt` (`none`/`verify`/`speed-profile`/`speed`), `installReason`, `packageSource`. 未対応の環境や認可では明示的に拒否. none は手動コンパイルを追加せず, Android 自身のコンパイルを無効にしません.
 - 成功結果は読み取れた `updateOwner` と `dexopt` を返す場合があります. null は現在の呼び出し元に Android が owner を返さなかったことを示し, 可視性による非表示も含むため全体での不在を証明しません. 読み取り失敗では省略して notes に記録. DexOpt 状態は accepted/failed/cancelled/timeout/unavailable/unknown. accepted はシステムによるスキップも含み, 実際のコンパイルを保証しません. 追加処理の失敗は確認済みのインストール成功を変更しません.
+- 署名チェックとローカルのパッケージ名/SharedUID 完全一致ブロックリストは全入口に適用され, `BLOCKED_BY_POLICY` を返します. mismatch/unknown の署名は実際の dialog でその項目だけ一度許可できますが, Android の署名検証は残ります. サイレント/通知では許可できず, ブロックリストは上書き不可. 権限プレビューは選択した APK 分割の宣言であり, 付与済み権限ではありません.
 
 ******
 
@@ -190,6 +191,7 @@ Dhizuku, 通知インストール, 永続的な既定インストーラーのス
 - 既定インストーラーページは通常の優先設定と永続ポリシーを区別します. 通常設定は Shizuku または Root を使い, ROM の制限を受けます. Dhizuku の永続設定は API 26-33 に対応し, API 34+ では所有者のコールバックを検証できないため変更前に拒否します. Root は対応端末のユーザー 0 で system UID の補助プロセスを使います. 競合する永続ポリシーは上書きしません. `persistentConfigured` は過去の設定成功の記録であり, 現在のシステムポリシーの証明ではありません. 受動的な照会は `preferred` または `none` のみを返します.
 - `dhizuku`: Android 8.0 (API 26)+, 有効な Dhizuku デバイス/プロファイル所有者, このプラグインへの許可が必要です. 現在の所有者ユーザーのみを操作し, 実際の所有者パッケージをインストーラーとして記録します. shell/root 用のダウングレード, テストパッケージ, 低 targetSdk 制限回避, 他のユーザー, 任意のインストーラー指定, 削除時のデータ保持は非対応です. プラグインは所有者を設定しません.
 - 権限付与要求と none 以外の DexOpt は Shizuku/Root が必要で, verify は API 26+ が必要. インストール理由は API 26+, ソースは API 33+, 更新所有権の要求は API 34+. 所有権は初回インストールのみで有効化でき, 更新や別ユーザーの既存パッケージでは無視される場合があります. false は既存 owner を解除しません.
+- none/Dhizuku の既存署名確認は現在のユーザーのみで, Shizuku/Root は全体を照会します. SharedUID ルールがある場合, 別ユーザーの既存パッケージを除外できなければ例外なしで拒否します.
 
 ******
 
@@ -221,6 +223,7 @@ Dhizuku, 通知インストール, 永続的な既定インストーラーのス
 - インストール, 検査, 履歴, アプリ管理はオフラインで動作します. INTERNET は手動でバージョンを確認するときだけ, 12 時間間隔でプラグインの固定 GitHub Releases API にアクセスするために使用します. バックグラウンド更新確認やパッケージのアップロードは行いません.
 - パッケージソースは読み取り専用で開きます. 履歴には限定されたアプリ情報と結果を保存し, パッケージの内容やソース URI は保存しません. エラー内のパスは伏せられます. 非公開ストレージはバックアップ対象外です. 履歴の削除はアプリやソースを削除しません.
 - 権限付与はシステムが許可できる権限を要求し, Android 14 の USE_FULL_SCREEN_INTENT などインストーラーが変更できる app-op を含む場合があります. 全宣言権限を保証せず, アクセシビリティ, オーバーレイや任意の署名権限は付与しません. restricted/system-fixed/policy-fixed 制限を維持し, restricted 権限 allowlist フラグを追加しません.
+- 署名チェックとローカルのパッケージ名/SharedUID 完全一致ブロックリストは全入口に適用され, `BLOCKED_BY_POLICY` を返します. mismatch/unknown の署名は実際の dialog でその項目だけ一度許可できますが, Android の署名検証は残ります. サイレント/通知では許可できず, ブロックリストは上書き不可. 権限プレビューは選択した APK 分割の宣言であり, 付与済み権限ではありません.
 
 正式公開後のプラグインは公式の [Releases](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/releases) ページまたは AutoJs6 のプラグインセンターからのみ入手してください. 出所不明のパッケージは, バージョン番号が同じに見えてもホストの検証に失敗したり, リスクを伴う可能性があります.
 
@@ -267,12 +270,14 @@ minimum host build: 5299 (6.8.0)
 _2026/10/02_
 
 - `機能` 高度なインストールオプション: `grantAllRequestedPermissions`, `requestUpdateOwnership`, `dexopt` (`none`/`verify`/`speed-profile`/`speed`), `installReason`, `packageSource`. 未対応の環境や認可では明示的に拒否. none は手動コンパイルを追加せず, Android 自身のコンパイルを無効にしません.
+- `機能` 署名チェックとローカルのパッケージ名/SharedUID 完全一致ブロックリストは全入口に適用され, `BLOCKED_BY_POLICY` を返します. mismatch/unknown の署名は実際の dialog でその項目だけ一度許可できますが, Android の署名検証は残ります. サイレント/通知では許可できず, ブロックリストは上書き不可. 権限プレビューは選択した APK 分割の宣言であり, 付与済み権限ではありません.
 - `改善` 高度なスクリプトオプションには AutoJs6 ビルド 5308+ と V3 / `advanced-install-options` の対応確認が必要. 省略時は従来の動作を維持し, 明示的な `false`/`none` も対応が必要. ローカル実装は正式公開や P9 全項目の完了を意味しません.
 - `改善` 成功結果は読み取れた `updateOwner` と `dexopt` を返す場合があります. null は現在の呼び出し元に Android が owner を返さなかったことを示し, 可視性による非表示も含むため全体での不在を証明しません. 読み取り失敗では省略して notes に記録. DexOpt 状態は accepted/failed/cancelled/timeout/unavailable/unknown. accepted はシステムによるスキップも含み, 実際のコンパイルを保証しません. 追加処理の失敗は確認済みのインストール成功を変更しません.
 - `改善` 権限付与要求と none 以外の DexOpt は Shizuku/Root が必要で, verify は API 26+ が必要. インストール理由は API 26+, ソースは API 33+, 更新所有権の要求は API 34+. 所有権は初回インストールのみで有効化でき, 更新や別ユーザーの既存パッケージでは無視される場合があります. false は既存 owner を解除しません.
 - `改善` 権限付与はシステムが許可できる権限を要求し, Android 14 の USE_FULL_SCREEN_INTENT などインストーラーが変更できる app-op を含む場合があります. 全宣言権限を保証せず, アクセシビリティ, オーバーレイや任意の署名権限は付与しません. restricted/system-fixed/policy-fixed 制限を維持し, restricted 権限 allowlist フラグを追加しません.
+- `改善` none/Dhizuku の既存署名確認は現在のユーザーのみで, Shizuku/Root は全体を照会します. SharedUID ルールがある場合, 別ユーザーの既存パッケージを除外できなければ例外なしで拒否します.
 - `依存関係` installer-api.aar を契約 V3 (MPL 2.0) に更新し, V1/V2 と全 11 AIDL トランザクションを維持. 高度なスクリプトオプションはホストビルド 5308+ が必要
-- `依存関係` 共有パッケージ解析器 (MPL 2.0) を更新し, 実際のマニフェストルートと sharedUserId を検証して曖昧な入力を拒否
+- `依存関係` 共有パッケージ解析器 (MPL 2.0) を更新し, 実際のマニフェストルートと sharedUserId を検証して曖昧な入力を拒否. 実際の Android 名前空間の要素から権限宣言を読み取り, コメントや拡張名前空間の偽宣言を除外し, コンパイル済み属性の矛盾を拒否.
 
 #### v1.1.0
 

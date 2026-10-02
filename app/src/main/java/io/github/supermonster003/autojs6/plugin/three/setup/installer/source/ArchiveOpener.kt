@@ -59,6 +59,8 @@ internal class PreparedPackage(
     val totalBytes: Long get() = apks.sumOf { it.size }
 
     val baseApk: PlannedApk? get() = apks.firstOrNull { it.splitName == null }
+    val sharedUserId: String? get() = baseApk?.manifest?.sharedUserId
+    val requestedPermissions: List<String> get() = apks.flatMap { it.manifest?.requestedPermissions.orEmpty() }.distinct().sorted()
 
     /** The failure that explains why [installable] is false, or null when the package can be installed. */
     fun failure(): InstallFailure? = when {
@@ -157,7 +159,8 @@ internal object ArchiveOpener {
             !archive.canInstall || !prepareForInstallation -> emptyList()
             else -> try {
                 archive.stageSelectedApks(File(stagingDirectory, "apks")).map { staged ->
-                    PlannedApk(staged.file.name, staged.file, staged.file.length(), staged.manifest.splitName?.takeIf { it.isNotBlank() }, manifest = staged.manifest)
+                    PlannedApk(staged.file.name, staged.file, staged.file.length(), staged.manifest.splitName?.takeIf { it.isNotBlank() },
+                        sha256 = sourceDigest(staged.file, checkActive), manifest = staged.manifest)
                 }
             } catch (failure: IOException) {
                 throw extractionFailure(failure, manifest?.packageName)

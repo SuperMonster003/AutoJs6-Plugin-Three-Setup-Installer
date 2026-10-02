@@ -10,6 +10,9 @@ import io.github.supermonster003.autojs6.plugin.three.setup.installer.auth.Autho
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.auth.AuthorizerResolver
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.auth.AuthorizerStates
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.auth.PrivilegedClient
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.policy.DialogSafetyApproval
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.policy.InstallSafetyBinding
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.policy.InstallSafetyGate
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.source.ArchiveOpener
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.source.PackageStaging
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.source.PackageSource
@@ -32,6 +35,8 @@ internal class DescriptorInstallEnvironment private constructor(
     private val sourceLoader: ((SourceEntry, () -> Unit) -> SourceDescriptor)? = null,
     private val availability: () -> Unit = {},
     private val userAction: (Intent) -> Unit = { UserActionLauncher.launch(context, it) },
+    safetyOwnerToken: String = java.util.UUID.randomUUID().toString(),
+    safetyReview: ((InstallSafetyBinding, Long, () -> Unit) -> DialogSafetyApproval)? = null,
 ) : InstallSession.Environment {
     /** A lazily opened external source; prepare owns and closes its descriptor immediately. */
     data class SourceDescriptor(val descriptor: ParcelFileDescriptor, val displayName: String, val size: Long)
@@ -41,6 +46,7 @@ internal class DescriptorInstallEnvironment private constructor(
     private val stagingCancellation = AtomicBoolean()
     private val openedSources = mutableMapOf<Int, MutableList<SeekableSource>>()
     private var deadline = Long.MAX_VALUE
+    private val safety = InstallSafetyGate(this.context, safetyOwnerToken, safetyReview, ::remaining) { requireNotNull(directory) }
 
     override fun resolve(request: InstallRequest, deadlineMillis: Long, checkActive: () -> Unit): InstallSession.Target {
         deadline = deadlineMillis
@@ -94,6 +100,13 @@ internal class DescriptorInstallEnvironment private constructor(
         } catch (_: PackageManager.NameNotFoundException) { null }
     }
 
+    override fun checkInstallPolicy(prepared: PreparedPackage) = safety.checkRules(prepared)
+    override fun reviewSafety(index: Int, prepared: PreparedPackage, target: InstallSession.Target, options: InstallOptions,
+        interaction: String, deadlineMillis: Long, onReviewRequired: () -> Unit, checkActive: () -> Unit): DialogSafetyApproval? =
+        safety.review(index, prepared, target, options, interaction, deadlineMillis, onReviewRequired, checkActive)
+    override fun validateSafety(index: Int, prepared: PreparedPackage, target: InstallSession.Target, options: InstallOptions,
+        approval: DialogSafetyApproval?, checkActive: () -> Unit) = safety.validate(index, prepared, target, options, approval, checkActive)
+
     override fun confirm(prepared: PreparedPackage, target: InstallSession.Target, deadlineMillis: Long, checkActive: () -> Unit) = confirmation(prepared, target, deadlineMillis, checkActive)
     override fun configure(index: Int, prepared: PreparedPackage, target: InstallSession.Target, request: InstallRequest,
         deadlineMillis: Long, checkActive: () -> Unit): InstallSession.Selection =
@@ -126,10 +139,12 @@ internal class DescriptorInstallEnvironment private constructor(
             installed: (Int, InstallOptions) -> InstallSession.SourceCleanup,
             availability: () -> Unit = {},
             userAction: (Intent) -> Unit = { UserActionLauncher.launch(context, it) },
+            safetyOwnerToken: String = java.util.UUID.randomUUID().toString(),
+            safetyReview: ((InstallSafetyBinding, Long, () -> Unit) -> DialogSafetyApproval)? = null,
         ): DescriptorInstallEnvironment = DescriptorInstallEnvironment(context, emptyList(),
             confirmation = { _, _, _, _ -> throw InstallFailure(InstallerErrorCodes.INTERNAL, "External confirmation configuration is missing") },
             configuration = configuration, preparedListener = preparedListener, installed = installed, sourceLoader = sourceLoader,
-            availability = availability, userAction = userAction)
+            availability = availability, userAction = userAction, safetyOwnerToken = safetyOwnerToken, safetyReview = safetyReview)
 
         fun acquire(context: Context, descriptors: List<ParcelFileDescriptor>,
             configuration: ((Int, PreparedPackage, InstallSession.Target, InstallRequest, Long, () -> Unit) -> InstallSession.Selection)? = null,
@@ -140,6 +155,8 @@ internal class DescriptorInstallEnvironment private constructor(
             },
             availability: () -> Unit = {},
             userAction: (Intent) -> Unit = { UserActionLauncher.launch(context, it) },
+            safetyOwnerToken: String = java.util.UUID.randomUUID().toString(),
+            safetyReview: ((InstallSafetyBinding, Long, () -> Unit) -> DialogSafetyApproval)? = null,
         ): DescriptorInstallEnvironment {
             if (descriptors.isEmpty() || descriptors.size > InstallerContract.MAX_BATCH_SOURCES * InstallerContract.MAX_SPLITS_PER_PACKAGE) {
                 throw RequestDocuments.invalid("Invalid source descriptor count")
@@ -148,7 +165,7 @@ internal class DescriptorInstallEnvironment private constructor(
             try {
                 descriptors.forEach { owned += ParcelFileDescriptor.dup(it.fileDescriptor) }
                 return DescriptorInstallEnvironment(context, owned, confirmation, configuration, preparedListener, installed,
-                    availability = availability, userAction = userAction)
+                    availability = availability, userAction = userAction, safetyOwnerToken = safetyOwnerToken, safetyReview = safetyReview)
             } catch (failure: Exception) {
                 owned.forEach { runCatching { it.close() } }
                 throw RequestDocuments.invalid("Package source descriptor is closed or invalid")
