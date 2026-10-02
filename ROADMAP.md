@@ -1189,3 +1189,10 @@ if (!installer.isDefault()) installer.setDefault(true);
 - 新建专属API31以固定Host5312真实首启向导发现线上条目, 两次实际网络下载及最终设备base.apk摘要均相同. 第一轮由测试操作取消确认, 第二轮通过Play Protect正常扫描/系统安装, 向导显示Installed:1, 插件页显示1.2.0(63)已启用. 宿主临时未知来源开关恢复关闭, 缓存自动清理, preferred XML相同, 无active sessions/owner/特权server. 仅本轮独有AVD/PID46028核验后关闭, 用户API24 AVD保持.
 - 初次完整云端API24/35各有一条旧测试以未经canonical的cache路径和实际canonical目录直接比较而失败. f8b746b/build64只修测试断言和版本计数, 保留超时/宿主描述符/目录边界校验, 不改生产代码. 完整Actions37012451323复验成功: API24记录266项/58跳过/0失败, API35记录276项/64跳过/0失败, JVM/APK/lint及Markdown通过; 不把需要专属环境的跳过项计为实装成功, 不改写tag上的原失败记录.
 - 十语言当前发布状态及36生成物同步, 历史changelog保持. 本笔发布记录使用build65, VERSION_BUILD与可达提交数一致, 主插件和索引工作区干净并同步远端; 已发布APK仍为immutable build63. 完整证据见docs/dev/p7-remote-publication-evidence.md及p7-live-wizard-release-evidence.md. 原P0-P9按记录范围全部完成, 宿主按维护者要求继续本地, 无额外设备/资料/关键决策/手动操作待处理.
+### 2026-10-02 (CI37015190116界面焦点与清理同步)
+
+- 维护者报告head8a39ff6/build65的GitHub CI失败. 该次JVM/APK/lint及API24通过, API35 HTML实际212项/7失败/64跳过, 最早是窗口未明确获得输入焦点时primaryClip!!为空, 随后列表/外观/几何测试持续失焦. 原日志没有失焦时当前窗口证据, 不据此断言某一个系统浮层或AndroidX helper是全部失败的唯一根因. Finished276为进度统计, 不作真实通过数量.
+- 本轮只修androidTest与CI收集: Copy前等焦点及布局, 可空剪贴板内容轮询与原相等断言共用原10秒预算; 列表交互等待窗口, 几何采样/触摸要求焦点. 测试finally明确结束自己拥有的Activity并等DESTROYED后再close, 保留原恢复和全部IME/尺寸/点击断言. 清理错误不覆盖原失败, 不靠跳过或延长原等待预算通过.
+- 失败清理前保存安全命名的窗口身份/截图及有界dumpsys; 新单一Bash入口在模拟器退出前收集logcat/window/activity/IME/power和自有诊断文件, 原失败退出码保持. CI始终上传HTML和原始结果以准确计数, 不改特权用例opt-in. 脚本成功/测试失败/诊断失败三种隔离模拟与语法检查通过.
+- 原CI固定APK在新task-owned API35本地全套212项中148通过/64跳过, 集中UI一轮19/19; 另一轮由已记录的ADB传输中断导致次生错误, 没有冒称复现云端七项或计为通过. 修复pair四类UI19/19, 67.626秒, 无跳过/失败, 外观恢复且无活动测试/session. 394 JVM零失败/错误/跳过, Debug/androidTest及lint0错误/51警告通过. 详见docs/dev/ci-ui-window-synchronization-evidence.md, 完整远端矩阵及API35重复验证随本修复提交的GitHub检查记录提供.
+- 本逻辑提交使用build66. 生产安装逻辑, 公共契约, v1.2.0标签及已发布build63 APK均保持; 宿主继续不推送. 未修改路线图原条目结构或重发发行包.

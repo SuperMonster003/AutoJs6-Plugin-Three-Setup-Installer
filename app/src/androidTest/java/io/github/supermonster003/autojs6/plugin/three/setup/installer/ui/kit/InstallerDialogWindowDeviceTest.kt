@@ -21,10 +21,13 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.graphics.Insets
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.lifecycle.Lifecycle
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.UiTestFailures
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.preserveTestFailure
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.readyForWindowInput
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.useOwnedWindow
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.spike.DialogGeometryActivity
 import org.junit.Assert.*
 import org.junit.Test
@@ -108,17 +111,22 @@ class InstallerDialogWindowDeviceTest {
     }
 
     private fun clickPositive(scenario: ActivityScenario<DialogGeometryActivity>, sample: Snapshot) {
+        val current = stable(scenario) { it.orientation == sample.orientation && it.imeVisible == sample.imeVisible }
+        assertGeometry(current)
         var previous = 0
-        scenario.onActivity { previous = it.positiveClicks }
-        val bounds = sample.positive.bounds
+        scenario.onActivity {
+            check(it.window.decorView.readyForWindowInput()) { "The geometry window lost focus before the tap" }
+            previous = it.positiveClicks
+        }
+        val bounds = current.positive.bounds
         val down = SystemClock.uptimeMillis()
         val press = MotionEvent.obtain(down, down, MotionEvent.ACTION_DOWN, bounds.exactCenterX(), bounds.exactCenterY(), 0)
         press.source = InputDevice.SOURCE_TOUCHSCREEN
-        try { assertTrue("Touch down was rejected: ${sample.describe()}", instrumentation.uiAutomation.injectInputEvent(press, true)) }
+        try { assertTrue("Touch down was rejected: ${current.describe()}", instrumentation.uiAutomation.injectInputEvent(press, true)) }
         finally { press.recycle() }
         val release = MotionEvent.obtain(down, SystemClock.uptimeMillis(), MotionEvent.ACTION_UP, bounds.exactCenterX(), bounds.exactCenterY(), 0)
         release.source = InputDevice.SOURCE_TOUCHSCREEN
-        try { assertTrue("Touch up was rejected: ${sample.describe()}", instrumentation.uiAutomation.injectInputEvent(release, true)) }
+        try { assertTrue("Touch up was rejected: ${current.describe()}", instrumentation.uiAutomation.injectInputEvent(release, true)) }
         finally { release.recycle() }
         waitFor(5_000, "A visible fixed action did not receive its measured-screen-position tap") {
             var count = 0
@@ -178,7 +186,7 @@ class InstallerDialogWindowDeviceTest {
                 scenario.onActivity { value = snapshot(it) }
                 requireNotNull(value)
             }.onFailure { lastFailure = it }.getOrNull()
-            if (next != null && ready(next) && next == previous) {
+            if (next != null && next.focus && ready(next) && next == previous) {
                 if (SystemClock.elapsedRealtime() - stableSince >= 400) return next
             } else {
                 stableSince = SystemClock.elapsedRealtime()
@@ -193,6 +201,7 @@ class InstallerDialogWindowDeviceTest {
     @Suppress("DEPRECATION")
     private fun snapshot(activity: DialogGeometryActivity): Snapshot {
         val decor = activity.window.decorView
+        check(decor.isAttachedToWindow && decor.isLaidOut && !decor.isLayoutRequested) { "The geometry window layout is not ready" }
         val dialog = activity.dialog
         val insets = requireNotNull(ViewCompat.getRootWindowInsets(decor)) { "Window insets are not attached yet" }
         val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
@@ -235,21 +244,25 @@ class InstallerDialogWindowDeviceTest {
         val originalSettings = settings()
         val previousOverrides = DialogGeometryActivity.activeOverrides
         DialogGeometryActivity.activeOverrides = overrides
+        var failure: Throwable? = null
         try {
-            ActivityScenario.launch<DialogGeometryActivity>(Intent(context, DialogGeometryActivity::class.java)).use { scenario ->
-                var originalOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+            var originalOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+            ActivityScenario.launch<DialogGeometryActivity>(Intent(context, DialogGeometryActivity::class.java)).useOwnedWindow(
+                "DialogGeometry-${overrides.language}-${overrides.fontScale}-${overrides.dark}",
+                beforeFinish = { it.hideKeyboard(); it.requestedOrientation = originalOrientation },
+            ) { scenario ->
                 scenario.onActivity { originalOrientation = it.requestedOrientation }
-                try { run(scenario) }
-                finally {
-                    if (scenario.state != Lifecycle.State.DESTROYED) {
-                        scenario.onActivity { it.hideKeyboard(); it.requestedOrientation = originalOrientation; it.finish() }
-                        waitFor(10_000, "The geometry fixture Activity was not destroyed") { scenario.state == Lifecycle.State.DESTROYED }
-                    }
-                }
+                run(scenario)
             }
+        } catch (error: Throwable) {
+            failure = error
+            UiTestFailures.capture("DialogGeometry", error)
+            throw error
         } finally {
-            DialogGeometryActivity.activeOverrides = previousOverrides
-            assertEquals("The geometry fixture changed global/application appearance or the selected IME", originalSettings, settings())
+            preserveTestFailure(failure) {
+                DialogGeometryActivity.activeOverrides = previousOverrides
+                assertEquals("The geometry fixture changed global/application appearance or the selected IME", originalSettings, settings())
+            }
         }
     }
 
