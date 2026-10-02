@@ -96,23 +96,26 @@ jobs:
 
       - name: Run the activation, discovery and Binder contract tests
         uses: reactivecircus/android-emulator-runner@v2.38.0
+        env:
+          ANDROID_SERIAL: emulator-5554
         with:
           api-level: ${{ matrix.api-level }}
           target: ${{ matrix.target }}
           arch: ${{ matrix.arch }}
           profile: ${{ matrix.profile }}
           avd-name: Three_Setup_Installer_Conformance_CI_${{ matrix.api-level }}
-          script: |
-            chmod +x gradlew
-            # Privileged (Shizuku / Root) paths need a real authorizer and are exercised on the device matrix
-            # of ROADMAP.md, not on the disposable CI emulator; the contract suite covers discovery and binding.
-            ./gradlew :app:connectedDebugAndroidTest --console=plain --stacktrace
+          emulator-port: 5554
+          # Privileged cases keep their explicit device/authorizer opt-ins.
+          script: bash tools/run-ci-instrumentation.sh
 
-      - name: Upload instrumentation reports after failure
-        if: failure()
+      - name: Upload instrumentation reports and available device diagnostics
+        if: always()
         uses: actions/upload-artifact@v7
         with:
           name: instrumentation-reports-api${{ matrix.api-level }}
-          path: app/build/reports/androidTests/
+          path: |
+            app/build/reports/androidTests/
+            app/build/outputs/androidTest-results/
+            build/ci-device/
           if-no-files-found: ignore
           retention-days: 7

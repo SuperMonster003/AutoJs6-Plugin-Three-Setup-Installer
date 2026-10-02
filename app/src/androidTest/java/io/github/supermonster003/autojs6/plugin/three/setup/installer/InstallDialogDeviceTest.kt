@@ -62,7 +62,7 @@ class InstallDialogDeviceTest {
         val failure = AtomicReference<Throwable>()
         var worker: Thread? = null
         try {
-            ActivityScenario.launch<InstallDialogActivity>(record.activityIntent()).use { scenario ->
+            ActivityScenario.launch<InstallDialogActivity>(record.activityIntent()).useOwnedWindow("InstallDialog") { scenario ->
                 var originalTask = -1
                 scenario.onActivity { originalTask = it.taskId }
                 worker = Thread {
@@ -128,7 +128,7 @@ class InstallDialogDeviceTest {
         val failure = AtomicReference<InstallFailure>()
         var worker: Thread? = null
         try {
-            ActivityScenario.launch<InstallDialogActivity>(record.activityIntent()).use { scenario ->
+            ActivityScenario.launch<InstallDialogActivity>(record.activityIntent()).useOwnedWindow("InstallDialog") { scenario ->
                 worker = Thread {
                     try { record.confirm(0, prepared(file), target(), InstallOptions(), SystemClock.elapsedRealtime() + 20_000) {} }
                     catch (error: InstallFailure) { failure.set(error); record.onFailed(error) }
@@ -151,15 +151,33 @@ class InstallDialogDeviceTest {
         val record = InstallPresentation.create(context, request(), InstallPresentation.Callbacks(cancel = {}))
         try {
             record.onFailed(InstallFailure(InstallerErrorCodes.INSTALL_FAILED, "private debug text", systemMessage = "INSTALL_FAILED_VERSION_DOWNGRADE"))
-            ActivityScenario.launch<InstallDialogActivity>(record.activityIntent()).use { scenario ->
+            ActivityScenario.launch<InstallDialogActivity>(record.activityIntent()).useOwnedWindow("InstallDialog") { scenario ->
+                val deadline = SystemClock.elapsedRealtime() + 10_000
+                waitUntil(deadline) {
+                    var ready = false
+                    scenario.onActivity { ready = it.window.decorView.readyForWindowInput() }
+                    ready
+                }
+                var shown = ""
                 scenario.onActivity { activity ->
-                    val shown = activity.window.decorView.findViewWithTag<TextView>(InstallDialogActivity.TAG_ERROR).text.toString()
+                    check(activity.window.decorView.readyForWindowInput()) { "The copy window lost focus before the click" }
+                    shown = activity.window.decorView.findViewWithTag<TextView>(InstallDialogActivity.TAG_ERROR).text.toString()
                     assertTrue(shown.contains("INSTALL_FAILED"))
                     assertTrue(shown.contains("INSTALL_FAILED_VERSION_DOWNGRADE"))
                     assertFalse(shown.contains("private debug text"))
                     activity.window.decorView.findViewWithTag<View>(InstallDialogActivity.TAG_COPY).performClick()
-                    assertEquals(shown, activity.getSystemService(ClipboardManager::class.java).primaryClip!!.getItemAt(0).text.toString())
                 }
+                var copied: String? = null
+                waitUntil(deadline) {
+                    scenario.onActivity { activity ->
+                        copied = if (activity.window.decorView.readyForWindowInput())
+                            activity.getSystemService(ClipboardManager::class.java).primaryClip
+                                ?.takeIf { it.itemCount > 0 }?.getItemAt(0)?.text?.toString()
+                        else null
+                    }
+                    copied == shown
+                }
+                assertEquals(shown, copied)
             }
         } finally { record.close() }
     }
@@ -170,7 +188,7 @@ class InstallDialogDeviceTest {
         val intent = Intent(context, InstallDialogActivity::class.java).putExtra(InstallPresentation.EXTRA_TOKEN, token)
             .setData(Uri.parse("three-setup-install://session/$token"))
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NEW_DOCUMENT)
-        ActivityScenario.launch<InstallDialogActivity>(intent).use { scenario ->
+        ActivityScenario.launch<InstallDialogActivity>(intent).useOwnedWindow("InstallDialog") { scenario ->
             scenario.onActivity { activity ->
                 assertNotNull(activity.window.decorView.findViewWithTag<View>(InstallDialogActivity.TAG_DONE))
                 assertNull(activity.window.decorView.findViewWithTag<View>(InstallDialogActivity.TAG_CONFIRM))
@@ -189,7 +207,7 @@ class InstallDialogDeviceTest {
             record.onItemResult(0, error)
             record.onCompleted(InstallDocuments.batch(listOf(error, success())))
             val oldOutcome = record.snapshot().items.map { it.result.toString() }
-            ActivityScenario.launch<InstallDialogActivity>(record.activityIntent()).use { scenario ->
+            ActivityScenario.launch<InstallDialogActivity>(record.activityIntent()).useOwnedWindow("InstallDialog") { scenario ->
                 scenario.onActivity { it.window.decorView.findViewWithTag<View>("install_retry_0").performClick() }
                 assertEquals(listOf(0), retries)
                 assertEquals(oldOutcome, record.snapshot().items.map { it.result.toString() })
@@ -219,7 +237,7 @@ class InstallDialogDeviceTest {
         val done = CountDownLatch(1)
         var worker: Thread? = null
         try {
-            ActivityScenario.launch<InstallDialogActivity>(record.activityIntent()).use { scenario ->
+            ActivityScenario.launch<InstallDialogActivity>(record.activityIntent()).useOwnedWindow("InstallDialog") { scenario ->
                 worker = Thread {
                     try { record.confirm(0, prepared(file), target(), InstallOptions(), SystemClock.elapsedRealtime() + 20_000) {} }
                     catch (_: InstallFailure) { }
@@ -254,7 +272,7 @@ class InstallDialogDeviceTest {
         val failure = AtomicReference<InstallFailure>()
         var worker: Thread? = null
         try {
-            ActivityScenario.launch<InstallDialogActivity>(record.activityIntent()).use { scenario ->
+            ActivityScenario.launch<InstallDialogActivity>(record.activityIntent()).useOwnedWindow("InstallDialog") { scenario ->
                 worker = Thread {
                     try {
                         record.confirm(0, prepared(file), target(), InstallOptions(), SystemClock.elapsedRealtime() + 20_000) {
@@ -300,7 +318,7 @@ class InstallDialogDeviceTest {
         val failure = AtomicReference<Throwable>()
         var worker: Thread? = null
         try {
-            ActivityScenario.launch<InstallDialogActivity>(record.activityIntent()).use { scenario ->
+            ActivityScenario.launch<InstallDialogActivity>(record.activityIntent()).useOwnedWindow("InstallDialog") { scenario ->
                 worker = Thread {
                     try { choice.set(record.confirm(0, prepared(file), target(), InstallOptions(deleteSource = true), SystemClock.elapsedRealtime() + 20_000) {}) }
                     catch (error: Throwable) { failure.set(error) }
@@ -338,7 +356,7 @@ class InstallDialogDeviceTest {
         val ticket = writer.begin(value.token)
         assertTrue(ticket.save(value, true)!!.await())
         try {
-            ActivityScenario.launch<InstallDialogActivity>(recoveryIntent(value.token)).use { scenario ->
+            ActivityScenario.launch<InstallDialogActivity>(recoveryIntent(value.token)).useOwnedWindow("InstallDialog") { scenario ->
                 waitForView(scenario, "install_recovery_explanation")
                 scenario.onActivity { activity ->
                     val text = viewText(activity.window.decorView)
@@ -374,7 +392,7 @@ class InstallDialogDeviceTest {
         writer.read(UUID.randomUUID().toString()) { entered.countDown(); release.await(8, TimeUnit.SECONDS) }
         assertTrue(entered.await(5, TimeUnit.SECONDS))
         try {
-            ActivityScenario.launch<InstallDialogActivity>(recoveryIntent(value.token)).use { scenario ->
+            ActivityScenario.launch<InstallDialogActivity>(recoveryIntent(value.token)).useOwnedWindow("InstallDialog") { scenario ->
                 scenario.onActivity { it.window.decorView.findViewWithTag<View>(InstallDialogActivity.TAG_DONE).performClick() }
                 scenario.recreate()
                 release.countDown()
@@ -395,7 +413,7 @@ class InstallDialogDeviceTest {
         val ticket = InstallRecoveryPersistence.writer(context).begin(value.token)
         assertTrue(ticket.save(value, true)!!.await())
         try {
-            ActivityScenario.launch<InstallDialogActivity>(recoveryIntent(value.token)).use { scenario ->
+            ActivityScenario.launch<InstallDialogActivity>(recoveryIntent(value.token)).useOwnedWindow("InstallDialog") { scenario ->
                 waitForView(scenario, InstallDialogActivity.TAG_ERROR)
                 scenario.onActivity { activity ->
                     val message = activity.window.decorView.findViewWithTag<TextView>(InstallDialogActivity.TAG_ERROR).text.toString()
@@ -462,10 +480,9 @@ class InstallDialogDeviceTest {
             assertEquals("Recreation must preserve its document task", taskId, activities.single().taskId)
         }
     }
-    private fun waitUntil(condition: () -> Boolean) {
-        val end = SystemClock.elapsedRealtime() + 10_000
+    private fun waitUntil(deadline: Long = SystemClock.elapsedRealtime() + 10_000, condition: () -> Boolean) {
         while (!condition()) {
-            if (SystemClock.elapsedRealtime() >= end) fail("Installation UI did not reach the expected state")
+            if (SystemClock.elapsedRealtime() >= deadline) fail("Installation UI did not reach the expected state")
             SystemClock.sleep(25)
         }
     }

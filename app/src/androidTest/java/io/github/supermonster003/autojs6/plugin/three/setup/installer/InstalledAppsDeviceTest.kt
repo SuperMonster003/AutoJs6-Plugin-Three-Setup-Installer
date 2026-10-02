@@ -50,10 +50,11 @@ class InstalledAppsDeviceTest {
 
     @Test fun searchSortAndSystemSwitchSurviveRecreationWithoutStartingAnOperation() {
         assumeFalse("Unlock the device for the application browser", context.getSystemService(KeyguardManager::class.java).isKeyguardLocked)
-        ActivityScenario.launch<InstalledAppsActivity>(Intent(context, InstalledAppsActivity::class.java)).use { scenario ->
+        ActivityScenario.launch<InstalledAppsActivity>(Intent(context, InstalledAppsActivity::class.java)).useOwnedWindow("InstalledApps") { scenario ->
             waitUntil {
                 var ready = false
-                scenario.onActivity { ready = loaded(it) && displayed(it).any { app -> app.packageName == context.packageName } }
+                scenario.onActivity { ready = it.window.decorView.readyForWindowInput() && loaded(it) &&
+                    displayed(it).any { app -> app.packageName == context.packageName } }
                 ready
             }
             var newest = ""
@@ -75,6 +76,11 @@ class InstalledAppsDeviceTest {
                 assertEquals(oldSort, activity.window.decorView.findViewWithTag<TextView>(InstalledAppsActivity.TAG_SORT).text.toString())
             }
             clickDialogText(cancel)
+            waitUntil {
+                var focused = false
+                scenario.onActivity { focused = it.window.decorView.readyForWindowInput() }
+                focused
+            }
             scenario.onActivity { activity ->
                 val sort = activity.window.decorView.findViewWithTag<TextView>(InstalledAppsActivity.TAG_SORT)
                 assertEquals(oldSort, sort.text.toString())
@@ -85,7 +91,7 @@ class InstalledAppsDeviceTest {
             waitUntil {
                 var ready = false
                 scenario.onActivity { activity ->
-                    ready = loaded(activity) && displayed(activity).isNotEmpty() &&
+                    ready = activity.window.decorView.readyForWindowInput() && loaded(activity) && displayed(activity).isNotEmpty() &&
                         displayed(activity).all { it.packageName.contains(context.packageName, ignoreCase = true) }
                 }
                 ready
@@ -93,7 +99,7 @@ class InstalledAppsDeviceTest {
             scenario.recreate()
             waitUntil {
                 var ready = false
-                scenario.onActivity { ready = loaded(it) && displayed(it).isNotEmpty() }
+                scenario.onActivity { ready = it.window.decorView.readyForWindowInput() && loaded(it) && displayed(it).isNotEmpty() }
                 ready
             }
             scenario.onActivity { activity ->
@@ -125,9 +131,18 @@ class InstalledAppsDeviceTest {
 
     private fun clickDialogText(text: String) = waitUntil {
         val root = instrumentation.uiAutomation.rootInActiveWindow ?: return@waitUntil false
-        if (root.packageName?.toString() != context.packageName) return@waitUntil false
-        root.findAccessibilityNodeInfosByText(text).firstOrNull { it.text?.toString() == text && it.isClickable }
-            ?.performAction(AccessibilityNodeInfo.ACTION_CLICK) == true
+        val nodes = mutableListOf<AccessibilityNodeInfo>()
+        try {
+            if (root.packageName?.toString() != context.packageName) return@waitUntil false
+            nodes += root.findAccessibilityNodeInfosByText(text)
+            nodes.firstOrNull { it.text?.toString() == text && it.isClickable && it.isVisibleToUser && it.isEnabled }
+                ?.performAction(AccessibilityNodeInfo.ACTION_CLICK) == true
+        } finally {
+            @Suppress("DEPRECATION")
+            nodes.filter { it !== root }.forEach { it.recycle() }
+            @Suppress("DEPRECATION")
+            root.recycle()
+        }
     }
 
     private fun waitUntil(condition: () -> Boolean) {

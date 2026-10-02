@@ -78,13 +78,14 @@ class StandaloneAppearanceDeviceTest {
     private fun exercisePages(case: Case) {
         assertTrue(AppearancePreferences(case.language, if (case.dark) "dark" else "light", AppearancePreferences.DEFAULT_COLOR).save(context))
         for (page in pages) {
-            ActivityScenario.launch<HostAppearanceActivity>(Intent(context, page)).use { scenario ->
+            ActivityScenario.launch<HostAppearanceActivity>(Intent(context, page)).useOwnedWindow("${case.id}-${page.simpleName}") { scenario ->
                 var original: Configuration? = null
                 var originalMetrics: DisplayMetrics? = null
                 var privateResources: Resources? = null
                 var owner: HostAppearanceActivity? = null
                 var contentConstraint: Closeable? = null
                 var originallyKeptScreenOn = false
+                var windowFailure: Throwable? = null
                 try {
                     scenario.onActivity { activity ->
                         owner = activity
@@ -134,18 +135,22 @@ class StandaloneAppearanceDeviceTest {
                         }
                     }
                 } catch (failure: Throwable) {
+                    windowFailure = failure
+                    UiTestFailures.capture("${case.id}-${page.simpleName}", failure)
                     runCatching { report("${case.id}-${page.simpleName}-failure", mapOf("failure" to failure.toString(), "cause" to failure.cause?.toString())) }
                     throw failure
                 } finally {
-                    instrumentation.runOnMainSync {
-                        contentConstraint?.close()
-                        owner?.takeUnless { it.isDestroyed }?.let { activity ->
-                            (activity as? SettingsActivity)?.prompt?.dismiss()
-                            hideKeyboard(activity.window)
-                            if (!originallyKeptScreenOn) activity.window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                    preserveTestFailure(windowFailure) {
+                        instrumentation.runOnMainSync {
+                            contentConstraint?.close()
+                            owner?.takeUnless { it.isDestroyed }?.let { activity ->
+                                (activity as? SettingsActivity)?.prompt?.dismiss()
+                                hideKeyboard(activity.window)
+                                if (!originallyKeptScreenOn) activity.window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                            }
+                            @Suppress("DEPRECATION")
+                            original?.let { privateResources?.updateConfiguration(it, originalMetrics) }
                         }
-                        @Suppress("DEPRECATION")
-                        original?.let { privateResources?.updateConfiguration(it, originalMetrics) }
                     }
                 }
             }
@@ -569,16 +574,23 @@ class StandaloneAppearanceDeviceTest {
         val unrelated = listOf("installer_settings", "installer_updates").associateWith { context.getSharedPreferences(it, Context.MODE_PRIVATE).all.toMap() }
         val global = globalSettings()
         val plan = StandaloneAppearanceRecovery.begin(context)
+        var failure: Throwable? = null
         try {
             recoveryStatus("DISPLAY_AUDIT", plan)
             run()
+        } catch (error: Throwable) {
+            failure = error
+            UiTestFailures.capture("StandaloneAppearance", error)
+            throw error
         }
         finally {
-            StandaloneAppearanceRecovery.restore(context, plan.runId, drainPendingLauncherWork = true)
-            recoveryStatus("RESTORED", plan)
-            assertEquals("The test did not restore the exact plugin appearance keys", before, preferences.all)
-            for ((file, saved) in unrelated) assertEquals("Display-only actions changed $file", saved, context.getSharedPreferences(file, Context.MODE_PRIVATE).all)
-            assertEquals("The display test changed global/application appearance or the selected IME", global, globalSettings())
+            preserveTestFailure(failure) {
+                StandaloneAppearanceRecovery.restore(context, plan.runId, drainPendingLauncherWork = true)
+                recoveryStatus("RESTORED", plan)
+                assertEquals("The test did not restore the exact plugin appearance keys", before, preferences.all)
+                for ((file, saved) in unrelated) assertEquals("Display-only actions changed $file", saved, context.getSharedPreferences(file, Context.MODE_PRIVATE).all)
+                assertEquals("The display test changed global/application appearance or the selected IME", global, globalSettings())
+            }
         }
     }
 
