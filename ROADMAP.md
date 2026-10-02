@@ -1173,3 +1173,10 @@ if (!installer.isDefault()) installer.setDefault(true);
 - 自有API31两项真实Binder/PFD会话回归通过. 首轮第三项创建hardlink被SELinux拒绝, 未放宽权限; 测试提交f983f6f0a3/build5313改用真实文件与ContentProvider同inode别名, 1/1无跳过通过, 不冒称真硬链接创建已覆盖. 固定宿主5312含另一会话Terminal/Inspector源码, 不归称干净安装器提交制品. 用户手机宿主未替换.
 - Docs6bdbdad6/6.8.0内容88, d.ts18b36840/4.28.0, Ace9bf6851b/1.20.0/build122, Offline9bcdfd18/6.8.6/build69各自门禁通过并本地提交. 离线200文件/11744511字节, 聚合SHA-256=65786402628484d27bb4b59f23646f90477f0306c171ff70b2b99ea3f8ac7ec9. Ace原releases和宿主并行工作保留, 其余相关工作区干净.
 - 本条以build62独立文档提交, 细节见docs/dev/p9-profiles-integration-evidence.md. 最终R8正式宿主脚本/多API契约和签名产物另作最后一笔验收提交. P7继续延迟, 没有远端动作或新设备申请.
+### 2026-10-02 (P9 build63最终本地交付)
+
+- 最终1.2.0/build63签名R8包为autojs6-plugin-three-setup-installer-v1.2.0-8b427100.apk, 2140911字节, SHA-256=d8ae073dfaaa155ce31540663f55395639be13b8d5074c57f6057ef62b5b5fbe. CRC/v2签名/非Debug/无native通过, releases仅此包. 旧build60核验后归档. Temurin单组决策完整gate4分42秒通过, 394 JVM零失败/错误/跳过, 两种lint均0错误/51警告, 36文档/15图标一致.
+- 自有API31最终Release上, 正式宿主5312的真实UID10152通过公开Rhino脚本: 省略逐包选项时命中首个启用script+真实包前缀配置, Dhizuku实装v1并由宿主实际删除来源; 显式false和三个null重置实装v2且来源保留. 异签名和unsigned均BLOCKED_BY_POLICY且原来源不变, 正常卸载自有夹具. 只有一次完成事件, 无不确定结果; 精确来源/设置journal/临时宿主存储mode恢复, preferred XML字节相同.
+- 同一最终APK在API24/31/35独立Release契约各2/2通过, 实际跨UID/PID且六类未授权业务均拒绝. API24/35保数据覆盖主包, 各自原test直接备份恢复并核对摘要; 私有Release历史未读取且没有为此额外Debug覆盖. 不把此前固定Debug/UI或PFD假完成回归冒称全ROM最终R8全矩阵, 无新Samsung/API33/36/37验收.
+- 自有5562最后保留最终Release, 无测试夹具/系统活跃session/安装FGS, 原Dhizuku owner保持. 仅其本轮记录的进程38644和AVD身份确认后关闭, 用户5554与其他设备保持运行. 全部失败/修正/恢复边界见docs/dev/p9-profiles-release-evidence.md及设备独立证据.
+- 主插件本轮按336478a/build61来源配置, 49b5e66/build62整体同步及本笔build63最终gate三笔本地提交. 最终VERSION_BUILD与可达提交数一致且工作区干净; 关联仓库各自提交, 其他会话工作及Ace原releases保留. 原P9四项完成, 只有原P7三项按维护者要求继续延迟, 不推送/打标签/发布. 无新增设备, 产品抉择或手动操作待维护者处理.
