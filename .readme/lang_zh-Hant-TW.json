@@ -8,7 +8,7 @@
   "p_introduction_what": "3-Setup Installer 可從獨立首頁, AutoJs6 入口與指令碼, 以及安裝套件的外部開啟和分享請求安裝, 更新, 檢查與解除安裝 Android 應用程式. 支援 Android 系統確認及透過 Shizuku, Root 或 Dhizuku 執行特權操作.",
   "p_introduction_how": "外掛獨立處理套件檢查, 安裝和結果, 可選擇對話方塊, 靜默或通知列互動. 通知列模式在通知中確認, 取消和顯示結果; Android 仍要求系統確認時, 僅在點擊對應通知後開啟.",
   "h3_status": "目前狀態",
-  "p_status": "{{ version_name }} 已實作下述安裝, 應用程式管理與指令碼功能. 官方 GitHub Release 和外掛中心索引收錄仍待完成. 宿主整合需要 AutoJs6 >= {{ required_host_version_name }} ({{ required_host_version_code }}), `installer` 指令碼 API 需要組建 {{ script_host_version_code }} 或更高版本. 裝置涵蓋範圍與剩餘驗收記錄在 [ROADMAP.md]({{ roadmap_url }}) 中. Dhizuku, 通知列安裝和持久預設安裝器的指令碼選項需要 AutoJs6 {{ required_host_version_name }} 組建 {{ v2_host_version_code }} 或以上及 installer V2 契約. 基本宿主整合仍支援組建 {{ required_host_version_code }}, V1 指令碼方法從組建 {{ script_host_version_code }} 起可用.",
+  "p_status": "{{ version_name }} 已實作下述安裝, 應用程式管理與指令碼功能. 目前版本可從 [GitHub Releases]({{ repo_url }}/releases/tag/v{{ version_name }}) 或 AutoJs6 外掛中心取得. 宿主整合需要 AutoJs6 >= {{ required_host_version_name }} ({{ required_host_version_code }}), `installer` 指令碼 API 需要組建 {{ script_host_version_code }} 或更高版本. 裝置涵蓋範圍與剩餘驗收記錄在 [ROADMAP.md]({{ roadmap_url }}) 中. Dhizuku, 通知列安裝和持久預設安裝器的指令碼選項需要 AutoJs6 {{ required_host_version_name }} 組建 {{ v2_host_version_code }} 或以上及 installer V2 契約. 基本宿主整合仍支援組建 {{ required_host_version_code }}, V1 指令碼方法從組建 {{ script_host_version_code }} 起可用.",
   "h3_features": "功能",
   "p_features_intro": "{{ version_name }} 已實作的功能",
   "features": [

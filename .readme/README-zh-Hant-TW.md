@@ -52,7 +52,7 @@
 
 ******
 
-1.2.0 已實作下述安裝, 應用程式管理與指令碼功能. 官方 GitHub Release 和外掛中心索引收錄仍待完成. 宿主整合需要 AutoJs6 >= 6.8.0 (5299), `installer` 指令碼 API 需要組建 5300 或更高版本. 裝置涵蓋範圍與剩餘驗收記錄在 [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md) 中. Dhizuku, 通知列安裝和持久預設安裝器的指令碼選項需要 AutoJs6 6.8.0 組建 5307 或以上及 installer V2 契約. 基本宿主整合仍支援組建 5299, V1 指令碼方法從組建 5300 起可用.
+1.2.0 已實作下述安裝, 應用程式管理與指令碼功能. 目前版本可從 [GitHub Releases](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/releases/tag/v1.2.0) 或 AutoJs6 外掛中心取得. 宿主整合需要 AutoJs6 >= 6.8.0 (5299), `installer` 指令碼 API 需要組建 5300 或更高版本. 裝置涵蓋範圍與剩餘驗收記錄在 [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md) 中. Dhizuku, 通知列安裝和持久預設安裝器的指令碼選項需要 AutoJs6 6.8.0 組建 5307 或以上及 installer V2 契約. 基本宿主整合仍支援組建 5299, V1 指令碼方法從組建 5300 起可用.
 
 ******
 

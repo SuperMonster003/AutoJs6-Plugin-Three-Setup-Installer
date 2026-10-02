@@ -8,7 +8,7 @@
   "p_introduction_what": "3-Setup Installer 可从独立首页, AutoJs6 入口与脚本, 以及安装包的外部打开和分享请求安装, 更新, 检查与卸载 Android 应用. 支持 Android 系统确认及通过 Shizuku, Root 或 Dhizuku 执行特权操作.",
   "p_introduction_how": "插件独立处理安装包检查, 安装和结果, 可选择对话框, 静默或通知栏交互. 通知栏模式在通知中确认, 取消和展示结果; Android 仍要求系统确认时, 仅在点击对应通知后打开.",
   "h3_status": "当前状态",
-  "p_status": "{{ version_name }} 已实现下述安装, 应用管理与脚本功能. 官方 GitHub Release 和插件中心索引准入仍待完成. 宿主接入需要 AutoJs6 >= {{ required_host_version_name }} ({{ required_host_version_code }}), `installer` 脚本 API 需要构建 {{ script_host_version_code }} 或更高版本. 设备覆盖与剩余验收记录在 [ROADMAP.md]({{ roadmap_url }}) 中. Dhizuku, 通知栏安装和持久默认安装器的脚本选项需要 AutoJs6 {{ required_host_version_name }} 构建 {{ v2_host_version_code }} 或以上及 installer V2 契约. 基础宿主接入仍支持构建 {{ required_host_version_code }}, V1 脚本方法从构建 {{ script_host_version_code }} 起可用.",
+  "p_status": "{{ version_name }} 已实现下述安装, 应用管理与脚本功能. 当前版本可从 [GitHub Releases]({{ repo_url }}/releases/tag/v{{ version_name }}) 或 AutoJs6 插件中心获取. 宿主接入需要 AutoJs6 >= {{ required_host_version_name }} ({{ required_host_version_code }}), `installer` 脚本 API 需要构建 {{ script_host_version_code }} 或更高版本. 设备覆盖与剩余验收记录在 [ROADMAP.md]({{ roadmap_url }}) 中. Dhizuku, 通知栏安装和持久默认安装器的脚本选项需要 AutoJs6 {{ required_host_version_name }} 构建 {{ v2_host_version_code }} 或以上及 installer V2 契约. 基础宿主接入仍支持构建 {{ required_host_version_code }}, V1 脚本方法从构建 {{ script_host_version_code }} 起可用.",
   "h3_features": "功能",
   "p_features_intro": "{{ version_name }} 已实现的功能",
   "features": [
