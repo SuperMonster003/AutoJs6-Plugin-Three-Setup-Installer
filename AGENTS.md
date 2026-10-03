@@ -30,7 +30,7 @@
 | 最低宿主 versionCode | `ThreeSetupInstallerPlugin.REQUIRED_HOST_VERSION` = `InstallerIds.REQUIRED_HOST_VERSION_CODE` = 5299 (AutoJs6 6.8.0 的 P1 构建: `installer-api`, `package-archive-parser` 与宿主客户端首次交付, 路线图 P1.5 回填于 2026-09-30) |
 | 平台版本插件 | `io.github.supermonster003.autojs6-platform-versions` 1.8.3 (建仓时 plugins.gradle.org 已发布 1.8.6, 与兄弟仓库统一升级时再更新) |
 | 发布文件名 | `autojs6-plugin-three-setup-installer-v{VERSION_NAME}-{CRC32}.apk` (单 APK) |
-| 图标源图 | `.python/icons/three-setup-ic-launcher-light.png` / `-dark.png` (1254 x 1254 RGBA, alpha 一致, 图案 `#272727` / `#D8D8D8`; light / dark 指使用它的模式); `ADAPTIVE_GLYPH = 0.41` |
+| 图标源图 | `.python/icons/three-setup-ic-launcher-light.png` / `-dark.png` (1254 x 1254 RGBA, alpha 一致, 图案 `#272727` / `#D8D8D8`; light / dark 指使用它的模式); `ADAPTIVE_GLYPH` 由 Optical geometry v1 派生 |
 
 ## 3. 工作区与提交
 
@@ -269,3 +269,12 @@ py .python/generate_launcher_icons.py --check
 - 参考项目 (只读架构参考, GPL-3.0): `https://github.com/iamr0s/InstallerX`, `https://github.com/wxxsfxyzm/InstallerX-Revived`
 
 参考时以这些仓库的当前代码为准; 复制骨架后必须替换身份字段, URL, 文案, 常量, 版本与测试数据.
+
+## Optical icon standard (2026-10-03)
+
+- Follow `../AUTOJS6_PLUGIN_BLACK_N_WHITE_ADAPTIVE_ICON_AGENTS.md` for every standalone plugin, including the Plugin Center. `.python/icon_geometry.py` v1 is a self-contained copy of the common geometry algorithm; keep its implementation identical across the standalone plugins. Never read sibling checkouts during a build.
+- Derive size from the equal-weight combination of visible bounding-box area (alpha >= 16) and alpha-weighted ink area. Target visible size is 0.52 of the canvas, with only documented optical corrections in 0.94-1.06. The adaptive ratio is always the UI ratio multiplied by 72/108. This supersedes older hardcoded UI/adaptive widths in historical notes. Preserve aspect ratio, optical placement and final nonzero-alpha safety checks.
+- Current derived widths: UI 0.5612, adaptive 0.3741 (rounded documentation values, not generation constants). Optical scale=1.00 and zero offsets.
+- Generate `mipmap/ic_plugin_center.png` and its night counterpart from the same geometry as the transparent UI/launcher mode. They are transparent neutral artwork for installed and catalog entries, independent of the active launcher alias. Keep them through `raw/keep_plugin_center_icon.xml`. Existing separate brand assets retain their original purpose.
+- The default glyph colors are #272727 / #D8D8D8. Stamp Mail is the maintainer-approved grayscale exception: preserve the envelope folds, use neutral R=G=B values, and retain identical day/night alpha. Do not introduce a filled background into the Plugin Center assets.
+- Run the icon generator and its read-only `--check`, `.python/tests/test_icon_geometry.py`, existing icon regressions, and review the full set at 36/48/64 px in both themes and in launcher masks. `.github/workflows/icons.yml` verifies Windows/Linux reproducibility. Synthetic previews do not replace actual launcher verification.
