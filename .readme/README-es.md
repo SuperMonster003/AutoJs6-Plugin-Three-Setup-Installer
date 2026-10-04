@@ -52,7 +52,7 @@ El plugin gestiona la inspección de paquetes, la instalación y los resultados 
 
 ******
 
-1.2.0 describe las funciones de instalación, gestión de aplicaciones y scripts implementadas a continuación. Esta versión está disponible en [GitHub Releases](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/releases/tag/v1.2.0) y en el centro de plugins de AutoJs6. La integración requiere AutoJs6 >= 6.8.0 (5299), y la API de scripts `installer` requiere la compilación 5300 o posterior. La cobertura de dispositivos y las validaciones pendientes se registran en [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md). Dhizuku, la instalación por notificación y las opciones de scripts para el instalador persistente requieren AutoJs6 6.8.0 compilación 5307 o posterior con el contrato installer V2. La integración básica sigue disponible desde la compilación 5299 y los métodos de scripts V1 desde 5300.
+1.2.1 describe las funciones de instalación, gestión de aplicaciones y scripts implementadas a continuación. Esta versión está disponible en [GitHub Releases](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/releases/tag/v1.2.1) y en el centro de plugins de AutoJs6. La integración requiere AutoJs6 >= 6.8.0 (5299), y la API de scripts `installer` requiere la compilación 5300 o posterior. La cobertura de dispositivos y las validaciones pendientes se registran en [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md). Dhizuku, la instalación por notificación y las opciones de scripts para el instalador persistente requieren AutoJs6 6.8.0 compilación 5307 o posterior con el contrato installer V2. La integración básica sigue disponible desde la compilación 5299 y los métodos de scripts V1 desde 5300.
 
 ******
 
@@ -60,7 +60,7 @@ El plugin gestiona la inspección de paquetes, la instalación y los resultados 
 
 ******
 
-Funciones implementadas en 1.2.0:
+Funciones implementadas en 1.2.1:
 
 - Formatos de paquete: `.apk`, `.apks`, `.xapk`, `.apkm`, `.apkz` y archivos ZIP que contienen APK; los paquetes divididos se seleccionan para el dispositivo; los archivos `.aab` se reconocen y describen pero no se instalan.
 - `none` usa la confirmación de Android. Los ajustes nuevos prueban `shizuku -> root -> dhizuku -> none` para `auto`, según disponibilidad; cada método se puede reordenar o desactivar. Los ajustes guardados con tres métodos conservan su orden relativo y métodos habilitados; Dhizuku se inserta antes de `none`, desactivado. Una elección explícita nunca cambia a otro método.
@@ -278,6 +278,12 @@ Los planes y el progreso del plugin se mantienen como una lista verificable en R
 
 ******
 
+#### v1.2.1
+
+_2026/10/04_
+
+- `Mejora` Los iconos del centro de plugins usan los tamaños, posiciones, imágenes claras y oscuras y fondos circulares ajustados en Icon Studio, conservando fuentes y parámetros reproducibles
+
 #### v1.2.0
 
 _2026/10/02_
@@ -308,37 +314,6 @@ _2026/10/02_
 - `Mejora` Los ajustes guardan el orden y activación de los métodos, las opciones de instalación y las notificaciones. Las instalaciones locales/externas usan `dialog` por defecto y permiten elegir `auto`, `silent` o `notification`. La interfaz del anfitrión usa `dialog`; los scripts mantienen sus opciones explícitas y `auto` por defecto. Los cambios se guardan tras confirmar.
 - `Dependencia` Se añade Dhizuku API 2.6.0 (MIT) para la autorización mediante propietario de dispositivo/perfil
 - `Dependencia` Se actualiza `installer-api.aar` al contrato V2 (MPL 2.0), manteniendo la negociación V1 y añadiendo al final el método de instalador persistente; el origen y SHA-256 figuran en los avisos de terceros; AutoJs6 >= 6.8.0 (5307).
-
-#### v1.0.0
-
-_2026/10/02_
-
-- `Aviso` 1.0.0 describe las funciones de instalación, gestión de aplicaciones y scripts implementadas a continuación. La publicación oficial en GitHub Releases y la inclusión en el centro de plugins siguen pendientes. La integración requiere AutoJs6 >= 6.8.0 (5299), y la API de scripts `installer` requiere la compilación 5300 o posterior. La cobertura de dispositivos y las validaciones pendientes se registran en [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md).
-- `Función` 3-Setup Installer instala, actualiza, inspecciona y desinstala aplicaciones Android desde su inicio independiente, las entradas y scripts de AutoJs6, o solicitudes externas para abrir y compartir paquetes. Admite la confirmación de Android y operaciones privilegiadas mediante Shizuku o Root
-- `Función` Formatos de paquete: `.apk`, `.apks`, `.xapk`, `.apkm`, `.apkz` y archivos ZIP que contienen APK; los paquetes divididos se seleccionan para el dispositivo; los archivos `.aab` se reconocen y describen pero no se instalan
-- `Función` Se puede intentar eliminar el origen tras una instalación correcta. Las versiones anteriores, los paquetes de prueba, la omisión del límite de targetSdk bajo (Android 14+), la atribución del instalador y otros usuarios requieren Shizuku o Root y siguen sujetos a las restricciones de Android
-- `Función` La API de scripts `installer` (alias `$installer`) ofrece formas síncrona, `...Async` y de sesión para instalar paquetes individuales, por lotes o divididos, desinstalar, inspeccionar, consultar autorizadores y usuarios, y configurar el instalador predeterminado. Los fallos son objetos `InstallerError` con un `code` estable (requiere AutoJs6 >= 6.8.0 (5300)). Los scripts usan `interaction: 'auto'` por defecto e instalan en silencio cuando hay privilegios. Las acciones de instalación de la interfaz del anfitrión usan `dialog`. Si Android exige confirmación, `auto` la permite y la registra en `notes`. Elige `interaction: 'dialog'` para confirmar antes de instalar. La elección explícita `silent` falla con `AUTHORIZER_REQUIRED` si no hay privilegios o hace falta confirmación del sistema
-- `Función` El inicio independiente muestra la disponibilidad y autorización de Shizuku/Root, el instalador predeterminado, las tareas activas y las instalaciones recientes. Selecciona varios paquetes en el selector del sistema para instalarlos secuencialmente, continuar tras errores individuales o cancelar los elementos restantes
-- `Función` La confirmación muestra información de la aplicación, versiones anterior y nueva, firmas y componentes APK seleccionables. El progreso permite cancelar; los resultados muestran acciones de éxito o errores que se pueden copiar. La instalación por lotes muestra el estado de cada elemento
-- `Función` Notificaciones de progreso en primer plano, cancelación y resultados. Denegar el permiso de notificaciones no impide la instalación
-- `Función` Abre o comparte uno o varios paquetes, incluidos los archivos APKS compartidos por MT Manager. Varios paquetes entran en una cola secuencial. Los elementos externos fallidos se pueden reintentar mientras su URI y acceso sigan disponibles
-- `Función` La gestión de aplicaciones instaladas permite buscar por nombre o paquete, ordenar por nombre, fecha de instalación o actualización, y mostrar aplicaciones del sistema. Abre una aplicación o su información del sistema, o revisa y confirma su desinstalación. Shizuku o Root pueden desinstalar después sin otra confirmación del sistema y conservar los datos si se solicita; en otros casos se usa la confirmación de Android
-- `Función` La tarjeta de inicio y los ajustes abren la misma página del instalador predeterminado, con acciones privilegiadas para establecerlo o quitarlo y guía hacia los ajustes del sistema sin privilegios. Las políticas OEM pueden impedir el cambio o exigir borrar el controlador anterior. Los scripts conservan `installer.isDefault`, `installer.setDefault` y `setDefaultAsync`; los resultados reflejan la respuesta del dispositivo
-- `Función` Los ajustes guardan el orden y los métodos de autorización habilitados, las opciones de instalación y las notificaciones de progreso. Las instalaciones locales y externas usan `dialog` por defecto; las opciones `auto` o `silent` guardadas explícitamente se aplican. Las solicitudes del anfitrión/scripts conservan sus opciones explícitas, y la API de scripts mantiene `auto` por defecto. Las selecciones se guardan solo al confirmar
-- `Función` La apariencia incluye idioma, modo nocturno, color del tema e icono del lanzador. Los tres primeros siguen AutoJs6 por defecto y admiten ajustes locales; sin anfitrión se usan el idioma y modo del sistema y el color predeterminado. Los iconos ofrecen modos claro, oscuro, automático y transparente; el automático sigue el sistema, sujeto a la caché y las máscaras del lanzador
-- `Función` El historial privado conserva hasta 200 elementos con paquete, nombre, versiones anterior/nueva, resultado, fecha, origen (anfitrión/script/externo/inicio), autorización y detalles del error. Elimina un registro o borra el historial sin desinstalar aplicaciones ni eliminar archivos de origen. Tras finalizar el proceso, los elementos incompletos se marcan como cancelados y nunca se reanudan automáticamente
-- `Función` Los ajustes incluyen Acerca de y el historial de versiones integrado en diez idiomas. La búsqueda manual de actualizaciones utiliza la API GitHub Releases del plugin con un intervalo de 12 horas, resultados en caché y gestión de versiones ignoradas. Las páginas de publicación se abren en el navegador; las actualizaciones no se descargan ni instalan automáticamente
-- `Función` README, instrucciones del centro de plugins y registro de cambios en 10 idiomas
-- `Mejora` Las fuentes con acceso aleatorio evitan una copia completa en caché, y los flujos se almacenan temporalmente cuando es necesario. Se admiten paquetes divididos en ZIP, AAB solo permite inspección y se rechazan fuentes modificadas
-- `Mejora` Solo se intenta eliminar tras una instalación correcta. Si la instalación falla, se cancela o agota el tiempo, el origen siempre se conserva. Un fallo de eliminación no cambia una instalación correcta, y el proveedor externo puede rechazarla. En los scripts, el anfitrión aplica `deleteSource` a rutas y orígenes `file://`, y conserva los orígenes `content://`. Revisa `sourceDeleted` y `notes`. En un lote, los elementos con éxito confirmado siguen aplicando `deleteSource` aunque otro falle o se cancele el resto de la cola
-- `Mejora` Las instalaciones simultáneas del mismo paquete se ejecutan en serie entre usuarios y métodos de autorización, conservando la cancelación y los plazos de espera, y se limpian los directorios temporales inactivos durante más de 24 horas
-- `Mejora` Reintentar una vez una conexión privilegiada interrumpida mientras se establece; las instalaciones y desinstalaciones ya iniciadas nunca se repiten automáticamente
-- `Dependencia` Se añade Shizuku API 13.1.5 (`dev.rikka.shizuku:api`, `dev.rikka.shizuku:provider`) para el modo de autorización Shizuku
-- `Dependencia` Se añade libsu 6.0.0 (`com.github.topjohnwu.libsu:core`, `service`) para el modo de autorización Root
-- `Dependencia` Se añade AndroidHiddenApiBypass 6.1 para las API ocultas del instalador de paquetes que usa el servicio privilegiado
-- `Dependencia` Se añade `common-plugin-api.aar` (módulo de AutoJs6 `plugin-api/common-plugin-api`, build del host 6.8.0 / 5298, MPL 2.0) como contrato de plugin compartido, con hash bloqueado en `locks/host-api-aars.lock`
-- `Dependencia` Se añade `installer-api.aar` (AutoJs6, MPL 2.0) para el contrato de instalación; el origen y SHA-256 figuran en los avisos de terceros
-- `Dependencia` Se añade `package-archive-parser.aar` (AutoJs6, MPL 2.0) para inspeccionar APK y contenedores y seleccionar partes; el origen y SHA-256 figuran en los avisos de terceros
 
 ##### Para más historial de versiones
 
