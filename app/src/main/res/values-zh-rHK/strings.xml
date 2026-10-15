@@ -59,7 +59,7 @@
     <string name="app_update_checking" tools:ignore="TypographyEllipsis">正在檢查更新...</string>
     <string name="app_update_manage_ignored">管理已忽略的更新</string>
     <string name="app_update_no_ignored">目前沒有已忽略的版本</string>
-    <string name="app_update_stop_ignoring">Stop ignoring</string>
+    <string name="app_update_stop_ignoring">取消忽略</string>
     <string name="apps_action_failed">無法為 %1$s 執行此操作.</string>
     <string name="apps_actions_collapse">操作已展開</string>
     <string name="apps_actions_expand">操作已收起</string>

@@ -59,7 +59,7 @@
     <string name="app_update_checking" tools:ignore="TypographyEllipsis">Buscando actualizaciones...</string>
     <string name="app_update_manage_ignored">Gestionar actualizaciones ignoradas</string>
     <string name="app_update_no_ignored">No hay versiones ignoradas</string>
-    <string name="app_update_stop_ignoring">Stop ignoring</string>
+    <string name="app_update_stop_ignoring">Dejar de ignorar</string>
     <string name="apps_action_failed">Esta acción no está disponible para %1$s.</string>
     <string name="apps_actions_collapse">Acciones expandidas</string>
     <string name="apps_actions_expand">Acciones contraídas</string>

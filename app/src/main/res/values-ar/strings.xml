@@ -59,7 +59,7 @@
     <string name="app_update_checking" tools:ignore="TypographyEllipsis">جار التحقق من التحديثات...</string>
     <string name="app_update_manage_ignored">إدارة التحديثات المتجاهلة</string>
     <string name="app_update_no_ignored">لا توجد إصدارات متجاهلة حاليا</string>
-    <string name="app_update_stop_ignoring">Stop ignoring</string>
+    <string name="app_update_stop_ignoring">إيقاف التجاهل</string>
     <string name="apps_action_failed">هذا الإجراء غير متاح للتطبيق %1$s.</string>
     <string name="apps_actions_collapse">الإجراءات موسعة</string>
     <string name="apps_actions_expand">الإجراءات مطوية</string>

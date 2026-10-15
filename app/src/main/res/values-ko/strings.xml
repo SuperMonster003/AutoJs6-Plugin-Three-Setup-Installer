@@ -59,7 +59,7 @@
     <string name="app_update_checking" tools:ignore="TypographyEllipsis">업데이트 확인 중...</string>
     <string name="app_update_manage_ignored">무시한 업데이트 관리</string>
     <string name="app_update_no_ignored">무시한 릴리스가 없습니다</string>
-    <string name="app_update_stop_ignoring">Stop ignoring</string>
+    <string name="app_update_stop_ignoring">무시 중지</string>
     <string name="apps_action_failed">%1$s에서 이 작업을 사용할 수 없습니다.</string>
     <string name="apps_actions_collapse">작업 펼쳐짐</string>
     <string name="apps_actions_expand">작업 접힘</string>

@@ -59,7 +59,7 @@
     <string name="app_update_checking" tools:ignore="TypographyEllipsis">Проверка обновлений...</string>
     <string name="app_update_manage_ignored">Пропущенные обновления</string>
     <string name="app_update_no_ignored">Нет пропущенных версий</string>
-    <string name="app_update_stop_ignoring">Stop ignoring</string>
+    <string name="app_update_stop_ignoring">Не игнорировать</string>
     <string name="apps_action_failed">Это действие недоступно для %1$s.</string>
     <string name="apps_actions_collapse">Действия развёрнуты</string>
     <string name="apps_actions_expand">Действия свёрнуты</string>

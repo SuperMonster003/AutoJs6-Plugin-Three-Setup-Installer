@@ -6,8 +6,9 @@
 
 # v1.2.1
 
-###### 2026/10/05
+###### 2026/10/15
 
+* `Corrección` Completar las traducciones que faltaban en los ajustes de actualización
 * `Mejora` Los iconos del centro de plugins usan los tamaños, posiciones, imágenes claras y oscuras y fondos circulares ajustados en Icon Studio, conservando fuentes y parámetros reproducibles
 * `Mejora` Los iconos de información de la aplicación de Android comparten las imágenes y los fondos claros y oscuros de Icon Studio, conservando las imágenes transparentes del centro de plugins y las opciones del lanzador
 

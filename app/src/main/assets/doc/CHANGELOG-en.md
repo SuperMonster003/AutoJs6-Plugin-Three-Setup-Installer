@@ -6,8 +6,9 @@
 
 # v1.2.1
 
-###### 2026/10/05
+###### 2026/10/15
 
+* `Fix` Complete missing translations in update settings
 * `Improvement` Plugin Center icons use the sizes, positions, light and dark artwork, and circular backgrounds adjusted in Icon Studio, retaining reproducible sources and parameters
 * `Improvement` Android App info icons share Icon Studio artwork and light/dark backgrounds while preserving transparent Plugin Center artwork and existing launcher choices
 

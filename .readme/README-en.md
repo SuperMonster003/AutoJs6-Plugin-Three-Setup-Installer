@@ -280,8 +280,9 @@ The plugin's plans and progress are maintained as a checkable list in ROADMAP.md
 
 #### v1.2.1
 
-_2026/10/05_
+_2026/10/15_
 
+- `Fix` Complete missing translations in update settings
 - `Improvement` Plugin Center icons use the sizes, positions, light and dark artwork, and circular backgrounds adjusted in Icon Studio, retaining reproducible sources and parameters
 - `Improvement` Android App info icons share Icon Studio artwork and light/dark backgrounds while preserving transparent Plugin Center artwork and existing launcher choices
 
