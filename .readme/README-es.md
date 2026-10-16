@@ -280,9 +280,10 @@ Los planes y el progreso del plugin se mantienen como una lista verificable en R
 
 #### v1.2.1
 
-_2026/10/15_
+_2026/10/17_
 
 - `Corrección` Completar las traducciones que faltaban en los ajustes de actualización
+- `Corrección` En la interfaz en árabe, 3-Setup Installer ya no aparece invertido como Setup Installer-3
 - `Mejora` Los iconos del centro de plugins usan los tamaños, posiciones, imágenes claras y oscuras y fondos circulares ajustados en Icon Studio, conservando fuentes y parámetros reproducibles
 - `Mejora` Los iconos de información de la aplicación de Android comparten las imágenes y los fondos claros y oscuros de Icon Studio, conservando las imágenes transparentes del centro de plugins y las opciones del lanzador
 

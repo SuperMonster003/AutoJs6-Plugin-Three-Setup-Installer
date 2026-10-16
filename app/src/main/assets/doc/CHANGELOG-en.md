@@ -6,9 +6,10 @@
 
 # v1.2.1
 
-###### 2026/10/15
+###### 2026/10/17
 
 * `Fix` Complete missing translations in update settings
+* `Fix` In the Arabic interface, 3-Setup Installer no longer appears reversed as Setup Installer-3
 * `Improvement` Plugin Center icons use the sizes, positions, light and dark artwork, and circular backgrounds adjusted in Icon Studio, retaining reproducible sources and parameters
 * `Improvement` Android App info icons share Icon Studio artwork and light/dark backgrounds while preserving transparent Plugin Center artwork and existing launcher choices
 
