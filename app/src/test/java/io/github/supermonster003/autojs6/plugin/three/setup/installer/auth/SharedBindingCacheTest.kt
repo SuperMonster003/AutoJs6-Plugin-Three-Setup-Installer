@@ -85,7 +85,7 @@ class SharedBindingCacheTest {
         assertSame(rootService, f.cache.acquire("root", 1))
         assertEquals(1L, rootBinding.closed.count)
     }
-    @Test fun `last timed out waiter closes the pending connection`() = fixture { f ->
+    @Test fun `last timed out waiter closes the pending connection`() = fixture(inlineDispatch = true) { f ->
         assertThrows(TimeoutException::class.java) { f.cache.acquire("root", 20) }
         val old = f.next()
         assertTrue(old.closed.await(3, TimeUnit.SECONDS))
@@ -112,8 +112,8 @@ class SharedBindingCacheTest {
         assertSame(replacement, f.cache.acquire("root", 1))
         assertEquals(1L, fresh.closed.count)
     }
-    private fun fixture(block: (Fixture) -> Unit) {
-        val f = Fixture()
+    private fun fixture(inlineDispatch: Boolean = false, block: (Fixture) -> Unit) {
+        val f = Fixture(inlineDispatch)
         try { block(f) } finally {
             f.cache.close()
             f.workers.shutdownNow()
@@ -128,11 +128,12 @@ class SharedBindingCacheTest {
         override fun bind() = Unit
         override fun close() { closed.countDown() }
     }
-    private class Fixture {
+    private class Fixture(inlineDispatch: Boolean) {
         val transport = Executors.newSingleThreadExecutor()
         val workers = Executors.newFixedThreadPool(4)
         val created = LinkedBlockingQueue<FakeBinding>()
-        val cache = SharedBindingCache<String, Connection>({ transport.execute(it) }, { it.alive }, { _, connected, disconnected ->
+        // The timeout case starts with an actual pending binding, even when the executor is busy.
+        val cache = SharedBindingCache<String, Connection>({ if (inlineDispatch) it() else transport.execute(it) }, { it.alive }, { _, connected, disconnected ->
             FakeBinding(connected, disconnected).also { created.offer(it) }
         })
         fun next(): FakeBinding = requireNotNull(created.poll(3, TimeUnit.SECONDS)) { "No binding created" }
