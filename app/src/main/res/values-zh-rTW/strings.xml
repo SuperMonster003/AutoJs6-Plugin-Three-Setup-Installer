@@ -182,6 +182,7 @@
     <string name="install_no_system_message">Android 未傳回額外的錯誤詳細資訊.</string>
     <string name="install_open">開啟</string>
     <string name="install_open_in_profile">已為使用者 %1$s 安裝. 請切換至該使用者或設定檔後開啟此應用程式.</string>
+    <string name="install_open_no_launch_entry">此應用程式沒有可直接開啟的介面.</string>
     <string name="install_open_unavailable">目前使用者無法開啟此應用程式.</string>
     <string name="install_optimizing">正在進行額外編譯</string>
     <string name="install_optimizing_note">應用程式已安裝. 此階段僅進行額外編譯; 取消或失敗不會撤銷安裝.</string>

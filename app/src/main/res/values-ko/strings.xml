@@ -182,6 +182,7 @@
     <string name="install_no_system_message">Android에서 추가 오류 정보를 반환하지 않았습니다.</string>
     <string name="install_open">열기</string>
     <string name="install_open_in_profile">사용자 %1$s에 설치했습니다. 해당 사용자 또는 프로필에서 앱을 여세요.</string>
+    <string name="install_open_no_launch_entry">이 앱에는 직접 열 수 있는 화면이 없습니다.</string>
     <string name="install_open_unavailable">현재 사용자에서 이 앱을 열 수 없습니다.</string>
     <string name="install_optimizing">추가 컴파일 진행 중</string>
     <string name="install_optimizing_note">앱은 이미 설치되었습니다. 이 단계는 추가 컴파일만 수행하며 취소하거나 실패해도 설치는 취소되지 않습니다.</string>

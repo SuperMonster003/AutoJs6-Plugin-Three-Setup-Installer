@@ -182,6 +182,7 @@
     <string name="install_no_system_message">Android から追加のエラー詳細は返されませんでした.</string>
     <string name="install_open">開く</string>
     <string name="install_open_in_profile">ユーザー %1$s にインストールしました. そのユーザーまたはプロファイルからアプリを開いてください.</string>
+    <string name="install_open_no_launch_entry">このアプリには直接開ける画面がありません.</string>
     <string name="install_open_unavailable">現在のユーザーではこのアプリを開けません.</string>
     <string name="install_optimizing">追加コンパイル中</string>
     <string name="install_optimizing_note">アプリは既にインストールされています. この段階は追加コンパイルのみで, キャンセルや失敗でインストールは取り消されません.</string>

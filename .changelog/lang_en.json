@@ -6,12 +6,13 @@
   "changelog_label_dependency": "Dependency",
   "$data": {
     "v1.2.1": {
-      "released_date": "2026/10/17",
+      "released_date": "2026/11/08",
       "improvement": [
         "Plugin Center icons use the sizes, positions, light and dark artwork, and circular backgrounds adjusted in Icon Studio, retaining reproducible sources and parameters",
         "Android App info icons share Icon Studio artwork and light/dark backgrounds while preserving transparent Plugin Center artwork and existing launcher choices"
       ],
       "fix": [
+        "Misleading text after successfully installing or updating an application without a launchable interface could be mistaken for an installation failure",
         "Complete missing translations in update settings",
         "In the Arabic interface, 3-Setup Installer no longer appears reversed as Setup Installer-3"
       ]

@@ -182,6 +182,7 @@
     <string name="install_no_system_message">Android did not return additional error details.</string>
     <string name="install_open">Open</string>
     <string name="install_open_in_profile">Installed for user %1$s. Open this app from that user or profile.</string>
+    <string name="install_open_no_launch_entry">This application has no interface that can be opened directly.</string>
     <string name="install_open_unavailable">This application cannot be opened for the current user.</string>
     <string name="install_optimizing">Performing extra compilation</string>
     <string name="install_optimizing_note">The app is already installed. This phase only performs extra compilation; cancellation or failure does not undo installation.</string>

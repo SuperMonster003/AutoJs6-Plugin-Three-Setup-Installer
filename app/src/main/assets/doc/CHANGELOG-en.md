@@ -6,8 +6,9 @@
 
 # v1.2.1
 
-###### 2026/10/17
+###### 2026/11/08
 
+* `Fix` Misleading text after successfully installing or updating an application without a launchable interface could be mistaken for an installation failure
 * `Fix` Complete missing translations in update settings
 * `Fix` In the Arabic interface, 3-Setup Installer no longer appears reversed as Setup Installer-3
 * `Improvement` Plugin Center icons use the sizes, positions, light and dark artwork, and circular backgrounds adjusted in Icon Studio, retaining reproducible sources and parameters

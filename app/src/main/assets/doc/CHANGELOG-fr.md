@@ -6,8 +6,9 @@
 
 # v1.2.1
 
-###### 2026/10/17
+###### 2026/11/08
 
+* `Correctif` Le message affiché après l'installation ou la mise à jour réussie d'une application sans interface accessible directement pouvait laisser croire à un échec de l'installation
 * `Correctif` Compléter les traductions manquantes dans les paramètres de mise à jour
 * `Correctif` Dans l'interface en arabe, 3-Setup Installer ne s'affiche plus à l'envers sous la forme Setup Installer-3
 * `Amélioration` Les icônes du centre de plugins utilisent les tailles, positions, images claires et sombres et fonds circulaires réglés dans Icon Studio, avec les sources et paramètres permettant de les reproduire

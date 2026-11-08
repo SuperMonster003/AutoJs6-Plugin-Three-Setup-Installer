@@ -182,6 +182,7 @@
     <string name="install_no_system_message">Android n\'a pas renvoyé de détails supplémentaires.</string>
     <string name="install_open">Ouvrir</string>
     <string name="install_open_in_profile">Installée pour l\'utilisateur %1$s. Ouvrez cette application depuis cet utilisateur ou profil.</string>
+    <string name="install_open_no_launch_entry">Cette application ne dispose pas d\'une interface pouvant être ouverte directement.</string>
     <string name="install_open_unavailable">Cette application ne peut pas être ouverte pour l\'utilisateur actuel.</string>
     <string name="install_optimizing">Compilation supplémentaire en cours</string>
     <string name="install_optimizing_note">L\'application est déjà installée. Cette phase effectue uniquement une compilation supplémentaire; une annulation ou un échec laisse l\'application installée.</string>

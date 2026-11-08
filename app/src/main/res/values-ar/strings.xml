@@ -182,6 +182,7 @@
     <string name="install_no_system_message">لم يقدم Android تفاصيل إضافية للخطأ.</string>
     <string name="install_open">فتح</string>
     <string name="install_open_in_profile">تم التثبيت للمستخدم %1$s. افتح التطبيق من ذلك المستخدم أو الملف الشخصي.</string>
+    <string name="install_open_no_launch_entry">لا يحتوي هذا التطبيق على واجهة يمكن فتحها مباشرة.</string>
     <string name="install_open_unavailable">لا يمكن فتح هذا التطبيق للمستخدم الحالي.</string>
     <string name="install_optimizing">جار إجراء التجميع الإضافي</string>
     <string name="install_optimizing_note">التطبيق مثبت بالفعل. تنفذ هذه المرحلة تجميعا إضافيا فقط; ولا يؤدي الإلغاء أو الفشل إلى التراجع عن التثبيت.</string>

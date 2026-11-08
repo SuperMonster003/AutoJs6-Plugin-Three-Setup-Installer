@@ -280,8 +280,9 @@ Los planes y el progreso del plugin se mantienen como una lista verificable en R
 
 #### v1.2.1
 
-_2026/10/17_
+_2026/11/08_
 
+- `Corrección` El mensaje tras instalar o actualizar correctamente una aplicación sin interfaz que se pueda abrir directamente podía confundirse con un fallo de instalación
 - `Corrección` Completar las traducciones que faltaban en los ajustes de actualización
 - `Corrección` En la interfaz en árabe, 3-Setup Installer ya no aparece invertido como Setup Installer-3
 - `Mejora` Los iconos del centro de plugins usan los tamaños, posiciones, imágenes claras y oscuras y fondos circulares ajustados en Icon Studio, conservando fuentes y parámetros reproducibles

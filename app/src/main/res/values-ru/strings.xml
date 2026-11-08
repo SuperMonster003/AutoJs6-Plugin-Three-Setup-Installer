@@ -182,6 +182,7 @@
     <string name="install_no_system_message">Android не вернул дополнительные сведения об ошибке.</string>
     <string name="install_open">Открыть</string>
     <string name="install_open_in_profile">Установлено для пользователя %1$s. Откройте приложение из этого пользователя или профиля.</string>
+    <string name="install_open_no_launch_entry">У этого приложения нет интерфейса, который можно открыть напрямую.</string>
     <string name="install_open_unavailable">Это приложение нельзя открыть для текущего пользователя.</string>
     <string name="install_optimizing">Выполняется дополнительная компиляция</string>
     <string name="install_optimizing_note">Приложение уже установлено. На этом этапе выполняется только дополнительная компиляция; отмена или ошибка не отменяют установку.</string>

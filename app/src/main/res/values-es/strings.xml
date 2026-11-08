@@ -182,6 +182,7 @@
     <string name="install_no_system_message">Android no devolvió detalles adicionales del error.</string>
     <string name="install_open">Abrir</string>
     <string name="install_open_in_profile">Instalada para el usuario %1$s. Abre esta aplicación desde ese usuario o perfil.</string>
+    <string name="install_open_no_launch_entry">Esta aplicación no tiene una interfaz que se pueda abrir directamente.</string>
     <string name="install_open_unavailable">Esta aplicación no se puede abrir para el usuario actual.</string>
     <string name="install_optimizing">Realizando compilación adicional</string>
     <string name="install_optimizing_note">La aplicación ya está instalada. Esta fase solo realiza una compilación adicional; una cancelación o un fallo no deshace la instalación.</string>

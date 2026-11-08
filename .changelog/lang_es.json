@@ -6,12 +6,13 @@
   "changelog_label_dependency": "Dependencia",
   "$data": {
     "v1.2.1": {
-      "released_date": "2026/10/17",
+      "released_date": "2026/11/08",
       "improvement": [
         "Los iconos del centro de plugins usan los tamaños, posiciones, imágenes claras y oscuras y fondos circulares ajustados en Icon Studio, conservando fuentes y parámetros reproducibles",
         "Los iconos de información de la aplicación de Android comparten las imágenes y los fondos claros y oscuros de Icon Studio, conservando las imágenes transparentes del centro de plugins y las opciones del lanzador"
       ],
       "fix": [
+        "El mensaje tras instalar o actualizar correctamente una aplicación sin interfaz que se pueda abrir directamente podía confundirse con un fallo de instalación",
         "Completar las traducciones que faltaban en los ajustes de actualización",
         "En la interfaz en árabe, 3-Setup Installer ya no aparece invertido como Setup Installer-3"
       ]

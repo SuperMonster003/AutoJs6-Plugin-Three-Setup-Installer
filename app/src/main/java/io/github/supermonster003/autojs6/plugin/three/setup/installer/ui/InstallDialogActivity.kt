@@ -415,7 +415,7 @@ class InstallDialogActivity : HostAppearanceActivity() {
                     try { startActivity(launch); dismissPresentation() }
                     catch (_: Exception) { Toast.makeText(this, R.string.install_open_unavailable, Toast.LENGTH_LONG).show() }
                 }.apply { isEnabled = launch != null })
-                if (!state.recovered && launch == null) dialog.content.addView(kit.text(if (current) getString(R.string.install_open_unavailable)
+                if (!state.recovered && launch == null) dialog.content.addView(kit.text(if (current) getString(R.string.install_open_no_launch_entry)
                     else getString(R.string.install_open_in_profile, user ?: getString(R.string.install_unknown)), color = kit.palette.muted).apply {
                     if (!current) tag = TAG_OPEN_PROFILE
                 })
