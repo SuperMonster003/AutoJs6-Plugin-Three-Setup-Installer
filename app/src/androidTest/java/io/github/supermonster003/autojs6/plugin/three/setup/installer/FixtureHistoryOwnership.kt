@@ -61,14 +61,29 @@ internal class FixtureHistoryOwnership(private val context: Context, private val
                     "The selected history entry does not belong to the fixed external fixture"
                 }
             }
-            // Retire exact IDs even before a queued terminal save reaches disk.
-            val completed = CountDownLatch(ids.size)
-            val successful = AtomicBoolean(true)
-            ids.forEach { id -> history.remove(id) { written ->
-                if (!written) successful.set(false)
-                completed.countDown()
-            } }
-            check(completed.await(5, TimeUnit.SECONDS) && successful.get()) { "Fixture history cleanup was not saved durably" }
+            // A terminal snapshot can precede its final history save. That save can supersede
+            // the removal's disk revision, even though its retired IDs cannot return. Retry only
+            // these owned IDs within the original five-second budget, retaining the durability
+            // receipt and both baseline checks instead of treating a superseded write as success.
+            val deadline = SystemClock.elapsedRealtime() + 5_000
+            var saved = false
+            while (!saved && SystemClock.elapsedRealtime() < deadline) {
+                check(history.list().filterNot { it.id in ids }.associateBy { it.id } == baseline) {
+                    "Unrelated history changed; no further fixture history was deleted"
+                }
+                val completed = CountDownLatch(ids.size)
+                val successful = AtomicBoolean(true)
+                ids.forEach { id -> history.remove(id) { written ->
+                    if (!written) successful.set(false)
+                    completed.countDown()
+                } }
+                check(completed.await((deadline - SystemClock.elapsedRealtime()).coerceAtLeast(0), TimeUnit.MILLISECONDS)) {
+                    "Fixture history cleanup callback timed out"
+                }
+                saved = successful.get()
+                if (!saved) SystemClock.sleep(25)
+            }
+            check(saved) { "Fixture history cleanup was not saved durably" }
             check(history.list().associateBy { it.id } == baseline) { "History cache did not return to its original entries" }
             check(settledDisk().associateBy { it.id } == baseline) { "Durable history did not return to its original entries" }
             InstrumentationRegistry.getInstrumentation().sendStatus(0, Bundle().apply {

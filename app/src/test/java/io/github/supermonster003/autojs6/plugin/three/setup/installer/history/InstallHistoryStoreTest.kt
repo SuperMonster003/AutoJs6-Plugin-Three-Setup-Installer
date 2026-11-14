@@ -193,6 +193,36 @@ class InstallHistoryStoreTest {
         } finally { release.countDown(); io.shutdownNow() }
     }
 
+    @Test fun lateTerminalSaveCanSupersedeRemovalButRetryPreservesUnrelatedHistory() {
+        val queued = Queue()
+        val target = file()
+        val baseline = entry()
+        val fixture = entry(terminal = false)
+        var beforeCommit: (() -> Unit)? = null
+        val disk = InstallHistoryFile(target) { beforeCommit?.also { beforeCommit = null }?.invoke() }
+        val store = InstallHistoryStore(disk, queued, clock = { now })
+        store.begin(baseline.token).save(listOf(baseline), 0, finish = true)
+        val ticket = store.begin(fixture.token)
+        ticket.save(listOf(fixture), 0)
+        queued.drain()
+
+        // The presentation can already expose terminal state when this last save is queued.
+        beforeCommit = { ticket.save(listOf(entry(fixture.token)), 1, finish = true) }
+        var removed: Boolean? = null
+        store.remove(fixture.id) { removed = it }
+        queued.drain()
+        assertEquals(false, removed)
+        assertEquals(listOf(baseline), store.list())
+        assertEquals(listOf(baseline), disk.read())
+
+        // Retrying the same owned ID gets a durable receipt without clearing other records.
+        store.remove(fixture.id) { removed = it }
+        queued.drain()
+        assertEquals(true, removed)
+        assertEquals(listOf(baseline), store.list())
+        assertEquals(listOf(baseline), disk.read())
+    }
+
     @Test fun atomicFailureKeepsThePreviousFileAndDoesNotChangeTheTrueOutcome() {
         val target = file()
         val first = entry()
