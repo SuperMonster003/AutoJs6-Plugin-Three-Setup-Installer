@@ -73,6 +73,9 @@ class InstallDialogDeviceTest {
                 waitUntil { record.snapshot().prompt != null }
                 waitForView(scenario, InstallDialogActivity.TAG_CONFIRM)
                 scenario.onActivity { activity ->
+                    // Components are folded behind one row until the user asks for them.
+                    assertNull(activity.window.decorView.findViewWithTag<View>("install_split_base.apk"))
+                    activity.window.decorView.findViewWithTag<View>(InstallDialogActivity.TAG_SPLITS).performClick()
                     val base = activity.window.decorView.findViewWithTag<CheckBox>("install_split_base.apk")
                     assertTrue(base.isChecked)
                     assertFalse(base.isEnabled)
@@ -142,6 +145,76 @@ class InstallDialogDeviceTest {
                 assertEquals(0, cancelCallbacks.get())
                 assertEquals(before, context.packageManager.packageInstaller.mySessions.map { it.sessionId }.toSet())
                 waitForView(scenario, InstallDialogActivity.TAG_DONE)
+            }
+        } finally { record.close(); worker?.interrupt(); worker?.join(5_000); file.delete() }
+    }
+
+    @Test fun confirmationNamesTheAutomaticMethodAndKeepsRareChoicesFolded() {
+        unlocked()
+        val file = fixture()
+        val record = InstallPresentation.create(context, request(), InstallPresentation.Callbacks(cancel = {}))
+        val done = CountDownLatch(1)
+        val choice = AtomicReference<InstallPresentation.Choice>()
+        var worker: Thread? = null
+        try {
+            ActivityScenario.launch<InstallDialogActivity>(record.activityIntent()).useOwnedWindow("InstallDialog") { scenario ->
+                worker = Thread {
+                    try { choice.set(record.confirm(0, prepared(file), target(), InstallOptions(), SystemClock.elapsedRealtime() + 20_000) {}) }
+                    catch (_: Throwable) { }
+                    finally { done.countDown() }
+                }.apply { start() }
+                waitForView(scenario, InstallDialogActivity.TAG_CONFIRM)
+                scenario.onActivity { activity ->
+                    val root = activity.window.decorView
+                    val prompt = record.snapshot().prompt!!
+                    // The worker resolved `auto` for this request; the row names that method instead of only "Automatic".
+                    val selected = requireNotNull(prompt.autoAuthorizer)
+                    val method = if (selected == Authorizer.NONE) activity.getString(R.string.confirm_system) else selected.id.replaceFirstChar { it.uppercase() }
+                    assertTrue(viewText(root.findViewWithTag(InstallDialogActivity.TAG_AUTHORIZER))
+                        .contains(activity.getString(R.string.install_authorizer_auto_resolved, method)))
+                    assertEquals(activity.getString(R.string.install_kind_new), root.findViewWithTag<TextView>(InstallDialogActivity.TAG_KIND).text.toString())
+                    assertEquals("1.0 (1)", root.findViewWithTag<TextView>("install_info_version").text.toString())
+                    // Nothing is installed to compare with, so the signature row is absent rather than a filler line.
+                    assertNull(root.findViewWithTag<View>("install_info_signature"))
+                    listOf("install_allow_downgrade", "install_dexopt", "install_user_input", "install_permissions_list", "install_split_feature.apk")
+                        .forEach { assertNull("$it must stay folded", root.findViewWithTag<View>(it)) }
+                    assertTrue(viewText(root.findViewWithTag(InstallDialogActivity.TAG_MORE_OPTIONS)).contains(activity.getString(R.string.install_more_options_none)))
+                    root.findViewWithTag<View>(InstallDialogActivity.TAG_PERMISSIONS).performClick()
+                }
+                scenario.onActivity { activity ->
+                    val root = activity.window.decorView
+                    // Requested permissions open in place and fold away again.
+                    assertNotNull(root.findViewWithTag<TextView>("install_permissions_list"))
+                    root.findViewWithTag<View>(InstallDialogActivity.TAG_PERMISSIONS).performClick()
+                }
+                scenario.onActivity { activity ->
+                    val root = activity.window.decorView
+                    assertNull(root.findViewWithTag<View>("install_permissions_list"))
+                    root.findViewWithTag<View>(InstallDialogActivity.TAG_MORE_OPTIONS).performClick()
+                }
+                scenario.onActivity { activity ->
+                    val root = activity.window.decorView
+                    // An open section shows its controls; once folded again, its summary lists what was switched on.
+                    assertNotNull(root.findViewWithTag<View>("install_user_input"))
+                    root.findViewWithTag<android.widget.CompoundButton>("install_update_ownership").performClick()
+                    root.findViewWithTag<View>(InstallDialogActivity.TAG_MORE_OPTIONS).performClick()
+                }
+                scenario.onActivity { activity ->
+                    val root = activity.window.decorView
+                    assertNull(root.findViewWithTag<View>("install_user_input"))
+                    assertTrue(viewText(root.findViewWithTag(InstallDialogActivity.TAG_MORE_OPTIONS)).contains(activity.getString(R.string.advanced_update_ownership)))
+                    root.findViewWithTag<View>(InstallDialogActivity.TAG_CONFIRM).performClick()
+                }
+                assertTrue(done.await(5, TimeUnit.SECONDS))
+                assertTrue(choice.get().options.requestUpdateOwnership)
+                // A terminal result also keeps this record from staying behind as unfinished history.
+                record.onCompleted(success())
+                waitForView(scenario, InstallDialogActivity.TAG_DONE)
+                scenario.onActivity { activity ->
+                    // The result repeats which method the automatic choice ended up using.
+                    assertEquals(activity.getString(R.string.install_authorizer_auto_resolved, activity.getString(R.string.confirm_system)),
+                        activity.window.decorView.findViewWithTag<TextView>(InstallDialogActivity.TAG_RESULT_AUTHORIZER).text.toString())
+                }
             }
         } finally { record.close(); worker?.interrupt(); worker?.join(5_000); file.delete() }
     }
@@ -326,6 +399,8 @@ class InstallDialogDeviceTest {
                 }.apply { start() }
                 waitForView(scenario, InstallDialogActivity.TAG_CONFIRM)
                 scenario.onActivity { activity ->
+                    assertNull(activity.window.decorView.findViewWithTag<View>("install_target_user_custom"))
+                    activity.window.decorView.findViewWithTag<View>(InstallDialogActivity.TAG_MORE_OPTIONS).performClick()
                     activity.window.decorView.findViewWithTag<View>("install_target_user_custom").performClick()
                     activity.window.decorView.findViewWithTag<EditText>("install_user_input").setText(otherUser)
                     activity.window.decorView.findViewWithTag<View>(InstallDialogActivity.TAG_CONFIRM).performClick()

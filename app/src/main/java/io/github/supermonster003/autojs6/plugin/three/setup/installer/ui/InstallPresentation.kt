@@ -8,6 +8,7 @@ import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
 import com.google.gson.JsonObject
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.auth.Authorizer
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.engine.DeviceUser
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.engine.DeviceUsers
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.engine.InstallFailure
@@ -109,8 +110,12 @@ internal object InstallPresentation {
         val metadata: Metadata,
         val choices: InstallChoices,
         val users: List<DeviceUser>,
+        autoAuthorizer: Authorizer? = null,
     ) {
         val token: String = UUID.randomUUID().toString()
+        /** What `auto` selects at the moment. Display only: approval resolves the authorizer again. */
+        @Volatile var autoAuthorizer: Authorizer? = autoAuthorizer
+            internal set
         internal val decision = InstallDecision<Choice>()
     }
 
@@ -291,7 +296,8 @@ internal object InstallPresentation {
                 .getOrDefault(listOf(DeviceUser(target.userId, null, false, true)))
             checkActive()
             val waiting = Prompt(index, metadata,
-                InstallChoices(options, prepared.apks.map { InstallChoices.Apk(it.name, it.splitName == null) }, canDeleteSource), users)
+                InstallChoices(options, prepared.apks.map { InstallChoices.Apk(it.name, it.splitName == null) }, canDeleteSource), users,
+                target.authorizer.takeIf { Authorizer.isAuto(options.authorizer) })
             synchronized(lock) {
                 if (closed || terminal) throw cancelled()
                 check(prompt == null) { "Only one item can wait for confirmation" }

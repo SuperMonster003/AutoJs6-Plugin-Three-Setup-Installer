@@ -9,7 +9,9 @@
       "released_date": "2026/11/14",
       "improvement": [
         "Plugin Center icons use the sizes, positions, light and dark artwork, and circular backgrounds adjusted in Icon Studio, retaining reproducible sources and parameters",
-        "Android App info icons share Icon Studio artwork and light/dark backgrounds while preserving transparent Plugin Center artwork and existing launcher choices"
+        "Android App info icons share Icon Studio artwork and light/dark backgrounds while preserving transparent Plugin Center artwork and existing launcher choices",
+        "Redesigned installation dialog: application details appear in an aligned table (version, size, SDK and signature comparison) labeled as a new install, update, reinstall or downgrade; APK components, permissions and rarely used options are folded by default; text has more line spacing and separation",
+        "With the Automatic authorization method, the installation dialog and the installation result show the method actually used (for example Shizuku or system confirmation)"
       ],
       "fix": [
         "Shizuku/Root installations no longer default to a local-file source that can restrict accessibility settings on Android 13+; explicit package source choices are preserved",

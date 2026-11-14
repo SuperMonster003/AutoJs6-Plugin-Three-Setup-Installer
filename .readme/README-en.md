@@ -289,6 +289,8 @@ _2026/11/14_
 - `Fix` In the Arabic interface, 3-Setup Installer no longer appears reversed as Setup Installer-3
 - `Improvement` Plugin Center icons use the sizes, positions, light and dark artwork, and circular backgrounds adjusted in Icon Studio, retaining reproducible sources and parameters
 - `Improvement` Android App info icons share Icon Studio artwork and light/dark backgrounds while preserving transparent Plugin Center artwork and existing launcher choices
+- `Improvement` Redesigned installation dialog: application details appear in an aligned table (version, size, SDK and signature comparison) labeled as a new install, update, reinstall or downgrade; APK components, permissions and rarely used options are folded by default; text has more line spacing and separation
+- `Improvement` With the Automatic authorization method, the installation dialog and the installation result show the method actually used (for example Shizuku or system confirmation)
 
 #### v1.2.0
 

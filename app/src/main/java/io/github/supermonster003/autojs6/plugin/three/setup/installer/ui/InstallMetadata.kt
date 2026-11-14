@@ -42,8 +42,10 @@ internal object InstallMetadata {
             prepared.displayApk?.let { file -> app.sourceDir = file.absolutePath; app.publicSourceDir = file.absolutePath }
             runCatching { packages.getApplicationLabel(app).toString() }.getOrNull()?.let { label = it }
             runCatching {
-                Bitmap.createBitmap(96, 96, Bitmap.Config.ARGB_8888).also { bitmap ->
-                    app.loadIcon(packages).apply { setBounds(0, 0, 96, 96); draw(Canvas(bitmap)) }
+                // The dialog shows the icon at 48 dp; a fixed 96 px bitmap is blurred on dense screens.
+                val size = (48 * context.resources.displayMetrics.density).toInt().coerceIn(96, 192)
+                Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888).also { bitmap ->
+                    app.loadIcon(packages).apply { setBounds(0, 0, size, size); draw(Canvas(bitmap)) }
                 }
             }.getOrNull()
         }

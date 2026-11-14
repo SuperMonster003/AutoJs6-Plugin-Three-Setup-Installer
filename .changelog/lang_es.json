@@ -9,7 +9,9 @@
       "released_date": "2026/11/14",
       "improvement": [
         "Los iconos del centro de plugins usan los tamaños, posiciones, imágenes claras y oscuras y fondos circulares ajustados en Icon Studio, conservando fuentes y parámetros reproducibles",
-        "Los iconos de información de la aplicación de Android comparten las imágenes y los fondos claros y oscuros de Icon Studio, conservando las imágenes transparentes del centro de plugins y las opciones del lanzador"
+        "Los iconos de información de la aplicación de Android comparten las imágenes y los fondos claros y oscuros de Icon Studio, conservando las imágenes transparentes del centro de plugins y las opciones del lanzador",
+        "Diálogo de instalación rediseñado: la información de la aplicación se muestra en una tabla alineada (versión, tamaño, SDK y comparación de firmas) e indica si es una instalación nueva, una actualización, una reinstalación o una versión anterior; los componentes APK, los permisos y las opciones poco usadas quedan plegados por defecto; el texto tiene más interlineado y separación",
+        "Con el método de autorización automático, el diálogo y el resultado de la instalación muestran el método realmente utilizado (por ejemplo, Shizuku o la confirmación del sistema)"
       ],
       "fix": [
         "Las instalaciones con Shizuku/Root ya no usan por defecto un origen de archivo local que puede restringir la accesibilidad en Android 13 o posterior; se conservan los orígenes indicados explícitamente",
