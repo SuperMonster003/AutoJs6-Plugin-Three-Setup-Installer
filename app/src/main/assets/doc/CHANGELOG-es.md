@@ -4,18 +4,23 @@
 
 ******
 
-# v1.2.1
+# v1.2.2
 
 ###### 2026/11/14
 
 * `Corrección` Las instalaciones con Shizuku/Root ya no usan por defecto un origen de archivo local que puede restringir la accesibilidad en Android 13 o posterior; se conservan los orígenes indicados explícitamente
 * `Corrección` El mensaje tras instalar o actualizar correctamente una aplicación sin interfaz que se pueda abrir directamente podía confundirse con un fallo de instalación
+* `Mejora` Diálogo de instalación rediseñado: la información de la aplicación se muestra en una tabla alineada (versión, tamaño, SDK y comparación de firmas) e indica si es una instalación nueva, una actualización, una reinstalación o una versión anterior; los componentes APK, los permisos y las opciones poco usadas quedan plegados por defecto; el texto tiene más interlineado y separación
+* `Mejora` Con el método de autorización automático, el diálogo y el resultado de la instalación muestran el método realmente utilizado (por ejemplo, Shizuku o la confirmación del sistema)
+
+# v1.2.1
+
+###### 2026/10/17
+
 * `Corrección` Completar las traducciones que faltaban en los ajustes de actualización
 * `Corrección` En la interfaz en árabe, 3-Setup Installer ya no aparece invertido como Setup Installer-3
 * `Mejora` Los iconos del centro de plugins usan los tamaños, posiciones, imágenes claras y oscuras y fondos circulares ajustados en Icon Studio, conservando fuentes y parámetros reproducibles
 * `Mejora` Los iconos de información de la aplicación de Android comparten las imágenes y los fondos claros y oscuros de Icon Studio, conservando las imágenes transparentes del centro de plugins y las opciones del lanzador
-* `Mejora` Diálogo de instalación rediseñado: la información de la aplicación se muestra en una tabla alineada (versión, tamaño, SDK y comparación de firmas) e indica si es una instalación nueva, una actualización, una reinstalación o una versión anterior; los componentes APK, los permisos y las opciones poco usadas quedan plegados por defecto; el texto tiene más interlineado y separación
-* `Mejora` Con el método de autorización automático, el diálogo y el resultado de la instalación muestran el método realmente utilizado (por ejemplo, Shizuku o la confirmación del sistema)
 
 # v1.2.0
 

@@ -4,18 +4,23 @@
 
 ******
 
-# v1.2.1
+# v1.2.2
 
 ###### 2026/11/14
 
 * `Correctif` Les installations avec Shizuku/Root ne déclarent plus par défaut une source de fichier local pouvant restreindre l'accessibilité sous Android 13 ou version ultérieure; les sources explicitement choisies sont conservées
 * `Correctif` Le message affiché après l'installation ou la mise à jour réussie d'une application sans interface accessible directement pouvait laisser croire à un échec de l'installation
+* `Amélioration` Dialogue d'installation repensé : les informations de l'application s'affichent dans un tableau aligné (version, taille, SDK, comparaison des signatures) avec la mention nouvelle installation, mise à jour, réinstallation ou version antérieure; les composants APK, les autorisations et les options rarement utilisées sont repliés par défaut; l'interligne et les espacements du texte sont plus généreux
+* `Amélioration` Avec la méthode d'autorisation automatique, le dialogue et le résultat de l'installation indiquent la méthode réellement utilisée (par exemple Shizuku ou la confirmation système)
+
+# v1.2.1
+
+###### 2026/10/17
+
 * `Correctif` Compléter les traductions manquantes dans les paramètres de mise à jour
 * `Correctif` Dans l'interface en arabe, 3-Setup Installer ne s'affiche plus à l'envers sous la forme Setup Installer-3
 * `Amélioration` Les icônes du centre de plugins utilisent les tailles, positions, images claires et sombres et fonds circulaires réglés dans Icon Studio, avec les sources et paramètres permettant de les reproduire
 * `Amélioration` Les icônes des informations d'application Android utilisent les illustrations et les fonds clairs et sombres d'Icon Studio, en conservant les images transparentes du centre de plugins et les choix du lanceur
-* `Amélioration` Dialogue d'installation repensé : les informations de l'application s'affichent dans un tableau aligné (version, taille, SDK, comparaison des signatures) avec la mention nouvelle installation, mise à jour, réinstallation ou version antérieure; les composants APK, les autorisations et les options rarement utilisées sont repliés par défaut; l'interligne et les espacements du texte sont plus généreux
-* `Amélioration` Avec la méthode d'autorisation automatique, le dialogue et le résultat de l'installation indiquent la méthode réellement utilisée (par exemple Shizuku ou la confirmation système)
 
 # v1.2.0
 

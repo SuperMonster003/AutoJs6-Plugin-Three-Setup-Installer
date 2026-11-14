@@ -52,7 +52,7 @@ The plugin handles package inspection, installation and results independently of
 
 ******
 
-1.2.1 documents the implemented installation, app-management and script features below. This version is available from [GitHub Releases](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/releases/tag/v1.2.1) and the AutoJs6 plugin center. Host integration requires AutoJs6 >= 6.8.0 (5299), and the `installer` script API requires build 5300 or later. Device coverage and remaining acceptance work are recorded in [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md). Dhizuku, notification installation and persistent-default script options require AutoJs6 6.8.0 build 5307 or later with installer contract V2. Base host integration remains available from build 5299, and V1 script methods from build 5300.
+1.2.2 documents the implemented installation, app-management and script features below. This version is available from [GitHub Releases](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/releases/tag/v1.2.2) and the AutoJs6 plugin center. Host integration requires AutoJs6 >= 6.8.0 (5299), and the `installer` script API requires build 5300 or later. Device coverage and remaining acceptance work are recorded in [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md). Dhizuku, notification installation and persistent-default script options require AutoJs6 6.8.0 build 5307 or later with installer contract V2. Base host integration remains available from build 5299, and V1 script methods from build 5300.
 
 ******
 
@@ -60,7 +60,7 @@ The plugin handles package inspection, installation and results independently of
 
 ******
 
-Implemented features in 1.2.1:
+Implemented features in 1.2.2:
 
 - Package formats: `.apk`, `.apks`, `.xapk`, `.apkm`, `.apkz` and ZIP archives that contain APKs; split packages are selected for the device; `.aab` files are recognized and described but not installed.
 - `none` uses Android confirmation. Fresh settings try usable `shizuku -> root -> dhizuku -> none` for `auto`; each method can be reordered or disabled. Existing saved three-method orders keep their relative order and enabled choices, with Dhizuku inserted before `none` but disabled. An explicit authorizer never falls back.
@@ -279,18 +279,23 @@ The plugin's plans and progress are maintained as a checkable list in ROADMAP.md
 
 ******
 
-#### v1.2.1
+#### v1.2.2
 
 _2026/11/14_
 
 - `Fix` Shizuku/Root installations no longer default to a local-file source that can restrict accessibility settings on Android 13+; explicit package source choices are preserved
 - `Fix` Misleading text after successfully installing or updating an application without a launchable interface could be mistaken for an installation failure
+- `Improvement` Redesigned installation dialog: application details appear in an aligned table (version, size, SDK and signature comparison) labeled as a new install, update, reinstall or downgrade; APK components, permissions and rarely used options are folded by default; text has more line spacing and separation
+- `Improvement` With the Automatic authorization method, the installation dialog and the installation result show the method actually used (for example Shizuku or system confirmation)
+
+#### v1.2.1
+
+_2026/10/17_
+
 - `Fix` Complete missing translations in update settings
 - `Fix` In the Arabic interface, 3-Setup Installer no longer appears reversed as Setup Installer-3
 - `Improvement` Plugin Center icons use the sizes, positions, light and dark artwork, and circular backgrounds adjusted in Icon Studio, retaining reproducible sources and parameters
 - `Improvement` Android App info icons share Icon Studio artwork and light/dark backgrounds while preserving transparent Plugin Center artwork and existing launcher choices
-- `Improvement` Redesigned installation dialog: application details appear in an aligned table (version, size, SDK and signature comparison) labeled as a new install, update, reinstall or downgrade; APK components, permissions and rarely used options are folded by default; text has more line spacing and separation
-- `Improvement` With the Automatic authorization method, the installation dialog and the installation result show the method actually used (for example Shizuku or system confirmation)
 
 #### v1.2.0
 
@@ -310,18 +315,6 @@ _2026/10/02_
 - `Improvement` Consistent visual sizing for launcher and Plugin Center icons, with transparent backgrounds and neutral black, white or grayscale artwork
 - `Dependency` Upgrade installer-api.aar to contract V3 (MPL 2.0), retaining V1/V2 and all eleven AIDL transactions; advanced script options require host build 5308+. The same V3 contract adds the optional source-profiles feature and profile fields from host 5312, with all eleven AIDL transactions unchanged
 - `Dependency` Upgrade the shared package archive parser (MPL 2.0) to verify the actual manifest root and sharedUserId; ambiguous input is rejected. Read permission declarations from real Android-namespace elements, excluding comment and extension-namespace decoys and refusing conflicting compiled attributes.
-
-#### v1.1.0
-
-_2026/10/02_
-
-- `Feature` `dhizuku`: requires Android 8.0 (API 26)+, an active Dhizuku device/profile owner and permission granted to this plugin. It operates in the current owner user, and installation attribution uses the real owner package. It does not grant shell/root downgrade, test-package, low-targetSdk bypass, other-user, arbitrary installer attribution or keep-data uninstall options. The plugin does not provision an owner.
-- `Feature` The default-installer page distinguishes ordinary preferences and persistent policy. Ordinary preferences use Shizuku or Root and remain subject to ROM restrictions. Persistent policy is available through Dhizuku on API 26-33; API 34+ is rejected before mutation because the owner callback cannot be verified. Root uses a system-UID helper only in user 0 on supported devices. Competing persistent policies are not overwritten. `persistentConfigured` is a receipt of a previous successful configuration, not proof of the current system policy; passive observation reports only `preferred` or `none`.
-- `Feature` `interaction: 'notification'` is an installation mode: notifications carry the initial confirmation, cancellation, progress and results without plugin installation dialogs. Android confirmation still requires a notification tap. Notification permission, the app's notifications and its installation channel must be enabled; otherwise the request fails with `NOTIFICATION_UNAVAILABLE`. Notification denial does not block the other interaction modes. Uninstallation does not accept `notification`.
-- `Improvement` `none` uses Android confirmation. Fresh settings try usable `shizuku -> root -> dhizuku -> none` for `auto`; each method can be reordered or disabled. Existing saved three-method orders keep their relative order and enabled choices, with Dhizuku inserted before `none` but disabled. An explicit authorizer never falls back.
-- `Improvement` Settings save authorizer order/enabled methods, installation options and notification preferences. Home/external installation defaults to `dialog`, with explicit `auto`, `silent` or `notification` choices available. Host UI installation actions use `dialog`; scripts retain explicit options and still default to `auto`. Changes are saved after confirmation.
-- `Dependency` Add Dhizuku API 2.6.0 (MIT) for the device/profile-owner authorizer
-- `Dependency` Upgrade `installer-api.aar` to contract V2 (MPL 2.0), retaining V1 negotiation and appending the persistent-default method; provenance and SHA-256 are in Third-Party Notices; AutoJs6 >= 6.8.0 (5307).
 
 ##### For more release history
 

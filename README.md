@@ -52,7 +52,7 @@
 
 ******
 
-1.2.1 已实现下述安装, 应用管理与脚本功能. 当前版本可从 [GitHub Releases](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/releases/tag/v1.2.1) 或 AutoJs6 插件中心获取. 宿主接入需要 AutoJs6 >= 6.8.0 (5299), `installer` 脚本 API 需要构建 5300 或更高版本. 设备覆盖与剩余验收记录在 [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md) 中. Dhizuku, 通知栏安装和持久默认安装器的脚本选项需要 AutoJs6 6.8.0 构建 5307 或以上及 installer V2 契约. 基础宿主接入仍支持构建 5299, V1 脚本方法从构建 5300 起可用.
+1.2.2 已实现下述安装, 应用管理与脚本功能. 当前版本可从 [GitHub Releases](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/releases/tag/v1.2.2) 或 AutoJs6 插件中心获取. 宿主接入需要 AutoJs6 >= 6.8.0 (5299), `installer` 脚本 API 需要构建 5300 或更高版本. 设备覆盖与剩余验收记录在 [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md) 中. Dhizuku, 通知栏安装和持久默认安装器的脚本选项需要 AutoJs6 6.8.0 构建 5307 或以上及 installer V2 契约. 基础宿主接入仍支持构建 5299, V1 脚本方法从构建 5300 起可用.
 
 ******
 
@@ -60,7 +60,7 @@
 
 ******
 
-1.2.1 已实现的功能:
+1.2.2 已实现的功能:
 
 - 安装包格式: `.apk`, `.apks`, `.xapk`, `.apkm`, `.apkz` 以及包含 APK 的 ZIP 压缩包; 分包按设备选择; `.aab` 文件只识别与说明, 不安装.
 - `none` 使用 Android 确认. 新配置的 `auto` 按 `shizuku -> root -> dhizuku -> none` 选择可用方式, 可调整顺序和启用状态. 已保存的旧三项配置保留原相对顺序及启用选择, Dhizuku 插入 `none` 前但默认禁用. 显式指定的授权方式不回退.
@@ -279,18 +279,23 @@ minimum host build: 5299 (6.8.0)
 
 ******
 
-#### v1.2.1
+#### v1.2.2
 
 _2026/11/14_
 
 - `修复` Shizuku/Root 安装不再默认标记为本地文件来源, 避免在 Android 13+ 触发无障碍等受限设置; 保留明确指定的安装来源
 - `修复` 没有启动界面的应用安装或升级成功后, 提示文案容易被误解为安装失败的问题
+- `优化` 重新设计安装对话框: 应用信息改为对齐的表格 (版本, 大小, SDK, 签名比对), 并标明新安装, 更新, 重新安装或降级; APK 分包, 权限和不常用的选项默认折叠; 加大文字行距与间距
+- `优化` 授权方式为自动时, 安装对话框与安装结果显示实际采用的方式 (例如 Shizuku 或系统确认)
+
+#### v1.2.1
+
+_2026/10/17_
+
 - `修复` 补齐更新设置中遗漏的多语言翻译
 - `修复` 阿拉伯语界面中, 3-Setup Installer 不再被倒序显示成 Setup Installer-3
 - `优化` 插件中心图标采用统一工作台调整后的尺寸, 位置, 亮暗图稿与圆形底色, 保留可重建原稿和参数
 - `优化` Android 系统应用信息图标与图标工作台共用图稿和亮暗底色, 保留插件中心透明图稿及现有启动器选项
-- `优化` 重新设计安装对话框: 应用信息改为对齐的表格 (版本, 大小, SDK, 签名比对), 并标明新安装, 更新, 重新安装或降级; APK 分包, 权限和不常用的选项默认折叠; 加大文字行距与间距
-- `优化` 授权方式为自动时, 安装对话框与安装结果显示实际采用的方式 (例如 Shizuku 或系统确认)
 
 #### v1.2.0
 
@@ -310,18 +315,6 @@ _2026/10/02_
 - `优化` 启动器与插件中心图标按统一视觉尺寸标准调整, 插件中心采用透明背景和黑白或中性灰阶图案
 - `依赖` 升级 installer-api.aar 至契约 V3 (MPL 2.0), 保留 V1/V2 与全部 11 个 AIDL 事务; 高级脚本选项需要宿主构建 5308+. 同一 V3 契约追加可选 source-profiles 能力及来源配置字段, 宿主接入从 5312 起, 十一项 AIDL 事务保持不变
 - `依赖` 升级共享安装包解析器 (MPL 2.0), 核验真实清单根元素及 sharedUserId, 拒绝有歧义的输入. 从真实 Android 命名空间元素读取权限声明, 排除注释和扩展命名空间伪声明, 并拒绝编译属性冲突.
-
-#### v1.1.0
-
-_2026/10/02_
-
-- `新增` `dhizuku`: 需要 Android 8.0 (API 26)+, 已激活的 Dhizuku 设备/资料所有者, 并向本插件授权. 只操作当前所有者用户, 安装者归属使用真实所有者包名. 不提供 shell/root 的降级, 测试包, 绕过低 targetSdk, 其他用户, 任意安装者归属或卸载保留数据选项. 插件不自动配置所有者.
-- `新增` 默认安装器页面区分普通偏好与持久化策略. 普通偏好通过 Shizuku 或 Root 设置, 仍受 ROM 限制. Dhizuku 的持久化策略支持 API 26-33; API 34+ 因无法核验所有者回调, 在修改前拒绝. Root 仅在受支持设备的用户 0 中使用 system UID 辅助进程. 不覆盖竞争的持久策略. `persistentConfigured` 仅记录此前成功配置的回执, 不是当前系统策略的证明; 被动查询只报告 `preferred` 或 `none`.
-- `新增` `interaction: 'notification'` 仅用于安装: 在通知中确认, 取消, 展示进度和结果, 不弹出插件安装对话框. Android 系统确认仍需点击对应通知. 必须允许通知并启用应用通知及安装渠道, 否则以 `NOTIFICATION_UNAVAILABLE` 失败. 其它交互模式不会因缺少通知许可而被阻止. 卸载不接受 `notification`.
-- `优化` `none` 使用 Android 确认. 新配置的 `auto` 按 `shizuku -> root -> dhizuku -> none` 选择可用方式, 可调整顺序和启用状态. 已保存的旧三项配置保留原相对顺序及启用选择, Dhizuku 插入 `none` 前但默认禁用. 显式指定的授权方式不回退.
-- `优化` 设置保存授权顺序与启用状态, 安装选项及通知偏好. 首页/外部安装默认使用 `dialog`, 可显式选择 `auto`, `silent` 或 `notification`. 宿主界面安装入口使用 `dialog`; 脚本保留显式选项且默认仍为 `auto`. 修改在确认后保存.
-- `依赖` 附加 Dhizuku API 2.6.0 (MIT), 提供设备/资料所有者授权方式
-- `依赖` 升级 `installer-api.aar` 为契约 V2 (MPL 2.0), 保留 V1 协商并在末尾追加持久默认方法; 产物来源与 SHA-256 见第三方声明; AutoJs6 >= 6.8.0 (5307).
 
 ##### 更多发行历史
 

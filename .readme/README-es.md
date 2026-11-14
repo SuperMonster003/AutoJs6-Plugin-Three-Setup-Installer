@@ -52,7 +52,7 @@ El plugin gestiona la inspección de paquetes, la instalación y los resultados 
 
 ******
 
-1.2.1 describe las funciones de instalación, gestión de aplicaciones y scripts implementadas a continuación. Esta versión está disponible en [GitHub Releases](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/releases/tag/v1.2.1) y en el centro de plugins de AutoJs6. La integración requiere AutoJs6 >= 6.8.0 (5299), y la API de scripts `installer` requiere la compilación 5300 o posterior. La cobertura de dispositivos y las validaciones pendientes se registran en [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md). Dhizuku, la instalación por notificación y las opciones de scripts para el instalador persistente requieren AutoJs6 6.8.0 compilación 5307 o posterior con el contrato installer V2. La integración básica sigue disponible desde la compilación 5299 y los métodos de scripts V1 desde 5300.
+1.2.2 describe las funciones de instalación, gestión de aplicaciones y scripts implementadas a continuación. Esta versión está disponible en [GitHub Releases](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/releases/tag/v1.2.2) y en el centro de plugins de AutoJs6. La integración requiere AutoJs6 >= 6.8.0 (5299), y la API de scripts `installer` requiere la compilación 5300 o posterior. La cobertura de dispositivos y las validaciones pendientes se registran en [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md). Dhizuku, la instalación por notificación y las opciones de scripts para el instalador persistente requieren AutoJs6 6.8.0 compilación 5307 o posterior con el contrato installer V2. La integración básica sigue disponible desde la compilación 5299 y los métodos de scripts V1 desde 5300.
 
 ******
 
@@ -60,7 +60,7 @@ El plugin gestiona la inspección de paquetes, la instalación y los resultados 
 
 ******
 
-Funciones implementadas en 1.2.1:
+Funciones implementadas en 1.2.2:
 
 - Formatos de paquete: `.apk`, `.apks`, `.xapk`, `.apkm`, `.apkz` y archivos ZIP que contienen APK; los paquetes divididos se seleccionan para el dispositivo; los archivos `.aab` se reconocen y describen pero no se instalan.
 - `none` usa la confirmación de Android. Los ajustes nuevos prueban `shizuku -> root -> dhizuku -> none` para `auto`, según disponibilidad; cada método se puede reordenar o desactivar. Los ajustes guardados con tres métodos conservan su orden relativo y métodos habilitados; Dhizuku se inserta antes de `none`, desactivado. Una elección explícita nunca cambia a otro método.
@@ -279,18 +279,23 @@ Los planes y el progreso del plugin se mantienen como una lista verificable en R
 
 ******
 
-#### v1.2.1
+#### v1.2.2
 
 _2026/11/14_
 
 - `Corrección` Las instalaciones con Shizuku/Root ya no usan por defecto un origen de archivo local que puede restringir la accesibilidad en Android 13 o posterior; se conservan los orígenes indicados explícitamente
 - `Corrección` El mensaje tras instalar o actualizar correctamente una aplicación sin interfaz que se pueda abrir directamente podía confundirse con un fallo de instalación
+- `Mejora` Diálogo de instalación rediseñado: la información de la aplicación se muestra en una tabla alineada (versión, tamaño, SDK y comparación de firmas) e indica si es una instalación nueva, una actualización, una reinstalación o una versión anterior; los componentes APK, los permisos y las opciones poco usadas quedan plegados por defecto; el texto tiene más interlineado y separación
+- `Mejora` Con el método de autorización automático, el diálogo y el resultado de la instalación muestran el método realmente utilizado (por ejemplo, Shizuku o la confirmación del sistema)
+
+#### v1.2.1
+
+_2026/10/17_
+
 - `Corrección` Completar las traducciones que faltaban en los ajustes de actualización
 - `Corrección` En la interfaz en árabe, 3-Setup Installer ya no aparece invertido como Setup Installer-3
 - `Mejora` Los iconos del centro de plugins usan los tamaños, posiciones, imágenes claras y oscuras y fondos circulares ajustados en Icon Studio, conservando fuentes y parámetros reproducibles
 - `Mejora` Los iconos de información de la aplicación de Android comparten las imágenes y los fondos claros y oscuros de Icon Studio, conservando las imágenes transparentes del centro de plugins y las opciones del lanzador
-- `Mejora` Diálogo de instalación rediseñado: la información de la aplicación se muestra en una tabla alineada (versión, tamaño, SDK y comparación de firmas) e indica si es una instalación nueva, una actualización, una reinstalación o una versión anterior; los componentes APK, los permisos y las opciones poco usadas quedan plegados por defecto; el texto tiene más interlineado y separación
-- `Mejora` Con el método de autorización automático, el diálogo y el resultado de la instalación muestran el método realmente utilizado (por ejemplo, Shizuku o la confirmación del sistema)
 
 #### v1.2.0
 
@@ -310,18 +315,6 @@ _2026/10/02_
 - `Mejora` Tamaño visual uniforme de los iconos del lanzador y del Centro de complementos, con fondos transparentes y diseños en blanco, negro o grises neutros
 - `Dependencia` Actualizar installer-api.aar al contrato V3 (MPL 2.0), conservando V1/V2 y las 11 transacciones AIDL; las opciones avanzadas requieren host build 5308+. El mismo contrato V3 añade la capacidad opcional source-profiles y sus campos desde el anfitrión 5312, sin cambiar las once transacciones AIDL
 - `Dependencia` Actualizar el analizador compartido de paquetes (MPL 2.0) para verificar la raíz real del manifiesto y sharedUserId y rechazar entradas ambiguas. Leer permisos desde elementos reales del espacio de nombres Android, excluir declaraciones falsas en comentarios o espacios de nombres externos y rechazar atributos compilados contradictorios.
-
-#### v1.1.0
-
-_2026/10/02_
-
-- `Función` `dhizuku`: requiere Android 8.0 (API 26)+, un propietario de dispositivo/perfil Dhizuku activo y permiso para el plugin. Solo opera en el usuario propietario actual y atribuye la instalación al paquete propietario real. No admite opciones shell/root de degradación, paquetes de prueba, omisión de targetSdk bajo, otros usuarios, atribución arbitraria ni conservación de datos al desinstalar. El plugin no configura propietarios.
-- `Función` La página del instalador predeterminado distingue preferencias normales y políticas persistentes. Las preferencias usan Shizuku o Root y dependen de la ROM. Dhizuku admite políticas persistentes en API 26-33; API 34+ se rechaza antes de modificar porque no se puede verificar la respuesta del propietario. Root usa un auxiliar con UID del sistema solo en el usuario 0 de dispositivos compatibles. No se sustituyen políticas persistentes competidoras. `persistentConfigured` registra una configuración anterior correcta, sin probar la política actual; la observación pasiva solo informa `preferred` o `none`.
-- `Función` `interaction: 'notification'` solo sirve para instalar: las notificaciones muestran confirmación inicial, cancelación, progreso y resultados sin diálogos de instalación del plugin. La confirmación de Android requiere tocar su notificación. El permiso, las notificaciones de la aplicación y el canal de instalación deben estar activos; de lo contrario se informa `NOTIFICATION_UNAVAILABLE`. Los demás modos toleran la falta de permiso de notificaciones. La desinstalación no admite `notification`.
-- `Mejora` `none` usa la confirmación de Android. Los ajustes nuevos prueban `shizuku -> root -> dhizuku -> none` para `auto`, según disponibilidad; cada método se puede reordenar o desactivar. Los ajustes guardados con tres métodos conservan su orden relativo y métodos habilitados; Dhizuku se inserta antes de `none`, desactivado. Una elección explícita nunca cambia a otro método.
-- `Mejora` Los ajustes guardan el orden y activación de los métodos, las opciones de instalación y las notificaciones. Las instalaciones locales/externas usan `dialog` por defecto y permiten elegir `auto`, `silent` o `notification`. La interfaz del anfitrión usa `dialog`; los scripts mantienen sus opciones explícitas y `auto` por defecto. Los cambios se guardan tras confirmar.
-- `Dependencia` Se añade Dhizuku API 2.6.0 (MIT) para la autorización mediante propietario de dispositivo/perfil
-- `Dependencia` Se actualiza `installer-api.aar` al contrato V2 (MPL 2.0), manteniendo la negociación V1 y añadiendo al final el método de instalador persistente; el origen y SHA-256 figuran en los avisos de terceros; AutoJs6 >= 6.8.0 (5307).
 
 ##### Para más historial de versiones
 

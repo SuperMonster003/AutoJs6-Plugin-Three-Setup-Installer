@@ -4,18 +4,23 @@
 
 ******
 
-# v1.2.1
+# v1.2.2
 
 ###### 2026/11/14
 
 * `Fix` Shizuku/Root installations no longer default to a local-file source that can restrict accessibility settings on Android 13+; explicit package source choices are preserved
 * `Fix` Misleading text after successfully installing or updating an application without a launchable interface could be mistaken for an installation failure
+* `Improvement` Redesigned installation dialog: application details appear in an aligned table (version, size, SDK and signature comparison) labeled as a new install, update, reinstall or downgrade; APK components, permissions and rarely used options are folded by default; text has more line spacing and separation
+* `Improvement` With the Automatic authorization method, the installation dialog and the installation result show the method actually used (for example Shizuku or system confirmation)
+
+# v1.2.1
+
+###### 2026/10/17
+
 * `Fix` Complete missing translations in update settings
 * `Fix` In the Arabic interface, 3-Setup Installer no longer appears reversed as Setup Installer-3
 * `Improvement` Plugin Center icons use the sizes, positions, light and dark artwork, and circular backgrounds adjusted in Icon Studio, retaining reproducible sources and parameters
 * `Improvement` Android App info icons share Icon Studio artwork and light/dark backgrounds while preserving transparent Plugin Center artwork and existing launcher choices
-* `Improvement` Redesigned installation dialog: application details appear in an aligned table (version, size, SDK and signature comparison) labeled as a new install, update, reinstall or downgrade; APK components, permissions and rarely used options are folded by default; text has more line spacing and separation
-* `Improvement` With the Automatic authorization method, the installation dialog and the installation result show the method actually used (for example Shizuku or system confirmation)
 
 # v1.2.0
 
