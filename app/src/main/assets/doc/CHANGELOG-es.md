@@ -6,8 +6,9 @@
 
 # v1.2.1
 
-###### 2026/11/08
+###### 2026/11/14
 
+* `Corrección` Las instalaciones con Shizuku/Root ya no usan por defecto un origen de archivo local que puede restringir la accesibilidad en Android 13 o posterior; se conservan los orígenes indicados explícitamente
 * `Corrección` El mensaje tras instalar o actualizar correctamente una aplicación sin interfaz que se pueda abrir directamente podía confundirse con un fallo de instalación
 * `Corrección` Completar las traducciones que faltaban en los ajustes de actualización
 * `Corrección` En la interfaz en árabe, 3-Setup Installer ya no aparece invertido como Setup Installer-3

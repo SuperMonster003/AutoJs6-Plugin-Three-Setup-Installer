@@ -110,7 +110,9 @@ internal open class PrivilegedInstallerImpl(expectedOwnerUid: Int? = null) : IPr
             setOriginatingUid(ownerUid)
             if (Build.VERSION.SDK_INT >= 31) setRequireUserAction(PackageInstaller.SessionParams.USER_ACTION_NOT_REQUIRED)
             if (Build.VERSION.SDK_INT >= 26 && installReason != null) setInstallReason(installReason)
-            if (Build.VERSION.SDK_INT >= 33) setPackageSource(packageSource ?: PackageInstaller.PACKAGE_SOURCE_LOCAL_FILE)
+            // Match shell installs when no source was requested. LOCAL_FILE opts even root/shell
+            // installs into Android's restricted settings (including accessibility access).
+            if (Build.VERSION.SDK_INT >= 33) setPackageSource(packageSource ?: PackageInstaller.PACKAGE_SOURCE_OTHER)
             if (Build.VERSION.SDK_INT >= 34 && requestOwner) setRequestUpdateOwnership(true)
         }
         synchronized(this) {

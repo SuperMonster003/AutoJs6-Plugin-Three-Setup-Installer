@@ -65,6 +65,7 @@
   "h3_faq": "자주 묻는 질문",
   "faq_items": [
     "**왜 여전히 확인이 필요한가요?** `none`은 항상 Android 확인이 필요하고 특권 방식도 Android 정책의 영향을 받습니다. `notification`은 알림 동작으로만 시스템 확인을 열며 Android 확인을 우회하지 않습니다.",
+    "**설치 후 접근성이 제한되는 이유는 무엇인가요?** Android 13 이상에서는 패키지 출처가 `local-file` 또는 `downloaded-file`이면 설정이 제한될 수 있습니다. Shizuku/Root의 기본값은 이제 Android 셸 설치와 같은 `other`이며, 명시적으로 선택한 출처가 우선합니다. `none`/Dhizuku는 `local-file` 기본값을 유지합니다. 업데이트해도 기존 제한은 자동으로 해제되지 않습니다. 신뢰하는 앱이라면 Android 설정 > 앱 > 해당 앱 > 더보기 > 제한된 설정 허용에서 허용한 후 접근성 서비스를 켜세요. 메뉴 제공 여부와 추가 확인은 Android 버전 및 ROM에 따라 다릅니다.",
     "**`.aab`를 설치할 수 있나요?** 아니요. Android App Bundle은 배포 형식이므로 먼저 bundletool로 `.apks` 세트로 변환하세요. 플러그인은 `.aab` 파일을 인식하고 패키지와 모듈 정보를 표시합니다.",
     "**`allowDowngrade: true`인데 다운그레이드가 실패하는 이유는?** 이 옵션은 다운그레이드를 요청할 뿐이며 Android가 펌웨어, 권한을 실행하는 주체 및 debuggable 여부에 따라 결정합니다. 검증한 user 펌웨어에서 Sony G8441 / API 28과 Xiaomi 23046RP50C / API 35는 debuggable이 아닌 패키지의 다운그레이드를 거부했지만 Sony XQ-DQ72 / API 33의 Root 경로는 허용했습니다. 이는 각 기기의 결과입니다. 오류와 `systemMessage`를 확인하세요. Root도 모든 ROM에서 성공을 보장하지 않습니다.",
     "**HyperOS에서 어떤 설치자 패키지 이름을 사용할 수 있나요?** ADB 또는 무선 디버깅으로 시작한 Shizuku에서는 설치자 패키지 이름을 지정하지 않으면 `com.android.shell`을 사용합니다. 검증한 Xiaomi 23046RP50C / HyperOS / API 35에서는 확인 창 없는 새 설치와 업데이트 모두 이 값이 기록되었습니다. `com.android.shell` 또는 플러그인 자체 패키지 이름을 명시한 경우에도 성공했으며 요청한 값이 기록되었습니다. 다른 패키지 이름이나 ROM 버전은 시스템 응답에 따라 달라집니다.",

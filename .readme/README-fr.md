@@ -213,6 +213,7 @@ Faits de plateforme qui délimitent ce que le plugin peut faire:
 ******
 
 - **Pourquoi une confirmation reste-t-elle nécessaire?** `none` exige toujours la confirmation Android. Les méthodes privilégiées restent soumises à la politique Android. `notification` ouvre la confirmation système uniquement par son action de notification et ne la contourne pas.
+- **Pourquoi l'accessibilité est-elle restreinte après l'installation?** Sous Android 13 ou version ultérieure, une source `local-file` ou `downloaded-file` peut déclencher des paramètres restreints. Shizuku/Root utilisent désormais `other` par défaut, comme les installations depuis le shell Android; un choix explicite reste prioritaire. `none`/Dhizuku conservent `local-file` par défaut. Une mise à jour ne supprime pas automatiquement les restrictions existantes. Pour une application de confiance, ouvrez Paramètres Android > Applications > l'application > Plus > Autoriser les paramètres restreints, puis activez son service d'accessibilité. La disponibilité et les vérifications supplémentaires dépendent de la version d'Android et de la ROM.
 - **Peut-on installer un `.aab` ?** Non. Un Android App Bundle est un format de publication ; convertissez-le d'abord avec bundletool en un ensemble `.apks`. Le plugin reconnaît les fichiers `.aab` et affiche les informations de paquet et de modules.
 - **Pourquoi une rétrogradation peut-elle échouer avec `allowDowngrade: true`?** Ce paramètre demande une rétrogradation; Android décide selon le firmware, l'identité autorisée et le caractère debuggable de l'application. Les firmwares user testés sur Sony G8441 / API 28 et Xiaomi 23046RP50C / API 35 ont refusé les rétrogradations d'applications non debuggable, tandis que Sony XQ-DQ72 / API 33 avec Root en a accepté une. Ces résultats concernent ces appareils uniquement. Consultez l'erreur et `systemMessage`; Root ne garantit pas une rétrogradation sur toutes les ROM.
 - **Quel nom de paquet d'installateur utiliser sur HyperOS?** Avec Shizuku lancé par ADB ou le débogage sans fil, ne pas spécifier de nom utilise `com.android.shell`. Sur le Xiaomi 23046RP50C / HyperOS / API 35 testé, les nouvelles installations et mises à jour silencieuses ont enregistré cette valeur. Les valeurs explicites `com.android.shell` et le nom du paquet du plugin ont aussi été acceptées et enregistrées comme demandé. Les autres noms ou versions de ROM restent soumis à la réponse du système.
@@ -280,8 +281,9 @@ Les plans et l'avancement du plugin sont tenus sous forme de liste cochable dans
 
 #### v1.2.1
 
-_2026/11/08_
+_2026/11/14_
 
+- `Correctif` Les installations avec Shizuku/Root ne déclarent plus par défaut une source de fichier local pouvant restreindre l'accessibilité sous Android 13 ou version ultérieure; les sources explicitement choisies sont conservées
 - `Correctif` Le message affiché après l'installation ou la mise à jour réussie d'une application sans interface accessible directement pouvait laisser croire à un échec de l'installation
 - `Correctif` Compléter les traductions manquantes dans les paramètres de mise à jour
 - `Correctif` Dans l'interface en arabe, 3-Setup Installer ne s'affiche plus à l'envers sous la forme Setup Installer-3

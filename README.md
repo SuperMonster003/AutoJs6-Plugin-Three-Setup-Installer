@@ -213,6 +213,7 @@ Dhizuku, 通知栏安装和持久默认安装器的脚本选项需要 AutoJs6 6.
 ******
 
 - **为什么安装仍要求确认?** `none` 始终需要 Android 系统确认, 特权方式也可能受 Android 策略限制. `notification` 仅通过通知动作打开系统确认, 不绕过 Android 的确认要求.
+- **为什么安装后无障碍服务受限?** Android 13+ 可能因 `local-file` 或 `downloaded-file` 安装来源触发受限设置. Shizuku/Root 现默认使用 `other`, 与 Android 命令行安装一致; 明确指定的来源优先. `none`/Dhizuku 保留 `local-file` 默认值. 更新不会自动清除已有的限制. 对于信任的应用, 可在 Android 设置 > 应用 > 该应用 > 更多 > 允许受限制的设置中放行, 然后启用其无障碍服务. 入口及额外检查取决于 Android 版本和 ROM.
 - **能安装 `.aab` 吗?** 不能. Android App Bundle 是发布格式, 请先用 bundletool 转换为 `.apks` 集合. 插件会识别 `.aab` 文件并显示其包名与模块信息.
 - **为什么设置 `allowDowngrade: true` 后仍可能降级失败?** 此选项仅请求允许降级; Android 根据固件, 授权身份及应用是否 debuggable 作出决定. 已测 user 固件中, Sony G8441 / API 28 与 Xiaomi 23046RP50C / API 35 拒绝非 debuggable 包降级, Sony XQ-DQ72 / API 33 的 Root 路径则接受. 这些结果只代表对应设备. 请检查返回的错误与 `systemMessage`; Root 不保证所有 ROM 都允许降级.
 - **HyperOS 的安装者包名该怎么填?** Shizuku 经 ADB 或无线调试启动时, 不指定安装者包名会使用 `com.android.shell`. 已测 Xiaomi 23046RP50C / HyperOS / API 35 的静默新装与更新均记录此值. 显式指定 `com.android.shell` 或插件自身包名也都成功, 查询到的安装者与请求一致. 其他包名或 ROM 版本仍以系统答复为准.
@@ -280,8 +281,9 @@ minimum host build: 5299 (6.8.0)
 
 #### v1.2.1
 
-_2026/11/08_
+_2026/11/14_
 
+- `修复` Shizuku/Root 安装不再默认标记为本地文件来源, 避免在 Android 13+ 触发无障碍等受限设置; 保留明确指定的安装来源
 - `修复` 没有启动界面的应用安装或升级成功后, 提示文案容易被误解为安装失败的问题
 - `修复` 补齐更新设置中遗漏的多语言翻译
 - `修复` 阿拉伯语界面中, 3-Setup Installer 不再被倒序显示成 Setup Installer-3

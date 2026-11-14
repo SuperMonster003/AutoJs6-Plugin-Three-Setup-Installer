@@ -65,6 +65,7 @@
   "h3_faq": "常見問題",
   "faq_items": [
     "**為何安裝仍要求確認?** `none` 始終需要 Android 系統確認, 特權方式也可能受 Android 原則限制. `notification` 僅透過通知操作開啟系統確認, 不略過 Android 的確認要求.",
+    "**為什麼安裝後無障礙服務受限?** Android 13+ 可能因 `local-file` 或 `downloaded-file` 安裝來源觸發受限設定. Shizuku/Root 現預設使用 `other`, 與 Android 命令列安裝一致; 明確指定的來源優先. `none`/Dhizuku 保留 `local-file` 預設值. 更新不會自動清除既有的限制. 對於信任的應用程式, 可在 Android 設定 > 應用程式 > 該應用程式 > 更多 > 允許受限設定中放行, 然後啟用其無障礙服務. 入口及額外檢查取決於 Android 版本和 ROM.",
     "**能安裝 `.aab` 嗎?** 不能. Android App Bundle 是發佈格式, 請先用 bundletool 轉換為 `.apks` 集合. 外掛程式會識別 `.aab` 檔案並顯示其套件名稱與模組資訊.",
     "**為何設定 `allowDowngrade: true` 後仍可能降級失敗?** 此選項僅請求允許降級; Android 根據韌體, 授權身分及應用程式是否 debuggable 作出決定. 已測 user 韌體中, Sony G8441 / API 28 與 Xiaomi 23046RP50C / API 35 拒絕非 debuggable 套件降級, Sony XQ-DQ72 / API 33 的 Root 路徑則接受. 這些結果只代表對應裝置. 請檢查傳回的錯誤與 `systemMessage`; Root 不保證所有 ROM 都允許降級.",
     "**HyperOS 的安裝者套件名稱應如何填寫?** Shizuku 經 ADB 或無線偵錯啟動時, 不指定安裝者套件名稱會使用 `com.android.shell`. 已測 Xiaomi 23046RP50C / HyperOS / API 35 的靜默新安裝與更新均記錄此值. 明確指定 `com.android.shell` 或外掛程式自身套件名稱也都成功, 查詢到的安裝者與請求一致. 其他套件名稱或 ROM 版本仍以系統答覆為準.",

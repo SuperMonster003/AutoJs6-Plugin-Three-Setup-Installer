@@ -1,5 +1,6 @@
 package io.github.supermonster003.autojs6.plugin.three.setup.installer
 
+import android.app.AppOpsManager
 import android.app.PendingIntent
 import android.content.ComponentName
 import android.content.Intent
@@ -37,6 +38,55 @@ class PrivilegedInstallerDeviceTest {
     private val instrumentation = InstrumentationRegistry.getInstrumentation()
     private val context = instrumentation.targetContext
     private val authorizer = InstrumentationRegistry.getArguments().getString("privilegedAuthorizer")
+
+    @Test fun defaultSourceAvoidsRestrictedSettingsAndExplicitSourcesArePreserved() {
+        assumeTrue(authorizer in listOf("shizuku", "root"))
+        assumeTrue("Checks the Android 13/14 restricted-settings policy", Build.VERSION.SDK_INT in 33..34)
+        FixturePackageOwnership(setOf(FIXTURE)).use { ownership ->
+            withService { service ->
+                val sources = listOf(null, PackageInstaller.PACKAGE_SOURCE_LOCAL_FILE,
+                    PackageInstaller.PACKAGE_SOURCE_DOWNLOADED_FILE, PackageInstaller.PACKAGE_SOURCE_UNSPECIFIED,
+                    PackageInstaller.PACKAGE_SOURCE_OTHER, PackageInstaller.PACKAGE_SOURCE_STORE)
+                for (source in sources) {
+                    ownership.installationStarted()
+                    try {
+                        install(service, 1, packageSource = source)
+                        val recorded = context.packageManager.getInstallSourceInfo(FIXTURE)
+                        assertEquals(source ?: PackageInstaller.PACKAGE_SOURCE_OTHER, recorded.packageSource)
+                        assertEquals(caller(service), recorded.installingPackageName)
+                        val restricted = source == PackageInstaller.PACKAGE_SOURCE_LOCAL_FILE ||
+                            source == PackageInstaller.PACKAGE_SOURCE_DOWNLOADED_FILE
+                        val expected = if (restricted) AppOpsManager.MODE_ERRORED else AppOpsManager.MODE_ALLOWED
+                        assertEquals("source=$source", expected, restrictedSettingsMode())
+                        evidence("package-source", "requested=$source recorded=${recorded.packageSource} restricted=$restricted")
+                        if (source == PackageInstaller.PACKAGE_SOURCE_LOCAL_FILE) {
+                            // Updating metadata must not silently undo an existing system restriction.
+                            install(service, 2)
+                            assertEquals(PackageInstaller.PACKAGE_SOURCE_OTHER,
+                                context.packageManager.getInstallSourceInfo(FIXTURE).packageSource)
+                            assertEquals(AppOpsManager.MODE_ERRORED, restrictedSettingsMode())
+                            evidence("package-source-update", "recorded=other existingRestrictionPreserved=true")
+                        }
+                    } finally {
+                        if (runCatching { context.packageManager.getPackageInfo(FIXTURE, 0) }.isSuccess) uninstall(service)
+                    }
+                }
+            }
+        }
+    }
+
+    @Suppress("DEPRECATION")
+    private fun restrictedSettingsMode(): Int {
+        val uid = context.packageManager.getApplicationInfo(FIXTURE, 0).uid
+        instrumentation.uiAutomation.adoptShellPermissionIdentity(
+            "android.permission.GET_APP_OPS_STATS", "android.permission.MANAGE_APPOPS")
+        return try {
+            context.getSystemService(AppOpsManager::class.java)
+                .unsafeCheckOpNoThrow("android:access_restricted_settings", uid, FIXTURE)
+        } finally {
+            instrumentation.uiAutomation.dropShellPermissionIdentity()
+        }
+    }
 
     @Test fun installUpdateDowngradeUninstallAndRebind() {
         assumeTrue(authorizer in listOf("shizuku", "root"))
@@ -123,10 +173,13 @@ class PrivilegedInstallerDeviceTest {
         }
     }
 
-    private fun install(service: IPrivilegedInstaller, version: Int, requireSuccess: Boolean = true): Intent {
+    private fun install(service: IPrivilegedInstaller, version: Int, requireSuccess: Boolean = true, packageSource: Int? = null): Intent {
         val bytes = instrumentation.context.assets.open("fixture-v$version.apk").use { it.readBytes() }
         val started = SystemClock.elapsedRealtime()
-        val id = service.createSession(Bundle().apply { putLong(PrivilegedOptions.SIZE, bytes.size.toLong()) }, caller(service), 0)
+        val id = service.createSession(Bundle().apply {
+            putLong(PrivilegedOptions.SIZE, bytes.size.toLong())
+            packageSource?.let { putInt(PrivilegedOptions.PACKAGE_SOURCE, it) }
+        }, caller(service), 0)
         var terminalReceived = false
         try {
             ParcelFileDescriptor.AutoCloseOutputStream(service.openWrite(id, "base.apk", bytes.size.toLong())).use { it.write(bytes) }

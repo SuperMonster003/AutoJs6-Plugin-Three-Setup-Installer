@@ -108,6 +108,7 @@ internal class FixturePackageOwnership(private val packages: Set<String>) : Clos
     private var started = false
     init {
         val fixedPackages = setOf(FixtureInstallUi.PACKAGE_NAME,
+            "io.github.supermonster003.autojs6.installer.spike.fixture",
             "io.github.supermonster003.autojs6.installer.advanced.fixture",
             "io.github.supermonster003.autojs6.installer.advanced.shared.fixture")
         require(packages.isNotEmpty() && packages.all { it in fixedPackages })

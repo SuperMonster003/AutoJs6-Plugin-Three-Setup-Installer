@@ -6,8 +6,9 @@
 
 # v1.2.1
 
-###### 2026/11/08
+###### 2026/11/14
 
+* `Fix` Shizuku/Root installations no longer default to a local-file source that can restrict accessibility settings on Android 13+; explicit package source choices are preserved
 * `Fix` Misleading text after successfully installing or updating an application without a launchable interface could be mistaken for an installation failure
 * `Fix` Complete missing translations in update settings
 * `Fix` In the Arabic interface, 3-Setup Installer no longer appears reversed as Setup Installer-3

@@ -213,6 +213,7 @@ Platform facts that shape what the plugin can do:
 ******
 
 - **Why does installation still require confirmation?** `none` always requires Android confirmation. Privileged authorizers may also be subject to Android policy. `notification` opens system confirmation only through its notification action; it does not bypass Android's confirmation.
+- **Why is accessibility restricted after installation?** On Android 13+, a `local-file` or `downloaded-file` package source can trigger restricted settings. Shizuku/Root now default to `other`, matching Android shell installations; explicit source choices take precedence. `none`/Dhizuku keep the `local-file` default. Existing restrictions are not automatically cleared by an update. For an app you trust, open Android Settings > Apps > the app > More > Allow restricted settings, then enable its accessibility service. Availability and additional checks depend on the Android version and ROM.
 - **Can an `.aab` be installed?** No. An Android App Bundle is a publishing format; convert it with bundletool into an `.apks` set first. The plugin recognizes `.aab` files and shows their package and module information.
 - **Why can a downgrade still fail with `allowDowngrade: true`?** This flag requests a downgrade; Android decides according to the firmware, authorization identity and whether the app is debuggable. Tested user firmware rejected non-debuggable downgrades on Sony G8441 / API 28 and Xiaomi 23046RP50C / API 35, while Sony XQ-DQ72 / API 33 with Root accepted one. These results are device-specific. Check the returned error and `systemMessage`; Root does not guarantee a downgrade on every ROM.
 - **What installer package name works on HyperOS?** With Shizuku started through ADB or wireless debugging, leaving the installer package name unset uses `com.android.shell`. On the tested Xiaomi 23046RP50C / HyperOS / API 35, silent new installations and updates recorded this value. Explicit `com.android.shell` and the plugin's own package name were also accepted and recorded as requested. Other package names or ROM versions still depend on the system's response.
@@ -280,8 +281,9 @@ The plugin's plans and progress are maintained as a checkable list in ROADMAP.md
 
 #### v1.2.1
 
-_2026/11/08_
+_2026/11/14_
 
+- `Fix` Shizuku/Root installations no longer default to a local-file source that can restrict accessibility settings on Android 13+; explicit package source choices are preserved
 - `Fix` Misleading text after successfully installing or updating an application without a launchable interface could be mistaken for an installation failure
 - `Fix` Complete missing translations in update settings
 - `Fix` In the Arabic interface, 3-Setup Installer no longer appears reversed as Setup Installer-3

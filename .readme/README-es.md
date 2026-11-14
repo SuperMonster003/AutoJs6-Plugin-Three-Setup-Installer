@@ -213,6 +213,7 @@ Hechos de la plataforma que delimitan lo que el plugin puede hacer:
 ******
 
 - **Por qué sigue siendo necesaria una confirmación?** `none` siempre requiere la confirmación de Android. Los métodos privilegiados también dependen de su política. `notification` abre la confirmación del sistema únicamente mediante su acción de notificación y no la omite.
+- **Por qué se restringe la accesibilidad tras instalar?** En Android 13 o posterior, un origen `local-file` o `downloaded-file` puede activar ajustes restringidos. Shizuku/Root ahora usan `other` por defecto, igual que las instalaciones desde el shell de Android; un origen explícito tiene prioridad. `none`/Dhizuku conservan `local-file` como valor predeterminado. Una actualización no elimina automáticamente las restricciones existentes. Para una aplicación de confianza, abre Ajustes de Android > Aplicaciones > la aplicación > Más > Permitir ajustes restringidos y activa después su servicio de accesibilidad. La disponibilidad y las comprobaciones adicionales dependen de la versión de Android y de la ROM.
 - **Se puede instalar un `.aab`?** No. Un Android App Bundle es un formato de publicación; conviértelo primero con bundletool en un conjunto `.apks`. El plugin reconoce los archivos `.aab` y muestra la información de paquete y módulos.
 - **Por qué puede fallar una versión anterior con `allowDowngrade: true`?** Este parámetro solicita la degradación; Android decide según el firmware, la identidad autorizada y si la aplicación es debuggable. Los firmwares user probados en Sony G8441 / API 28 y Xiaomi 23046RP50C / API 35 rechazaron la degradación de paquetes no debuggable, mientras que Sony XQ-DQ72 / API 33 con Root la aceptó. Son resultados específicos de esos dispositivos. Revisa el error y `systemMessage`; Root no garantiza la degradación en todas las ROM.
 - **Qué nombre de paquete del instalador funciona en HyperOS?** Con Shizuku iniciado mediante ADB o depuración inalámbrica, dejar el nombre sin especificar usa `com.android.shell`. En el Xiaomi 23046RP50C / HyperOS / API 35 probado, las instalaciones nuevas y actualizaciones silenciosas registraron ese valor. También se aceptaron los valores explícitos `com.android.shell` y el nombre de paquete del propio plugin, y se registraron tal como se solicitaron. Otros nombres o versiones de ROM dependen de la respuesta del sistema.
@@ -280,8 +281,9 @@ Los planes y el progreso del plugin se mantienen como una lista verificable en R
 
 #### v1.2.1
 
-_2026/11/08_
+_2026/11/14_
 
+- `Corrección` Las instalaciones con Shizuku/Root ya no usan por defecto un origen de archivo local que puede restringir la accesibilidad en Android 13 o posterior; se conservan los orígenes indicados explícitamente
 - `Corrección` El mensaje tras instalar o actualizar correctamente una aplicación sin interfaz que se pueda abrir directamente podía confundirse con un fallo de instalación
 - `Corrección` Completar las traducciones que faltaban en los ajustes de actualización
 - `Corrección` En la interfaz en árabe, 3-Setup Installer ya no aparece invertido como Setup Installer-3
