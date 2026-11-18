@@ -3,6 +3,7 @@ package io.github.supermonster003.autojs6.plugin.three.setup.installer.engine
 import android.content.Intent
 import com.google.gson.JsonObject
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.auth.Authorizer
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.policy.InstalledSigningFact
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.source.ArchiveOpener
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.source.PlannedApk
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.source.PreparedPackage
@@ -459,6 +460,96 @@ class InstallSessionTest {
         assertNull(fixture.failure)
     }
 
+    @Test fun `caller death after the commit keeps waiting for the item and cancels only the later items`() {
+        val fixture = Fixture(request())
+        fixture.commits = true
+        val detached = mutableListOf<Boolean>()
+        fixture.install = {
+            detached += fixture.session.detachCaller()
+            // The dead caller's callbacks now fail; the committed item must not turn into a cancellation.
+            fixture.failStage = true
+            fixture.engineListener!!.onStage("confirming")
+            success()
+        }
+        fixture.run()
+        assertEquals(listOf(true), detached)
+        assertEquals(1, fixture.calls.size)
+        assertNull(fixture.failure)
+        assertEquals(listOf(true, false, false), fixture.results().map { it["ok"].asBoolean })
+        assertEquals(listOf("CANCELLED", "CANCELLED"), fixture.results().drop(1).map { it.getAsJsonObject("error")["code"].asString })
+        assertFalse(fixture.session.detachCaller())
+    }
+
+    @Test fun `caller death before the commit is still a cancellation`() {
+        val fixture = Fixture(request(items = listOf(0)))
+        val detached = mutableListOf<Boolean>()
+        fixture.install = { detached += fixture.session.detachCaller(); success() }
+        fixture.run()
+        assertEquals(listOf(false), detached)
+        assertFalse(fixture.session.detachCaller())
+    }
+
+    @Test fun `a rejected session whose package was installed by the system installer reports success`() {
+        val fixture = Fixture(request(items = listOf(0)))
+        fixture.commits = true
+        fixture.signers = setOf("cert")
+        fixture.identities += InstalledSigningFact(known = true, found = false)
+        fixture.identities += InstalledSigningFact(true, true, true, setOf("cert"), 2, "2.0", 5_000)
+        fixture.install = { throw InstallStatusMapper.toFailure(InstallStatusMapper.STATUS_FAILURE_ABORTED,
+            "INSTALL_FAILED_ABORTED: User rejected permissions", "example.package") }
+        fixture.run()
+        assertNull(fixture.failure)
+        val result = requireNotNull(fixture.completed)
+        assertTrue(result["ok"].asBoolean)
+        assertEquals("example.package", result["packageName"].asString)
+        val notes = result.getAsJsonArray("notes").map { it.asString }
+        assertTrue(notes.toString(), notes.any { "USER_CANCELLED" in it && "User rejected permissions" in it })
+        assertEquals(listOf("example.package", "example.package"), fixture.identityQueries)
+        assertEquals(1, fixture.cleanups.size)
+    }
+
+    @Test fun `a rejected session without a changed package keeps the cancellation`() {
+        val fixture = Fixture(request(items = listOf(0)))
+        fixture.commits = true
+        fixture.signers = setOf("cert")
+        val unchanged = InstalledSigningFact(true, true, true, setOf("cert"), 2, "2.0", 5_000)
+        fixture.identities += unchanged
+        fixture.identities += unchanged
+        fixture.install = { throw InstallStatusMapper.toFailure(InstallStatusMapper.STATUS_FAILURE_ABORTED,
+            "INSTALL_FAILED_ABORTED: User rejected permissions", "example.package") }
+        fixture.run()
+        assertEquals(InstallerErrorCodes.USER_CANCELLED, fixture.failure?.code)
+        assertTrue(fixture.cleanups.isEmpty())
+    }
+
+    @Test fun `a failure before the commit is never checked against the device`() {
+        val fixture = Fixture(request(items = listOf(0)))
+        fixture.signers = setOf("cert")
+        fixture.identities += InstalledSigningFact(known = true, found = false)
+        fixture.identities += InstalledSigningFact(true, true, true, setOf("cert"), 2, "2.0", 5_000)
+        fixture.install = { throw InstallFailure(InstallerErrorCodes.USER_CANCELLED, "declined") }
+        fixture.run()
+        assertEquals(InstallerErrorCodes.USER_CANCELLED, fixture.failure?.code)
+        assertEquals(1, fixture.identityQueries.size)
+    }
+
+    @Test fun `a cancellation after the commit reports the installed package and still stops the batch`() {
+        val fixture = Fixture(request())
+        fixture.commits = true
+        fixture.signers = setOf("cert")
+        fixture.identities += InstalledSigningFact(true, true, true, setOf("cert"), 1, "1.0", 1_000)
+        fixture.identities += InstalledSigningFact(true, true, true, setOf("cert"), 2, "2.0", 9_000)
+        fixture.install = {
+            fixture.session.cancel()
+            throw InstallFailure(InstallerErrorCodes.CANCELLED, "Installation interrupted")
+        }
+        fixture.run()
+        assertEquals(1, fixture.calls.size)
+        assertEquals(listOf(true, false, false), fixture.results().map { it["ok"].asBoolean })
+        assertTrue(fixture.results().first().getAsJsonArray("notes").any { "CANCELLED" in it.asString })
+        assertFalse(Thread.currentThread().isInterrupted)
+    }
+
     private fun request(items: List<Int> = listOf(0, 1, 2), continueOnError: Boolean = true, timeout: Long = 1_000, interaction: String = "auto") =
         InstallRequest("batch", items.mapIndexed { i, item -> SourceEntry(i, item, "same.apk", 1) }, interaction,
             InstallOptions(authorizer = "root", user = "42", deleteSource = true, continueOnError = continueOnError, timeoutMillis = timeout))
@@ -493,12 +584,20 @@ class InstallSessionTest {
         var itemResult: (Int, JsonObject) -> Unit = { _, _ -> }
         val session = InstallSession(request, this, this) { now }
         private var versions = 0
+        var commits = false
+        var failStage = false
+        var engineListener: InstallEngine.Listener? = null
+        var signers = emptySet<String>()
+        val identities = ArrayDeque<InstalledSigningFact?>()
+        val identityQueries = mutableListOf<String>()
         private val engine = object : InstallEngine {
             override fun install(request: InstallEngine.Request, listener: InstallEngine.Listener, checkCancelled: () -> Unit): InstallEngine.Result {
                 calls += request
+                engineListener = listener
                 listener.onStage("writing")
                 listener.onProgress(1, 1)
                 checkCancelled()
+                if (commits) listener.onCommitting()
                 if (earlyInstalled) listener.onInstalled(success())
                 return install()
             }
@@ -521,6 +620,12 @@ class InstallSessionTest {
             if (++versions % 2 == 0 && failPostMetadata) throw IllegalStateException("metadata unavailable")
             return InstallSession.Version("$versions.0", versions.toLong())
         }
+        override fun installedIdentity(packageName: String, target: InstallSession.Target): InstalledSigningFact? {
+            identityQueries += packageName
+            return identities.removeFirstOrNull()
+        }
+        override fun sourceSigners(prepared: PreparedPackage): Set<String> = signers
+        override fun onStage(stage: String, detail: JsonObject) { if (failStage) throw IllegalStateException("caller died") }
         override fun confirm(prepared: PreparedPackage, target: InstallSession.Target, deadlineMillis: Long, checkActive: () -> Unit) = confirm()
         override fun configure(index: Int, prepared: PreparedPackage, target: InstallSession.Target, request: InstallRequest,
             deadlineMillis: Long, checkActive: () -> Unit): InstallSession.Selection =

@@ -13,6 +13,7 @@ import io.github.supermonster003.autojs6.plugin.three.setup.installer.auth.Privi
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.policy.DialogSafetyApproval
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.policy.InstallSafetyBinding
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.policy.InstallSafetyGate
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.policy.InstalledSigningFact
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.profiles.InstallProfilePreferences
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.profiles.InstallProfileSnapshot
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.profiles.InstallProfilePlan
@@ -130,6 +131,10 @@ internal class DescriptorInstallEnvironment private constructor(
             InstallSession.Version(info.versionName, if (Build.VERSION.SDK_INT >= 28) info.longVersionCode else info.versionCode.toLong())
         } catch (_: PackageManager.NameNotFoundException) { null }
     }
+
+    override fun installedIdentity(packageName: String, target: InstallSession.Target): InstalledSigningFact? =
+        safety.installedIdentity(packageName, target)
+    override fun sourceSigners(prepared: PreparedPackage): Set<String> = safety.sourceSigners(prepared)
 
     override fun checkInstallPolicy(prepared: PreparedPackage) = safety.checkRules(prepared)
     override fun reviewSafety(index: Int, prepared: PreparedPackage, target: InstallSession.Target, options: InstallOptions,

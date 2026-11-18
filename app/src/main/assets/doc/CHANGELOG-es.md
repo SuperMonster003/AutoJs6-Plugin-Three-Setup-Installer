@@ -6,10 +6,11 @@
 
 # v1.2.2
 
-###### 2026/11/14
+###### 2026/11/18
 
 * `Corrección` Las instalaciones con Shizuku/Root ya no usan por defecto un origen de archivo local que puede restringir la accesibilidad en Android 13 o posterior; se conservan los orígenes indicados explícitamente
 * `Corrección` El mensaje tras instalar o actualizar correctamente una aplicación sin interfaz que se pueda abrir directamente podía confundirse con un fallo de instalación
+* `Corrección` Instalaciones completadas correctamente se mostraban como canceladas cuando la aplicación que solicitó la instalación se reemplazaba durante ella (por ejemplo, AutoJs6 al actualizarse a sí mismo) o cuando un instalador del sistema como el de ColorOS completaba la instalación a su manera; ahora el resultado se basa en la versión y la firma de la aplicación instalada
 * `Mejora` Diálogo de instalación rediseñado: la información de la aplicación se muestra en una tabla alineada (versión, tamaño, SDK y comparación de firmas) e indica si es una instalación nueva, una actualización, una reinstalación o una versión anterior; los componentes APK, los permisos y las opciones poco usadas quedan plegados por defecto; el texto tiene más interlineado y separación
 * `Mejora` Con el método de autorización automático, el diálogo y el resultado de la instalación muestran el método realmente utilizado (por ejemplo, Shizuku o la confirmación del sistema)
 

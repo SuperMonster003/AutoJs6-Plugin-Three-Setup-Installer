@@ -50,6 +50,11 @@ internal interface InstallEngine {
         fun onProgress(bytesWritten: Long, totalBytes: Long) = Unit
         /** Authoritative package success, before optional work; never an invitation to retry. */
         fun onInstalled(result: Result) = Unit
+        /**
+         * Called immediately before the platform commit. From here on Android may finish the
+         * installation without the caller, so a later failure must be checked against the device.
+         */
+        fun onCommitting() = Unit
         /** Must launch/delegate confirmation or throw. Never silently discard this callback. */
         fun onUserAction(intent: Intent)
     }
@@ -134,6 +139,7 @@ internal abstract class SessionInstallEngine(
             checkActive()
             listener.onStage(InstallerContract.STAGE_COMMITTING)
             checkActive()
+            listener.onCommitting()
             session.commit()
             val status = session.await(deadline, checkActive) { intent ->
                 checkActive()

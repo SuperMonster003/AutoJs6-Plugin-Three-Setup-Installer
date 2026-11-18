@@ -27,6 +27,8 @@ internal class InstallerBinder(context: Context, private val guard: CallerGuard 
     private val reaper = Executors.newSingleThreadScheduledExecutor()
     private val sessions = SessionRegistry(SystemClock::elapsedRealtime, scheduler = reaper)
     private val defaults = io.github.supermonster003.autojs6.plugin.three.setup.installer.settings.DefaultInstallerLock.get(context)
+    /** The service is being destroyed, which also happens when its only caller dies or unbinds. */
+    @Volatile private var closing = false
     init {
         queue.executor.execute { PackageStaging.cleanStale(this.context) }
     }
@@ -187,7 +189,9 @@ internal class InstallerBinder(context: Context, private val guard: CallerGuard 
                 )
                 environment = owned
                 val notificationToken = record?.token ?: java.util.UUID.randomUUID().toString()
-                val death = CallbackDeath(callback.asBinder()) { reserved.close() }
+                // A committed item outlives its caller (e.g. AutoJs6 updating itself is killed by the
+                // installation); its real result still reaches the plugin's page. Otherwise cancel.
+                val death = CallbackDeath(callback.asBinder()) { if (!core.detachCaller()) reserved.close() }
                 core = InstallSession(actual, owned, object : InstallSession.Listener {
                     override fun onStage(stage: String, detail: com.google.gson.JsonObject) {
                         record?.onStage(stage, detail)
@@ -234,7 +238,11 @@ internal class InstallerBinder(context: Context, private val guard: CallerGuard 
                     override fun cancel(): Boolean { guard.enforceOwner(owner); return core.cancel() }
                     override fun close() { guard.enforceOwner(owner); reserved.close() }
                 }
-                reserved.attach { core.cancel(); death.close() }
+                reserved.attach {
+                    // Losing the service with its caller is no cancellation of an item Android already owns.
+                    if (!(closing && core.detachCaller())) core.cancel()
+                    death.close()
+                }
                 death.link()
                 if (interactive) InstallationUi.show(context, record)
                 core.start(queue.executor)
@@ -260,5 +268,5 @@ internal class InstallerBinder(context: Context, private val guard: CallerGuard 
         requireNotNull(callback) { "Callback is required" }
         try { action(callback) } catch (failure: Exception) { queue.reject(callback, InstallFailure.from(failure)) }
     }
-    override fun close() { sessions.close(); reaper.shutdownNow(); queue.close() }
+    override fun close() { closing = true; sessions.close(); reaper.shutdownNow(); queue.close() }
 }

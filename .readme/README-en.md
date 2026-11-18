@@ -281,10 +281,11 @@ The plugin's plans and progress are maintained as a checkable list in ROADMAP.md
 
 #### v1.2.2
 
-_2026/11/14_
+_2026/11/18_
 
 - `Fix` Shizuku/Root installations no longer default to a local-file source that can restrict accessibility settings on Android 13+; explicit package source choices are preserved
 - `Fix` Misleading text after successfully installing or updating an application without a launchable interface could be mistaken for an installation failure
+- `Fix` Installations that had actually succeeded were shown as cancelled when the app that requested them was replaced during the installation (for example AutoJs6 updating itself), or when a system installer such as the one on ColorOS completed the installation its own way; the result now follows the installed app's version and signature
 - `Improvement` Redesigned installation dialog: application details appear in an aligned table (version, size, SDK and signature comparison) labeled as a new install, update, reinstall or downgrade; APK components, permissions and rarely used options are folded by default; text has more line spacing and separation
 - `Improvement` With the Automatic authorization method, the installation dialog and the installation result show the method actually used (for example Shizuku or system confirmation)
 

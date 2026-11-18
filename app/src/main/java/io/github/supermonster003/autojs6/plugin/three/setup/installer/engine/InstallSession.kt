@@ -4,6 +4,7 @@ import android.content.Intent
 import com.google.gson.JsonObject
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.auth.Authorizer
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.policy.DialogSafetyApproval
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.policy.InstalledSigningFact
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.source.PreparedPackage
 import org.autojs.plugin.installer.api.InstallerContract
 import org.autojs.plugin.installer.api.InstallerErrorCodes
@@ -40,6 +41,10 @@ internal class InstallSession(
         fun validateSafety(index: Int, prepared: PreparedPackage, target: Target, options: InstallOptions,
             approval: DialogSafetyApproval?, checkActive: () -> Unit) = Unit
         fun installedVersion(packageName: String, target: Target): Version?
+        /** The installed identity used to check a failed platform answer; null when it cannot be read. */
+        fun installedIdentity(packageName: String, target: Target): InstalledSigningFact? = null
+        /** Certificate digests of the prepared base APK in [InstalledSigningFact.signers] form; empty when unknown. */
+        fun sourceSigners(prepared: PreparedPackage): Set<String> = emptySet()
         /** P3 supplies the plugin confirmation. Explicit dialog must never silently bypass it. */
         fun confirm(prepared: PreparedPackage, target: Target, deadlineMillis: Long, checkActive: () -> Unit)
         fun configure(index: Int, prepared: PreparedPackage, target: Target, request: InstallRequest,
@@ -66,6 +71,10 @@ internal class InstallSession(
     private var started = false
     private var cancelled = false
     private var terminal = false
+    /** The current item's platform session has been (or is being) committed. */
+    private var committing = false
+    /** The caller died while a committed item was still running; the remaining items are cancelled. */
+    private var callerDetached = false
     private var worker: Thread? = null
     private var status = Status(InstallerContract.STAGE_PENDING, 0, 0f)
     private val deadline = clock() + request.options.timeoutMillis
@@ -89,6 +98,19 @@ internal class InstallSession(
         cancelled = true
         // The worker clears its identity under the same lock before it can return to the pool.
         worker?.interrupt()
+        true
+    }
+
+    /**
+     * The caller's Binder died. Before the current item reaches the platform this is no different
+     * from [cancel] (returns false, the owner cancels). Once its session has been committed, Android
+     * may finish it without the caller, and a caller that updates itself is killed by that very
+     * installation: the item then keeps waiting for its real platform result, which still reaches
+     * the plugin's own result page and records (returns true). Items after it are cancelled.
+     */
+    fun detachCaller(): Boolean = synchronized(lock) {
+        if (terminal || !committing) return false
+        callerDetached = true
         true
     }
 
@@ -172,9 +194,15 @@ internal class InstallSession(
                 val previous = prepared.packageName?.let { environment.installedVersion(it, selectedTarget) }
                 environment.validateSafety(index, current, selectedTarget, options, safetyApproval, ::checkActive)
                 checkActive()
-                val installed = selectedTarget.engine.install(
+                // Sampled under the package lock: only a change after this point can prove that a
+                // session which ended without success has nevertheless installed this package.
+                val identityBefore = current.packageName?.let { name ->
+                    try { environment.installedIdentity(name, selectedTarget) } catch (_: Exception) { null }
+                }
+                val installed = try { selectedTarget.engine.install(
                     InstallEngine.Request(current, options, selectedTarget.userId, interaction, deadline),
                     object : InstallEngine.Listener {
+                        override fun onCommitting() { synchronized(lock) { committing = true } }
                         override fun onStage(stage: String) = stage(stage, index, current.packageName)
                         override fun onProgress(bytesWritten: Long, totalBytes: Long) {
                             checkActive()
@@ -194,7 +222,9 @@ internal class InstallSession(
                         }
                     },
                     ::checkActive,
-                )
+                ) } catch (failure: Exception) {
+                    installedDespite(failure, current, selectedTarget, options, identityBefore, interaction) ?: throw failure
+                }
                 // Installation is now confirmed. Optional metadata/cleanup, or a late cancel,
                 // must never convert an installed package into a failed result.
                 val packageName = installed.packageName ?: prepared.packageName
@@ -226,6 +256,11 @@ internal class InstallSession(
             } finally {
                 runCatching { environment.discardItem(index) }
                 packageLease?.close()
+                synchronized(lock) {
+                    committing = false
+                    // Nobody receives the remaining items' results any more.
+                    if (callerDetached) cancelled = true
+                }
             }
         }
         finish(if (request.isBatch) InstallDocuments.batch(results) else results.single(), null)
@@ -243,8 +278,37 @@ internal class InstallSession(
         notifyListener { listener.onStage(stage, InstallDocuments.stageDetail(index, packageName)) }
     }
 
+    /**
+     * A failure after the commit is checked against the device before it is reported (see
+     * [InstalledOutcome]). Returns the confirmed result, or null to report [failure] unchanged.
+     */
+    private fun installedDespite(failure: Exception, prepared: PreparedPackage, target: Target, options: InstallOptions,
+        before: InstalledSigningFact?, interaction: String): InstallEngine.Result? {
+        if (!synchronized(lock) { committing }) return null
+        val name = prepared.packageName ?: return null
+        // A cancellation restores the interrupt flag; the query must not be cut short by it, and
+        // the session's cancelled state still stops the items after this one.
+        val interrupted = Thread.interrupted()
+        val confirmed = try {
+            InstalledOutcome.confirms(prepared.versionCode, environment.sourceSigners(prepared), before,
+                environment.installedIdentity(name, target))
+        } catch (_: Exception) { false }
+        if (!confirmed) {
+            if (interrupted) Thread.currentThread().interrupt()
+            return null
+        }
+        // Ownership and optimization follow-up belong to a session that ended in success; report them as not done.
+        val followUp = if (options.requestUpdateOwnership || options.dexopt != InstallerContract.DEXOPT_NONE) {
+            InstallFollowUp.failed(options, failure)
+        } else InstallFollowUp()
+        return InstallEngine.Result(name, listOf(InstalledOutcome.note(InstallFailure.from(failure, name))) + followUp.notes,
+            interaction, followUp)
+    }
+
     private fun notifyListener(block: () -> Unit) {
         try { block() } catch (failure: Exception) {
+            // A caller that died after the commit no longer receives callbacks; the item continues.
+            if (synchronized(lock) { callerDetached }) return
             cancel()
             throw InstallFailure(InstallerErrorCodes.CANCELLED, "Session callback disconnected", cause = failure)
         }

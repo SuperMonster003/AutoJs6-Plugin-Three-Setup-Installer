@@ -37,6 +37,21 @@ class InstallEngineTest {
         assertTrue(first.file.exists())
     }
 
+    @Test fun `the hand-off to the platform is announced immediately before the commit only`() {
+        val engine = FakeEngine()
+        val listener = RecordingListener()
+        engine.session.beforeCommit = { assertEquals(1, listener.committing) }
+        engine.install(request(apk("base.apk", byteArrayOf(1))), listener)
+        assertEquals(1, listener.committing)
+
+        val cancelled = FakeEngine()
+        val early = RecordingListener()
+        cancelled.session.beforeWrite = { throw InstallFailure("CANCELLED", "cancelled") }
+        val second = apk("second.apk", byteArrayOf(1))
+        assertThrows(InstallFailure::class.java) { cancelled.install(request(second), early) }
+        assertEquals(0, early.committing)
+    }
+
     @Test fun `does not open a session for a cancelled request`() {
         val engine = FakeEngine()
         val failure = assertThrows(InstallFailure::class.java) {
@@ -284,7 +299,9 @@ class InstallEngineTest {
     private class RecordingListener(private val progressed: (Long) -> Unit = {}) : InstallEngine.Listener {
         val stages = mutableListOf<String>()
         val progress = mutableListOf<Pair<Long, Long>>()
+        var committing = 0
         override fun onStage(stage: String) { stages += stage }
+        override fun onCommitting() { committing++ }
         override fun onProgress(bytesWritten: Long, totalBytes: Long) { progress += bytesWritten to totalBytes; progressed(bytesWritten) }
         override fun onUserAction(intent: Intent) = error("Unexpected confirmation")
     }

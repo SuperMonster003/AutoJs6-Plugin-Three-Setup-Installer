@@ -93,16 +93,9 @@ internal class InstallSafetyGate(
         checkActive()
         // The platform verifies the base APK. Scheme-presence detection and arbitrary split
         // metadata are not certificates. Android still verifies the final complete split set.
-        val flags = signingFlags()
         val base = prepared.baseApk ?: throw InstallFailure(InstallerErrorCodes.INVALID_PACKAGE, "The base APK is missing", packageName = name)
-        val baseHash = requireNotNull(base.sha256)
-        val sourceSigners = sourceSigningFacts.getOrPut(baseHash) {
-            val stable = stableBase(base, name, checkActive)
-            try {
-                runCatching { context.packageManager.getPackageArchiveInfo(stable.file.absolutePath, flags)
-                    ?.takeIf { it.packageName == name }?.let(::signers).orEmpty() }.getOrDefault(emptySet())
-            } finally { stable.close() }
-        }
+        requireNotNull(base.sha256)
+        val sourceSigners = sourceSigners(prepared, checkActive)
         checkActive()
         val installed = installed(name, target)
         checkActive()
@@ -115,6 +108,24 @@ internal class InstallSafetyGate(
         return InstallSafetyBinding(index, name, prepared.sharedUserId, digests, target.userId, options.user,
             target.authorizer.id, policy.revision, sourceSigners, installed)
     }
+
+    /** Certificate digests of the prepared base APK, cached per content hash; empty when unknown. */
+    fun sourceSigners(prepared: PreparedPackage, checkActive: () -> Unit = {}): Set<String> {
+        val name = prepared.packageName ?: return emptySet()
+        val base = prepared.baseApk ?: return emptySet()
+        val baseHash = base.sha256 ?: return emptySet()
+        return sourceSigningFacts.getOrPut(baseHash) {
+            val stable = stableBase(base, name, checkActive)
+            try {
+                runCatching { context.packageManager.getPackageArchiveInfo(stable.file.absolutePath, signingFlags())
+                    ?.takeIf { it.packageName == name }?.let(::signers).orEmpty() }.getOrDefault(emptySet())
+            } finally { stable.close() }
+        }
+    }
+
+    /** The package as installed for [target]; null when it cannot be read. */
+    fun installedIdentity(name: String, target: InstallSession.Target): InstalledSigningFact? =
+        installed(name, target).takeIf { it.known }
 
     /** A held descriptor pins an inode, not its bytes. Never combine one read's hash with
      * another read's certificates from a provider/host-writable inode. */

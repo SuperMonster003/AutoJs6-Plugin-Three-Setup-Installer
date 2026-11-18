@@ -6,14 +6,15 @@
   "changelog_label_dependency": "Dépendance",
   "$data": {
     "v1.2.2": {
-      "released_date": "2026/11/14",
+      "released_date": "2026/11/18",
       "improvement": [
         "Dialogue d'installation repensé : les informations de l'application s'affichent dans un tableau aligné (version, taille, SDK, comparaison des signatures) avec la mention nouvelle installation, mise à jour, réinstallation ou version antérieure; les composants APK, les autorisations et les options rarement utilisées sont repliés par défaut; l'interligne et les espacements du texte sont plus généreux",
         "Avec la méthode d'autorisation automatique, le dialogue et le résultat de l'installation indiquent la méthode réellement utilisée (par exemple Shizuku ou la confirmation système)"
       ],
       "fix": [
         "Les installations avec Shizuku/Root ne déclarent plus par défaut une source de fichier local pouvant restreindre l'accessibilité sous Android 13 ou version ultérieure; les sources explicitement choisies sont conservées",
-        "Le message affiché après l'installation ou la mise à jour réussie d'une application sans interface accessible directement pouvait laisser croire à un échec de l'installation"
+        "Le message affiché après l'installation ou la mise à jour réussie d'une application sans interface accessible directement pouvait laisser croire à un échec de l'installation",
+        "Des installations réussies étaient affichées comme annulées lorsque l'application à l'origine de l'installation était remplacée pendant celle-ci (par exemple AutoJs6 se mettant à jour) ou lorsqu'un programme d'installation système comme celui de ColorOS terminait l'installation à sa manière; le résultat suit désormais la version et la signature de l'application installée"
       ]
     },
     "v1.2.1": {
