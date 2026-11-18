@@ -34,4 +34,13 @@ AutoJs6 插件中心第二期收口走查 (宿主仓库 `docs/plugin-center/evid
 - 修复中途的一次 `self-update` 仍报 CANCELLED, 由此找到第二个取消来源 (服务随宿主销毁时关闭租约), 一并修复后通过.
 - JVM: `:app:testDebugUnitTest` 409 项, 0 失败 / 错误 / 跳过; 新增 `InstalledOutcomeTest` 5 项, `InstallSessionTest` 6 项 (提交后调用方死亡, 提交前死亡, 已装上的中止, 未变化的中止, 提交前失败不核对, 提交后取消), `InstallEngineTest` 1 项 (提交通知只在提交前发出一次).
 - 设备 (同一 AVD): `InstallerBinderDeviceTest`, `InstallSafetyPolicyDeviceTest`, `InstallSessionDeviceTest` 共 20 项通过.
-- 未在真机复测: ColorOS 的实际安装器与 Shizuku 授权下的宿主自更新, 由维护者在真机上点按确认.
+
+真机复测 (2026-11-18, 提交 `116a7e4` 的 debug 包 versionCode 150 覆盖原插件, 宿主 debug 6642 的 "ui" 脚本调用 `installer.install`, `interaction: dialog`, 所有对话框由维护者点按):
+
+| 设备 | 场景 | 结果 |
+|---|---|---|
+| Redmi 22120RN86C (Android 13, MIUI 14) | Shizuku, AutoJs6 重装自身 | 插件记为 completed; 13:51:10 换上新包, 13:51:11 `am_kill org.autojs.autojs6 ... installPackageLI` |
+| OnePlus OPD2413 (Android 15, ColorOS 15) | 无特权, 插件先无 "安装未知应用" (由维护者在设置页打开), 装 Java Libraries 1.0.0 (vc 14) | 插件记为 completed, AutoJs6 收到 ok, notes 为 `The package installer reported USER_CANCELLED (INSTALL_FAILED_ABORTED: User rejected permissions), but the package is installed ...`; 13:56:39 由 `com.android.packageinstaller` 的会话装上, 13:56:40.958 插件会话以 `User rejected permissions` 销毁 |
+| 同一平板 | 无特权, AutoJs6 重装自身 | 插件记为 completed; 13:57:17 换上新包并结束宿主, 13:57:18.992 插件会话同样被 ColorOS 中止 |
+
+测后两台装回原插件 (Redmi build 48, 平板 1.2.2 / 149, md5 核对一致), 宿主内容未变, Java Libraries 已卸载.
