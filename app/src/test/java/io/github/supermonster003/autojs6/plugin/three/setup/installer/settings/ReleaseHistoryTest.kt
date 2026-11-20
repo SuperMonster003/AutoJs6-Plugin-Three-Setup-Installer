@@ -1,6 +1,8 @@
 package io.github.supermonster003.autojs6.plugin.three.setup.installer.settings
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.FileNotFoundException
@@ -113,5 +115,47 @@ class ReleaseHistoryParserTest {
 
     @Test fun ignoresSectionTitlesThatAreNotVersions() {
         assertTrue(ReleaseHistoryParser.parse("### Release History\n\n* `Feature` Orphan\n").isEmpty())
+    }
+
+    // Q160 A: markdown links in a release note show as link text.
+
+    @Test fun aPlainLinkBecomesItsText() {
+        val inline = ReleaseHistoryInlineParser.parse("See the [AutoJs6 documentation](https://docs.autojs6.com/#/ai) for details")
+        assertEquals("See the AutoJs6 documentation for details", inline.text)
+        assertEquals(listOf(ReleaseHistoryLink(8, 29, "https://docs.autojs6.com/#/ai")), inline.links)
+        assertEquals("AutoJs6 documentation", inline.text.substring(inline.links[0].start, inline.links[0].end))
+    }
+
+    @Test fun theUnderscoresAndBackticksAroundALinkGo() {
+        val inline = ReleaseHistoryInlineParser.parse("Crash on Android 7.x _[`issue #575`](https://github.com/SuperMonster003/AutoJs6/issues/575)_")
+        assertEquals("Crash on Android 7.x issue #575", inline.text)
+        assertEquals(listOf(ReleaseHistoryLink(21, 31, "https://github.com/SuperMonster003/AutoJs6/issues/575")), inline.links)
+        assertFalse(inline.text.contains('_') || inline.text.contains('`'))
+        // An underscore without its pair stays.
+        assertEquals("An unpaired _underscore stays", ReleaseHistoryInlineParser.parse("An unpaired _[underscore](https://example.com) stays").text)
+    }
+
+    @Test fun everyLinkOfALineIsKept() {
+        val inline = ReleaseHistoryInlineParser.parse(
+            "Fixes [#432](https://github.com/a/b/issues/432), _[`#463`](https://github.com/a/b/issues/463)_ and [#520](http://example.com/520).",
+        )
+        assertEquals("Fixes #432, #463 and #520.", inline.text)
+        assertEquals(listOf("#432", "#463", "#520"), inline.links.map { inline.text.substring(it.start, it.end) })
+        assertEquals(
+            listOf("https://github.com/a/b/issues/432", "https://github.com/a/b/issues/463", "http://example.com/520"),
+            inline.links.map { it.url },
+        )
+    }
+
+    @Test fun aLineWithoutALinkStaysAsItIs() {
+        listOf(
+            "Replies stream faster in the chat",
+            "Keeps `code`, _italics_, [brackets] and (parentheses)",
+            "A [relative link](docs/README.md) is not a link",
+        ).forEach { line ->
+            val inline = ReleaseHistoryInlineParser.parse(line)
+            assertSame(line, inline.text)
+            assertTrue(inline.links.isEmpty())
+        }
     }
 }

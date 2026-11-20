@@ -44,6 +44,7 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -52,14 +53,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextLinkStyles
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -68,6 +75,7 @@ import androidx.compose.ui.unit.isSpecified
 import androidx.compose.ui.unit.sp
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.R
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.settings.ReleaseHistoryEntry
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.settings.ReleaseHistoryInlineParser
 
 /** The colors of the settings page, as ARGB ints, mapped to the Material 3 roles the page uses. */
 internal data class ReleaseHistoryColors(
@@ -348,13 +356,27 @@ private fun CategoryChip(tag: String, count: Int?, modifier: Modifier = Modifier
 
 /**
  * One item: a drawn dot (not a font glyph, so it looks the same with every font) centered on the first line, the text
- * beside it; wrapped lines align with the text, not with the dot.
+ * beside it; wrapped lines align with the text, not with the dot. Markdown links in the text show as link text in the
+ * primary color, underlined, and open in the browser (Q160 A).
  */
 @Composable
 private fun BulletItem(text: String, modifier: Modifier = Modifier) {
     val style = MaterialTheme.typography.bodyMedium
     val firstLine: Dp = with(LocalDensity.current) { if (style.lineHeight.isSpecified) style.lineHeight.toDp() else 20.dp }
     val dotColor = MaterialTheme.colorScheme.onSurfaceVariant
+    val inline = remember(text) { ReleaseHistoryInlineParser.parse(text) }
+    val uriHandler = LocalUriHandler.current
+    val linkColor = MaterialTheme.colorScheme.primary
+    val body = remember(inline, linkColor, uriHandler) {
+        buildAnnotatedString {
+            append(inline.text)
+            val styles = TextLinkStyles(SpanStyle(color = linkColor, textDecoration = TextDecoration.Underline))
+            // Our own listener: with the default one, a device without a browser crashes the page (IllegalArgumentException).
+            inline.links.forEach { link ->
+                addLink(LinkAnnotation.Url(link.url, styles) { runCatching { uriHandler.openUri(link.url) } }, link.start, link.end)
+            }
+        }
+    }
     Row(modifier = modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
         Box(modifier = Modifier.width(ReleaseHistoryDefaults.bulletSlot).height(firstLine), contentAlignment = Alignment.CenterStart) {
             Box(
@@ -364,6 +386,6 @@ private fun BulletItem(text: String, modifier: Modifier = Modifier) {
                     .background(dotColor, CircleShape),
             )
         }
-        Text(text = text, style = style, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.weight(1f))
+        Text(text = body, style = style, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.weight(1f))
     }
 }
