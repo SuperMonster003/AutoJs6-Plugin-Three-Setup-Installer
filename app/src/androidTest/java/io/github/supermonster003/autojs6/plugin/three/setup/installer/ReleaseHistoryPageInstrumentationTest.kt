@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.ParcelFileDescriptor
+import android.util.Log
 import android.view.KeyEvent
 import android.view.View
 import androidx.compose.ui.semantics.SemanticsProperties
@@ -246,21 +247,44 @@ class ReleaseHistoryPageInstrumentationTest {
         return tag ?: UNTAGGED
     }
 
-    /** The window with input focus as `dumpsys window` reports it; for failure messages only (it connects UiAutomation). */
+    /** Runs [command] as the shell user (it connects UiAutomation) and returns its output. */
+    private fun shell(command: String): String =
+        ParcelFileDescriptor.AutoCloseInputStream(instrumentation.uiAutomation.executeShellCommand(command)).bufferedReader().use { it.readText() }
+
+    /**
+     * The focused window and app as `dumpsys window` reports them, for diagnostics only. API 33 and 35 leave
+     * mCurrentFocus out of `dumpsys window windows`, so the whole dump is read.
+     */
     private fun focusedWindow(): String = runCatching {
-        ParcelFileDescriptor.AutoCloseInputStream(instrumentation.uiAutomation.executeShellCommand("dumpsys window windows"))
-            .bufferedReader().useLines { lines -> lines.map(String::trim).filter { it.startsWith("mCurrentFocus=") }.distinct().joinToString() }
+        shell("dumpsys window").lineSequence().map(String::trim)
+            .filter { it.startsWith("mCurrentFocus=") || it.startsWith("mFocusedApp=") }.distinct().joinToString()
             .ifEmpty { "mCurrentFocus not in dumpsys" }
     }.getOrElse { "dumpsys failed: $it" }
 
-    /** Keys go to the focused window: while a system dialog (an ANR, say) has focus, every Tab would be lost. */
-    private fun awaitWindowFocus(scenario: ActivityScenario<*>, visited: List<String> = emptyList()) {
+    private fun windowFocused(scenario: ActivityScenario<*>): Boolean = try {
         var focused = false
-        try {
-            compose.waitUntil(TIMEOUT) { scenario.onActivity { focused = it.hasWindowFocus() }; focused }
-        } catch (timeout: ComposeTimeoutException) {
-            fail("the page has no window focus after $TIMEOUT ms; visited: $visited; ${focusedWindow()}")
+        compose.waitUntil(TIMEOUT) { scenario.onActivity { focused = it.hasWindowFocus() }; focused }
+        true
+    } catch (timeout: ComposeTimeoutException) {
+        false
+    }
+
+    /**
+     * Keys go to the focused window: while a system dialog has focus (an ANR or crash dialog of another app on a slow
+     * emulator, say), every Tab would be lost. When focus does not come, the test closes system dialogs (error dialogs
+     * take that as "wait" or "close") and brings the page back to the front, once, before it gives up.
+     */
+    private fun awaitWindowFocus(scenario: ActivityScenario<*>, visited: List<String> = emptyList()) {
+        if (windowFocused(scenario)) return
+        val before = focusedWindow()
+        Log.w(LOG_TAG, "no window focus after $TIMEOUT ms ($before), closing system dialogs")
+        shell("am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS")
+        scenario.onActivity { it.startActivity(Intent(it, it.javaClass).addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)) }
+        if (!windowFocused(scenario)) {
+            fail("the page has no window focus after $TIMEOUT ms, nor after closing system dialogs; visited: $visited; " +
+                "before: $before; after: ${focusedWindow()}")
         }
+        Log.i(LOG_TAG, "window focus is back: ${focusedWindow()}")
     }
 
     /** Presses Tab until focus returns to a control seen before; every focused control must be on screen. */
@@ -300,6 +324,7 @@ class ReleaseHistoryPageInstrumentationTest {
 
     private companion object {
         const val TAG = "setup"
+        const val LOG_TAG = "ReleaseHistoryTest"
         const val TIMEOUT = 15_000L
         const val MAX_TABS = 120
         const val UNTAGGED = "(untagged)"
