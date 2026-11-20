@@ -106,7 +106,11 @@ jobs:
           avd-name: Three_Setup_Installer_Conformance_CI_${{ matrix.api-level }}
           emulator-port: 5554
           # Privileged cases keep their explicit device/authorizer opt-ins.
-          script: bash tools/run-ci-instrumentation.sh
+          # A freshly booted emulator may show "System UI isn't responding", whose dialog takes the window focus that the
+          # device tests wait for; hide_error_dialogs keeps such dialogs from appearing.
+          script: |
+            adb shell settings put global hide_error_dialogs 1
+            bash tools/run-ci-instrumentation.sh
 
       - name: Upload instrumentation reports and available device diagnostics
         if: always()
