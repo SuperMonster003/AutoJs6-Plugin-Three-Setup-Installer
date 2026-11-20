@@ -1,56 +1,65 @@
-3-Setup Installer 可從獨立首頁, AutoJs6 入口與腳本, 以及安裝套件的外部開啟和分享請求安裝, 更新, 檢查與解除安裝 Android 應用程式. 支援 Android 系統確認及透過 Shizuku, Root 或 Dhizuku 執行特權操作.
+3-Setup Installer 用於安裝, 更新, 檢查與解除安裝 Android 應用程式. 可以從它的首頁, AutoJs6 的安裝操作與腳本, 或其他應用程式開啟和分享的安裝套件發起安裝; 預設由 Android 系統確認, 經 Shizuku, Root 或 Dhizuku 授權後亦可以靜默安裝. 不連接 AutoJs6 也能單獨使用.
 
-1.2.2 已實作下述安裝, 應用程式管理與腳本功能. 目前版本可從 [GitHub Releases](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/releases/tag/v1.2.2) 或 AutoJs6 外掛程式中心取得. 宿主接入需要 AutoJs6 >= 6.8.0 (5299), `installer` 腳本 API 需要組建 5300 或更高版本. 裝置覆蓋與餘下驗收記錄在 [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md) 中. Dhizuku, 通知欄安裝和持久預設安裝器的腳本選項需要 AutoJs6 6.8.0 組建 5307 或以上及 installer V2 契約. 基本宿主接入仍支援組建 5299, V1 腳本方法從組建 5300 起可用.
+### 開始使用
 
-進階腳本選項需要 AutoJs6 構建 5308+ 並協商 V3 與 `advanced-install-options`. 沒有配置覆蓋時, 省略欄位保留原行為; 明確的 `false`/`none` 仍需對應支援. 正式發佈及裝置驗收狀態以路線圖為準.
+1. 從啓動器開啟 3-Setup Installer. 需要靜默安裝時, 在首頁 "授權方式" 中點按 Shizuku, Root 或 Dhizuku 對應的 "授權".
+2. 點按 "選擇安裝套件", 選擇一個或多個 APK, APKS, XAPK 等安裝套件.
+3. 在安裝對話框中核對版本, 簽章與權限, 然後點按 "安裝".
+4. 在 AutoJs6 "插件中心" 啟用本插件後, AutoJs6 中的安裝操作同樣顯示此對話框; 在其他應用程式中開啟或分享安裝套件時也可以選擇 3-Setup Installer.
 
-### 使用方法
+### 主要功能
 
-1. Android 7.0 及以上可在正式發佈後從官方 [Releases](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/releases) 安裝 APK, 或在官方索引收錄後使用 AutoJs6 外掛程式中心安裝精靈. 發佈前可使用維護者提供的組建或從原始碼建置進行測試. 透過啟動器圖示開啟獨立首頁.
-2. 在首頁檢查授權與預設安裝器狀態, 選擇單個或多個安裝套件. 透過所選對話框或通知確認, 並查看進行中工作與最近歷史.
-3. 接入 AutoJs6 時, 使用組建 5299 (6.8.0) 或更高版本, 並在插件中心啟用 `3-Setup Installer`. 腳本 API 需要組建 5300 或更高版本. Dhizuku, 通知欄安裝和持久預設安裝器的腳本選項需要 AutoJs6 6.8.0 組建 5307 或以上及 installer V2 契約. 基本宿主接入仍支援組建 5299, V1 腳本方法從組建 5300 起可用.
-4. 使用 AutoJs6 的安裝操作, 或在開啟及分享安裝套件時選擇 3-Setup Installer. 出現確認對話框時, 先檢查應用程式與安裝選項再確認安裝. 選擇特權方式時, 請準備 Shizuku, Root 或 Dhizuku 授權.
-5. 從首頁選單進入已安裝應用程式或設定. 可檢查本地安裝預設項, 外觀, 啟動器圖示和通知; 關於, 發行歷史與手動更新檢查位於設定中.
+- **安裝對話框**: 列出版本變化, 大小, SDK 與簽章比對, 標明新安裝, 更新, 重新安裝或降級; APK 分包, 權限與 "更多選項" 可以展開調整.
+- **授權方式**: 未授權時由 Android 逐次確認; 經 Shizuku, Root 或 Dhizuku 授權後可以靜默安裝, 允許降級或授予權限等. 設定中的 "授權方式順序與啟用" 決定自動選擇的順序.
+- **批量與記錄**: 一次可以安裝多個應用程式, 首頁顯示進行中的任務與 "最近安裝"; 記錄只保存應用程式資料與結果, 不保存安裝套件.
+- **已安裝應用程式**: 從首頁的 "更多" 選單進入, 可以搜尋, 排序, 查看應用程式資料或解除安裝應用程式.
+- **預設安裝器**: 把本插件設為開啟 APK 檔案的預設應用程式; 能否設定取決於授權方式與系統限制.
+- **安裝設定檔與黑名單**: 在設定中按安裝來源與套件名稱前綴預設安裝選項, 或用 "套件名稱黑名單" 與 "SharedUID 黑名單" 阻止指定應用程式的安裝.
+- **簽章檢查**: 新安裝套件的簽章與已安裝應用程式不一致時預設阻止, 只能在安裝對話框中對目前項目放行一次.
+- **設定**: 調整 "預設互動方式", 外觀, 啓動器圖標與通知, 亦可以查看 "發行歷史" 或手動 "檢查更新".
 
-### 授權方式
+### 在腳本中使用
 
-- `none`: 標準 PackageInstaller 工作階段; Android 會要求使用者確認每次安裝, 支援分包, 不提供特權選項.
-- `shizuku`: 需要 Shizuku 正在執行 (經無線偵錯, ADB 或 Root 啟動), 並獨立向 3-Setup Installer 授權. 向 AutoJs6 授權不等於向本外掛程式授權. 安裝, 解除安裝及其他使用者操作使用正在執行的 Shizuku 服務身分.
-- `root`: 需要已 Root 的裝置, 並由 Root 管理器向 3-Setup Installer 授予 `su`. 透過 libsu 提供特權安裝, 解除安裝, 使用者及預設安裝器操作. 每項請求是否允許仍由 Android 和 ROM 政策決定.
-- `dhizuku`: 需要 Android 8.0 (API 26)+, 已啟用的 Dhizuku 裝置/設定檔擁有者, 並向此外掛程式授權. 只操作目前擁有者使用者, 安裝者歸屬使用真實擁有者套件名稱. 不提供 shell/root 的降級, 測試套件, 略過低 targetSdk, 其他使用者, 任意安裝者歸屬或解除安裝保留資料選項. 外掛程式不自動設定擁有者.
-- **注意:** 腳本預設使用 `interaction: 'auto'`, 特權可用時預設靜默安裝. 宿主介面的安裝入口使用 `dialog`. 若 Android 要求確認, `auto` 允許系統確認並記錄至 `notes`. 需要安裝前確認時, 明確使用 `interaction: 'dialog'`. 明確指定 `silent` 時, 若特權不可用或需要系統確認, 會以 `AUTHORIZER_REQUIRED` 失敗.
-- 設定儲存授權次序與啟用狀態, 安裝選項及通知偏好. 首頁/外部安裝預設使用 `dialog`, 可明確選擇 `auto`, `silent` 或 `notification`. 宿主介面安裝入口使用 `dialog`; 腳本保留明確選項且預設仍為 `auto`. 修改在確認後儲存.
+AutoJs6 腳本透過 `installer` 模組安裝, 檢查與解除安裝應用程式. 下例先顯示安裝對話框, 由用戶確認後安裝; 同步方法需要在腳本線程中調用, 不能在 UI 線程中調用:
 
-### 相容性
+```js
+console.log(installer.status);
+try {
+    let result = installer.install('./app.apk', { interaction: 'dialog' });
+    console.log(result.packageName, result.versionName);
+} catch (e) {
+    console.error(e.code, e.message);
+}
+```
 
-- Android 7.0 (API 24) 及以上. 裝置驗證情況和剩餘涵蓋範圍記錄在 [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md) 中.
-- 略過低 targetSdk 封鎖自 Android 14 (API 34) 起存在; 更早的系統忽略該選項並在結果中註明.
-- 預設安裝器頁面區分一般偏好與持久化原則. 一般偏好透過 Shizuku 或 Root 設定, 仍受 ROM 限制. Dhizuku 的持久化原則支援 API 26-33; API 34+ 因無法驗證擁有者回呼, 在修改前拒絕. Root 僅在受支援裝置的使用者 0 中使用 system UID 輔助程序. 不覆寫衝突的持久原則. `persistentConfigured` 僅記錄此前成功設定的回執, 並非目前系統原則的證明; 被動查詢只回報 `preferred` 或 `none`.
-- `dhizuku`: 需要 Android 8.0 (API 26)+, 已啟用的 Dhizuku 裝置/設定檔擁有者, 並向此外掛程式授權. 只操作目前擁有者使用者, 安裝者歸屬使用真實擁有者套件名稱. 不提供 shell/root 的降級, 測試套件, 略過低 targetSdk, 其他使用者, 任意安裝者歸屬或解除安裝保留資料選項. 外掛程式不自動設定擁有者.
-- 權限授予請求及非 none 的 DexOpt 需要 Shizuku/Root, verify 需要 API 26+. 安裝原因需要 API 26+, 來源標籤需要 API 33+, 請求更新擁有權需要 API 34+. 擁有權僅能在首次安裝啟用, 更新或其他使用者已有該套件時可能被忽略; false 不撤銷既有 owner.
-- none/Dhizuku 僅能檢查目前使用者的已安裝簽章, Shizuku/Root 進行全域查詢. SharedUID 規則非空時, 無法排除其他使用者已有該套件會直接拒絕, 不能一次放行.
+- 不寫 `interaction` 時為 `auto`: 已授權特權方式時靜默安裝, 否則由 Android 請求確認.
+- 傳入陣列為批量安裝, 返回與來源順序對應的結果, 請逐項檢查 `ok` 與 `error`; `installAsync` 返回 Promise, 可以在 UI 線程中使用.
+- `installer.inspect(source)` 只讀取安裝套件的套件名稱, 版本等資料, 不安裝.
+- 完整的選項與事件見 [AutoJs6 文檔 > installer](https://docs.autojs6.com/#/installer).
+
+### 運行要求
+
+- Android 7.0 或更高版本. 與 AutoJs6 配合使用需要 AutoJs6 6.8.0 或更高版本, 單獨使用不需要 AutoJs6.
+- Shizuku, Root 與 Dhizuku 均為可選, 只在靜默安裝或使用特權選項時需要; Dhizuku 需要 Android 8.0 或更高版本.
+- 安裝與解除安裝權限用於請求 Android 確認, 查詢應用程式清單的權限用於已安裝應用程式與版本, 簽章比對; 通知權限用於通知欄安裝與進度通知.
+- 僅在手動檢查插件更新時連網, 安裝套件不會上載.
 
 ### 常見問題
 
-- **為何安裝仍要求確認?** `none` 始終需要 Android 系統確認, 特權方式亦可能受 Android 原則限制. `notification` 僅透過通知操作開啟系統確認, 不略過 Android 的確認要求.
-- **為甚麼安裝後無障礙服務受限制?** Android 13+ 可能因 `local-file` 或 `downloaded-file` 安裝來源觸發受限制設定. Shizuku/Root 現預設使用 `other`, 與 Android 命令列安裝一致; 明確指定的來源優先. `none`/Dhizuku 保留 `local-file` 預設值. 更新不會自動清除現有的限制. 對於信任的應用程式, 可在 Android 設定 > 應用程式 > 該應用程式 > 更多 > 允許受限制的設定中放行, 然後啟用其無障礙服務. 入口及額外檢查取決於 Android 版本和 ROM.
-- **能安裝 `.aab` 嗎?** 不能. Android App Bundle 是發佈格式, 請先用 bundletool 轉換為 `.apks` 集合. 外掛程式會識別 `.aab` 檔案並顯示其套件名稱與模組資訊.
-- **為何設定 `allowDowngrade: true` 後仍可能降級失敗?** 此選項僅請求允許降級; Android 根據韌體, 授權身分及應用程式是否 debuggable 作出決定. 已測 user 韌體中, Sony G8441 / API 28 與 Xiaomi 23046RP50C / API 35 拒絕非 debuggable 套件降級, Sony XQ-DQ72 / API 33 的 Root 路徑則接受. 這些結果只代表對應裝置. 請檢查傳回的錯誤與 `systemMessage`; Root 不保證所有 ROM 都允許降級.
-- **HyperOS 的安裝者套件名稱應如何填寫?** Shizuku 經 ADB 或無線偵錯啟動時, 不指定安裝者套件名稱會使用 `com.android.shell`. 已測 Xiaomi 23046RP50C / HyperOS / API 35 的靜默新安裝與更新均記錄此值. 明確指定 `com.android.shell` 或外掛程式自身套件名稱也都成功, 查詢到的安裝者與請求一致. 其他套件名稱或 ROM 版本仍以系統答覆為準.
-- **ColorOS 或其他系統提示外掛程式需要激活時怎麼辦?** 新安裝或強制停止後, Android 可能讓應用程式保持停止狀態, 等待使用者互動. 請在 AutoJs6 外掛程式中心使用提供的激活入口, 或從啟動器圖示開啟 3-Setup Installer 後重試. 這遵循 [Android 的停止狀態規則](https://developer.android.com/reference/android/content/pm/ApplicationInfo#FLAG_STOPPED). ColorOS 專項行為尚未完成實機驗證.
-- **為何設定預設安裝器會失敗, 或儲存的持久標記與目前處理程式不同?** 預設安裝器頁面區分一般偏好與持久化原則. 一般偏好透過 Shizuku 或 Root 設定, 仍受 ROM 限制. Dhizuku 的持久化原則支援 API 26-33; API 34+ 因無法驗證擁有者回呼, 在修改前拒絕. Root 僅在受支援裝置的使用者 0 中使用 system UID 輔助程序. 不覆寫衝突的持久原則. `persistentConfigured` 僅記錄此前成功設定的回執, 並非目前系統原則的證明; 被動查詢只回報 `preferred` 或 `none`.
-- **為甚麼來源沒有刪除?** 僅在安裝成功後嘗試刪除. 安裝失敗, 取消或逾時始終保留來源. 刪除失敗不會改變安裝成功的結果, 外部來源提供者可能拒絕刪除. 腳本的 `deleteSource` 由宿主刪除路徑或 `file://` 來源, 保留 `content://` 來源; 請檢查 `sourceDeleted` 和 `notes`. 批量中已確認成功的項目仍按 `deleteSource` 處理, 即使其他項目失敗或餘下佇列被取消.
-- **可以重試或恢復嗎?** 失敗的外部 URI 項目在來源及存取權限仍可用時可以重試. 來源或存取權限釋放後, 請重新開啟安裝套件. 程序重新啟動後, 恢復介面顯示已確認並儲存的結果, 未完成項目標為中斷. 恢復介面為唯讀, 不會自動安裝或重試. 再次開始前請檢查應用程式的實際安裝狀態.
+**已授權仍需確認安裝的原因**
 
-### 權限與安全
+Android 或廠商系統的原則仍可能要求用戶確認. 這時選擇 "自動" 會改由 Android 確認, 選擇靜默方式則以失敗結束並說明原因.
 
-- Binder 入口受 `org.autojs.permission.PLUGIN` 簽章權限保護, 只有 AutoJs6 能夠存取; 外部 "開啟方式" 入口只接受安裝套件檔案, 從不執行腳本.
-- REQUEST_INSTALL_PACKAGES 和 REQUEST_DELETE_PACKAGES 用於 Android 確認. QUERY_ALL_PACKAGES 用於已安裝應用程式管理, 版本與簽章比對以及預設安裝器偵測. 一般權限 ENFORCE_UPDATE_OWNERSHIP 用於明確請求更新擁有權, 不表示必然獲得 owner.
-- FOREGROUND_SERVICE 和 FOREGROUND_SERVICE_DATA_SYNC 支援安裝工作及臨時來源存取; POST_NOTIFICATIONS 用於通知. `notification` 互動要求通知與安裝頻道可用, 其他互動模式允許缺少通知權限.
-- Shizuku, Root 與 Dhizuku 用於請求的操作. 外掛程式不會自動設定裝置/設定檔擁有者. 持久預設規則只透過請求的設定或清除操作修改; 不上傳安裝套件.
-- 安裝, 檢查, 歷史和應用程式管理均可離線使用. INTERNET 僅在使用者手動檢查版本時存取插件固定的 GitHub Releases API, 間隔 12 小時. 不在背景檢查更新, 不上傳安裝套件.
-- 安裝套件來源以唯讀方式開啟. 歷史只儲存有限的應用程式中繼資料與結果, 不儲存套件內容或來源 URI, 錯誤中的路徑會遮蔽. 插件私人儲存空間不參與備份. 刪除歷史不會解除安裝對應應用程式或刪除來源.
-- 授予選項請求系統可授予的權限, 也可能包含 Android 14 的 USE_FULL_SCREEN_INTENT 等安裝器可改變的 app-op. 不保證全部宣告權限, 不授予無障礙, 懸浮視窗或任意簽章權限. restricted/system-fixed/policy-fixed 限制仍有效, 不額外設定 restricted 權限 allowlist 標誌.
-- 簽章檢查與本機套件名稱/SharedUID 精確黑名單適用於全部入口, 使用 `BLOCKED_BY_POLICY`. 僅真實 dialog 可對目前項目一次放行 mismatch/unknown 簽章, Android 仍會驗證; 靜默/通知不能放行, 黑名單不可覆寫. 權限預覽顯示實際選取 APK 分包宣告的權限, 不代表已授予權限.
+**安裝後無法開啟無障礙服務的原因**
 
-安裝指南與目前進度請參閱 [項目 README](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer) 與 [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md).
+Android 13 起會限制以本機檔案方式安裝的應用程式使用無障礙等受限設定; 經 Shizuku 或 Root 安裝時預設不標記為本機檔案. 對信任的應用程式, 在系統設定的應用程式資料頁右上角選單中允許受限設定, 再開啟無障礙服務; 入口因系統而異.
+
+**無法安裝 .aab 檔案的原因**
+
+Android App Bundle 是發佈格式, 不能直接安裝. 請先用 bundletool 轉換為 .apks 安裝套件; 插件可以顯示 .aab 檔案的套件名稱與模組資料.
+
+**允許降級後仍降級失敗的原因**
+
+"允許降級" 只是向系統提出請求, 是否接受由系統版本, 授權方式以及應用程式是否可調試決定. 失敗時結果中會附上系統返回的訊息.
+
+授權方式, 安裝選項與權限的詳細說明見 [項目主頁](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer).

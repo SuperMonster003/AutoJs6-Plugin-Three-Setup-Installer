@@ -44,7 +44,7 @@ import io.github.supermonster003.autojs6.plugin.three.setup.installer.ui.Default
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.ui.HomeActivity
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.ui.InstalledAppsActivity
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.ui.InstallProfilesActivity
-import io.github.supermonster003.autojs6.plugin.three.setup.installer.ui.ReleaseHistoryActivity
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.ui.DocumentActivity
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.ui.SettingsActivity
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.ui.appearance.AppearancePreferences
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.ui.appearance.HostAppearanceActivity
@@ -65,7 +65,7 @@ class StandaloneAppearanceDeviceTest {
     private val pages = if (InstrumentationRegistry.getArguments().getString("profileAppearanceOnly") == "true")
         listOf(InstallProfilesActivity::class.java)
     else listOf(HomeActivity::class.java, SettingsActivity::class.java, DefaultInstallerActivity::class.java,
-        InstalledAppsActivity::class.java, InstallProfilesActivity::class.java, AboutActivity::class.java, ReleaseHistoryActivity::class.java)
+        InstalledAppsActivity::class.java, InstallProfilesActivity::class.java, AboutActivity::class.java, DocumentActivity::class.java)
 
     @Test fun lightNavajoPagesKeepControlsInsideInsets() = withRestoredState {
         exercisePages(Case("en-light-font1", "en", 1f, false, null))
@@ -222,7 +222,7 @@ class StandaloneAppearanceDeviceTest {
             check(state != activity.getString(R.string.apps_loading)) { "Application list is loading" }
             assertNotEquals(activity.getString(R.string.apps_load_failed), state)
         }
-        if (activity is ReleaseHistoryActivity) check(decor.findViewWithTag<TextView>("document").text.toString() != activity.getString(R.string.default_installer_loading))
+        if (activity is DocumentActivity) check(decor.findViewWithTag<TextView>("document").text.toString() != activity.getString(R.string.default_installer_loading))
         val edgeRoot = if (scroll is ListView) {
             check(scroll.count > 0 && scroll.childCount > 0)
             val position = if (bottom) scroll.count - 1 else 0

@@ -4,13 +4,22 @@
 
 ******
 
+# v1.2.3
+
+###### 2026/11/20
+
+* `Fix` Installations that had actually succeeded were shown as cancelled when the app that requested them was replaced during the installation (for example AutoJs6 updating itself), or when a system installer such as the one on ColorOS completed the installation its own way; the result now follows the installed app's version and signature
+* `Improvement` The release history page now expands and collapses by version: a collapsed version shows its date and the number of entries per category, an expanded one names each category once; all versions can be expanded or collapsed at once, and the newest one opens expanded; the page is titled "Release history" (formerly "Version history") with the plugin name as the subtitle, and its entries in the settings, on the About page and in the update dialog are renamed to match
+* `Improvement` Rewrote the instructions shown in Plugin Center in five parts: getting started, main features, using it in scripts, requirements and FAQ
+* `Dependency` Added Jetpack Compose BOM 2026.09.00 (release history page)
+* `Dependency` Upgraded shared build plugins version 1.9.0 -> 1.9.7
+
 # v1.2.2
 
-###### 2026/11/18
+###### 2026/11/14
 
 * `Fix` Shizuku/Root installations no longer default to a local-file source that can restrict accessibility settings on Android 13+; explicit package source choices are preserved
 * `Fix` Misleading text after successfully installing or updating an application without a launchable interface could be mistaken for an installation failure
-* `Fix` Installations that had actually succeeded were shown as cancelled when the app that requested them was replaced during the installation (for example AutoJs6 updating itself), or when a system installer such as the one on ColorOS completed the installation its own way; the result now follows the installed app's version and signature
 * `Improvement` Redesigned installation dialog: application details appear in an aligned table (version, size, SDK and signature comparison) labeled as a new install, update, reinstall or downgrade; APK components, permissions and rarely used options are folded by default; text has more line spacing and separation
 * `Improvement` With the Automatic authorization method, the installation dialog and the installation result show the method actually used (for example Shizuku or system confirmation)
 

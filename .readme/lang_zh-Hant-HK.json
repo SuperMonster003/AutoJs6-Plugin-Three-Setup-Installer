@@ -113,7 +113,6 @@
   "text_link_installer_docs": "安裝器模組文件",
   "text_link_reference_projects": "InstallerX 與 InstallerX Revived (架構參考, GPL-3.0, 未重用程式碼)",
   "text_link_third_party_notices": "第三方聲明",
-  "p_instruction_more": "安裝指南與目前進度請參閱 [項目 README]({{ repo_url }}) 與 [ROADMAP.md]({{ roadmap_url }}).",
   "p_quick_start_details": "來源可為路徑, `file://` 或有讀取權限的 `content://` URI. 陣列表示獨立批量項目, `{ splits: [...] }` 表示一個應用程式的分包. `session(...)` 建立後立即開始, 傳回物件支援 `cancel()` 和 `wait()`. 同步呼叫可能擲出 `InstallerError`, 且不能在 UI 執行緒執行. 讀取 `installer.status`, 建立 `installer.session(...)` 和呼叫 `session.wait()` 同樣受此限制. UI 執行緒請使用 Async 方法, 或在腳本工作執行緒執行同步操作. 工作階段物件只能在建立它的腳本執行緒使用. 請處理 Promise 拒絕, 並逐項檢查批量結果的 `ok` 與 `error`. 外掛程式缺失或不相容時回報 `PLUGIN_UNAVAILABLE`. `setDefault` 傳回是否達到請求狀態, 清除預設項成功亦傳回 true. `app.uninstall` 仍是宿主的系統解除安裝快捷入口, 需要特權選項時使用 `installer.uninstall`. 完整選項與事件見 [installer API 文件]({{ docs_installer_url }}).",
   "example_probe": "唯讀查詢可用狀態與相容資訊.",
   "example_install": "需要 Shizuku 授權; silent 在 Android 要求確認時失敗.",
@@ -130,5 +129,59 @@
   "p_profiles_requirements": "宿主介面及腳本使用來源配置需要 AutoJs6 {{ profiles_host_version_code }}+ 及 V3 `source-profiles` 能力. 舊宿主或未協商的請求保留原行為. 省略欄位可繼承配置, 明確的 `false`/`auto`/`current`/`none` 覆蓋配置. 只有 `installer`, `installReason`, `packageSource` 接受 null 清除繼承; 後兩者的 null 仍需進階選項能力. `interaction`, `timeout`, `continueOnError` 屬於整次工作階段, 不進入配置.",
   "p_profiles_lifecycle": "任務開始處理時固定來源配置及自動授權排序, 編輯設定不會改變正在處理的任務或同批後續項目. 已確認的重試沿用完整確認選項, 未確認的重試重新讀取入口預設值及配置. 每次仍重新檢查來源和簽章, 不重用一次性策略放行. 配置不能繞過簽章, 黑名單, 授權或系統限制.",
   "p_profiles_cleanup": "協商來源配置後, 成功項目的 `sourceDeleteRequested` 表示最終刪除請求, 不代表已刪除. 宿主明確的 `deleteSource: false` 禁止刪除; 決策欄位缺失或類型錯誤時保留檔案並記錄 notes. 宿主等待批次結果, 保留與失敗, 未處理或要求保留項目共用的檔案及可確認的別名. 本機外部入口也保留同批重複 URI/標準化路徑. `sourceDeleted` 才報告實際清理結果, content URI 不由宿主刪除.",
-  "example_profiles": "來源配置範例: 需要宿主 5312+; 保留檔案並清除三個繼承欄位, 呼叫函式才開始安裝"
+  "example_profiles": "來源配置範例: 需要宿主 5312+; 保留檔案並清除三個繼承欄位, 呼叫函式才開始安裝",
+  "instruction_p_what": "3-Setup Installer 用於安裝, 更新, 檢查與解除安裝 Android 應用程式. 可以從它的首頁, AutoJs6 的安裝操作與腳本, 或其他應用程式開啟和分享的安裝套件發起安裝; 預設由 Android 系統確認, 經 Shizuku, Root 或 Dhizuku 授權後亦可以靜默安裝. 不連接 AutoJs6 也能單獨使用.",
+  "instruction_h3_start": "開始使用",
+  "instruction_start_steps": [
+    "從啓動器開啟 3-Setup Installer. 需要靜默安裝時, 在首頁 \"授權方式\" 中點按 Shizuku, Root 或 Dhizuku 對應的 \"授權\".",
+    "點按 \"選擇安裝套件\", 選擇一個或多個 APK, APKS, XAPK 等安裝套件.",
+    "在安裝對話框中核對版本, 簽章與權限, 然後點按 \"安裝\".",
+    "在 AutoJs6 \"插件中心\" 啟用本插件後, AutoJs6 中的安裝操作同樣顯示此對話框; 在其他應用程式中開啟或分享安裝套件時也可以選擇 3-Setup Installer."
+  ],
+  "instruction_h3_features": "主要功能",
+  "instruction_features": [
+    "**安裝對話框**: 列出版本變化, 大小, SDK 與簽章比對, 標明新安裝, 更新, 重新安裝或降級; APK 分包, 權限與 \"更多選項\" 可以展開調整.",
+    "**授權方式**: 未授權時由 Android 逐次確認; 經 Shizuku, Root 或 Dhizuku 授權後可以靜默安裝, 允許降級或授予權限等. 設定中的 \"授權方式順序與啟用\" 決定自動選擇的順序.",
+    "**批量與記錄**: 一次可以安裝多個應用程式, 首頁顯示進行中的任務與 \"最近安裝\"; 記錄只保存應用程式資料與結果, 不保存安裝套件.",
+    "**已安裝應用程式**: 從首頁的 \"更多\" 選單進入, 可以搜尋, 排序, 查看應用程式資料或解除安裝應用程式.",
+    "**預設安裝器**: 把本插件設為開啟 APK 檔案的預設應用程式; 能否設定取決於授權方式與系統限制.",
+    "**安裝設定檔與黑名單**: 在設定中按安裝來源與套件名稱前綴預設安裝選項, 或用 \"套件名稱黑名單\" 與 \"SharedUID 黑名單\" 阻止指定應用程式的安裝.",
+    "**簽章檢查**: 新安裝套件的簽章與已安裝應用程式不一致時預設阻止, 只能在安裝對話框中對目前項目放行一次.",
+    "**設定**: 調整 \"預設互動方式\", 外觀, 啓動器圖標與通知, 亦可以查看 \"發行歷史\" 或手動 \"檢查更新\"."
+  ],
+  "instruction_h3_script": "在腳本中使用",
+  "instruction_p_script": "AutoJs6 腳本透過 `installer` 模組安裝, 檢查與解除安裝應用程式. 下例先顯示安裝對話框, 由用戶確認後安裝; 同步方法需要在腳本線程中調用, 不能在 UI 線程中調用:",
+  "instruction_script_notes": [
+    "不寫 `interaction` 時為 `auto`: 已授權特權方式時靜默安裝, 否則由 Android 請求確認.",
+    "傳入陣列為批量安裝, 返回與來源順序對應的結果, 請逐項檢查 `ok` 與 `error`; `installAsync` 返回 Promise, 可以在 UI 線程中使用.",
+    "`installer.inspect(source)` 只讀取安裝套件的套件名稱, 版本等資料, 不安裝.",
+    "完整的選項與事件見 [AutoJs6 文檔 > installer]({{ docs_installer_url }})."
+  ],
+  "instruction_h3_requirements": "運行要求",
+  "instruction_requirements": [
+    "Android {{ min_android_version }} 或更高版本. 與 AutoJs6 配合使用需要 AutoJs6 {{ required_host_version_name }} 或更高版本, 單獨使用不需要 AutoJs6.",
+    "Shizuku, Root 與 Dhizuku 均為可選, 只在靜默安裝或使用特權選項時需要; Dhizuku 需要 Android 8.0 或更高版本.",
+    "安裝與解除安裝權限用於請求 Android 確認, 查詢應用程式清單的權限用於已安裝應用程式與版本, 簽章比對; 通知權限用於通知欄安裝與進度通知.",
+    "僅在手動檢查插件更新時連網, 安裝套件不會上載."
+  ],
+  "instruction_h3_faq": "常見問題",
+  "instruction_faq": [
+    {
+      "q": "已授權仍需確認安裝的原因",
+      "a": "Android 或廠商系統的原則仍可能要求用戶確認. 這時選擇 \"自動\" 會改由 Android 確認, 選擇靜默方式則以失敗結束並說明原因."
+    },
+    {
+      "q": "安裝後無法開啟無障礙服務的原因",
+      "a": "Android 13 起會限制以本機檔案方式安裝的應用程式使用無障礙等受限設定; 經 Shizuku 或 Root 安裝時預設不標記為本機檔案. 對信任的應用程式, 在系統設定的應用程式資料頁右上角選單中允許受限設定, 再開啟無障礙服務; 入口因系統而異."
+    },
+    {
+      "q": "無法安裝 .aab 檔案的原因",
+      "a": "Android App Bundle 是發佈格式, 不能直接安裝. 請先用 bundletool 轉換為 .apks 安裝套件; 插件可以顯示 .aab 檔案的套件名稱與模組資料."
+    },
+    {
+      "q": "允許降級後仍降級失敗的原因",
+      "a": "\"允許降級\" 只是向系統提出請求, 是否接受由系統版本, 授權方式以及應用程式是否可調試決定. 失敗時結果中會附上系統返回的訊息."
+    }
+  ],
+  "instruction_p_more": "授權方式, 安裝選項與權限的詳細說明見 [項目主頁]({{ repo_url }})."
 }

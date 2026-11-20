@@ -316,8 +316,14 @@
     <string name="profile_title">安装配置文件</string>
     <string name="profile_unreadable">无法读取已保存的配置文件. 修复或明确重置配置文件之前, 安装请求将被阻止.</string>
     <string name="profile_unsaved">存在未保存的更改. 保存列表以使其生效, 或取消以放弃更改.</string>
+    <string name="release_history">发行历史</string>
+    <string name="release_history_collapse_all">收起全部</string>
+    <string name="release_history_collapsed">已收起</string>
     <string name="release_history_error">无法读取内置文档.</string>
-    <string name="release_history_title">版本历史</string>
+    <string name="release_history_expand_all">展开全部</string>
+    <string name="release_history_expanded">已展开</string>
+    <string name="release_history_summary">查看应用内置的发行历史</string>
+    <string name="release_history_unavailable">无法加载发行历史</string>
     <string name="settings_appearance">外观</string>
     <string name="settings_authorizer_order">授权方式顺序与启用</string>
     <string name="settings_authorizers_note">自动选择使用首个已启用且当前已授权的方式. 请至少启用一项. 宿主或脚本显式选择的方式不变.</string>

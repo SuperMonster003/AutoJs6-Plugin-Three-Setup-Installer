@@ -52,7 +52,7 @@ The plugin handles package inspection, installation and results independently of
 
 ******
 
-1.2.2 documents the implemented installation, app-management and script features below. This version is available from [GitHub Releases](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/releases/tag/v1.2.2) and the AutoJs6 plugin center. Host integration requires AutoJs6 >= 6.8.0 (5299), and the `installer` script API requires build 5300 or later. Device coverage and remaining acceptance work are recorded in [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md). Dhizuku, notification installation and persistent-default script options require AutoJs6 6.8.0 build 5307 or later with installer contract V2. Base host integration remains available from build 5299, and V1 script methods from build 5300.
+1.2.3 documents the implemented installation, app-management and script features below. This version is available from [GitHub Releases](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/releases/tag/v1.2.3) and the AutoJs6 plugin center. Host integration requires AutoJs6 >= 6.8.0 (5299), and the `installer` script API requires build 5300 or later. Device coverage and remaining acceptance work are recorded in [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md). Dhizuku, notification installation and persistent-default script options require AutoJs6 6.8.0 build 5307 or later with installer contract V2. Base host integration remains available from build 5299, and V1 script methods from build 5300.
 
 ******
 
@@ -60,7 +60,7 @@ The plugin handles package inspection, installation and results independently of
 
 ******
 
-Implemented features in 1.2.2:
+Implemented features in 1.2.3:
 
 - Package formats: `.apk`, `.apks`, `.xapk`, `.apkm`, `.apkz` and ZIP archives that contain APKs; split packages are selected for the device; `.aab` files are recognized and described but not installed.
 - `none` uses Android confirmation. Fresh settings try usable `shizuku -> root -> dhizuku -> none` for `auto`; each method can be reordered or disabled. Existing saved three-method orders keep their relative order and enabled choices, with Dhizuku inserted before `none` but disabled. An explicit authorizer never falls back.
@@ -279,13 +279,22 @@ The plugin's plans and progress are maintained as a checkable list in ROADMAP.md
 
 ******
 
+#### v1.2.3
+
+_2026/11/20_
+
+- `Fix` Installations that had actually succeeded were shown as cancelled when the app that requested them was replaced during the installation (for example AutoJs6 updating itself), or when a system installer such as the one on ColorOS completed the installation its own way; the result now follows the installed app's version and signature
+- `Improvement` The release history page now expands and collapses by version: a collapsed version shows its date and the number of entries per category, an expanded one names each category once; all versions can be expanded or collapsed at once, and the newest one opens expanded; the page is titled "Release history" (formerly "Version history") with the plugin name as the subtitle, and its entries in the settings, on the About page and in the update dialog are renamed to match
+- `Improvement` Rewrote the instructions shown in Plugin Center in five parts: getting started, main features, using it in scripts, requirements and FAQ
+- `Dependency` Added Jetpack Compose BOM 2026.09.00 (release history page)
+- `Dependency` Upgraded shared build plugins version 1.9.0 -> 1.9.7
+
 #### v1.2.2
 
-_2026/11/18_
+_2026/11/14_
 
 - `Fix` Shizuku/Root installations no longer default to a local-file source that can restrict accessibility settings on Android 13+; explicit package source choices are preserved
 - `Fix` Misleading text after successfully installing or updating an application without a launchable interface could be mistaken for an installation failure
-- `Fix` Installations that had actually succeeded were shown as cancelled when the app that requested them was replaced during the installation (for example AutoJs6 updating itself), or when a system installer such as the one on ColorOS completed the installation its own way; the result now follows the installed app's version and signature
 - `Improvement` Redesigned installation dialog: application details appear in an aligned table (version, size, SDK and signature comparison) labeled as a new install, update, reinstall or downgrade; APK components, permissions and rarely used options are folded by default; text has more line spacing and separation
 - `Improvement` With the Automatic authorization method, the installation dialog and the installation result show the method actually used (for example Shizuku or system confirmation)
 
@@ -297,25 +306,6 @@ _2026/10/17_
 - `Fix` In the Arabic interface, 3-Setup Installer no longer appears reversed as Setup Installer-3
 - `Improvement` Plugin Center icons use the sizes, positions, light and dark artwork, and circular backgrounds adjusted in Icon Studio, retaining reproducible sources and parameters
 - `Improvement` Android App info icons share Icon Studio artwork and light/dark backgrounds while preserving transparent Plugin Center artwork and existing launcher choices
-
-#### v1.2.0
-
-_2026/10/02_
-
-- `Feature` Advanced installation options: `grantAllRequestedPermissions`, `requestUpdateOwnership`, `dexopt` (`none`/`verify`/`speed-profile`/`speed`), `installReason` and `packageSource`. Unsupported platforms or authorizers reject requests instead of silently ignoring them. `none` adds no manual compilation and does not disable Android compilation.
-- `Feature` Signature checks and local exact package-name/SharedUID blacklists apply to every entry point, using `BLOCKED_BY_POLICY`. Only a real dialog can allow a mismatch/unknown signature once for that item; Android still validates it. Silent/notification modes cannot grant this exception, and a blacklist cannot be overridden. Permission preview describes declarations in the selected APK splits, not granted permissions.
-- `Feature` Source profiles can be named, enabled, edited and reordered in settings. The first enabled profile matching both origin and actual package-name prefix applies; profiles never stack, and any origin includes Home. A profile supplies partial defaults for 12 per-app options. Explicit requests take precedence, and the real confirmation page can make final changes.
-- `Improvement` Advanced script options require AutoJs6 build 5308+ and negotiated V3 with `advanced-install-options`. Without profile overrides, omission preserves existing behavior; explicit `false`/`none` still requires support. The roadmap records official release and device acceptance status.
-- `Improvement` Successful results may report observed `updateOwner` and `dexopt`. Null means Android returned no owner to the current calling identity, possibly due to visibility filtering; it does not prove global absence. A failed read omits the field and adds notes. DexOpt states are accepted/failed/cancelled/timeout/unavailable/unknown; accepted includes a system skip and does not prove compilation ran. Failure of this extra step preserves confirmed installation success.
-- `Improvement` Permission-grant requests and non-none DexOpt require Shizuku/Root; verify needs API 26+. Install reason needs API 26+, package source API 33+, and requesting update ownership API 34+. Ownership can start only on initial installation; updates or an existing package in another user may be ignored. False does not revoke an existing owner.
-- `Improvement` The grant option requests permissions the system can grant, including supported installer-changeable app-ops such as USE_FULL_SCREEN_INTENT on Android 14. It does not guarantee every declared permission or grant accessibility, overlays or arbitrary signature permissions. Restricted/system-fixed/policy-fixed constraints remain, without an extra restricted-permission allowlist flag.
-- `Improvement` none/Dhizuku can inspect installed signatures only in the current user; Shizuku/Root query globally. With nonempty SharedUID rules, uncertainty about a package in another user is blocked without an exception.
-- `Improvement` Host UI and script profiles require AutoJs6 5312+ and the V3 `source-profiles` feature. Older or non-negotiated requests retain their behavior. Omitted fields may inherit defaults; explicit `false`/`auto`/`current`/`none` override them. Only `installer`, `installReason` and `packageSource` accept null resets; the latter two still require advanced-option support. `interaction`, `timeout` and `continueOnError` remain session-wide and are excluded from profiles.
-- `Improvement` Profiles and automatic authorizer ordering are frozen when processing starts; settings edits cannot change that task or later batch items. A confirmed retry retains the complete confirmed options; an unconfirmed retry reads entry defaults and profiles again. Every retry rechecks sources and signatures without reusing a one-time policy exception. Profiles cannot bypass signatures, blacklists, authorization or Android limits.
-- `Improvement` After profile negotiation, successful items report `sourceDeleteRequested` as the effective request, not proof of deletion. Explicit host `deleteSource: false` vetoes cleanup; missing or mistyped decisions retain files with notes. The host waits for batch results and retains files or proven aliases shared with failed, unprocessed or retained items. Local external entries also retain repeated batch URIs/normalized paths. `sourceDeleted` reports actual cleanup; the host never deletes content URIs.
-- `Improvement` Consistent visual sizing for launcher and Plugin Center icons, with transparent backgrounds and neutral black, white or grayscale artwork
-- `Dependency` Upgrade installer-api.aar to contract V3 (MPL 2.0), retaining V1/V2 and all eleven AIDL transactions; advanced script options require host build 5308+. The same V3 contract adds the optional source-profiles feature and profile fields from host 5312, with all eleven AIDL transactions unchanged
-- `Dependency` Upgrade the shared package archive parser (MPL 2.0) to verify the actual manifest root and sharedUserId; ambiguous input is rejected. Read permission declarations from real Android-namespace elements, excluding comment and extension-namespace decoys and refusing conflicting compiled attributes.
 
 ##### For more release history
 

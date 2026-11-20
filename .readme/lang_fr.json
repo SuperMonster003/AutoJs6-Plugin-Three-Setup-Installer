@@ -113,7 +113,6 @@
   "text_link_installer_docs": "Documentation du module installer",
   "text_link_reference_projects": "InstallerX et InstallerX Revived (référence d'architecture, GPL-3.0, aucun code réutilisé)",
   "text_link_third_party_notices": "Avis de tiers",
-  "p_instruction_more": "Consultez le [README du projet]({{ repo_url }}) et [ROADMAP.md]({{ roadmap_url }}) pour le guide d'installation et l'avancement actuel.",
   "p_quick_start_details": "Une source peut être un chemin, une URI `file://` ou une URI `content://` lisible. Un tableau représente des éléments indépendants; `{ splits: [...] }` installe une seule application. `session(...)` démarre immédiatement; l'objet retourné propose `cancel()` et `wait()`. Les appels synchrones peuvent lever `InstallerError` et sont interdits sur le thread UI. Cela concerne aussi la lecture de `installer.status`, la création de `installer.session(...)` et l'appel de `session.wait()`. Utilisez les méthodes Async sur le thread UI, ou exécutez les opérations synchrones sur un thread de travail du script. Un objet session doit être utilisé uniquement sur le thread du script qui l'a créé. Gérez les rejets des Promise et vérifiez `ok` et `error` pour chaque résultat du lot. Un plugin absent ou incompatible produit `PLUGIN_UNAVAILABLE`. `setDefault` indique si l'état demandé a été atteint, y compris l'effacement du choix par défaut. `app.uninstall` reste le raccourci système de l'hôte; utilisez `installer.uninstall` pour les options privilégiées. Consultez la [documentation API installer]({{ docs_installer_url }}) pour les options et événements.",
   "example_probe": "Informations de disponibilité et de compatibilité en lecture seule.",
   "example_install": "Autorisation Shizuku requise; silent échoue si Android exige une confirmation.",
@@ -130,5 +129,59 @@
   "p_profiles_requirements": "Les profils de l'interface hôte et des scripts nécessitent AutoJs6 {{ profiles_host_version_code }}+ et V3 `source-profiles`. Les anciennes demandes ou celles sans négociation gardent leur comportement. Les champs omis héritent des valeurs; `false`/`auto`/`current`/`none` explicites les remplacent. Seuls `installer`, `installReason` et `packageSource` acceptent null pour réinitialiser; les deux derniers exigent encore les options avancées. `interaction`, `timeout` et `continueOnError` restent propres à la session, hors profils.",
   "p_profiles_lifecycle": "Les profils et l'ordre des autorisations automatiques sont figés au début du traitement; une modification ne change ni la tâche ni la suite du lot. Une nouvelle tentative confirmée conserve toutes les options confirmées; sans confirmation, elle relit les valeurs d'entrée et profils. Chaque tentative revérifie sources et signatures sans réutiliser une exception ponctuelle. Les profils ne contournent ni signatures, ni listes noires, ni autorisations ou limites Android.",
   "p_profiles_cleanup": "Après négociation, `sourceDeleteRequested` indique la demande effective des éléments réussis, pas une suppression accomplie. `deleteSource: false` explicite côté hôte interdit la suppression; une décision absente ou mal typée conserve le fichier avec notes. Après les résultats du lot, les fichiers ou alias prouvés partagés avec des éléments échoués, non traités ou conservés restent présents. Les entrées externes locales conservent aussi les URI/chemins normalisés répétés. `sourceDeleted` indique le nettoyage réel; l'hôte ne supprime jamais les URI content.",
-  "example_profiles": "Exemple de profil: hôte 5312+; conserver les fichiers et réinitialiser trois champs hérités; l'appel démarre l'installation"
+  "example_profiles": "Exemple de profil: hôte 5312+; conserver les fichiers et réinitialiser trois champs hérités; l'appel démarre l'installation",
+  "instruction_p_what": "3-Setup Installer installe, met à jour, inspecte et désinstalle des applications Android. Une installation peut partir de son écran d'accueil, des actions d'installation et des scripts d'AutoJs6, ou des paquets ouverts ou partagés par d'autres applications; Android confirme chacune par défaut, et avec Shizuku, Root ou Dhizuku autorisé, l'installation silencieuse est aussi possible. Il fonctionne aussi seul, sans AutoJs6.",
+  "instruction_h3_start": "Prise en main",
+  "instruction_start_steps": [
+    "Ouvrez 3-Setup Installer depuis le lanceur. Pour l'installation silencieuse, touchez \"Autoriser\" pour Shizuku, Root ou Dhizuku dans \"Autorisation\" sur l'écran d'accueil.",
+    "Touchez \"Choisir des paquets à installer\" et sélectionnez un ou plusieurs paquets APK, APKS, XAPK ou similaires.",
+    "Vérifiez la version, la signature et les permissions dans la boîte de dialogue d'installation, puis touchez \"Installer\".",
+    "Une fois ce plugin activé dans le \"Centre des plugins\" d'AutoJs6, les actions d'installation d'AutoJs6 affichent la même boîte de dialogue; 3-Setup Installer peut aussi être choisi lorsqu'une autre application ouvre ou partage un paquet."
+  ],
+  "instruction_h3_features": "Fonctionnalités principales",
+  "instruction_features": [
+    "**Boîte de dialogue d'installation**: affiche le changement de version, la taille, la comparaison du SDK et de la signature, et distingue nouvelle installation, mise à jour, réinstallation ou version antérieure; les composants APK, les permissions et \"Plus d'options\" peuvent être développés et ajustés.",
+    "**Autorisation**: sans autorisation, Android confirme chaque installation; avec Shizuku, Root ou Dhizuku, l'installation peut être silencieuse, accepter une version antérieure, accorder des permissions, etc. \"Ordre et activation des autorisations\" dans les paramètres fixe l'ordre de la sélection automatique.",
+    "**Lots et historique**: plusieurs applications peuvent être installées d'un coup, et l'écran d'accueil affiche les tâches en cours et les \"Installations récentes\"; l'historique ne garde que les informations des applications et les résultats, jamais les paquets.",
+    "**Applications installées**: accessible depuis le menu \"Plus\" de l'écran d'accueil, pour rechercher, trier, consulter les informations d'une application ou la désinstaller.",
+    "**Installateur par défaut**: définit ce plugin comme application par défaut pour ouvrir les fichiers APK; la possibilité dépend de l'autorisation et des restrictions du système.",
+    "**Profils d'installation et listes noires**: prédéfinissez dans les paramètres des options d'installation par source et par préfixe de nom de paquet, ou bloquez l'installation d'applications précises avec \"Liste noire des paquets\" et \"Liste noire des UID partagés\".",
+    "**Contrôle de la signature**: un paquet dont la signature diffère de celle de l'application installée est bloqué par défaut et ne peut être autorisé qu'une fois, pour cet élément, dans la boîte de dialogue d'installation.",
+    "**Paramètres**: réglez \"Interaction par défaut\", l'apparence, l'icône du lanceur et les notifications, ou consultez \"Historique des versions\" et lancez \"Rechercher les mises à jour\" manuellement."
+  ],
+  "instruction_h3_script": "Utilisation dans les scripts",
+  "instruction_p_script": "Les scripts AutoJs6 installent, inspectent et désinstallent des applications avec le module `installer`. L'exemple ci-dessous affiche la boîte de dialogue d'installation et installe après confirmation de l'utilisateur; les méthodes synchrones doivent être appelées sur un thread de script, pas sur le thread UI:",
+  "instruction_script_notes": [
+    "Sans `interaction`, le mode est `auto`: l'installation est silencieuse si une autorisation privilégiée est disponible, sinon Android demande une confirmation.",
+    "Un tableau lance une installation par lots et renvoie les résultats dans l'ordre des sources; vérifiez `ok` et `error` pour chaque élément. `installAsync` renvoie une Promise et peut être utilisé sur le thread UI.",
+    "`installer.inspect(source)` lit seulement le nom du paquet, la version et d'autres informations, sans installer.",
+    "Toutes les options et tous les événements sont décrits dans [Documentation AutoJs6 > installer]({{ docs_installer_url }})."
+  ],
+  "instruction_h3_requirements": "Prérequis",
+  "instruction_requirements": [
+    "Android {{ min_android_version }} ou version ultérieure. L'utilisation avec AutoJs6 requiert AutoJs6 {{ required_host_version_name }} ou version ultérieure; l'utilisation seule ne nécessite pas AutoJs6.",
+    "Shizuku, Root et Dhizuku sont facultatifs et ne servent qu'à l'installation silencieuse ou aux options privilégiées; Dhizuku requiert Android 8.0 ou version ultérieure.",
+    "Les permissions d'installation et de désinstallation demandent la confirmation d'Android, celle de la liste des applications sert aux applications installées, aux versions et à la comparaison des signatures, et celle des notifications à l'installation par notification et aux notifications de progression.",
+    "Le réseau n'est utilisé que pour rechercher manuellement les mises à jour du plugin; les paquets ne sont jamais envoyés."
+  ],
+  "instruction_h3_faq": "Questions fréquentes",
+  "instruction_faq": [
+    {
+      "q": "Pourquoi une confirmation reste nécessaire après autorisation",
+      "a": "La politique d'Android ou du fabricant peut toujours exiger une confirmation. Dans ce cas, \"Automatique\" passe à la confirmation d'Android, tandis qu'un mode silencieux échoue en indiquant la raison."
+    },
+    {
+      "q": "Pourquoi le service d'accessibilité ne peut pas être activé après l'installation",
+      "a": "Depuis Android 13, les applications installées depuis un fichier local ne peuvent pas utiliser l'accessibilité et les autres paramètres restreints; les installations via Shizuku ou Root ne sont pas marquées comme fichier local par défaut. Pour une application de confiance, autorisez les paramètres restreints depuis le menu en haut à droite de sa page d'informations dans les paramètres système, puis activez son service d'accessibilité; l'emplacement varie selon le système."
+    },
+    {
+      "q": "Pourquoi les fichiers .aab ne peuvent pas être installés",
+      "a": "Un Android App Bundle est un format de publication et ne s'installe pas directement. Convertissez-le d'abord en paquet .apks avec bundletool; le plugin peut afficher le nom du paquet et les modules d'un fichier .aab."
+    },
+    {
+      "q": "Pourquoi une version antérieure échoue même autorisée",
+      "a": "\"Autoriser une version antérieure\" ne fait que demander au système; l'acceptation dépend de la version du système, de l'autorisation et du caractère débogable de l'application. En cas d'échec, le résultat contient le message renvoyé par le système."
+    }
+  ],
+  "instruction_p_more": "Les détails sur les autorisations, les options d'installation et les permissions figurent sur la [page du projet]({{ repo_url }})."
 }

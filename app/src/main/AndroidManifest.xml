@@ -78,6 +78,7 @@
         <activity android:name=".ui.DefaultInstallerActivity" android:exported="false" android:configChanges="uiMode|locale|layoutDirection" />
         <activity android:name=".ui.AboutActivity" android:exported="false" android:configChanges="uiMode|locale|layoutDirection" />
         <activity android:name=".ui.ReleaseHistoryActivity" android:exported="false" android:configChanges="uiMode|locale|layoutDirection" />
+        <activity android:name=".ui.DocumentActivity" android:exported="false" android:configChanges="uiMode|locale|layoutDirection" />
         <activity android:name=".ui.InstallerSettingsActivity" android:exported="true"
             android:permission="org.autojs.permission.PLUGIN" android:excludeFromRecents="true" android:theme="@android:style/Theme.NoDisplay">
             <intent-filter><action android:name="org.autojs.plugin.INSTALLER_SETTINGS" /><category android:name="android.intent.category.DEFAULT" /></intent-filter>
@@ -85,7 +86,7 @@
 
         <meta-data
             android:name="org.autojs.plugin.contract.NATIVE_PAGE_ALIGNMENT"
-            android:value="0" />
+            android:value="16384" />
 
         <meta-data
             android:name="org.autojs.plugin.WAKE_ACTIVITY"

@@ -113,7 +113,6 @@
   "text_link_installer_docs": "安装器模块文档",
   "text_link_reference_projects": "InstallerX 与 InstallerX Revived (架构参考, GPL-3.0, 未复用代码)",
   "text_link_third_party_notices": "第三方声明",
-  "p_instruction_more": "安装指南与当前进度请参阅 [项目 README]({{ repo_url }}) 与 [ROADMAP.md]({{ roadmap_url }}).",
   "p_quick_start_details": "来源可为路径, `file://` 或有读取权限的 `content://` URI. 数组表示独立批量项目, `{ splits: [...] }` 表示一个应用的分包. `session(...)` 创建后立即开始, 返回对象支持 `cancel()` 和 `wait()`. 同步调用可能抛出 `InstallerError`, 且不能在 UI 线程执行. 读取 `installer.status`, 创建 `installer.session(...)` 和调用 `session.wait()` 同样受此限制. UI 线程请使用 Async 方法, 或在脚本工作线程执行同步操作. 会话对象只能在创建它的脚本线程使用. 请处理 Promise 拒绝, 并逐项检查批量结果的 `ok` 与 `error`. 插件缺失或不兼容时报告 `PLUGIN_UNAVAILABLE`. `setDefault` 返回是否达到请求状态, 清除默认项成功也返回 true. `app.uninstall` 仍是宿主的系统卸载快捷入口, 需要特权选项时使用 `installer.uninstall`. 完整选项与事件见 [installer API 文档]({{ docs_installer_url }}).",
   "example_probe": "只读查询可用状态与兼容信息.",
   "example_install": "需要 Shizuku 授权; silent 在 Android 要求确认时失败.",
@@ -130,5 +129,59 @@
   "p_profiles_requirements": "宿主界面与脚本使用来源配置需要 AutoJs6 {{ profiles_host_version_code }}+ 及 V3 `source-profiles` 能力. 旧宿主或未协商的请求保持原行为. 省略字段可继承配置, 显式 `false`/`auto`/`current`/`none` 覆盖配置. 只有 `installer`, `installReason`, `packageSource` 接受 null 清除继承; 后两者的 null 仍需高级选项能力. `interaction`, `timeout`, `continueOnError` 属于整次会话, 不进入配置.",
   "p_profiles_lifecycle": "任务开始处理时固定来源配置及自动授权排序, 编辑设置不会改变正在处理的任务或同批后续项目. 已确认的重试沿用完整确认选项, 未确认的重试重新读取入口默认值及配置. 每次仍重新检查来源和签名, 不复用一次性策略放行. 配置不能绕过签名, 黑名单, 授权或系统限制.",
   "p_profiles_cleanup": "协商来源配置后, 成功项的 `sourceDeleteRequested` 表示最终删除请求, 不代表已删除. 宿主显式 `deleteSource: false` 禁止删除; 决策字段缺失或类型错误时保留文件并记录 notes. 宿主等待批量结果, 保留与失败, 未处理或要求保留项目共用的文件及可确认的别名. 本地外部入口也保留同批重复 URI/规范化路径. `sourceDeleted` 才报告实际清理结果, content URI 不由宿主删除.",
-  "example_profiles": "来源配置示例: 需要宿主 5312+; 保留文件并清除三个继承字段, 调用函数才开始安装"
+  "example_profiles": "来源配置示例: 需要宿主 5312+; 保留文件并清除三个继承字段, 调用函数才开始安装",
+  "instruction_p_what": "3-Setup Installer 用于安装, 更新, 检查与卸载 Android 应用. 可以从它的首页, AutoJs6 的安装操作与脚本, 或其他应用打开和分享的安装包发起安装; 默认由 Android 系统确认, 经 Shizuku, Root 或 Dhizuku 授权后也可以静默安装. 不连接 AutoJs6 也能单独使用.",
+  "instruction_h3_start": "开始使用",
+  "instruction_start_steps": [
+    "从启动器打开 3-Setup Installer. 需要静默安装时, 在首页 \"授权方式\" 中点按 Shizuku, Root 或 Dhizuku 对应的 \"授权\".",
+    "点按 \"选择安装包\", 选择一个或多个 APK, APKS, XAPK 等安装包.",
+    "在安装对话框中核对版本, 签名与权限, 然后点按 \"安装\".",
+    "在 AutoJs6 \"插件中心\" 启用本插件后, AutoJs6 中的安装操作同样显示此对话框; 在其他应用中打开或分享安装包时也可以选择 3-Setup Installer."
+  ],
+  "instruction_h3_features": "主要功能",
+  "instruction_features": [
+    "**安装对话框**: 列出版本变化, 大小, SDK 与签名比对, 标明新安装, 更新, 重新安装或降级; APK 分包, 权限与 \"更多选项\" 可以展开调整.",
+    "**授权方式**: 未授权时由 Android 逐次确认; 经 Shizuku, Root 或 Dhizuku 授权后可以静默安装, 允许降级或授予权限等. 设置中的 \"授权方式顺序与启用\" 决定自动选择的顺序.",
+    "**批量与记录**: 一次可以安装多个应用, 首页显示进行中的任务与 \"最近安装\"; 记录只保存应用信息与结果, 不保存安装包.",
+    "**已安装应用**: 从首页的 \"更多\" 菜单进入, 可以搜索, 排序, 查看应用信息或卸载应用.",
+    "**默认安装器**: 把本插件设为打开 APK 文件的默认应用; 能否设置取决于授权方式与系统限制.",
+    "**安装配置文件与黑名单**: 在设置中按安装来源与包名前缀预设安装选项, 或用 \"包名黑名单\" 与 \"SharedUID 黑名单\" 阻止指定应用的安装.",
+    "**签名检查**: 新安装包的签名与已安装应用不一致时默认阻止, 只能在安装对话框中对当前项目放行一次.",
+    "**设置**: 调整 \"默认交互方式\", 外观, 启动器图标与通知, 也可以查看 \"发行历史\" 或手动 \"检查更新\"."
+  ],
+  "instruction_h3_script": "在脚本中使用",
+  "instruction_p_script": "AutoJs6 脚本通过 `installer` 模块安装, 检查与卸载应用. 下例先显示安装对话框, 由用户确认后安装; 同步方法需要在脚本线程中调用, 不能在 UI 线程中调用:",
+  "instruction_script_notes": [
+    "不写 `interaction` 时为 `auto`: 已授权特权方式时静默安装, 否则由 Android 请求确认.",
+    "传入数组为批量安装, 返回与来源顺序对应的结果, 请逐项检查 `ok` 与 `error`; `installAsync` 返回 Promise, 可以在 UI 线程中使用.",
+    "`installer.inspect(source)` 只读取安装包的包名, 版本等信息, 不安装.",
+    "完整的选项与事件见 [AutoJs6 文档 > installer]({{ docs_installer_url }})."
+  ],
+  "instruction_h3_requirements": "运行要求",
+  "instruction_requirements": [
+    "Android {{ min_android_version }} 或更高版本. 与 AutoJs6 配合使用需要 AutoJs6 {{ required_host_version_name }} 或更高版本, 单独使用不需要 AutoJs6.",
+    "Shizuku, Root 与 Dhizuku 均为可选, 只在静默安装或使用特权选项时需要; Dhizuku 需要 Android 8.0 或更高版本.",
+    "安装与卸载权限用于请求 Android 确认, 查询应用列表的权限用于已安装应用与版本, 签名比对; 通知权限用于通知栏安装与进度通知.",
+    "仅在手动检查插件更新时联网, 安装包不会上传."
+  ],
+  "instruction_h3_faq": "常见问题",
+  "instruction_faq": [
+    {
+      "q": "已授权仍需确认安装的原因",
+      "a": "Android 或厂商系统的策略仍可能要求用户确认. 这时选择 \"自动\" 会改由 Android 确认, 选择静默方式则以失败结束并说明原因."
+    },
+    {
+      "q": "安装后无法开启无障碍服务的原因",
+      "a": "Android 13 起会限制以本地文件方式安装的应用使用无障碍等受限设置; 经 Shizuku 或 Root 安装时默认不标记为本地文件. 对信任的应用, 在系统设置的应用信息页右上角菜单中允许受限制的设置, 再开启无障碍服务; 入口因系统而异."
+    },
+    {
+      "q": "无法安装 .aab 文件的原因",
+      "a": "Android App Bundle 是发布格式, 不能直接安装. 请先用 bundletool 转换为 .apks 安装包; 插件可以显示 .aab 文件的包名与模块信息."
+    },
+    {
+      "q": "允许降级后仍降级失败的原因",
+      "a": "\"允许降级\" 只是向系统提出请求, 是否接受由系统版本, 授权方式以及应用是否可调试决定. 失败时结果中会附上系统返回的信息."
+    }
+  ],
+  "instruction_p_more": "授权方式, 安装选项与权限的详细说明见 [项目主页]({{ repo_url }})."
 }

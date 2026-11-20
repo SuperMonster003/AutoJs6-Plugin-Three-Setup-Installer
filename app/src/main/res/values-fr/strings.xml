@@ -316,8 +316,14 @@
     <string name="profile_title">Profils d\'installation</string>
     <string name="profile_unreadable">Les profils enregistrés ne peuvent pas être lus. Les demandes d\'installation sont bloquées jusqu\'à leur réparation ou leur réinitialisation explicite.</string>
     <string name="profile_unsaved">Modifications non enregistrées. Enregistrez la liste pour les appliquer, ou annulez pour les abandonner.</string>
+    <string name="release_history">Historique des versions</string>
+    <string name="release_history_collapse_all">Tout réduire</string>
+    <string name="release_history_collapsed">Réduit</string>
     <string name="release_history_error">Impossible de lire le document intégré.</string>
-    <string name="release_history_title">Historique des versions</string>
+    <string name="release_history_expand_all">Tout développer</string>
+    <string name="release_history_expanded">Développé</string>
+    <string name="release_history_summary">Consulter l\'historique des versions inclus dans l\'application</string>
+    <string name="release_history_unavailable">Impossible de charger l\'historique des versions</string>
     <string name="settings_appearance">Apparence</string>
     <string name="settings_authorizer_order">Ordre et activation des autorisations</string>
     <string name="settings_authorizers_note">La sélection automatique utilise la première méthode activée et autorisée. Gardez au moins une méthode active. Les choix explicites de l\'hôte ou des scripts restent inchangés.</string>

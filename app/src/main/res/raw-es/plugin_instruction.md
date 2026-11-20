@@ -1,56 +1,65 @@
-3-Setup Installer instala, actualiza, inspecciona y desinstala aplicaciones Android desde su inicio independiente, las entradas y scripts de AutoJs6, o solicitudes externas para abrir y compartir paquetes. Admite la confirmación de Android y operaciones privilegiadas mediante Shizuku, Root o Dhizuku.
+3-Setup Installer instala, actualiza, inspecciona y desinstala aplicaciones de Android. La instalación puede empezar desde su pantalla de inicio, desde las acciones de instalación y los scripts de AutoJs6, o desde paquetes que otras aplicaciones abren o comparten; Android confirma cada una de forma predeterminada y, con Shizuku, Root o Dhizuku autorizado, también puede instalar en modo silencioso. También funciona por sí solo, sin AutoJs6.
 
-1.2.2 describe las funciones de instalación, gestión de aplicaciones y scripts implementadas a continuación. Esta versión está disponible en [GitHub Releases](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/releases/tag/v1.2.2) y en el centro de plugins de AutoJs6. La integración requiere AutoJs6 >= 6.8.0 (5299), y la API de scripts `installer` requiere la compilación 5300 o posterior. La cobertura de dispositivos y las validaciones pendientes se registran en [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md). Dhizuku, la instalación por notificación y las opciones de scripts para el instalador persistente requieren AutoJs6 6.8.0 compilación 5307 o posterior con el contrato installer V2. La integración básica sigue disponible desde la compilación 5299 y los métodos de scripts V1 desde 5300.
+### Primeros pasos
 
-Las opciones avanzadas requieren AutoJs6 5308+ y V3 con `advanced-install-options`. Sin cambios de perfil, omitir conserva el comportamiento; `false`/`none` explícito sigue requiriendo soporte. La hoja de ruta registra la publicación oficial y la validación de dispositivos.
+1. Abre 3-Setup Installer desde el lanzador. Para la instalación silenciosa, toca "Autorizar" en Shizuku, Root o Dhizuku dentro de "Autorización" en la pantalla de inicio.
+2. Toca "Elegir paquetes de instalación" y selecciona uno o varios paquetes APK, APKS, XAPK o similares.
+3. Revisa la versión, la firma y los permisos en el diálogo de instalación y toca "Instalar".
+4. Al activar este plugin en el "Centro de plugins" de AutoJs6, las acciones de instalación de AutoJs6 muestran el mismo diálogo; 3-Setup Installer también se puede elegir cuando otra aplicación abre o comparte un paquete.
 
-### Uso
+### Funciones principales
 
-1. En Android 7.0 o posterior, instala el APK oficial desde [Releases](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/releases) una vez publicado, o usa el asistente del centro de plugins AutoJs6 tras su inclusión en el índice oficial. Antes de la publicación, prueba una compilación del mantenedor o compila desde el código fuente. El icono del lanzador abre el inicio independiente.
-2. En Inicio, comprueba la autorización y el instalador predeterminado, y selecciona uno o varios paquetes. Confirma en el diálogo o la notificación elegidos y consulta las tareas y el historial.
-3. Para la integración con AutoJs6, usa la compilación 5299 (6.8.0) o posterior y habilita `3-Setup Installer` en el centro de plugins. La API de scripts requiere la compilación 5300 o posterior. Dhizuku, la instalación por notificación y las opciones de scripts para el instalador persistente requieren AutoJs6 6.8.0 compilación 5307 o posterior con el contrato installer V2. La integración básica sigue disponible desde la compilación 5299 y los métodos de scripts V1 desde 5300.
-4. Usa una acción de instalación de AutoJs6 o elige 3-Setup Installer al abrir o compartir archivos de paquetes. Cuando aparezca la confirmación, revisa la aplicación y las opciones antes de instalar. Prepara la autorización de Shizuku, Root o Dhizuku al elegir un método con privilegios.
-5. El menú de Inicio permite acceder a las aplicaciones instaladas y los ajustes. Revisa las opciones locales de instalación, la apariencia, el icono y las notificaciones; Acerca de, el historial de versiones y la búsqueda manual de actualizaciones están en los ajustes.
+- **Diálogo de instalación**: muestra el cambio de versión, el tamaño y la comparación de SDK y firma, e indica si es una instalación nueva, una actualización, una reinstalación o una versión anterior; los componentes APK, los permisos y "Más opciones" se pueden expandir y ajustar.
+- **Autorización**: sin autorización, Android confirma cada instalación; con Shizuku, Root o Dhizuku puede instalar en silencio, permitir versiones anteriores, conceder permisos y más. "Orden y activación de autorizaciones" en los ajustes define el orden de la selección automática.
+- **Lotes e historial**: se pueden instalar varias aplicaciones a la vez, y la pantalla de inicio muestra las tareas en curso y las "Instalaciones recientes"; el historial solo guarda la información de las aplicaciones y los resultados, nunca los paquetes.
+- **Aplicaciones instaladas**: se abre desde el menú "Más" de la pantalla de inicio para buscar, ordenar, ver la información de una aplicación o desinstalarla.
+- **Instalador predeterminado**: establece este plugin como aplicación predeterminada para abrir archivos APK; que sea posible depende de la autorización y de las restricciones del sistema.
+- **Perfiles de instalación y listas negras**: predefine en los ajustes opciones de instalación por origen y prefijo de nombre de paquete, o bloquea la instalación de aplicaciones concretas con "Lista negra de paquetes" y "Lista negra de UID compartidos".
+- **Comprobación de firma**: un paquete cuya firma no coincide con la de la aplicación instalada se bloquea de forma predeterminada y solo se puede permitir una vez, para ese elemento, en el diálogo de instalación.
+- **Ajustes**: ajusta "Interacción predeterminada", la apariencia, el icono del lanzador y las notificaciones, o consulta "Historial de versiones" y usa "Buscar actualizaciones" manualmente.
 
-### Modos de autorización
+### Uso en scripts
 
-- `none`: la sesión PackageInstaller estándar; Android pide al usuario confirmar cada instalación, se admiten paquetes divididos y las opciones privilegiadas no están disponibles.
-- `shizuku`: requiere Shizuku en ejecución (iniciado por depuración inalámbrica, ADB o Root) y permiso específico para 3-Setup Installer. Autorizar AutoJs6 no autoriza este plugin. Las instalaciones, desinstalaciones y operaciones para otros usuarios utilizan los privilegios del servicio Shizuku activo.
-- `root`: requiere un dispositivo con Root y un gestor que conceda `su` a 3-Setup Installer. Permite instalar, desinstalar y gestionar usuarios y el instalador predeterminado mediante libsu. Android y la ROM siguen decidiendo si se permite cada operación.
-- `dhizuku`: requiere Android 8.0 (API 26)+, un propietario de dispositivo/perfil Dhizuku activo y permiso para el plugin. Solo opera en el usuario propietario actual y atribuye la instalación al paquete propietario real. No admite opciones shell/root de degradación, paquetes de prueba, omisión de targetSdk bajo, otros usuarios, atribución arbitraria ni conservación de datos al desinstalar. El plugin no configura propietarios.
-- **Nota:** Los scripts usan `interaction: 'auto'` por defecto e instalan en silencio cuando hay privilegios. Las acciones de instalación de la interfaz del anfitrión usan `dialog`. Si Android exige confirmación, `auto` la permite y la registra en `notes`. Elige `interaction: 'dialog'` para confirmar antes de instalar. La elección explícita `silent` falla con `AUTHORIZER_REQUIRED` si no hay privilegios o hace falta confirmación del sistema.
-- Los ajustes guardan el orden y activación de los métodos, las opciones de instalación y las notificaciones. Las instalaciones locales/externas usan `dialog` por defecto y permiten elegir `auto`, `silent` o `notification`. La interfaz del anfitrión usa `dialog`; los scripts mantienen sus opciones explícitas y `auto` por defecto. Los cambios se guardan tras confirmar.
+Los scripts de AutoJs6 instalan, inspeccionan y desinstalan aplicaciones con el módulo `installer`. El ejemplo siguiente muestra el diálogo de instalación e instala cuando el usuario confirma; los métodos síncronos deben llamarse en un hilo de script, no en el hilo de UI:
 
-### Compatibilidad
+```js
+console.log(installer.status);
+try {
+    let result = installer.install('./app.apk', { interaction: 'dialog' });
+    console.log(result.packageName, result.versionName);
+} catch (e) {
+    console.error(e.code, e.message);
+}
+```
 
-- Android 7.0 (API 24) y posteriores. La validación de dispositivos y la cobertura pendiente se registran en [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md).
-- La omisión del bloqueo de targetSdk bajo existe desde Android 14 (API 34); en sistemas más antiguos la opción se ignora y se anota en el resultado.
-- La página del instalador predeterminado distingue preferencias normales y políticas persistentes. Las preferencias usan Shizuku o Root y dependen de la ROM. Dhizuku admite políticas persistentes en API 26-33; API 34+ se rechaza antes de modificar porque no se puede verificar la respuesta del propietario. Root usa un auxiliar con UID del sistema solo en el usuario 0 de dispositivos compatibles. No se sustituyen políticas persistentes competidoras. `persistentConfigured` registra una configuración anterior correcta, sin probar la política actual; la observación pasiva solo informa `preferred` o `none`.
-- `dhizuku`: requiere Android 8.0 (API 26)+, un propietario de dispositivo/perfil Dhizuku activo y permiso para el plugin. Solo opera en el usuario propietario actual y atribuye la instalación al paquete propietario real. No admite opciones shell/root de degradación, paquetes de prueba, omisión de targetSdk bajo, otros usuarios, atribución arbitraria ni conservación de datos al desinstalar. El plugin no configura propietarios.
-- Las solicitudes de permisos y DexOpt distinto de none requieren Shizuku/Root; verify requiere API 26+. El motivo necesita API 26+, el origen API 33+ y solicitar propiedad de actualizaciones API 34+. La propiedad solo se activa en la instalación inicial; Android puede ignorarla en actualizaciones o paquetes existentes para otro usuario. false no revoca un owner existente.
-- none/Dhizuku solo consulta firmas instaladas del usuario actual; Shizuku/Root consulta globalmente. Con reglas SharedUID, no poder descartar el paquete en otro usuario bloquea sin excepción.
+- Sin `interaction` el modo es `auto`: instala en silencio si hay una autorización privilegiada disponible; si no, Android pide confirmación.
+- Pasar un array instala por lotes y devuelve los resultados en el orden de los orígenes; comprueba `ok` y `error` en cada elemento. `installAsync` devuelve una Promise y se puede usar en el hilo de UI.
+- `installer.inspect(source)` solo lee el nombre del paquete, la versión y otra información, sin instalar.
+- Todas las opciones y eventos están en [Documentación de AutoJs6 > installer](https://docs.autojs6.com/#/installer).
+
+### Requisitos
+
+- Android 7.0 o posterior. Usarlo con AutoJs6 requiere AutoJs6 6.8.0 o posterior; el uso independiente no necesita AutoJs6.
+- Shizuku, Root y Dhizuku son opcionales y solo se necesitan para la instalación silenciosa o las opciones privilegiadas; Dhizuku requiere Android 8.0 o posterior.
+- Los permisos de instalación y desinstalación piden la confirmación de Android, el de la lista de aplicaciones sirve para las aplicaciones instaladas, las versiones y la comparación de firmas, y el de notificaciones para la instalación desde notificaciones y las notificaciones de progreso.
+- La red solo se usa al buscar manualmente actualizaciones del plugin; los paquetes nunca se suben.
 
 ### Preguntas frecuentes
 
-- **Por qué sigue siendo necesaria una confirmación?** `none` siempre requiere la confirmación de Android. Los métodos privilegiados también dependen de su política. `notification` abre la confirmación del sistema únicamente mediante su acción de notificación y no la omite.
-- **Por qué se restringe la accesibilidad tras instalar?** En Android 13 o posterior, un origen `local-file` o `downloaded-file` puede activar ajustes restringidos. Shizuku/Root ahora usan `other` por defecto, igual que las instalaciones desde el shell de Android; un origen explícito tiene prioridad. `none`/Dhizuku conservan `local-file` como valor predeterminado. Una actualización no elimina automáticamente las restricciones existentes. Para una aplicación de confianza, abre Ajustes de Android > Aplicaciones > la aplicación > Más > Permitir ajustes restringidos y activa después su servicio de accesibilidad. La disponibilidad y las comprobaciones adicionales dependen de la versión de Android y de la ROM.
-- **Se puede instalar un `.aab`?** No. Un Android App Bundle es un formato de publicación; conviértelo primero con bundletool en un conjunto `.apks`. El plugin reconoce los archivos `.aab` y muestra la información de paquete y módulos.
-- **Por qué puede fallar una versión anterior con `allowDowngrade: true`?** Este parámetro solicita la degradación; Android decide según el firmware, la identidad autorizada y si la aplicación es debuggable. Los firmwares user probados en Sony G8441 / API 28 y Xiaomi 23046RP50C / API 35 rechazaron la degradación de paquetes no debuggable, mientras que Sony XQ-DQ72 / API 33 con Root la aceptó. Son resultados específicos de esos dispositivos. Revisa el error y `systemMessage`; Root no garantiza la degradación en todas las ROM.
-- **Qué nombre de paquete del instalador funciona en HyperOS?** Con Shizuku iniciado mediante ADB o depuración inalámbrica, dejar el nombre sin especificar usa `com.android.shell`. En el Xiaomi 23046RP50C / HyperOS / API 35 probado, las instalaciones nuevas y actualizaciones silenciosas registraron ese valor. También se aceptaron los valores explícitos `com.android.shell` y el nombre de paquete del propio plugin, y se registraron tal como se solicitaron. Otros nombres o versiones de ROM dependen de la respuesta del sistema.
-- **ColorOS u otra ROM indica que el plugin necesita activación. Qué hago?** Tras instalar o forzar la detención, Android puede mantener una aplicación detenida hasta que el usuario interactúe con ella. Usa Activar en el centro de plugins de AutoJs6 si aparece, o abre 3-Setup Installer desde su icono y vuelve a intentarlo. Esto sigue las [reglas de detención de Android](https://developer.android.com/reference/android/content/pm/ApplicationInfo#FLAG_STOPPED). El comportamiento específico de ColorOS aún no se ha verificado en un dispositivo.
-- **Por qué puede fallar el cambio de instalador, o diferir el indicador persistente del controlador actual?** La página del instalador predeterminado distingue preferencias normales y políticas persistentes. Las preferencias usan Shizuku o Root y dependen de la ROM. Dhizuku admite políticas persistentes en API 26-33; API 34+ se rechaza antes de modificar porque no se puede verificar la respuesta del propietario. Root usa un auxiliar con UID del sistema solo en el usuario 0 de dispositivos compatibles. No se sustituyen políticas persistentes competidoras. `persistentConfigured` registra una configuración anterior correcta, sin probar la política actual; la observación pasiva solo informa `preferred` o `none`.
-- **Por qué no se eliminó el origen?** Solo se intenta eliminar tras una instalación correcta. Si la instalación falla, se cancela o agota el tiempo, el origen siempre se conserva. Un fallo de eliminación no cambia una instalación correcta, y el proveedor externo puede rechazarla. En los scripts, el anfitrión aplica `deleteSource` a rutas y orígenes `file://`, y conserva los orígenes `content://`. Revisa `sourceDeleted` y `notes`. En un lote, los elementos con éxito confirmado siguen aplicando `deleteSource` aunque otro falle o se cancele el resto de la cola.
-- **Puedo reintentar o reanudar?** Un URI externo fallido se puede reintentar mientras el origen y el acceso estén disponibles. Si se liberan el origen o su acceso, abre el paquete de nuevo. Tras reiniciar el proceso, la vista restaurada muestra los resultados confirmados guardados y marca los elementos pendientes como interrumpidos. Es de solo lectura y nunca instala ni reintenta automáticamente. Comprueba la aplicación instalada antes de empezar otra vez.
+**Por qué se sigue pidiendo confirmación tras autorizar**
 
-### Permisos y seguridad
+La política de Android o del fabricante puede seguir exigiendo la confirmación del usuario. En ese caso, "Automático" pasa a la confirmación de Android, mientras que un modo silencioso falla e indica el motivo.
 
-- Los puntos de entrada Binder están protegidos por el permiso de firma `org.autojs.permission.PLUGIN`, de modo que solo AutoJs6 puede alcanzarlos; la entrada externa "Abrir con" solo acepta archivos de paquete y nunca ejecuta un script.
-- REQUEST_INSTALL_PACKAGES y REQUEST_DELETE_PACKAGES permiten la confirmación de Android. QUERY_ALL_PACKAGES sirve para gestionar aplicaciones instaladas, comparar versiones y firmas y detectar el instalador predeterminado. El permiso normal ENFORCE_UPDATE_OWNERSHIP permite solicitar explícitamente la propiedad de actualizaciones, sin garantizar un owner.
-- FOREGROUND_SERVICE y FOREGROUND_SERVICE_DATA_SYNC mantienen la instalación y el acceso temporal a los orígenes; POST_NOTIFICATIONS permite notificaciones. `notification` exige notificaciones y canal habilitados. Los demás modos toleran la falta de permiso de notificaciones.
-- Shizuku, Root y Dhizuku se usan para las operaciones solicitadas. El plugin no configura propietarios de dispositivo/perfil. Las políticas persistentes solo cambian mediante una solicitud de establecerlas o quitarlas; no se suben paquetes.
-- La instalación, la inspección, el historial y la gestión de aplicaciones funcionan sin conexión. INTERNET se usa solo al comprobar versiones manualmente mediante la API GitHub Releases fija del plugin, con un intervalo de 12 horas. No se realizan comprobaciones en segundo plano ni se suben paquetes.
-- Los archivos de origen se abren en modo de solo lectura. El historial conserva metadatos limitados y resultados, sin contenido de paquetes ni URI de origen; las rutas de los errores se ocultan. El almacenamiento privado se excluye de las copias de seguridad. Eliminar un registro no desinstala la aplicación ni elimina su origen.
-- La opción solicita permisos que el sistema puede conceder y puede incluir app-ops modificables por el instalador, como USE_FULL_SCREEN_INTENT en Android 14. No garantiza todos los permisos ni concede accesibilidad, superposición o permisos de firma arbitrarios. Se mantienen las restricciones restricted/system-fixed/policy-fixed sin añadir una marca allowlist.
-- Las comprobaciones de firma y listas locales de bloqueo exacto por paquete/SharedUID se aplican a todas las entradas con `BLOCKED_BY_POLICY`. Solo un dialog real permite una excepción para la firma mismatch/unknown del elemento; Android sigue verificándola. Los modos silencioso/notification no permiten esa excepción y la lista de bloqueo no puede anularse. La vista de permisos muestra declaraciones de los APK seleccionados, no permisos concedidos.
+**Por qué no se puede activar el servicio de accesibilidad tras la instalación**
 
-Consulta el [README del proyecto](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer) y [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md) para la guía de instalación y el progreso actual.
+Desde Android 13, las aplicaciones instaladas desde un archivo local no pueden usar la accesibilidad ni otros ajustes restringidos; las instalaciones mediante Shizuku o Root no se marcan como archivo local de forma predeterminada. Para una aplicación de confianza, permite los ajustes restringidos desde el menú superior derecho de su página de información en los ajustes del sistema y luego activa su servicio de accesibilidad; la ubicación varía según el sistema.
+
+**Por qué no se pueden instalar archivos .aab**
+
+Un Android App Bundle es un formato de publicación y no se puede instalar directamente. Conviértelo primero en un paquete .apks con bundletool; el plugin puede mostrar el nombre del paquete y los módulos de un archivo .aab.
+
+**Por qué falla una versión anterior aunque esté permitida**
+
+"Permitir una versión anterior" solo hace la solicitud al sistema; que se acepte depende de la versión del sistema, la autorización y si la aplicación es depurable. Si falla, el resultado incluye el mensaje devuelto por el sistema.
+
+Los detalles sobre autorizaciones, opciones de instalación y permisos están en la [página del proyecto](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer).

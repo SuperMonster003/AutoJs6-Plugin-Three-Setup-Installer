@@ -1,63 +1,61 @@
 package io.github.supermonster003.autojs6.plugin.three.setup.installer.ui
 
 import android.os.Bundle
-import android.view.View
-import android.widget.LinearLayout
-import io.github.supermonster003.autojs6.plugin.three.setup.installer.R
-import io.github.supermonster003.autojs6.plugin.three.setup.installer.settings.DocumentText
-import io.github.supermonster003.autojs6.plugin.three.setup.installer.settings.ReleaseHistory
-import io.github.supermonster003.autojs6.plugin.three.setup.installer.settings.SettingsPageActivity
-import java.util.concurrent.Executors
+import androidx.activity.compose.setContent
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.settings.ReleaseHistoryAssetPolicy
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.settings.ReleaseHistoryEntry
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.settings.loadReleaseHistory
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.ui.appearance.HostAppearanceActivity
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.ui.kit.ThemeAccentRoles
 
-/** Bundled documents only. No WebView, active markup, external images or network access. */
-class ReleaseHistoryActivity : SettingsPageActivity() {
-    private val worker = Executors.newSingleThreadExecutor { Thread(it, "bundled-documents") }
-    private var generation = 0
-    override val pageTitle get() = when (intent.getStringExtra("document")) {
-        "license" -> R.string.settings_license
-        "notices" -> R.string.settings_notices
-        else -> R.string.release_history_title
+/**
+ * Renders the bundled changelog for the current locale (English when that one is missing) as one group per released
+ * version, under the title "Release history" with the plugin name as the subtitle
+ * (AUTOJS6_PLUGIN_RELEASE_HISTORY_AGENTS.md); reached from the settings page, the About page and the update dialog.
+ * Not exported and takes no data. The language, night mode and colors are those of the settings page
+ * ([HostAppearanceActivity]); a change of the host appearance redraws the page with the new colors.
+ */
+class ReleaseHistoryActivity : HostAppearanceActivity() {
+    override val dialogTheme = false
+    private lateinit var entries: List<ReleaseHistoryEntry>
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        entries = load()
+        render()
     }
 
-    override fun buildPage(content: LinearLayout) {
-        val document = intent.getStringExtra("document")
-        val expected = ++generation
-        val progress = kit.progressBar().apply { isIndeterminate = true }
-        content.addView(progress, LinearLayout.LayoutParams(-1, kit.dp(8)))
-        val text = kit.text(getString(R.string.default_installer_loading)).apply {
-            tag = "document"
-            setPaddingRelative(kit.dp(24), kit.dp(16), kit.dp(24), kit.dp(24))
-            textDirection = View.TEXT_DIRECTION_LOCALE
-            setTextIsSelectable(true)
-            setLineSpacing(0f, 1.25f)
-        }
-        content.addView(text, LinearLayout.LayoutParams(-1, -2))
-        val locale = resources.configuration.locales[0]
-        worker.execute {
-            fun read(path: String): String = assets.open(path).use { input ->
-                val output = java.io.ByteArrayOutputStream()
-                val buffer = ByteArray(8192)
-                while (true) {
-                    val count = input.read(buffer)
-                    if (count < 0) break
-                    require(output.size() + count <= 1024 * 1024)
-                    output.write(buffer, 0, count)
-                }
-                output.toString(Charsets.UTF_8.name())
-            }
-            val loaded = runCatching { when (document) {
-                "license" -> read("legal/LICENSE")
-                "notices" -> read("legal/THIRD_PARTY_NOTICES.md")
-                else -> ReleaseHistory.load(locale, ::read)
-            } }.getOrNull()
-            runOnUiThread {
-                if (isFinishing || isDestroyed || expected != generation) return@runOnUiThread
-                progress.visibility = View.GONE
-                text.text = if (loaded == null) getString(R.string.release_history_error)
-                else if (document == "license") loaded else DocumentText.render(loaded, kit.palette)
-            }
+    override fun onAppearanceChanged() {
+        if (!::entries.isInitialized) return
+        // The language may have changed with the appearance; the changelog follows it.
+        entries = load()
+        render()
+    }
+
+    private fun load(): List<ReleaseHistoryEntry> {
+        val candidates = ReleaseHistoryAssetPolicy.candidatesFor(resources.configuration.locales[0])
+        return loadReleaseHistory(candidates) { path ->
+            assets.open(path).use { stream -> stream.readBytes().toString(Charsets.UTF_8) }
         }
     }
 
-    override fun onDestroy() { generation++; worker.shutdownNow(); super.onDestroy() }
+    private fun render() {
+        val palette = kit.palette
+        val colors = ReleaseHistoryColors(
+            dark = palette.isDark,
+            primary = palette.accent,
+            primaryContainer = ThemeAccentRoles.fromSeed(appearance.accent, palette.isDark).container,
+            // The settings page draws its top bar on the page background; this page does the same.
+            background = palette.background,
+            surface = palette.background,
+            onSurface = palette.text,
+            onSurfaceVariant = palette.muted,
+            outlineVariant = palette.divider,
+        )
+        setContent {
+            ReleaseHistoryTheme(colors) {
+                ReleaseHistoryScreen(entries = entries, onBack = ::finish)
+            }
+        }
+    }
 }

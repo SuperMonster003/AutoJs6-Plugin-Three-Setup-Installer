@@ -1,6 +1,5 @@
 package io.github.supermonster003.autojs6.plugin.three.setup.installer.ui
 
-import android.content.Intent
 import android.graphics.Color
 import android.view.Gravity
 import android.view.View
@@ -11,6 +10,7 @@ import io.github.supermonster003.autojs6.plugin.three.setup.installer.R
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.settings.AppUpdateController
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.settings.ReleaseInfoCodec
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.settings.SettingsPageActivity
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.settings.openReleaseHistory
 
 class AboutActivity : SettingsPageActivity() {
     override val pageTitle = R.string.ui_about
@@ -43,9 +43,9 @@ class AboutActivity : SettingsPageActivity() {
         }
         link(R.string.settings_source, R.drawable.ic_code, "about-source") { AppUpdateController.openPage(this, ReleaseInfoCodec.SOURCE) }
         link(R.string.about_developer_page, R.drawable.ic_person, "about-developer") { AppUpdateController.openPage(this, AppUpdateController.DEVELOPER_PAGE) }
-        link(R.string.settings_license, R.drawable.ic_description, "about-license") { document("license") }
-        link(R.string.settings_notices, R.drawable.ic_description, "about-notices") { document("notices") }
-        link(R.string.release_history_title, R.drawable.ic_article, "about-history") { document("history") }
+        link(R.string.settings_license, R.drawable.ic_description, "about-license") { DocumentActivity.open(this, DocumentActivity.LICENSE) }
+        link(R.string.settings_notices, R.drawable.ic_description, "about-notices") { DocumentActivity.open(this, DocumentActivity.NOTICES) }
+        link(R.string.release_history, R.drawable.ic_article, "about-history") { openReleaseHistory() }
         link(R.string.app_update_check, R.drawable.ic_download, "about-update") {
             updates?.close()
             updates = AppUpdateController(this, settingsUi).also { it.check() }
@@ -54,5 +54,4 @@ class AboutActivity : SettingsPageActivity() {
 
     override fun onPageAppearanceChanged() { updates?.close(); updates = null }
     override fun onStop() { updates?.close(); updates = null; super.onStop() }
-    private fun document(name: String) = startActivity(Intent(this, ReleaseHistoryActivity::class.java).putExtra("document", name))
 }

@@ -74,7 +74,7 @@ class ManifestContractTest {
         val metaData = application.children("meta-data").associate { it.androidAttribute("name") to it.androidAttribute("value") }
         assertEquals(".WakeActivity", metaData["org.autojs.plugin.WAKE_ACTIVITY"])
         assertEquals("@string/plugin_author", metaData["org.autojs.plugin.info.AUTHOR"])
-        assertEquals("0", metaData["org.autojs.plugin.contract.NATIVE_PAGE_ALIGNMENT"])
+        assertEquals("16384", metaData["org.autojs.plugin.contract.NATIVE_PAGE_ALIGNMENT"])
     }
 
     @Test
@@ -83,7 +83,7 @@ class ManifestContractTest {
         assertEquals(setOf(".WakeActivity", ".ui.UninstallDialogActivity", ".ui.ConfirmationActivity",
             ".ui.InstallDialogActivity", ".ui.UserActionActivity", ".ui.ExternalInstallActivity", ".ui.HomeActivity",
             ".ui.InstalledAppsActivity", ".ui.SettingsActivity", ".ui.InstallProfilesActivity", ".ui.DefaultInstallerActivity", ".ui.AboutActivity",
-            ".ui.ReleaseHistoryActivity", ".ui.InstallerSettingsActivity"), activities.keys)
+            ".ui.ReleaseHistoryActivity", ".ui.DocumentActivity", ".ui.InstallerSettingsActivity"), activities.keys)
         listOf(".ui.InstallDialogActivity", ".ui.UserActionActivity").forEach { name ->
             assertEquals("false", activities.getValue(name).androidAttribute("exported"))
             assertEquals("true", activities.getValue(name).androidAttribute("excludeFromRecents"))
@@ -122,7 +122,7 @@ class ManifestContractTest {
             assertEquals("android.intent.action.MAIN", it.child("intent-filter").child("action").androidAttribute("name"))
             assertEquals("android.intent.category.LAUNCHER", it.child("intent-filter").child("category").androidAttribute("name"))
         }
-        listOf(".ui.HomeActivity", ".ui.SettingsActivity", ".ui.InstallProfilesActivity", ".ui.DefaultInstallerActivity", ".ui.AboutActivity", ".ui.ReleaseHistoryActivity", ".ui.InstalledAppsActivity").forEach {
+        listOf(".ui.HomeActivity", ".ui.SettingsActivity", ".ui.InstallProfilesActivity", ".ui.DefaultInstallerActivity", ".ui.AboutActivity", ".ui.ReleaseHistoryActivity", ".ui.DocumentActivity", ".ui.InstalledAppsActivity").forEach {
             assertEquals("false", activities.getValue(it).androidAttribute("exported"))
         }
         assertEquals(PLUGIN_PERMISSION, activities.getValue(".ui.InstallerSettingsActivity").androidAttribute("permission"))

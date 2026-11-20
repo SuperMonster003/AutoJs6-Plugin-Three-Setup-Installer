@@ -316,8 +316,14 @@
     <string name="profile_title">Профили установки</string>
     <string name="profile_unreadable">Не удается прочитать сохраненные профили. Запросы на установку блокируются до исправления профилей или их явного сброса.</string>
     <string name="profile_unsaved">Есть несохраненные изменения. Сохраните список, чтобы применить их, или отмените, чтобы отбросить.</string>
+    <string name="release_history">История выпусков</string>
+    <string name="release_history_collapse_all">Свернуть всё</string>
+    <string name="release_history_collapsed">Свёрнуто</string>
     <string name="release_history_error">Не удалось прочитать встроенный документ.</string>
-    <string name="release_history_title">История версий</string>
+    <string name="release_history_expand_all">Развернуть всё</string>
+    <string name="release_history_expanded">Развёрнуто</string>
+    <string name="release_history_summary">Открыть встроенную историю выпусков приложения</string>
+    <string name="release_history_unavailable">Не удалось загрузить историю выпусков</string>
     <string name="settings_appearance">Оформление</string>
     <string name="settings_authorizer_order">Порядок и включение способов авторизации</string>
     <string name="settings_authorizers_note">Автовыбор использует первый включенный способ с действующим разрешением. Включите хотя бы один. Явный выбор хоста или скрипта не меняется.</string>

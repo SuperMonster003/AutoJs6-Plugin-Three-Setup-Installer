@@ -18,7 +18,8 @@ import org.autojs.plugin.installer.api.InstallerContract
 /** Every picker edits a local draft; only the explicit confirmation persists a value. */
 class SettingsActivity : SettingsPageActivity() {
     override val pageTitle = R.string.settings_title
-    private var updates: AppUpdateController? = null
+    internal var updates: AppUpdateController? = null
+        private set
     private var displayedProfileRevision: String? = null
 
     override fun buildPage(content: LinearLayout) {
@@ -152,7 +153,7 @@ class SettingsActivity : SettingsPageActivity() {
         content.addView(settingsUi.group(R.string.ui_about))
         row(R.string.default_installer_title, getString(R.string.default_installer_summary), R.drawable.ic_shield, "settings-default") { open(DefaultInstallerActivity::class.java) }
         row(R.string.ui_about, getString(R.string.app_name), R.drawable.ic_info, "settings-about") { open(AboutActivity::class.java) }
-        row(R.string.release_history_title, null, R.drawable.ic_article, "settings-history") { open(ReleaseHistoryActivity::class.java) }
+        row(R.string.release_history, getString(R.string.release_history_summary), R.drawable.ic_article, "settings-history") { openReleaseHistory() }
         row(R.string.app_update_check, getString(R.string.settings_update_manual_note), R.drawable.ic_download, "settings-update") {
             updates?.close()
             updates = AppUpdateController(this, settingsUi).also { it.check() }

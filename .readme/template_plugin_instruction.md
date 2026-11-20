@@ -1,27 +1,35 @@
-{{ p_introduction_what }}
+{{ instruction_p_what }}
 
-{{ p_status }}
+### {{ instruction_h3_start }}
 
-{{ p_v3_requirements }}
+{{ placeholder_instruction_start_steps }}
 
-### {{ h3_usage }}
+### {{ instruction_h3_features }}
 
-{{ placeholder_usage_steps }}
+{{ placeholder_instruction_features }}
 
-### {{ h3_authorizers }}
+### {{ instruction_h3_script }}
 
-{{ placeholder_authorizer_points }}
+{{ instruction_p_script }}
 
-### {{ h3_compatibility }}
+```js
+console.log(installer.status);
+try {
+    let result = installer.install('./app.apk', { interaction: 'dialog' });
+    console.log(result.packageName, result.versionName);
+} catch (e) {
+    console.error(e.code, e.message);
+}
+```
 
-{{ placeholder_compatibility_points }}
+{{ placeholder_instruction_script_notes }}
 
-### {{ h3_faq }}
+### {{ instruction_h3_requirements }}
 
-{{ placeholder_faq_items }}
+{{ placeholder_instruction_requirements }}
 
-### {{ h3_security }}
+### {{ instruction_h3_faq }}
 
-{{ placeholder_security_points }}
+{{ placeholder_instruction_faq }}
 
-{{ p_instruction_more }}
+{{ instruction_p_more }}

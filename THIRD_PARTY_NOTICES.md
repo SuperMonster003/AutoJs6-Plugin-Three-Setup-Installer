@@ -24,9 +24,10 @@ license, reproduced in full in the distribution of the respective project.
 | Material Components for Android | `com.google.android.material:material` | 1.13.0 | Apache License 2.0 | Material 3 widgets and themes |
 | Gson | `com.google.code.gson:gson` | 2.13.2 | Apache License 2.0 | JSON documents of the Binder contract |
 | Kotlin standard library | `org.jetbrains.kotlin:kotlin-stdlib` | managed by the platform versions plugin | Apache License 2.0 | Language runtime |
+| Jetpack Compose | `androidx.compose:compose-bom` with `androidx.compose.runtime:runtime`, `androidx.compose.ui:ui`, `androidx.compose.foundation:foundation`, `androidx.compose.material3:material3`, `androidx.compose.animation:animation` and `androidx.activity:activity-compose` (https://github.com/androidx/androidx) | BOM 2026.09.00 | Apache License 2.0 | The release history page only. `ui-graphics` brings `androidx.graphics:graphics-path`, whose `libandroidx.graphics.path.so` (arm64-v8a, armeabi-v7a, x86_64, x86) is the only native library in the APK |
 
-Test-only dependencies (JUnit 4, AndroidX Test runner / rules / ext-junit, Apache License 2.0 or EPL 1.0) are
-not shipped in the APK.
+Test-only dependencies (JUnit 4, AndroidX Test runner / rules / ext-junit, Espresso core, Compose UI test with
+`ui-test-manifest` in debug builds only, Apache License 2.0 or EPL 1.0) are not shipped in the release APK.
 
 ## Android Open Source Project interface signatures
 

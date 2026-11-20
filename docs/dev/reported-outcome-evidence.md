@@ -44,3 +44,14 @@ AutoJs6 插件中心第二期收口走查 (宿主仓库 `docs/plugin-center/evid
 | 同一平板 | 无特权, AutoJs6 重装自身 | 插件记为 completed; 13:57:17 换上新包并结束宿主, 13:57:18.992 插件会话同样被 ColorOS 中止 |
 
 测后两台装回原插件 (Redmi build 48, 平板 1.2.2 / 149, md5 核对一致), 宿主内容未变, Java Libraries 已卸载.
+
+1.2.3 发布前补测 (2026-11-20, release 包 `4f9789ab` versionCode 152, 即 R8 后的同一修复; 临时 AVD API 35 google_apis x86_64, emulator-5650, 宿主 debug 6642 x86_64, 驱动脚本新增 `reject-new` / `reject-same` 两个场景, 核对真正的拒绝不会被报成成功):
+
+| 场景 | 结果 |
+|---|---|
+| `self-update` | PASS, 结果页 success, 宿主 lastUpdateTime 13:04:41 -> 13:05:48 (已替换) |
+| `oem-abort` | PASS, 结果页 success, 宿主收到 ok, 夹具由 shell 装上 (versionCode 2, 13:06:20) |
+| `reject-new`: 夹具未安装, 系统确认按返回键拒绝 | PASS, 结果页 cancelled, USER_CANCELLED, 宿主收到 USER_CANCELLED, 夹具仍未安装 |
+| `reject-same`: 同一夹具 APK 已由 shell 装上, 再按返回键拒绝 | PASS, 结果页 cancelled, USER_CANCELLED, 宿主收到 USER_CANCELLED, 夹具 lastUpdateTime 13:06:58 未变 |
+
+- 同一提交的 debug 包在 API 33 临时 AVD 上: `ReleaseHistoryPageInstrumentationTest`, `SettingsDeviceTest`, `StandaloneAppearanceDeviceTest`, `ThreeSetupInstallerPluginContractTest`, `HomeActivityDeviceTest`, `InstallerBinderDeviceTest`, `InstallSessionDeviceTest`, `InstallSafetyPolicyDeviceTest` 共 39 项, 32 项通过, 7 项为需要显式开启的夹具 (engineAuthorizer) 按设计跳过, 0 失败.

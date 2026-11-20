@@ -113,7 +113,6 @@
   "text_link_installer_docs": "Installer module documentation",
   "text_link_reference_projects": "InstallerX and InstallerX Revived (architecture reference, GPL-3.0, no code reused)",
   "text_link_third_party_notices": "Third-party notices",
-  "p_instruction_more": "See the [project README]({{ repo_url }}) and [ROADMAP.md]({{ roadmap_url }}) for the installation guide and the current progress.",
   "p_quick_start_details": "A source can be a path, `file://` or readable `content://` URI. Arrays are independent batch items, while `{ splits: [...] }` installs one app. `session(...)` starts immediately; its returned object supports `cancel()` and `wait()`. Synchronous calls can throw `InstallerError` and cannot run on the UI thread. This also applies to reading `installer.status`, creating `installer.session(...)` and calling `session.wait()`. Use Async methods on the UI thread, or perform synchronous operations on a script worker thread. A session object must be used only on the script thread that created it. Handle Promise rejection and inspect each batch result's `ok` and `error`. A missing or incompatible plugin reports `PLUGIN_UNAVAILABLE`. `setDefault` returns whether the requested state was reached, including clearing the default. `app.uninstall` remains the host's system-uninstall shortcut; use `installer.uninstall` for privileged options. See the [installer API documentation]({{ docs_installer_url }}) for all options and events.",
   "example_probe": "Read-only availability and compatibility information.",
   "example_install": "Requires Shizuku authorization; silent fails if Android requires confirmation.",
@@ -130,5 +129,59 @@
   "p_profiles_requirements": "Host UI and script profiles require AutoJs6 {{ profiles_host_version_code }}+ and the V3 `source-profiles` feature. Older or non-negotiated requests retain their behavior. Omitted fields may inherit defaults; explicit `false`/`auto`/`current`/`none` override them. Only `installer`, `installReason` and `packageSource` accept null resets; the latter two still require advanced-option support. `interaction`, `timeout` and `continueOnError` remain session-wide and are excluded from profiles.",
   "p_profiles_lifecycle": "Profiles and automatic authorizer ordering are frozen when processing starts; settings edits cannot change that task or later batch items. A confirmed retry retains the complete confirmed options; an unconfirmed retry reads entry defaults and profiles again. Every retry rechecks sources and signatures without reusing a one-time policy exception. Profiles cannot bypass signatures, blacklists, authorization or Android limits.",
   "p_profiles_cleanup": "After profile negotiation, successful items report `sourceDeleteRequested` as the effective request, not proof of deletion. Explicit host `deleteSource: false` vetoes cleanup; missing or mistyped decisions retain files with notes. The host waits for batch results and retains files or proven aliases shared with failed, unprocessed or retained items. Local external entries also retain repeated batch URIs/normalized paths. `sourceDeleted` reports actual cleanup; the host never deletes content URIs.",
-  "example_profiles": "Source-profile example: host 5312+; retain files and reset three inherited fields; calling this function starts installation"
+  "example_profiles": "Source-profile example: host 5312+; retain files and reset three inherited fields; calling this function starts installation",
+  "instruction_p_what": "3-Setup Installer installs, updates, inspects and uninstalls Android apps. Installations can start from its home screen, from AutoJs6 install actions and scripts, or from packages that other apps open or share; Android confirms each one by default, and with Shizuku, Root or Dhizuku authorized it can also install silently. It also works on its own without AutoJs6.",
+  "instruction_h3_start": "Getting started",
+  "instruction_start_steps": [
+    "Open 3-Setup Installer from the launcher. For silent installation, tap \"Authorize\" for Shizuku, Root or Dhizuku under \"Authorization\" on the home screen.",
+    "Tap \"Choose installation packages\" and pick one or more APK, APKS, XAPK or similar packages.",
+    "Check the version, signature and permissions in the installation dialog, then tap \"Install\".",
+    "Once this plugin is enabled in AutoJs6 \"Plugin Center\", install actions in AutoJs6 show the same dialog; 3-Setup Installer can also be chosen when another app opens or shares a package."
+  ],
+  "instruction_h3_features": "Main features",
+  "instruction_features": [
+    "**Installation dialog**: shows the version change, size, SDK and signature comparison, and marks a new install, update, reinstall or downgrade; APK components, permissions and \"More options\" can be expanded and adjusted.",
+    "**Authorization**: without authorization Android confirms each installation; with Shizuku, Root or Dhizuku it can install silently, allow downgrades, grant permissions and more. \"Authorization order and availability\" in the settings sets the order of automatic selection.",
+    "**Batches and records**: several apps can be installed at once, and the home screen shows running tasks and \"Recent installations\"; records keep only app information and results, never the packages.",
+    "**Installed apps**: opened from the \"More\" menu on the home screen, to search, sort, view app information or uninstall apps.",
+    "**Default installer**: makes this plugin the default app for opening APK files; whether this is possible depends on the authorization and system restrictions.",
+    "**Installation profiles and blacklists**: preset installation options in the settings by installation source and package name prefix, or block specific apps with \"Package blacklist\" and \"Shared-UID blacklist\".",
+    "**Signature check**: a package whose signature differs from the installed app is blocked by default and can only be allowed once, for that item, in the installation dialog.",
+    "**Settings**: adjust \"Default interaction\", appearance, the launcher icon and notifications, or view \"Release history\" and run \"Check for updates\" manually."
+  ],
+  "instruction_h3_script": "Using it in scripts",
+  "instruction_p_script": "AutoJs6 scripts install, inspect and uninstall apps through the `installer` module. The example below shows the installation dialog and installs after the user confirms; synchronous methods must be called on a script thread, not on the UI thread:",
+  "instruction_script_notes": [
+    "Without `interaction` the mode is `auto`: it installs silently when a privileged authorization is available, otherwise Android asks for confirmation.",
+    "Passing an array installs in a batch and returns results in the order of the sources; check `ok` and `error` for each item. `installAsync` returns a Promise and can be used on the UI thread.",
+    "`installer.inspect(source)` only reads the package name, version and other information, without installing.",
+    "See [AutoJs6 documentation > installer]({{ docs_installer_url }}) for all options and events."
+  ],
+  "instruction_h3_requirements": "Requirements",
+  "instruction_requirements": [
+    "Android {{ min_android_version }} or later. Working with AutoJs6 requires AutoJs6 {{ required_host_version_name }} or later; standalone use does not need AutoJs6.",
+    "Shizuku, Root and Dhizuku are all optional and only needed for silent installation or privileged options; Dhizuku requires Android 8.0 or later.",
+    "The install and uninstall permissions request Android confirmation, the app list permission serves installed apps, versions and signature comparison, and the notification permission serves notification-based installation and progress notifications.",
+    "The network is used only when checking for plugin updates manually; packages are never uploaded."
+  ],
+  "instruction_h3_faq": "FAQ",
+  "instruction_faq": [
+    {
+      "q": "Why confirmation is still required after authorization",
+      "a": "The policy of Android or the device vendor may still require user confirmation. In that case \"Automatic\" falls back to Android confirmation, while a silent mode fails and explains why."
+    },
+    {
+      "q": "Why accessibility services cannot be turned on after installation",
+      "a": "Since Android 13, apps installed as local files cannot use accessibility and other restricted settings; installations through Shizuku or Root are not marked as local files by default. For a trusted app, allow restricted settings from the top-right menu of its app info page in the system settings, then turn on its accessibility service; the entry varies by system."
+    },
+    {
+      "q": "Why .aab files cannot be installed",
+      "a": "An Android App Bundle is a publishing format and cannot be installed directly. Convert it to an .apks package with bundletool first; the plugin can show the package name and modules of an .aab file."
+    },
+    {
+      "q": "Why a downgrade fails even with downgrades allowed",
+      "a": "\"Allow version downgrade\" only asks the system; whether it is accepted depends on the system version, the authorization and whether the app is debuggable. When it fails, the result includes the message returned by the system."
+    }
+  ],
+  "instruction_p_more": "See the [project homepage]({{ repo_url }}) for details on authorization, installation options and permissions."
 }

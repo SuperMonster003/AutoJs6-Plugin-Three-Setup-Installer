@@ -15,6 +15,13 @@ Scenarios:
                confirmation. Like the ColorOS installer, which installs the APK through its own session, the
                same APK is installed by the shell and the confirmation is then rejected with Back
                (INSTALL_FAILED_ABORTED: User rejected permissions).
+  reject-new   The plugin already may install unknown apps; the fixture is absent and the system confirmation is
+               rejected with Back. Nothing was installed, so the page, AutoJs6 and the package must all say
+               cancelled (USER_CANCELLED), not installed: the post-commit check must not turn a real rejection
+               into a success.
+  reject-same  As reject-new, but the same fixture APK (same versionCode and certificate) is installed by the shell
+               first. The package exists and matches, yet its lastUpdateTime does not change, so the result must
+               still be USER_CANCELLED.
 
 Each scenario prints one PASS / FAIL line with the title of the plugin's result page, the error code shown
 there, the code AutoJs6 received (oem-abort) and the package's lastUpdateTime before / after.
@@ -25,7 +32,8 @@ Example (from the plugin repository):
       --plugin app/build/outputs/apk/debug/<plugin>.apk self-update oem-abort
 zh-CN: 安装结果验收: 插件结果页与回传给 AutoJs6 的结果须与会话结束后包的实际状态一致. 仅用于临时 AVD (emulator-*):
 插件对话框, 设置页与系统确认用 uiautomator 查找后点按, 系统确认用返回键关闭. self-update 让宿主经插件重装自身;
-oem-abort 模拟 ColorOS 安装器用自己的会话装上后再中止插件的会话. 每个场景输出一行 PASS / FAIL 与关键数值.
+oem-abort 模拟 ColorOS 安装器用自己的会话装上后再中止插件的会话; reject-new / reject-same 在没有装上 (或同一 APK
+早已装上, 更新时间不变) 时按返回键拒绝, 结果须仍为 USER_CANCELLED, 核对不能把真正的拒绝报成成功. 每个场景输出一行 PASS / FAIL 与关键数值.
 """
 from __future__ import annotations
 
@@ -260,20 +268,58 @@ def scenario_oem_abort(device: Device, args) -> bool:
     return ok
 
 
+def scenario_reject(device: Device, args, preinstalled: bool) -> bool:
+    name = "reject-same" if preinstalled else "reject-new"
+    device.shell("pm uninstall %s" % FIXTURE, check=False)
+    if preinstalled:
+        device.adb("install", "-r", "-d", str(FIXTURE_APK))
+    device.shell("appops set %s REQUEST_INSTALL_PACKAGES allow" % PLUGIN)
+    device.adb("push", str(FIXTURE_APK), HOST_FILES + "/" + name + ".apk")
+    before = device.last_update(FIXTURE)
+    start_script(device, name + ".json", HOST_FILES + "/" + name + ".apk")
+    button = device.wait(plugin_install_button, 180)
+    if not button:
+        print("FAIL %s: the plugin dialog did not offer Install; screen: %s" % (name, visible_texts(device)))
+        return False
+    device.tap(button)
+    if not device.wait(system_confirmation, 60):
+        print("FAIL %s: no system confirmation" % name)
+        return False
+    time.sleep(1)
+    device.shell("input keyevent 4")
+    result = device.wait(plugin_result, 60)
+    receipt = read_receipt(device, name + ".json", 30) or {}
+    after = device.last_update(FIXTURE)
+    host_code = "ok" if receipt.get("ok") else receipt.get("code")
+    ok = (bool(result) and result["title"] == "cancelled" and result["code"] == "USER_CANCELLED"
+          and receipt.get("ok") is False and host_code == "USER_CANCELLED" and after == before)
+    print("%s %s: page=%s code=%s host=%s fixture lastUpdateTime %s -> %s (versionCode %s)" % (
+        "PASS" if ok else "FAIL", name, result and result["title"], result and result["code"], host_code, before, after,
+        device.version_code(FIXTURE)))
+    device.shell("pm uninstall %s" % FIXTURE, check=False)
+    return ok
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     parser.add_argument("-s", "--serial", required=True)
     parser.add_argument("--work", type=pathlib.Path, required=True)
     parser.add_argument("--host", type=pathlib.Path, required=True, help="debug AutoJs6 APK for the AVD's ABI")
     parser.add_argument("--plugin", type=pathlib.Path, required=True, help="plugin APK signed like the host")
-    parser.add_argument("scenarios", nargs="+", choices=["self-update", "oem-abort"])
+    parser.add_argument("scenarios", nargs="+", choices=["self-update", "oem-abort", "reject-new", "reject-same"])
     args = parser.parse_args()
     args.work.mkdir(parents=True, exist_ok=True)
     device = Device(args.serial, args.work)
     prepare(device, args)
     results = []
     for name in args.scenarios:
-        results.append({"self-update": scenario_self_update, "oem-abort": scenario_oem_abort}[name](device, args))
+        scenarios = {
+            "self-update": scenario_self_update,
+            "oem-abort": scenario_oem_abort,
+            "reject-new": lambda d, a: scenario_reject(d, a, preinstalled=False),
+            "reject-same": lambda d, a: scenario_reject(d, a, preinstalled=True),
+        }
+        results.append(scenarios[name](device, args))
         device.shell("am force-stop %s" % PLUGIN, check=False)
     return 0 if all(results) else 1
 

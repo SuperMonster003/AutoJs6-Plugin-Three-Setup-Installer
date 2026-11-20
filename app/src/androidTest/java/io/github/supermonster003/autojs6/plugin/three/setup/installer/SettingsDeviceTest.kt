@@ -9,7 +9,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.google.android.material.radiobutton.MaterialRadioButton
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.settings.InstallerPreferences
-import io.github.supermonster003.autojs6.plugin.three.setup.installer.settings.ReleaseHistory
+import io.github.supermonster003.autojs6.plugin.three.setup.installer.settings.ReleaseHistoryAssetPolicy
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.ui.LauncherIconMode
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.ui.LauncherIconStatePolicy
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.ui.LauncherIcons
@@ -71,7 +71,7 @@ class SettingsDeviceTest {
 
     @Test fun everyBundledLanguageHasItsOwnHistoryAndLegalDocumentsStayOffline() {
         for (tag in listOf("zh-Hans", "zh-Hant-HK", "zh-Hant-TW", "en", "fr", "es", "ja", "ko", "ru", "ar")) {
-            val candidates = ReleaseHistory.candidates(Locale.forLanguageTag(tag))
+            val candidates = ReleaseHistoryAssetPolicy.candidatesFor(Locale.forLanguageTag(tag))
             val actual = context.assets.open(candidates.first()).bufferedReader().use { it.readText() }
             assertTrue(tag, actual.contains("1.0.0"))
         }

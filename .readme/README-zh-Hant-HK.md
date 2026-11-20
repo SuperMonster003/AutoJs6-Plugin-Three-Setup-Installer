@@ -52,7 +52,7 @@
 
 ******
 
-1.2.2 已實作下述安裝, 應用程式管理與腳本功能. 目前版本可從 [GitHub Releases](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/releases/tag/v1.2.2) 或 AutoJs6 外掛程式中心取得. 宿主接入需要 AutoJs6 >= 6.8.0 (5299), `installer` 腳本 API 需要組建 5300 或更高版本. 裝置覆蓋與餘下驗收記錄在 [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md) 中. Dhizuku, 通知欄安裝和持久預設安裝器的腳本選項需要 AutoJs6 6.8.0 組建 5307 或以上及 installer V2 契約. 基本宿主接入仍支援組建 5299, V1 腳本方法從組建 5300 起可用.
+1.2.3 已實作下述安裝, 應用程式管理與腳本功能. 目前版本可從 [GitHub Releases](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/releases/tag/v1.2.3) 或 AutoJs6 外掛程式中心取得. 宿主接入需要 AutoJs6 >= 6.8.0 (5299), `installer` 腳本 API 需要組建 5300 或更高版本. 裝置覆蓋與餘下驗收記錄在 [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md) 中. Dhizuku, 通知欄安裝和持久預設安裝器的腳本選項需要 AutoJs6 6.8.0 組建 5307 或以上及 installer V2 契約. 基本宿主接入仍支援組建 5299, V1 腳本方法從組建 5300 起可用.
 
 ******
 
@@ -60,7 +60,7 @@
 
 ******
 
-1.2.2 已實作的功能:
+1.2.3 已實作的功能:
 
 - 安裝套件格式: `.apk`, `.apks`, `.xapk`, `.apkm`, `.apkz` 以及包含 APK 的 ZIP 壓縮檔; 分包按裝置選擇; `.aab` 檔案只識別與說明, 不安裝.
 - `none` 使用 Android 確認. 新設定的 `auto` 按 `shizuku -> root -> dhizuku -> none` 選擇可用方式, 可調整次序和啟用狀態. 已儲存的舊三項設定保留原相對次序及啟用選擇, Dhizuku 插入 `none` 前但預設停用. 明確指定的授權方式不會改用其他方式.
@@ -279,13 +279,22 @@ minimum host build: 5299 (6.8.0)
 
 ******
 
+#### v1.2.3
+
+_2026/11/20_
+
+- `修復` 應用程式實際已安裝, 卻顯示安裝已取消的問題: 發起安裝的應用程式在安裝中被取代 (例如 AutoJs6 更新自身), 或 ColorOS 等系統安裝程式改用自己的方式完成安裝時出現; 現在按已安裝應用程式的版本與簽章報告結果
+- `優化` 發行歷史頁改為按版本展開或收起: 收起時顯示日期與各類別的項目數, 展開後每個類別只標示一次, 可一次展開或收起全部, 開啟時展開最新版本; 頁面標題由 "版本歷史" 改為 "發行歷史", 副標題為插件名稱, 設定頁, 關於頁與更新對話框中的入口也隨之改名
+- `優化` 插件中心中的使用說明重新編寫, 分為開始使用, 主要功能, 在腳本中使用, 運行要求與常見問題五部分
+- `依賴` 新增 Jetpack Compose BOM 2026.09.00 (發行歷史頁)
+- `依賴` 升級共用構建插件版本 1.9.0 -> 1.9.7
+
 #### v1.2.2
 
-_2026/11/18_
+_2026/11/14_
 
 - `修復` Shizuku/Root 安裝不再預設標記為本機檔案來源, 避免在 Android 13+ 觸發無障礙等受限制設定; 保留明確指定的安裝來源
 - `修復` 沒有啟動畫面的應用程式安裝或升級成功後, 提示文字容易被誤解為安裝失敗的問題
-- `修復` 應用程式實際已安裝, 卻顯示安裝已取消的問題: 發起安裝的應用程式在安裝中被取代 (例如 AutoJs6 更新自身), 或 ColorOS 等系統安裝程式改用自己的方式完成安裝時出現; 現在按已安裝應用程式的版本與簽章報告結果
 - `優化` 重新設計安裝對話框: 應用程式資訊改為對齊的表格 (版本, 大小, SDK, 簽章比對), 並標明新安裝, 更新, 重新安裝或降級; APK 分包, 權限和不常用的選項預設摺疊; 加大文字行距與間距
 - `優化` 授權方式為自動時, 安裝對話框與安裝結果顯示實際採用的方式 (例如 Shizuku 或系統確認)
 
@@ -297,25 +306,6 @@ _2026/10/17_
 - `修復` 阿拉伯語介面中, 3-Setup Installer 不再被倒序顯示成 Setup Installer-3
 - `優化` 外掛程式中心圖示採用統一工作台調整後的尺寸, 位置, 明暗圖稿與圓形底色, 保留可重建原稿和參數
 - `優化` Android 系統應用程式資訊圖示與圖示工作台共用圖稿及明暗底色, 保留外掛程式中心透明圖稿與現有啟動器選項
-
-#### v1.2.0
-
-_2026/10/02_
-
-- `新增` 進階安裝選項: `grantAllRequestedPermissions`, `requestUpdateOwnership`, `dexopt` (`none`/`verify`/`speed-profile`/`speed`), `installReason` 及 `packageSource`. 平台或授權方式不支援時明確拒絕, 不靜默忽略. none 不追加手動編譯, 也不關閉 Android 自身的編譯.
-- `新增` 簽章檢查與本機套件名稱/SharedUID 精確黑名單適用於全部入口, 使用 `BLOCKED_BY_POLICY`. 僅真實 dialog 可對目前項目一次放行 mismatch/unknown 簽章, Android 仍會驗證; 靜默/通知不能放行, 黑名單不可覆寫. 權限預覽顯示實際選取 APK 分包宣告的權限, 不代表已授予權限.
-- `新增` 來源配置可在設定中命名, 啟停, 編輯及排序. 按實際套件名稱選擇首個同時符合來源和名稱前綴的已啟用配置, 不疊加多個配置; 任意來源包含首頁. 配置只提供 12 項每應用程式選項的局部預設值, 明確請求優先, 真實確認頁的最終選擇仍可調整.
-- `優化` 進階腳本選項需要 AutoJs6 構建 5308+ 並協商 V3 與 `advanced-install-options`. 沒有配置覆蓋時, 省略欄位保留原行為; 明確的 `false`/`none` 仍需對應支援. 正式發佈及裝置驗收狀態以路線圖為準.
-- `優化` 成功結果可回報讀回的 `updateOwner` 及 `dexopt`. null 表示 Android 未向目前呼叫身分傳回 owner, 可能沒有 owner 或受可見性過濾, 不能證明全域不存在; 讀取失敗省略欄位並寫入 notes. DexOpt 狀態為 accepted/failed/cancelled/timeout/unavailable/unknown; accepted 包含系統略過, 不證明實際執行編譯. 附加步驟失敗不改變已確認的安裝成功.
-- `優化` 權限授予請求及非 none 的 DexOpt 需要 Shizuku/Root, verify 需要 API 26+. 安裝原因需要 API 26+, 來源標籤需要 API 33+, 請求更新擁有權需要 API 34+. 擁有權僅能在首次安裝啟用, 更新或其他使用者已有該套件時可能被忽略; false 不撤銷既有 owner.
-- `優化` 授予選項請求系統可授予的權限, 也可能包含 Android 14 的 USE_FULL_SCREEN_INTENT 等安裝器可改變的 app-op. 不保證全部宣告權限, 不授予無障礙, 懸浮視窗或任意簽章權限. restricted/system-fixed/policy-fixed 限制仍有效, 不額外設定 restricted 權限 allowlist 標誌.
-- `優化` none/Dhizuku 僅能檢查目前使用者的已安裝簽章, Shizuku/Root 進行全域查詢. SharedUID 規則非空時, 無法排除其他使用者已有該套件會直接拒絕, 不能一次放行.
-- `優化` 宿主介面及腳本使用來源配置需要 AutoJs6 5312+ 及 V3 `source-profiles` 能力. 舊宿主或未協商的請求保留原行為. 省略欄位可繼承配置, 明確的 `false`/`auto`/`current`/`none` 覆蓋配置. 只有 `installer`, `installReason`, `packageSource` 接受 null 清除繼承; 後兩者的 null 仍需進階選項能力. `interaction`, `timeout`, `continueOnError` 屬於整次工作階段, 不進入配置.
-- `優化` 任務開始處理時固定來源配置及自動授權排序, 編輯設定不會改變正在處理的任務或同批後續項目. 已確認的重試沿用完整確認選項, 未確認的重試重新讀取入口預設值及配置. 每次仍重新檢查來源和簽章, 不重用一次性策略放行. 配置不能繞過簽章, 黑名單, 授權或系統限制.
-- `優化` 協商來源配置後, 成功項目的 `sourceDeleteRequested` 表示最終刪除請求, 不代表已刪除. 宿主明確的 `deleteSource: false` 禁止刪除; 決策欄位缺失或類型錯誤時保留檔案並記錄 notes. 宿主等待批次結果, 保留與失敗, 未處理或要求保留項目共用的檔案及可確認的別名. 本機外部入口也保留同批重複 URI/標準化路徑. `sourceDeleted` 才報告實際清理結果, content URI 不由宿主刪除.
-- `優化` 啟動器與插件中心圖示按統一視覺尺寸標準調整, 插件中心採用透明背景和黑白或中性灰階圖案
-- `依賴` 升級 installer-api.aar 至契約 V3 (MPL 2.0), 保留 V1/V2 與全部 11 個 AIDL 交易; 進階指令碼選項需要宿主構建 5308+. 同一 V3 契約附加可選 source-profiles 能力及來源配置欄位, 宿主接入從 5312 起, 十一項 AIDL 交易保持不變
-- `依賴` 升級共用安裝包解析器 (MPL 2.0), 核驗真實資訊清單根元素及 sharedUserId, 拒絕有歧義的輸入. 從真實 Android 命名空間元素讀取權限宣告, 排除註解及擴充命名空間偽宣告, 並拒絕編譯屬性衝突.
 
 ##### 更多發行歷史
 

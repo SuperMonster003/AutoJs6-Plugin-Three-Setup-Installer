@@ -52,7 +52,7 @@ Le plugin gère l'inspection des paquets, l'installation et les résultats indé
 
 ******
 
-1.2.2 décrit les fonctions d'installation, de gestion des applications et de scripts présentées ci-dessous. Cette version est disponible sur [GitHub Releases](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/releases/tag/v1.2.2) et dans le centre de plugins AutoJs6. L'intégration nécessite AutoJs6 >= 6.8.0 (5299), et l'API de scripts `installer` nécessite la compilation 5300 ou ultérieure. La couverture des appareils et les validations restantes figurent dans [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md). Dhizuku, l'installation par notification et les options de scripts pour l'installateur persistant nécessitent AutoJs6 6.8.0 compilation 5307 ou ultérieure avec le contrat installer V2. L'intégration de base reste disponible dès la compilation 5299, et les méthodes de scripts V1 dès 5300.
+1.2.3 décrit les fonctions d'installation, de gestion des applications et de scripts présentées ci-dessous. Cette version est disponible sur [GitHub Releases](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/releases/tag/v1.2.3) et dans le centre de plugins AutoJs6. L'intégration nécessite AutoJs6 >= 6.8.0 (5299), et l'API de scripts `installer` nécessite la compilation 5300 ou ultérieure. La couverture des appareils et les validations restantes figurent dans [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md). Dhizuku, l'installation par notification et les options de scripts pour l'installateur persistant nécessitent AutoJs6 6.8.0 compilation 5307 ou ultérieure avec le contrat installer V2. L'intégration de base reste disponible dès la compilation 5299, et les méthodes de scripts V1 dès 5300.
 
 ******
 
@@ -60,7 +60,7 @@ Le plugin gère l'inspection des paquets, l'installation et les résultats indé
 
 ******
 
-Fonctions implémentées dans 1.2.2:
+Fonctions implémentées dans 1.2.3:
 
 - Formats de paquet : `.apk`, `.apks`, `.xapk`, `.apkm`, `.apkz` et archives ZIP contenant des APK ; les paquets fractionnés sont sélectionnés pour l'appareil ; les fichiers `.aab` sont reconnus et décrits mais pas installés.
 - `none` utilise la confirmation Android. Les nouveaux paramètres essaient `shizuku -> root -> dhizuku -> none` pour `auto`, selon leur disponibilité; chaque méthode peut être déplacée ou désactivée. Les anciens paramètres à trois méthodes conservent leur ordre relatif et leurs activations, avec Dhizuku inséré avant `none` mais désactivé. Un choix explicite ne bascule jamais vers une autre méthode.
@@ -279,13 +279,22 @@ Les plans et l'avancement du plugin sont tenus sous forme de liste cochable dans
 
 ******
 
+#### v1.2.3
+
+_2026/11/20_
+
+- `Correction` Des installations réussies étaient affichées comme annulées lorsque l'application à l'origine de l'installation était remplacée pendant celle-ci (par exemple AutoJs6 se mettant à jour) ou lorsqu'un programme d'installation système comme celui de ColorOS terminait l'installation à sa manière; le résultat suit désormais la version et la signature de l'application installée
+- `Amélioration` La page Historique des versions se développe et se réduit désormais par version: une version réduite affiche sa date et le nombre d'entrées par catégorie, une version développée ne nomme chaque catégorie qu'une fois; toutes les versions peuvent être développées ou réduites d'un coup, et la plus récente s'ouvre développée; la page a pour sous-titre le nom du plugin
+- `Amélioration` Réécriture des instructions affichées dans le Centre des plugins en cinq parties: prise en main, fonctionnalités principales, utilisation dans les scripts, prérequis et questions fréquentes
+- `Dépendance` Ajout de Jetpack Compose BOM 2026.09.00 (page Historique des versions)
+- `Dépendance` Mise à niveau des plugins de compilation partagés version 1.9.0 -> 1.9.7
+
 #### v1.2.2
 
-_2026/11/18_
+_2026/11/14_
 
-- `Correctif` Les installations avec Shizuku/Root ne déclarent plus par défaut une source de fichier local pouvant restreindre l'accessibilité sous Android 13 ou version ultérieure; les sources explicitement choisies sont conservées
-- `Correctif` Le message affiché après l'installation ou la mise à jour réussie d'une application sans interface accessible directement pouvait laisser croire à un échec de l'installation
-- `Correctif` Des installations réussies étaient affichées comme annulées lorsque l'application à l'origine de l'installation était remplacée pendant celle-ci (par exemple AutoJs6 se mettant à jour) ou lorsqu'un programme d'installation système comme celui de ColorOS terminait l'installation à sa manière; le résultat suit désormais la version et la signature de l'application installée
+- `Correction` Les installations avec Shizuku/Root ne déclarent plus par défaut une source de fichier local pouvant restreindre l'accessibilité sous Android 13 ou version ultérieure; les sources explicitement choisies sont conservées
+- `Correction` Le message affiché après l'installation ou la mise à jour réussie d'une application sans interface accessible directement pouvait laisser croire à un échec de l'installation
 - `Amélioration` Dialogue d'installation repensé : les informations de l'application s'affichent dans un tableau aligné (version, taille, SDK, comparaison des signatures) avec la mention nouvelle installation, mise à jour, réinstallation ou version antérieure; les composants APK, les autorisations et les options rarement utilisées sont repliés par défaut; l'interligne et les espacements du texte sont plus généreux
 - `Amélioration` Avec la méthode d'autorisation automatique, le dialogue et le résultat de l'installation indiquent la méthode réellement utilisée (par exemple Shizuku ou la confirmation système)
 
@@ -293,29 +302,10 @@ _2026/11/18_
 
 _2026/10/17_
 
-- `Correctif` Compléter les traductions manquantes dans les paramètres de mise à jour
-- `Correctif` Dans l'interface en arabe, 3-Setup Installer ne s'affiche plus à l'envers sous la forme Setup Installer-3
+- `Correction` Compléter les traductions manquantes dans les paramètres de mise à jour
+- `Correction` Dans l'interface en arabe, 3-Setup Installer ne s'affiche plus à l'envers sous la forme Setup Installer-3
 - `Amélioration` Les icônes du centre de plugins utilisent les tailles, positions, images claires et sombres et fonds circulaires réglés dans Icon Studio, avec les sources et paramètres permettant de les reproduire
 - `Amélioration` Les icônes des informations d'application Android utilisent les illustrations et les fonds clairs et sombres d'Icon Studio, en conservant les images transparentes du centre de plugins et les choix du lanceur
-
-#### v1.2.0
-
-_2026/10/02_
-
-- `Fonctionnalité` Options avancées: `grantAllRequestedPermissions`, `requestUpdateOwnership`, `dexopt` (`none`/`verify`/`speed-profile`/`speed`), `installReason` et `packageSource`. Une plateforme ou autorisation incompatible refuse la requête. none n'ajoute pas de compilation manuelle et ne désactive pas celle d'Android.
-- `Fonctionnalité` Les contrôles de signature et listes locales de blocage exact par paquet/SharedUID s'appliquent à toutes les entrées avec `BLOCKED_BY_POLICY`. Seul un vrai dialog permet une exception unique pour une signature mismatch/unknown; Android la vérifie toujours. Les modes silencieux/notification ne l'autorisent pas, et la liste de blocage reste impérative. L'aperçu montre les permissions déclarées dans les APK sélectionnés, pas celles accordées.
-- `Fonctionnalité` Les profils par source peuvent être nommés, activés, modifiés et réordonnés dans les paramètres. Le premier profil actif correspondant à la source et au préfixe du vrai nom de paquet s'applique, sans cumul; toute source inclut l'accueil. Il fournit des valeurs partielles pour 12 options par application. Les demandes explicites sont prioritaires, puis la vraie page de confirmation permet les choix finaux.
-- `Amélioration` Les options avancées nécessitent AutoJs6 5308+ et V3 avec `advanced-install-options`. Sans profil prioritaire, l'omission conserve le comportement; `false`/`none` explicite exige toujours la prise en charge. L'état de publication et de validation des appareils figure dans la feuille de route.
-- `Amélioration` Un résultat réussi peut contenir `updateOwner` et `dexopt` observés. null signifie qu'Android ne renvoie aucun owner à cette identité, éventuellement à cause du filtrage de visibilité, sans prouver une absence globale. Un échec de lecture omet le champ et ajoute des notes. Les états DexOpt sont accepted/failed/cancelled/timeout/unavailable/unknown. accepted inclut une opération ignorée par le système et ne prouve pas une compilation. L'échec de cette étape ne change pas une installation déjà confirmée.
-- `Amélioration` Les demandes de permissions et DexOpt autre que none exigent Shizuku/Root; verify exige API 26+. Le motif nécessite API 26+, la source API 33+ et la demande de propriété des mises à jour API 34+. Cette propriété ne démarre qu'à l'installation initiale; les mises à jour ou paquets présents chez un autre utilisateur peuvent être ignorés. false ne révoque pas un owner existant.
-- `Amélioration` L'option demande les permissions que le système peut accorder et peut inclure des app-ops modifiables par l'installateur, comme USE_FULL_SCREEN_INTENT sur Android 14. Elle ne garantit pas toutes les permissions et n'accorde ni accessibilité, ni superposition, ni permissions de signature arbitraires. Les contraintes restricted/system-fixed/policy-fixed restent actives, sans drapeau allowlist supplémentaire.
-- `Amélioration` none/Dhizuku ne vérifie les signatures installées que pour l'utilisateur actuel; Shizuku/Root interroge globalement. Avec des règles SharedUID, une présence incertaine chez un autre utilisateur bloque sans exception.
-- `Amélioration` Les profils de l'interface hôte et des scripts nécessitent AutoJs6 5312+ et V3 `source-profiles`. Les anciennes demandes ou celles sans négociation gardent leur comportement. Les champs omis héritent des valeurs; `false`/`auto`/`current`/`none` explicites les remplacent. Seuls `installer`, `installReason` et `packageSource` acceptent null pour réinitialiser; les deux derniers exigent encore les options avancées. `interaction`, `timeout` et `continueOnError` restent propres à la session, hors profils.
-- `Amélioration` Les profils et l'ordre des autorisations automatiques sont figés au début du traitement; une modification ne change ni la tâche ni la suite du lot. Une nouvelle tentative confirmée conserve toutes les options confirmées; sans confirmation, elle relit les valeurs d'entrée et profils. Chaque tentative revérifie sources et signatures sans réutiliser une exception ponctuelle. Les profils ne contournent ni signatures, ni listes noires, ni autorisations ou limites Android.
-- `Amélioration` Après négociation, `sourceDeleteRequested` indique la demande effective des éléments réussis, pas une suppression accomplie. `deleteSource: false` explicite côté hôte interdit la suppression; une décision absente ou mal typée conserve le fichier avec notes. Après les résultats du lot, les fichiers ou alias prouvés partagés avec des éléments échoués, non traités ou conservés restent présents. Les entrées externes locales conservent aussi les URI/chemins normalisés répétés. `sourceDeleted` indique le nettoyage réel; l'hôte ne supprime jamais les URI content.
-- `Amélioration` Taille visuelle harmonisée des icônes du lanceur et du Centre de plugins, avec des fonds transparents et des motifs noirs, blancs ou gris neutres
-- `Dépendance` Mise à niveau de installer-api.aar vers le contrat V3 (MPL 2.0), avec V1/V2 et les 11 transactions AIDL conservés; options avancées à partir du build hôte 5308. Le même contrat V3 ajoute la capacité optionnelle source-profiles et ses champs à partir de l'hôte 5312, sans changer les onze transactions AIDL
-- `Dépendance` Mise à niveau de l'analyseur partagé de paquets (MPL 2.0) pour vérifier la racine réelle du manifeste et sharedUserId et refuser les entrées ambiguës. Lire les permissions depuis les vrais éléments de l'espace de noms Android, exclure les leurres dans les commentaires et espaces de noms externes, et refuser les attributs compilés contradictoires.
 
 ##### Pour plus d'historique des versions
 

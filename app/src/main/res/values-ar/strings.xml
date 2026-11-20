@@ -316,8 +316,14 @@
     <string name="profile_title">ملفات تعريف التثبيت</string>
     <string name="profile_unreadable">تعذرت قراءة ملفات التعريف المحفوظة. تحظر طلبات التثبيت حتى يتم إصلاح الملفات أو إعادة تعيينها صراحة.</string>
     <string name="profile_unsaved">توجد تغييرات غير محفوظة. احفظ القائمة لتطبيقها, أو ألغ لتجاهلها.</string>
+    <string name="release_history">سجل الإصدارات</string>
+    <string name="release_history_collapse_all">طيّ الكل</string>
+    <string name="release_history_collapsed">مطوي</string>
     <string name="release_history_error">تعذرت قراءة المستند المدمج.</string>
-    <string name="release_history_title">سجل الإصدارات</string>
+    <string name="release_history_expand_all">توسيع الكل</string>
+    <string name="release_history_expanded">موسَّع</string>
+    <string name="release_history_summary">عرض سجل الإصدارات المضمن في التطبيق</string>
+    <string name="release_history_unavailable">تعذر تحميل سجل الإصدارات</string>
     <string name="settings_appearance">المظهر</string>
     <string name="settings_authorizer_order">ترتيب طرق التفويض وتفعيلها</string>
     <string name="settings_authorizers_note">يستخدم الاختيار التلقائي أول طريقة مفعلة ومصرح بها حاليا. أبق طريقة واحدة على الأقل مفعلة. لا تتغير اختيارات المضيف أو السكربت الصريحة.</string>

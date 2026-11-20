@@ -4,13 +4,22 @@
 
 ******
 
+# v1.2.3
+
+###### 2026/11/20
+
+* `Correction` Des installations réussies étaient affichées comme annulées lorsque l'application à l'origine de l'installation était remplacée pendant celle-ci (par exemple AutoJs6 se mettant à jour) ou lorsqu'un programme d'installation système comme celui de ColorOS terminait l'installation à sa manière; le résultat suit désormais la version et la signature de l'application installée
+* `Amélioration` La page Historique des versions se développe et se réduit désormais par version: une version réduite affiche sa date et le nombre d'entrées par catégorie, une version développée ne nomme chaque catégorie qu'une fois; toutes les versions peuvent être développées ou réduites d'un coup, et la plus récente s'ouvre développée; la page a pour sous-titre le nom du plugin
+* `Amélioration` Réécriture des instructions affichées dans le Centre des plugins en cinq parties: prise en main, fonctionnalités principales, utilisation dans les scripts, prérequis et questions fréquentes
+* `Dépendance` Ajout de Jetpack Compose BOM 2026.09.00 (page Historique des versions)
+* `Dépendance` Mise à niveau des plugins de compilation partagés version 1.9.0 -> 1.9.7
+
 # v1.2.2
 
-###### 2026/11/18
+###### 2026/11/14
 
-* `Correctif` Les installations avec Shizuku/Root ne déclarent plus par défaut une source de fichier local pouvant restreindre l'accessibilité sous Android 13 ou version ultérieure; les sources explicitement choisies sont conservées
-* `Correctif` Le message affiché après l'installation ou la mise à jour réussie d'une application sans interface accessible directement pouvait laisser croire à un échec de l'installation
-* `Correctif` Des installations réussies étaient affichées comme annulées lorsque l'application à l'origine de l'installation était remplacée pendant celle-ci (par exemple AutoJs6 se mettant à jour) ou lorsqu'un programme d'installation système comme celui de ColorOS terminait l'installation à sa manière; le résultat suit désormais la version et la signature de l'application installée
+* `Correction` Les installations avec Shizuku/Root ne déclarent plus par défaut une source de fichier local pouvant restreindre l'accessibilité sous Android 13 ou version ultérieure; les sources explicitement choisies sont conservées
+* `Correction` Le message affiché après l'installation ou la mise à jour réussie d'une application sans interface accessible directement pouvait laisser croire à un échec de l'installation
 * `Amélioration` Dialogue d'installation repensé : les informations de l'application s'affichent dans un tableau aligné (version, taille, SDK, comparaison des signatures) avec la mention nouvelle installation, mise à jour, réinstallation ou version antérieure; les composants APK, les autorisations et les options rarement utilisées sont repliés par défaut; l'interligne et les espacements du texte sont plus généreux
 * `Amélioration` Avec la méthode d'autorisation automatique, le dialogue et le résultat de l'installation indiquent la méthode réellement utilisée (par exemple Shizuku ou la confirmation système)
 
@@ -18,8 +27,8 @@
 
 ###### 2026/10/17
 
-* `Correctif` Compléter les traductions manquantes dans les paramètres de mise à jour
-* `Correctif` Dans l'interface en arabe, 3-Setup Installer ne s'affiche plus à l'envers sous la forme Setup Installer-3
+* `Correction` Compléter les traductions manquantes dans les paramètres de mise à jour
+* `Correction` Dans l'interface en arabe, 3-Setup Installer ne s'affiche plus à l'envers sous la forme Setup Installer-3
 * `Amélioration` Les icônes du centre de plugins utilisent les tailles, positions, images claires et sombres et fonds circulaires réglés dans Icon Studio, avec les sources et paramètres permettant de les reproduire
 * `Amélioration` Les icônes des informations d'application Android utilisent les illustrations et les fonds clairs et sombres d'Icon Studio, en conservant les images transparentes du centre de plugins et les choix du lanceur
 
@@ -58,7 +67,7 @@
 
 ###### 2026/10/02
 
-* `Note` 1.0.0 décrit les fonctions d'installation, de gestion des applications et de scripts présentées ci-dessous. La publication officielle sur GitHub Releases et le référencement dans le centre de plugins restent à effectuer. L'intégration nécessite AutoJs6 >= 6.8.0 (5299), et l'API de scripts `installer` nécessite la compilation 5300 ou ultérieure. La couverture des appareils et les validations restantes figurent dans [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md).
+* `Astuce` 1.0.0 décrit les fonctions d'installation, de gestion des applications et de scripts présentées ci-dessous. La publication officielle sur GitHub Releases et le référencement dans le centre de plugins restent à effectuer. L'intégration nécessite AutoJs6 >= 6.8.0 (5299), et l'API de scripts `installer` nécessite la compilation 5300 ou ultérieure. La couverture des appareils et les validations restantes figurent dans [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md).
 * `Fonctionnalité` 3-Setup Installer installe, met à jour, inspecte et désinstalle des applications Android depuis son accueil autonome, les entrées et scripts AutoJs6, ou l'ouverture et le partage de paquets par d'autres applications. Il prend en charge la confirmation Android et les opérations privilégiées via Shizuku ou Root
 * `Fonctionnalité` Formats de paquet : `.apk`, `.apks`, `.xapk`, `.apkm`, `.apkz` et archives ZIP contenant des APK ; les paquets fractionnés sont sélectionnés pour l'appareil ; les fichiers `.aab` sont reconnus et décrits mais pas installés
 * `Fonctionnalité` La suppression de la source après une installation réussie peut être demandée sans garantie. Les rétrogradations, paquets de test, contournements du targetSdk minimal (Android 14+), attributions d'installateur et autres utilisateurs nécessitent Shizuku ou Root et restent soumis aux restrictions Android

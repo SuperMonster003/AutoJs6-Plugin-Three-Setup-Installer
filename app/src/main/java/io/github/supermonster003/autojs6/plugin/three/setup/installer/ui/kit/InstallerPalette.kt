@@ -11,14 +11,15 @@ import kotlin.math.pow
 
 /** The same fixed Material Color Utilities rule as the other standalone Three plugins. */
 internal object ThemeAccentRoles {
-    data class Roles(val primary: Int, val onPrimary: Int)
+    /** [container] is the primary container role (tone 90 light, 30 dark); the release history page uses it. */
+    data class Roles(val primary: Int, val onPrimary: Int, val container: Int)
 
     @SuppressLint("RestrictedApi") // Material 1.13.0 supplies the pinned utilities used by the shared policy.
     fun fromSeed(seed: Int, dark: Boolean): Roles {
         val source = Hct.fromInt(seed or -0x1000000)
         val chroma = if (source.chroma < 4.0) 0.0 else max(source.chroma, 48.0).coerceAtMost(96.0)
         val tones = TonalPalette.fromHueAndChroma(source.hue, chroma)
-        return Roles(tones.tone(if (dark) 80 else 40), tones.tone(if (dark) 20 else 100))
+        return Roles(tones.tone(if (dark) 80 else 40), tones.tone(if (dark) 20 else 100), tones.tone(if (dark) 30 else 90))
     }
 }
 

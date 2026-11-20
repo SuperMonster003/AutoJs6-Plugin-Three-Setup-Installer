@@ -8,7 +8,6 @@ import android.widget.LinearLayout
 import android.widget.Toast
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.BuildConfig
 import io.github.supermonster003.autojs6.plugin.three.setup.installer.R
-import io.github.supermonster003.autojs6.plugin.three.setup.installer.ui.ReleaseHistoryActivity
 import java.io.Closeable
 import java.util.concurrent.Executors
 
@@ -18,6 +17,8 @@ internal class AppUpdateController(private val activity: SettingsPageActivity, p
     private val preferences = activity.getSharedPreferences("installer_updates", Context.MODE_PRIVATE)
     private var cancellation: UpdateCancellation? = null
     private var prompt: Dialog? = null
+    /** The dialog on screen (the checking progress or the result); the release history test presses its neutral button. */
+    internal val dialog: Dialog? get() = prompt
     @Volatile private var closed = false
     private var generation = 0
 
@@ -80,8 +81,8 @@ internal class AppUpdateController(private val activity: SettingsPageActivity, p
                     else Toast.makeText(activity, R.string.settings_error, Toast.LENGTH_LONG).show()
                 })
             }
-            layout.actions.addView(ui.kit.textButton(activity.getString(R.string.release_history_title), "update-history") {
-                dialog.dismiss(); activity.startActivity(Intent(activity, ReleaseHistoryActivity::class.java))
+            layout.actions.addView(ui.kit.textButton(activity.getString(R.string.release_history), "update-history") {
+                dialog.dismiss(); activity.openReleaseHistory()
             })
             if (release != null) layout.actions.addView(ui.kit.textButton(activity.getString(R.string.settings_update_open_release), "update-open") {
                 dialog.dismiss(); openPage(activity, release.url)

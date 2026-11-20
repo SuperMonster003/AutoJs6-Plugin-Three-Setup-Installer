@@ -316,8 +316,14 @@
     <string name="profile_title">Perfiles de instalación</string>
     <string name="profile_unreadable">No se pueden leer los perfiles guardados. Las solicitudes de instalación quedan bloqueadas hasta que los perfiles se reparen o se restablezcan explícitamente.</string>
     <string name="profile_unsaved">Hay cambios sin guardar. Guarde la lista para aplicarlos o cancele para descartarlos.</string>
+    <string name="release_history">Historial de versiones</string>
+    <string name="release_history_collapse_all">Contraer todo</string>
+    <string name="release_history_collapsed">Contraído</string>
     <string name="release_history_error">No se puede leer el documento integrado.</string>
-    <string name="release_history_title">Historial de versiones</string>
+    <string name="release_history_expand_all">Expandir todo</string>
+    <string name="release_history_expanded">Expandido</string>
+    <string name="release_history_summary">Consultar el historial de versiones incluido en la aplicación</string>
+    <string name="release_history_unavailable">No se pudo cargar el historial de versiones</string>
     <string name="settings_appearance">Apariencia</string>
     <string name="settings_authorizer_order">Orden y activación de autorizaciones</string>
     <string name="settings_authorizers_note">La selección automática usa el primer método activado y autorizado. Mantén al menos uno activo. Las elecciones explícitas del anfitrión o de scripts no cambian.</string>

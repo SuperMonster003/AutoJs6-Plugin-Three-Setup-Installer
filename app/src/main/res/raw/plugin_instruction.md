@@ -1,56 +1,65 @@
-3-Setup Installer installs, updates, inspects and uninstalls Android apps from its standalone home screen, AutoJs6 entries and scripts, or external package-opening and sharing requests. It supports Android confirmation and privileged operations through Shizuku, Root or Dhizuku.
+3-Setup Installer installs, updates, inspects and uninstalls Android apps. Installations can start from its home screen, from AutoJs6 install actions and scripts, or from packages that other apps open or share; Android confirms each one by default, and with Shizuku, Root or Dhizuku authorized it can also install silently. It also works on its own without AutoJs6.
 
-1.2.2 documents the implemented installation, app-management and script features below. This version is available from [GitHub Releases](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/releases/tag/v1.2.2) and the AutoJs6 plugin center. Host integration requires AutoJs6 >= 6.8.0 (5299), and the `installer` script API requires build 5300 or later. Device coverage and remaining acceptance work are recorded in [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md). Dhizuku, notification installation and persistent-default script options require AutoJs6 6.8.0 build 5307 or later with installer contract V2. Base host integration remains available from build 5299, and V1 script methods from build 5300.
+### Getting started
 
-Advanced script options require AutoJs6 build 5308+ and negotiated V3 with `advanced-install-options`. Without profile overrides, omission preserves existing behavior; explicit `false`/`none` still requires support. The roadmap records official release and device acceptance status.
+1. Open 3-Setup Installer from the launcher. For silent installation, tap "Authorize" for Shizuku, Root or Dhizuku under "Authorization" on the home screen.
+2. Tap "Choose installation packages" and pick one or more APK, APKS, XAPK or similar packages.
+3. Check the version, signature and permissions in the installation dialog, then tap "Install".
+4. Once this plugin is enabled in AutoJs6 "Plugin Center", install actions in AutoJs6 show the same dialog; 3-Setup Installer can also be chosen when another app opens or shares a package.
 
-### Usage
+### Main features
 
-1. On Android 7.0 or later, install the official APK from [Releases](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/releases) once published, or use the AutoJs6 plugin-center installation wizard once the official index lists it. Before publication, use a maintainer-provided build or build from source for testing. Open the launcher icon to reach the standalone Home screen.
-2. On Home, check authorization and default-installer status, then select one or multiple packages. Confirm through the chosen dialog or notification and follow active tasks and recent history.
-3. For AutoJs6 integration, use build 5299 (6.8.0) or later and enable `3-Setup Installer` in the plugin center. The script API requires build 5300 or later. Dhizuku, notification installation and persistent-default script options require AutoJs6 6.8.0 build 5307 or later with installer contract V2. Base host integration remains available from build 5299, and V1 script methods from build 5300.
-4. Use an installation action in AutoJs6, or choose 3-Setup Installer when opening or sharing package files. When a confirmation dialog appears, review the app and options before installing. Prepare Shizuku, Root or Dhizuku authorization when selecting a privileged method.
-5. Use the Home menu for installed apps and settings. Review local installation defaults, appearance, launcher icon and notifications; About, release history and manual update checks are in settings.
+- **Installation dialog**: shows the version change, size, SDK and signature comparison, and marks a new install, update, reinstall or downgrade; APK components, permissions and "More options" can be expanded and adjusted.
+- **Authorization**: without authorization Android confirms each installation; with Shizuku, Root or Dhizuku it can install silently, allow downgrades, grant permissions and more. "Authorization order and availability" in the settings sets the order of automatic selection.
+- **Batches and records**: several apps can be installed at once, and the home screen shows running tasks and "Recent installations"; records keep only app information and results, never the packages.
+- **Installed apps**: opened from the "More" menu on the home screen, to search, sort, view app information or uninstall apps.
+- **Default installer**: makes this plugin the default app for opening APK files; whether this is possible depends on the authorization and system restrictions.
+- **Installation profiles and blacklists**: preset installation options in the settings by installation source and package name prefix, or block specific apps with "Package blacklist" and "Shared-UID blacklist".
+- **Signature check**: a package whose signature differs from the installed app is blocked by default and can only be allowed once, for that item, in the installation dialog.
+- **Settings**: adjust "Default interaction", appearance, the launcher icon and notifications, or view "Release history" and run "Check for updates" manually.
 
-### Authorizers
+### Using it in scripts
 
-- `none`: the standard PackageInstaller session; Android asks the user to confirm every installation, split packages are supported, and privileged options are not available.
-- `shizuku`: requires Shizuku running (started through wireless debugging, ADB or Root) and permission granted specifically to 3-Setup Installer. Permission granted to AutoJs6 does not authorize this plugin. Installation, uninstallation and other-user operations use the privileges of the running Shizuku service.
-- `root`: requires a rooted device and a Root manager that grants `su` to 3-Setup Installer. It provides privileged installation, uninstallation and user/default-installer operations through libsu. Android and ROM policies still decide whether each requested operation is allowed.
-- `dhizuku`: requires Android 8.0 (API 26)+, an active Dhizuku device/profile owner and permission granted to this plugin. It operates in the current owner user, and installation attribution uses the real owner package. It does not grant shell/root downgrade, test-package, low-targetSdk bypass, other-user, arbitrary installer attribution or keep-data uninstall options. The plugin does not provision an owner.
-- **Note:** Scripts default to `interaction: 'auto'` and install silently when privileges are available. Host UI installation actions use `dialog`. If Android requires confirmation, `auto` permits it and records this in `notes`. Choose `interaction: 'dialog'` for confirmation before installation. Explicit `silent` fails with `AUTHORIZER_REQUIRED` if privileges are unavailable or system confirmation is required.
-- Settings save authorizer order/enabled methods, installation options and notification preferences. Home/external installation defaults to `dialog`, with explicit `auto`, `silent` or `notification` choices available. Host UI installation actions use `dialog`; scripts retain explicit options and still default to `auto`. Changes are saved after confirmation.
+AutoJs6 scripts install, inspect and uninstall apps through the `installer` module. The example below shows the installation dialog and installs after the user confirms; synchronous methods must be called on a script thread, not on the UI thread:
 
-### Compatibility
+```js
+console.log(installer.status);
+try {
+    let result = installer.install('./app.apk', { interaction: 'dialog' });
+    console.log(result.packageName, result.versionName);
+} catch (e) {
+    console.error(e.code, e.message);
+}
+```
 
-- Android 7.0 (API 24) and later. Device validation and remaining coverage are recorded in [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md).
-- The bypass of the low target SDK block exists from Android 14 (API 34); on older systems the option is ignored and noted in the result.
-- The default-installer page distinguishes ordinary preferences and persistent policy. Ordinary preferences use Shizuku or Root and remain subject to ROM restrictions. Persistent policy is available through Dhizuku on API 26-33; API 34+ is rejected before mutation because the owner callback cannot be verified. Root uses a system-UID helper only in user 0 on supported devices. Competing persistent policies are not overwritten. `persistentConfigured` is a receipt of a previous successful configuration, not proof of the current system policy; passive observation reports only `preferred` or `none`.
-- `dhizuku`: requires Android 8.0 (API 26)+, an active Dhizuku device/profile owner and permission granted to this plugin. It operates in the current owner user, and installation attribution uses the real owner package. It does not grant shell/root downgrade, test-package, low-targetSdk bypass, other-user, arbitrary installer attribution or keep-data uninstall options. The plugin does not provision an owner.
-- Permission-grant requests and non-none DexOpt require Shizuku/Root; verify needs API 26+. Install reason needs API 26+, package source API 33+, and requesting update ownership API 34+. Ownership can start only on initial installation; updates or an existing package in another user may be ignored. False does not revoke an existing owner.
-- none/Dhizuku can inspect installed signatures only in the current user; Shizuku/Root query globally. With nonempty SharedUID rules, uncertainty about a package in another user is blocked without an exception.
+- Without `interaction` the mode is `auto`: it installs silently when a privileged authorization is available, otherwise Android asks for confirmation.
+- Passing an array installs in a batch and returns results in the order of the sources; check `ok` and `error` for each item. `installAsync` returns a Promise and can be used on the UI thread.
+- `installer.inspect(source)` only reads the package name, version and other information, without installing.
+- See [AutoJs6 documentation > installer](https://docs.autojs6.com/#/installer) for all options and events.
+
+### Requirements
+
+- Android 7.0 or later. Working with AutoJs6 requires AutoJs6 6.8.0 or later; standalone use does not need AutoJs6.
+- Shizuku, Root and Dhizuku are all optional and only needed for silent installation or privileged options; Dhizuku requires Android 8.0 or later.
+- The install and uninstall permissions request Android confirmation, the app list permission serves installed apps, versions and signature comparison, and the notification permission serves notification-based installation and progress notifications.
+- The network is used only when checking for plugin updates manually; packages are never uploaded.
 
 ### FAQ
 
-- **Why does installation still require confirmation?** `none` always requires Android confirmation. Privileged authorizers may also be subject to Android policy. `notification` opens system confirmation only through its notification action; it does not bypass Android's confirmation.
-- **Why is accessibility restricted after installation?** On Android 13+, a `local-file` or `downloaded-file` package source can trigger restricted settings. Shizuku/Root now default to `other`, matching Android shell installations; explicit source choices take precedence. `none`/Dhizuku keep the `local-file` default. Existing restrictions are not automatically cleared by an update. For an app you trust, open Android Settings > Apps > the app > More > Allow restricted settings, then enable its accessibility service. Availability and additional checks depend on the Android version and ROM.
-- **Can an `.aab` be installed?** No. An Android App Bundle is a publishing format; convert it with bundletool into an `.apks` set first. The plugin recognizes `.aab` files and shows their package and module information.
-- **Why can a downgrade still fail with `allowDowngrade: true`?** This flag requests a downgrade; Android decides according to the firmware, authorization identity and whether the app is debuggable. Tested user firmware rejected non-debuggable downgrades on Sony G8441 / API 28 and Xiaomi 23046RP50C / API 35, while Sony XQ-DQ72 / API 33 with Root accepted one. These results are device-specific. Check the returned error and `systemMessage`; Root does not guarantee a downgrade on every ROM.
-- **What installer package name works on HyperOS?** With Shizuku started through ADB or wireless debugging, leaving the installer package name unset uses `com.android.shell`. On the tested Xiaomi 23046RP50C / HyperOS / API 35, silent new installations and updates recorded this value. Explicit `com.android.shell` and the plugin's own package name were also accepted and recorded as requested. Other package names or ROM versions still depend on the system's response.
-- **ColorOS or another ROM says the plugin needs activation. What should I do?** After installation or a force stop, Android can keep an app stopped until user interaction. In AutoJs6's plugin center, use Activate when offered, or open 3-Setup Installer from its launcher icon, then retry. This follows [Android's rules for stopped apps](https://developer.android.com/reference/android/content/pm/ApplicationInfo#FLAG_STOPPED). ColorOS-specific behavior has not yet been verified on a device.
-- **Why can a default-installer change fail, or a saved persistent marker differ from the current handler?** The default-installer page distinguishes ordinary preferences and persistent policy. Ordinary preferences use Shizuku or Root and remain subject to ROM restrictions. Persistent policy is available through Dhizuku on API 26-33; API 34+ is rejected before mutation because the owner callback cannot be verified. Root uses a system-UID helper only in user 0 on supported devices. Competing persistent policies are not overwritten. `persistentConfigured` is a receipt of a previous successful configuration, not proof of the current system policy; passive observation reports only `preferred` or `none`.
-- **Why was the source not deleted?** Deletion is attempted only after a successful installation. Sources are always retained if installation fails, is cancelled or times out. A deletion failure does not change a successful installation, and an external source provider may refuse deletion. For scripts, the host handles `deleteSource` for paths and `file://` sources, retaining `content://` sources. Check `sourceDeleted` and `notes`. In a batch, confirmed successful items still follow `deleteSource` even if another item fails or the remaining queue is cancelled.
-- **Can I retry or resume?** A failed external URI can be retried while the source and access are available. Once the source or its access is released, reopen the package. After a process restart, the restored view shows saved confirmed results and marks unfinished items as interrupted. It is read-only and never automatically installs or retries. Check the installed app before starting again.
+**Why confirmation is still required after authorization**
 
-### Permissions and Security
+The policy of Android or the device vendor may still require user confirmation. In that case "Automatic" falls back to Android confirmation, while a silent mode fails and explains why.
 
-- The Binder entry points are protected by the `org.autojs.permission.PLUGIN` signature permission, so only AutoJs6 can reach them; the external "Open with" entry only accepts package files and never runs a script.
-- REQUEST_INSTALL_PACKAGES and REQUEST_DELETE_PACKAGES support Android confirmation. QUERY_ALL_PACKAGES supports installed-app management, installed-version and signature comparisons, and default-installer detection. The normal permission ENFORCE_UPDATE_OWNERSHIP supports an explicit ownership request; it does not guarantee an owner is assigned.
-- FOREGROUND_SERVICE and FOREGROUND_SERVICE_DATA_SYNC support installation work and temporary source access; POST_NOTIFICATIONS permits notifications. `notification` interaction requires notifications and its channel to be enabled. Other interaction modes tolerate missing notification permission.
-- Shizuku, Root and Dhizuku are used for requested operations. The plugin does not provision a device/profile owner. Persistent default rules are changed only through the requested set/clear operation; source packages are never uploaded.
-- Installation, inspection, history and app management work offline. INTERNET is used only when you manually check releases at the plugin's fixed GitHub Releases API, with a 12-hour interval. No background update checks or package uploads are performed.
-- Package sources are opened read-only. History stores bounded app metadata and outcomes, not package contents or source URIs; error paths are redacted. Private plugin storage is excluded from backups. Deleting a history record does not uninstall its app or remove its source.
-- The grant option requests permissions the system can grant, including supported installer-changeable app-ops such as USE_FULL_SCREEN_INTENT on Android 14. It does not guarantee every declared permission or grant accessibility, overlays or arbitrary signature permissions. Restricted/system-fixed/policy-fixed constraints remain, without an extra restricted-permission allowlist flag.
-- Signature checks and local exact package-name/SharedUID blacklists apply to every entry point, using `BLOCKED_BY_POLICY`. Only a real dialog can allow a mismatch/unknown signature once for that item; Android still validates it. Silent/notification modes cannot grant this exception, and a blacklist cannot be overridden. Permission preview describes declarations in the selected APK splits, not granted permissions.
+**Why accessibility services cannot be turned on after installation**
 
-See the [project README](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer) and [ROADMAP.md](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer/blob/master/ROADMAP.md) for the installation guide and the current progress.
+Since Android 13, apps installed as local files cannot use accessibility and other restricted settings; installations through Shizuku or Root are not marked as local files by default. For a trusted app, allow restricted settings from the top-right menu of its app info page in the system settings, then turn on its accessibility service; the entry varies by system.
+
+**Why .aab files cannot be installed**
+
+An Android App Bundle is a publishing format and cannot be installed directly. Convert it to an .apks package with bundletool first; the plugin can show the package name and modules of an .aab file.
+
+**Why a downgrade fails even with downgrades allowed**
+
+"Allow version downgrade" only asks the system; whether it is accepted depends on the system version, the authorization and whether the app is debuggable. When it fails, the result includes the message returned by the system.
+
+See the [project homepage](https://github.com/SuperMonster003/AutoJs6-Plugin-Three-Setup-Installer) for details on authorization, installation options and permissions.
